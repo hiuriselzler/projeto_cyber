@@ -782,8 +782,29 @@ Rather than hold every later task behind that, the work was split.
   and nothing has run on a real phone yet, so a native-build problem would surface in 017, after 011 and
   003 exist. Task 003's mobile flows are built against `src/crypto/`'s interface and tested in Jest; 017
   confirms the native binding before anything relies on it.
-- **Offered, not yet decided:** a portable Postgres in the user profile for local database tests, and an
-  early development build through Expo's cloud service, to find native-build problems before 017.
+- **Decided since:** the portable Postgres (next entry). **Still open:** an early development build
+  through Expo's cloud service, to find native-build problems before 017.
+
+### 2026-09-12 — a local PostgreSQL without Docker
+
+- **PostgreSQL 16.15 runs from the user profile**, with no administrator rights: binaries in
+  `%LOCALAPPDATA%\Programs\pgsql-16.15`, data in `%LOCALAPPDATA%\cyberathlete\postgres-16`, listening on
+  `127.0.0.1` only with password authentication, and the two roles applied from
+  `infra/postgres/roles.sql`. `.env` holds freshly generated secrets and is git-ignored. Start and stop
+  commands are in the README.
+- **Only a verified build was kept.** EDB publishes no checksum and no signed executables for this zip,
+  and its download page served a third build, 16.15-3, that no independent source confirms. Build
+  16.15-1 is installed instead: its zip matches the hash in Scoop's manifest, and its programs are
+  byte-identical to zonky's copy on Maven Central, itself checked against Maven Central's checksums. Both
+  copies come from EDB in the end, so this rules out tampering on the way, not at the source.
+- **Found: psycopg's async driver cannot run on the event loop Windows uses by default.** Every
+  integration test failed locally while CI, on Linux, passed. The test suite now selects the compatible
+  loop on Windows (`apps/api/tests/conftest.py`), and all 51 API tests pass locally with none skipped.
+- **The API starts on Windows only under `uvicorn --reload`** — already the documented command. A plain
+  `uvicorn` refuses to start, and its message blames an unreachable database. Linux is unaffected, so the
+  API code is unchanged and the README says so.
+- **The whole API ran on this machine for the first time:** under `--reload`, `/health/ready` answered 200
+  against the local database, after the boot-time role check passed as `cyberathlete_app`.
 - **Two audit findings accepted, by id.** `pnpm audit --audit-level high` reports two advisories in
   `image-size` (GHSA-w3rx-r6r6-pgpr, GHSA-5p2g-fcmc-qvqq): denial of service from a crafted image, with no
   patched version. It is reached only through Metro at build time and never ships in the app. The gate
