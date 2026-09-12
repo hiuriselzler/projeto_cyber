@@ -1,0 +1,16 @@
+[
+  { "modality": "barbell", "unit_system": "metric", "increment_kg": "2.500000" },
+  { "modality": "barbell", "unit_system": "imperial", "increment_kg": "2.267962" },
+  { "modality": "dumbbell", "unit_system": "metric", "increment_kg": "2.000000" },
+  { "modality": "dumbbell", "unit_system": "imperial", "increment_kg": "2.267962" },
+  { "modality": "machine", "unit_system": "metric", "increment_kg": "5.000000" },
+  { "modality": "machine", "unit_system": "imperial", "increment_kg": "4.535924" },
+  { "modality": "cable", "unit_system": "metric", "increment_kg": "2.500000" },
+  { "modality": "cable", "unit_system": "imperial", "increment_kg": "2.267962" },
+  { "modality": "bodyweight", "unit_system": "metric", "increment_kg": "1.250000" },
+  { "modality": "bodyweight", "unit_system": "imperial", "increment_kg": "1.133981" },
+  { "modality": "band", "unit_system": "metric", "increment_kg": "0.000000" },
+  { "modality": "band", "unit_system": "imperial", "increment_kg": "0.000000" },
+  { "modality": "other", "unit_system": "metric", "increment_kg": "2.500000" },
+  { "modality": "other", "unit_system": "imperial", "increment_kg": "2.267962" }
+]

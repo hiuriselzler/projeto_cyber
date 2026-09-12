@@ -258,11 +258,12 @@ gamification_tracks (            -- seeded: one row per sport (deferred sports i
                                  -- `strength` and the four quality tracks
   track track_enum PK,
       -- discipline: strength | run | ride | walk | swim_pool | treadmill | indoor_bike
-      --             | trail_run | hike | open_water_swim | row_indoor
+      --             | trail_run | hike | open_water_swim | row_indoor | other
       -- quality:    consistency | recovery | precision | progression
   kind  track_kind_enum NOT NULL,-- discipline | quality
   hue_token text NOT NULL,       -- related sports share a hue (07 §3); no per-track rainbow
-  level_scale_bp integer NOT NULL DEFAULT 10000   -- multiplies thresholds (§2); may only decrease
+  level_scale_bp integer NOT NULL DEFAULT 10000
+      CHECK (level_scale_bp BETWEEN 1 AND 10000)  -- multiplies thresholds (§2); may only decrease
 )
 -- No radial position column. There is no radial layout — the mark is not a dashboard (07 §2).
 
@@ -290,7 +291,8 @@ xp_awards (                      -- the ledger; user_track_progress is a derivab
   source_id uuid NULL,
   awarded_at timestamptz NOT NULL,
   ‹sync›,
-  UNIQUE (user_id, source_kind, source_id, reason)   -- idempotence, INV-21
+  UNIQUE NULLS NOT DISTINCT (user_id, source_kind, source_id, reason)   -- idempotence, INV-21;
+                                             -- a NULL source_id still collides (ADR-013)
 )
 
 achievements (                   -- seeded catalog

@@ -1,0 +1,23 @@
+[
+  { "id": 1, "name_key": "muscle.chest", "region": "upper_push" },
+  { "id": 2, "name_key": "muscle.front_delts", "region": "upper_push" },
+  { "id": 3, "name_key": "muscle.side_delts", "region": "upper_push" },
+  { "id": 4, "name_key": "muscle.rear_delts", "region": "upper_pull" },
+  { "id": 5, "name_key": "muscle.lats", "region": "upper_pull" },
+  { "id": 6, "name_key": "muscle.upper_back", "region": "upper_pull" },
+  { "id": 7, "name_key": "muscle.traps", "region": "upper_pull" },
+  { "id": 8, "name_key": "muscle.biceps", "region": "arms" },
+  { "id": 9, "name_key": "muscle.triceps", "region": "arms" },
+  { "id": 10, "name_key": "muscle.forearms", "region": "arms" },
+  { "id": 11, "name_key": "muscle.abs", "region": "core" },
+  { "id": 12, "name_key": "muscle.obliques", "region": "core" },
+  { "id": 13, "name_key": "muscle.lower_back", "region": "core" },
+  { "id": 14, "name_key": "muscle.quadriceps", "region": "legs" },
+  { "id": 15, "name_key": "muscle.hamstrings", "region": "legs" },
+  { "id": 16, "name_key": "muscle.glutes", "region": "legs" },
+  { "id": 17, "name_key": "muscle.adductors", "region": "legs" },
+  { "id": 18, "name_key": "muscle.abductors", "region": "legs" },
+  { "id": 19, "name_key": "muscle.calves", "region": "legs" },
+  { "id": 20, "name_key": "muscle.hip_flexors", "region": "legs" },
+  { "id": 21, "name_key": "muscle.neck", "region": "other" }
+]

@@ -236,7 +236,7 @@ recorded differently. The four **quality** tracks share the neutral accent at va
 | Swim | `swim_pool`, `open_water_swim` | `#3FB5B5` | `#1E7F7F` |
 | Walk | `walk`, `hike` | `#7FA86B` | `#4C6B3E` |
 | Row | `row_indoor` | `#C25E7A` | `#8E3A52` |
-| Quality | all four | `#8494A4` → `#B8C4D0` by level | `#5A6874` → `#2C3742` |
+| Quality | all four quality tracks, and the catch-all `other` sport | `#8494A4` → `#B8C4D0` by level | `#5A6874` → `#2C3742` |
 
 `gamification_tracks.hue_token` stores which of these a track uses, so the sharing is data rather
 than a lookup in a component — and colour is never the only signal anyway (§Non-negotiables).

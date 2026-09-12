@@ -1,0 +1,3874 @@
+{
+  "muscle_groups": [
+    {
+      "id": 1,
+      "name_key": "muscle.chest",
+      "region": "upper_push"
+    },
+    {
+      "id": 2,
+      "name_key": "muscle.front_delts",
+      "region": "upper_push"
+    },
+    {
+      "id": 3,
+      "name_key": "muscle.side_delts",
+      "region": "upper_push"
+    },
+    {
+      "id": 4,
+      "name_key": "muscle.rear_delts",
+      "region": "upper_pull"
+    },
+    {
+      "id": 5,
+      "name_key": "muscle.lats",
+      "region": "upper_pull"
+    },
+    {
+      "id": 6,
+      "name_key": "muscle.upper_back",
+      "region": "upper_pull"
+    },
+    {
+      "id": 7,
+      "name_key": "muscle.traps",
+      "region": "upper_pull"
+    },
+    {
+      "id": 8,
+      "name_key": "muscle.biceps",
+      "region": "arms"
+    },
+    {
+      "id": 9,
+      "name_key": "muscle.triceps",
+      "region": "arms"
+    },
+    {
+      "id": 10,
+      "name_key": "muscle.forearms",
+      "region": "arms"
+    },
+    {
+      "id": 11,
+      "name_key": "muscle.abs",
+      "region": "core"
+    },
+    {
+      "id": 12,
+      "name_key": "muscle.obliques",
+      "region": "core"
+    },
+    {
+      "id": 13,
+      "name_key": "muscle.lower_back",
+      "region": "core"
+    },
+    {
+      "id": 14,
+      "name_key": "muscle.quadriceps",
+      "region": "legs"
+    },
+    {
+      "id": 15,
+      "name_key": "muscle.hamstrings",
+      "region": "legs"
+    },
+    {
+      "id": 16,
+      "name_key": "muscle.glutes",
+      "region": "legs"
+    },
+    {
+      "id": 17,
+      "name_key": "muscle.adductors",
+      "region": "legs"
+    },
+    {
+      "id": 18,
+      "name_key": "muscle.abductors",
+      "region": "legs"
+    },
+    {
+      "id": 19,
+      "name_key": "muscle.calves",
+      "region": "legs"
+    },
+    {
+      "id": 20,
+      "name_key": "muscle.hip_flexors",
+      "region": "legs"
+    },
+    {
+      "id": 21,
+      "name_key": "muscle.neck",
+      "region": "other"
+    }
+  ],
+  "modality_increments": [
+    {
+      "modality": "barbell",
+      "unit_system": "metric",
+      "increment_kg": "2.500000"
+    },
+    {
+      "modality": "barbell",
+      "unit_system": "imperial",
+      "increment_kg": "2.267962"
+    },
+    {
+      "modality": "dumbbell",
+      "unit_system": "metric",
+      "increment_kg": "2.000000"
+    },
+    {
+      "modality": "dumbbell",
+      "unit_system": "imperial",
+      "increment_kg": "2.267962"
+    },
+    {
+      "modality": "machine",
+      "unit_system": "metric",
+      "increment_kg": "5.000000"
+    },
+    {
+      "modality": "machine",
+      "unit_system": "imperial",
+      "increment_kg": "4.535924"
+    },
+    {
+      "modality": "cable",
+      "unit_system": "metric",
+      "increment_kg": "2.500000"
+    },
+    {
+      "modality": "cable",
+      "unit_system": "imperial",
+      "increment_kg": "2.267962"
+    },
+    {
+      "modality": "bodyweight",
+      "unit_system": "metric",
+      "increment_kg": "1.250000"
+    },
+    {
+      "modality": "bodyweight",
+      "unit_system": "imperial",
+      "increment_kg": "1.133981"
+    },
+    {
+      "modality": "band",
+      "unit_system": "metric",
+      "increment_kg": "0.000000"
+    },
+    {
+      "modality": "band",
+      "unit_system": "imperial",
+      "increment_kg": "0.000000"
+    },
+    {
+      "modality": "other",
+      "unit_system": "metric",
+      "increment_kg": "2.500000"
+    },
+    {
+      "modality": "other",
+      "unit_system": "imperial",
+      "increment_kg": "2.267962"
+    }
+  ],
+  "gamification_tracks": [
+    {
+      "track": "strength",
+      "kind": "discipline",
+      "hue_token": "strength",
+      "level_scale_bp": 10000
+    },
+    {
+      "track": "run",
+      "kind": "discipline",
+      "hue_token": "run",
+      "level_scale_bp": 10000
+    },
+    {
+      "track": "ride",
+      "kind": "discipline",
+      "hue_token": "ride",
+      "level_scale_bp": 10000
+    },
+    {
+      "track": "walk",
+      "kind": "discipline",
+      "hue_token": "walk",
+      "level_scale_bp": 10000
+    },
+    {
+      "track": "swim_pool",
+      "kind": "discipline",
+      "hue_token": "swim",
+      "level_scale_bp": 10000
+    },
+    {
+      "track": "treadmill",
+      "kind": "discipline",
+      "hue_token": "run",
+      "level_scale_bp": 10000
+    },
+    {
+      "track": "indoor_bike",
+      "kind": "discipline",
+      "hue_token": "ride",
+      "level_scale_bp": 10000
+    },
+    {
+      "track": "trail_run",
+      "kind": "discipline",
+      "hue_token": "run",
+      "level_scale_bp": 10000
+    },
+    {
+      "track": "hike",
+      "kind": "discipline",
+      "hue_token": "walk",
+      "level_scale_bp": 10000
+    },
+    {
+      "track": "open_water_swim",
+      "kind": "discipline",
+      "hue_token": "swim",
+      "level_scale_bp": 10000
+    },
+    {
+      "track": "row_indoor",
+      "kind": "discipline",
+      "hue_token": "row",
+      "level_scale_bp": 10000
+    },
+    {
+      "track": "other",
+      "kind": "discipline",
+      "hue_token": "quality",
+      "level_scale_bp": 10000
+    },
+    {
+      "track": "consistency",
+      "kind": "quality",
+      "hue_token": "quality",
+      "level_scale_bp": 10000
+    },
+    {
+      "track": "recovery",
+      "kind": "quality",
+      "hue_token": "quality",
+      "level_scale_bp": 10000
+    },
+    {
+      "track": "precision",
+      "kind": "quality",
+      "hue_token": "quality",
+      "level_scale_bp": 10000
+    },
+    {
+      "track": "progression",
+      "kind": "quality",
+      "hue_token": "quality",
+      "level_scale_bp": 10000
+    }
+  ],
+  "sport_profiles": [
+    {
+      "sport": "run",
+      "name_key": "sport.run",
+      "xp_track": "run",
+      "recording_mode": "gps",
+      "primary_metric": "distance",
+      "pace_unit_metric": "min_per_km",
+      "pace_unit_imperial": "min_per_mi",
+      "split_unit_m_metric": "1000.000",
+      "split_unit_m_imperial": "1609.344",
+      "has_route": true,
+      "has_elevation": true,
+      "autopause_threshold_mps": "0.80",
+      "live_fields": [
+        "elapsed_time",
+        "distance",
+        "current_pace",
+        "average_pace",
+        "moving_time",
+        "elevation_gain",
+        "heart_rate"
+      ],
+      "detail_sections": [
+        "summary",
+        "map",
+        "splits",
+        "elevation",
+        "heart_rate",
+        "notes"
+      ],
+      "session_types": [
+        "easy",
+        "long",
+        "tempo",
+        "interval",
+        "recovery",
+        "race"
+      ],
+      "metrics_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {}
+      }
+    },
+    {
+      "sport": "ride",
+      "name_key": "sport.ride",
+      "xp_track": "ride",
+      "recording_mode": "gps",
+      "primary_metric": "distance",
+      "pace_unit_metric": "km_per_h",
+      "pace_unit_imperial": "mph",
+      "split_unit_m_metric": "5000.000",
+      "split_unit_m_imperial": "8046.720",
+      "has_route": true,
+      "has_elevation": true,
+      "autopause_threshold_mps": "1.40",
+      "live_fields": [
+        "elapsed_time",
+        "distance",
+        "current_speed",
+        "average_speed",
+        "moving_time",
+        "elevation_gain",
+        "heart_rate"
+      ],
+      "detail_sections": [
+        "summary",
+        "map",
+        "splits",
+        "elevation",
+        "power",
+        "heart_rate",
+        "notes"
+      ],
+      "session_types": [
+        "easy",
+        "long",
+        "tempo",
+        "interval",
+        "recovery",
+        "race"
+      ],
+      "metrics_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "avg_watts": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "normalized_power": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "elevation_profile_type": {
+            "enum": [
+              "flat",
+              "rolling",
+              "hilly",
+              "mountainous"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "sport": "walk",
+      "name_key": "sport.walk",
+      "xp_track": "walk",
+      "recording_mode": "gps",
+      "primary_metric": "distance",
+      "pace_unit_metric": "min_per_km",
+      "pace_unit_imperial": "min_per_mi",
+      "split_unit_m_metric": "1000.000",
+      "split_unit_m_imperial": "1609.344",
+      "has_route": true,
+      "has_elevation": true,
+      "autopause_threshold_mps": "0.40",
+      "live_fields": [
+        "elapsed_time",
+        "distance",
+        "average_pace",
+        "moving_time",
+        "elevation_gain",
+        "heart_rate"
+      ],
+      "detail_sections": [
+        "summary",
+        "map",
+        "splits",
+        "elevation",
+        "heart_rate",
+        "notes"
+      ],
+      "session_types": [
+        "easy",
+        "long",
+        "recovery"
+      ],
+      "metrics_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {}
+      }
+    },
+    {
+      "sport": "swim_pool",
+      "name_key": "sport.swim_pool",
+      "xp_track": "swim_pool",
+      "recording_mode": "lap",
+      "primary_metric": "distance",
+      "pace_unit_metric": "min_per_100m",
+      "pace_unit_imperial": "min_per_100yd",
+      "split_unit_m_metric": null,
+      "split_unit_m_imperial": null,
+      "has_route": false,
+      "has_elevation": false,
+      "autopause_threshold_mps": null,
+      "live_fields": [
+        "elapsed_time",
+        "lengths",
+        "distance",
+        "average_pace",
+        "last_length_time"
+      ],
+      "detail_sections": [
+        "summary",
+        "sets",
+        "strokes",
+        "swolf",
+        "heart_rate",
+        "notes"
+      ],
+      "session_types": [
+        "easy",
+        "long",
+        "interval",
+        "recovery",
+        "technique",
+        "drill",
+        "race"
+      ],
+      "metrics_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "pool_length_m",
+          "pool_length_unit",
+          "lengths"
+        ],
+        "properties": {
+          "pool_length_m": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "pool_length_unit": {
+            "enum": [
+              "m",
+              "yd"
+            ]
+          },
+          "lengths": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "strokes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "swolf": {
+            "type": "number",
+            "minimum": 0
+          },
+          "stroke_mix": {
+            "type": "object",
+            "propertyNames": {
+              "enum": [
+                "freestyle",
+                "backstroke",
+                "breaststroke",
+                "butterfly",
+                "medley",
+                "kick",
+                "pull",
+                "drill"
+              ]
+            },
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "sport": "treadmill",
+      "name_key": "sport.treadmill",
+      "xp_track": "treadmill",
+      "recording_mode": "manual",
+      "primary_metric": "distance",
+      "pace_unit_metric": "min_per_km",
+      "pace_unit_imperial": "min_per_mi",
+      "split_unit_m_metric": null,
+      "split_unit_m_imperial": null,
+      "has_route": false,
+      "has_elevation": false,
+      "autopause_threshold_mps": null,
+      "live_fields": [],
+      "detail_sections": [
+        "summary",
+        "intervals",
+        "heart_rate",
+        "notes"
+      ],
+      "session_types": [
+        "easy",
+        "long",
+        "tempo",
+        "interval",
+        "recovery"
+      ],
+      "metrics_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "incline_bp": {
+            "type": "integer",
+            "minimum": -5000,
+            "maximum": 5000
+          },
+          "avg_watts": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    {
+      "sport": "indoor_bike",
+      "name_key": "sport.indoor_bike",
+      "xp_track": "indoor_bike",
+      "recording_mode": "manual",
+      "primary_metric": "duration",
+      "pace_unit_metric": "km_per_h",
+      "pace_unit_imperial": "mph",
+      "split_unit_m_metric": null,
+      "split_unit_m_imperial": null,
+      "has_route": false,
+      "has_elevation": false,
+      "autopause_threshold_mps": null,
+      "live_fields": [],
+      "detail_sections": [
+        "summary",
+        "intervals",
+        "power",
+        "heart_rate",
+        "notes"
+      ],
+      "session_types": [
+        "easy",
+        "long",
+        "tempo",
+        "interval",
+        "recovery"
+      ],
+      "metrics_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "avg_watts": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "resistance_level": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    {
+      "sport": "trail_run",
+      "name_key": "sport.trail_run",
+      "xp_track": "trail_run",
+      "recording_mode": "gps",
+      "primary_metric": "distance",
+      "pace_unit_metric": "min_per_km",
+      "pace_unit_imperial": "min_per_mi",
+      "split_unit_m_metric": "1000.000",
+      "split_unit_m_imperial": "1609.344",
+      "has_route": true,
+      "has_elevation": true,
+      "autopause_threshold_mps": "0.60",
+      "live_fields": [
+        "elapsed_time",
+        "distance",
+        "elevation_gain",
+        "average_pace",
+        "moving_time",
+        "heart_rate"
+      ],
+      "detail_sections": [
+        "summary",
+        "map",
+        "elevation",
+        "splits",
+        "heart_rate",
+        "notes"
+      ],
+      "session_types": [
+        "easy",
+        "long",
+        "tempo",
+        "recovery",
+        "race"
+      ],
+      "metrics_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {}
+      }
+    },
+    {
+      "sport": "hike",
+      "name_key": "sport.hike",
+      "xp_track": "hike",
+      "recording_mode": "gps",
+      "primary_metric": "distance",
+      "pace_unit_metric": "min_per_km",
+      "pace_unit_imperial": "min_per_mi",
+      "split_unit_m_metric": "1000.000",
+      "split_unit_m_imperial": "1609.344",
+      "has_route": true,
+      "has_elevation": true,
+      "autopause_threshold_mps": "0.30",
+      "live_fields": [
+        "elapsed_time",
+        "distance",
+        "elevation_gain",
+        "moving_time",
+        "heart_rate"
+      ],
+      "detail_sections": [
+        "summary",
+        "map",
+        "elevation",
+        "splits",
+        "notes"
+      ],
+      "session_types": [
+        "easy",
+        "long"
+      ],
+      "metrics_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {}
+      }
+    },
+    {
+      "sport": "open_water_swim",
+      "name_key": "sport.open_water_swim",
+      "xp_track": "open_water_swim",
+      "recording_mode": "gps",
+      "primary_metric": "distance",
+      "pace_unit_metric": "min_per_100m",
+      "pace_unit_imperial": "min_per_100yd",
+      "split_unit_m_metric": "100.000",
+      "split_unit_m_imperial": "91.440",
+      "has_route": true,
+      "has_elevation": false,
+      "autopause_threshold_mps": "0.20",
+      "live_fields": [
+        "elapsed_time",
+        "distance",
+        "average_pace",
+        "heart_rate"
+      ],
+      "detail_sections": [
+        "summary",
+        "map",
+        "splits",
+        "notes"
+      ],
+      "session_types": [
+        "easy",
+        "long",
+        "interval",
+        "technique",
+        "race"
+      ],
+      "metrics_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {}
+      }
+    },
+    {
+      "sport": "row_indoor",
+      "name_key": "sport.row_indoor",
+      "xp_track": "row_indoor",
+      "recording_mode": "manual",
+      "primary_metric": "distance",
+      "pace_unit_metric": "per_500m",
+      "pace_unit_imperial": "per_500m",
+      "split_unit_m_metric": null,
+      "split_unit_m_imperial": null,
+      "has_route": false,
+      "has_elevation": false,
+      "autopause_threshold_mps": null,
+      "live_fields": [],
+      "detail_sections": [
+        "summary",
+        "intervals",
+        "power",
+        "heart_rate",
+        "notes"
+      ],
+      "session_types": [
+        "easy",
+        "long",
+        "interval",
+        "recovery",
+        "race"
+      ],
+      "metrics_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "avg_split_s_per_500m": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "stroke_rate": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "avg_watts": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "drag_factor": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    {
+      "sport": "other",
+      "name_key": "sport.other",
+      "xp_track": "other",
+      "recording_mode": "manual",
+      "primary_metric": "duration",
+      "pace_unit_metric": "min_per_km",
+      "pace_unit_imperial": "min_per_mi",
+      "split_unit_m_metric": null,
+      "split_unit_m_imperial": null,
+      "has_route": false,
+      "has_elevation": false,
+      "autopause_threshold_mps": null,
+      "live_fields": [],
+      "detail_sections": [
+        "summary",
+        "heart_rate",
+        "notes"
+      ],
+      "session_types": [
+        "easy",
+        "long",
+        "interval",
+        "recovery"
+      ],
+      "metrics_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {}
+      }
+    }
+  ],
+  "achievements": [
+    {
+      "code": "first_block",
+      "name_key": "achievement.first_block.name",
+      "description_key": "achievement.first_block.description",
+      "track": "consistency",
+      "tier": 1,
+      "unit_system": null
+    },
+    {
+      "code": "first_deload",
+      "name_key": "achievement.first_deload.name",
+      "description_key": "achievement.first_deload.description",
+      "track": "recovery",
+      "tier": 1,
+      "unit_system": null
+    },
+    {
+      "code": "four_blocks",
+      "name_key": "achievement.four_blocks.name",
+      "description_key": "achievement.four_blocks.description",
+      "track": "consistency",
+      "tier": 2,
+      "unit_system": null
+    },
+    {
+      "code": "rir_sets_100",
+      "name_key": "achievement.rir_sets_100.name",
+      "description_key": "achievement.rir_sets_100.description",
+      "track": "precision",
+      "tier": 1,
+      "unit_system": null
+    },
+    {
+      "code": "block_adherence_90",
+      "name_key": "achievement.block_adherence_90.name",
+      "description_key": "achievement.block_adherence_90.description",
+      "track": "consistency",
+      "tier": 2,
+      "unit_system": null
+    },
+    {
+      "code": "rest_days_cycle",
+      "name_key": "achievement.rest_days_cycle.name",
+      "description_key": "achievement.rest_days_cycle.description",
+      "track": "recovery",
+      "tier": 1,
+      "unit_system": null
+    },
+    {
+      "code": "first_5k",
+      "name_key": "achievement.first_5k.name",
+      "description_key": "achievement.first_5k.description",
+      "track": "run",
+      "tier": 1,
+      "unit_system": null
+    },
+    {
+      "code": "sub_25_5k",
+      "name_key": "achievement.sub_25_5k.name",
+      "description_key": "achievement.sub_25_5k.description",
+      "track": "run",
+      "tier": 2,
+      "unit_system": null
+    },
+    {
+      "code": "first_100km_month",
+      "name_key": "achievement.first_100km_month.name",
+      "description_key": "achievement.first_100km_month.description",
+      "track": "run",
+      "tier": 2,
+      "unit_system": "metric"
+    },
+    {
+      "code": "first_100mi_month",
+      "name_key": "achievement.first_100mi_month.name",
+      "description_key": "achievement.first_100mi_month.description",
+      "track": "run",
+      "tier": 2,
+      "unit_system": "imperial"
+    },
+    {
+      "code": "bodyweight_bench",
+      "name_key": "achievement.bodyweight_bench.name",
+      "description_key": "achievement.bodyweight_bench.description",
+      "track": "strength",
+      "tier": 2,
+      "unit_system": null
+    },
+    {
+      "code": "double_bodyweight_deadlift",
+      "name_key": "achievement.double_bodyweight_deadlift.name",
+      "description_key": "achievement.double_bodyweight_deadlift.description",
+      "track": "strength",
+      "tier": 3,
+      "unit_system": null
+    },
+    {
+      "code": "swim_1km_session",
+      "name_key": "achievement.swim_1km_session.name",
+      "description_key": "achievement.swim_1km_session.description",
+      "track": "swim_pool",
+      "tier": 1,
+      "unit_system": "metric"
+    },
+    {
+      "code": "swim_1mi_session",
+      "name_key": "achievement.swim_1mi_session.name",
+      "description_key": "achievement.swim_1mi_session.description",
+      "track": "swim_pool",
+      "tier": 2,
+      "unit_system": "imperial"
+    },
+    {
+      "code": "consecutive_cycles_12",
+      "name_key": "achievement.consecutive_cycles_12.name",
+      "description_key": "achievement.consecutive_cycles_12.description",
+      "track": "consistency",
+      "tier": 2,
+      "unit_system": null
+    },
+    {
+      "code": "one_year_logged",
+      "name_key": "achievement.one_year_logged.name",
+      "description_key": "achievement.one_year_logged.description",
+      "track": null,
+      "tier": 3,
+      "unit_system": null
+    }
+  ],
+  "exercises": [
+    {
+      "id": "32ad16a8-2112-55f0-b74d-6e295beb72ad",
+      "name_key": "exercise.barbell_bench_press",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 5,
+      "default_max_reps": 8,
+      "primary_muscle_id": 1,
+      "secondary_muscle_ids": [
+        2,
+        9
+      ]
+    },
+    {
+      "id": "3d6c36b1-95fd-5e46-9d10-562ed9ba38fb",
+      "name_key": "exercise.incline_barbell_bench_press",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 6,
+      "default_max_reps": 10,
+      "primary_muscle_id": 1,
+      "secondary_muscle_ids": [
+        2,
+        9
+      ]
+    },
+    {
+      "id": "ee02aac1-1e1a-5d19-937b-1b847434ba70",
+      "name_key": "exercise.decline_barbell_bench_press",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 6,
+      "default_max_reps": 10,
+      "primary_muscle_id": 1,
+      "secondary_muscle_ids": [
+        2,
+        9
+      ]
+    },
+    {
+      "id": "36d0ed08-d87d-5fe2-88e2-0dfa3cd881db",
+      "name_key": "exercise.close_grip_bench_press",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 6,
+      "default_max_reps": 10,
+      "primary_muscle_id": 9,
+      "secondary_muscle_ids": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "15518feb-4354-58ff-adcc-331d22f272c2",
+      "name_key": "exercise.barbell_floor_press",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 5,
+      "default_max_reps": 8,
+      "primary_muscle_id": 1,
+      "secondary_muscle_ids": [
+        2,
+        9
+      ]
+    },
+    {
+      "id": "dc447e8b-d99f-5e3c-b37b-1a82d44b3d74",
+      "name_key": "exercise.smith_machine_bench_press",
+      "modality": "machine",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 6,
+      "default_max_reps": 10,
+      "primary_muscle_id": 1,
+      "secondary_muscle_ids": [
+        2,
+        9
+      ]
+    },
+    {
+      "id": "1e3527a9-42bb-543a-bfee-ee478aefd8d2",
+      "name_key": "exercise.dumbbell_bench_press",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 6,
+      "default_max_reps": 12,
+      "primary_muscle_id": 1,
+      "secondary_muscle_ids": [
+        2,
+        9
+      ]
+    },
+    {
+      "id": "c02265fc-d549-592d-96dd-16c0ed79da0a",
+      "name_key": "exercise.incline_dumbbell_bench_press",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 1,
+      "secondary_muscle_ids": [
+        2,
+        9
+      ]
+    },
+    {
+      "id": "aa720b74-6641-571e-b476-8bd7b4ba480a",
+      "name_key": "exercise.decline_dumbbell_bench_press",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 1,
+      "secondary_muscle_ids": [
+        2,
+        9
+      ]
+    },
+    {
+      "id": "012e0c5d-e259-5aa6-b6fb-514e92984e1c",
+      "name_key": "exercise.dumbbell_squeeze_press",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 1,
+      "secondary_muscle_ids": [
+        2,
+        9
+      ]
+    },
+    {
+      "id": "5ea8579a-2f4f-5529-8187-92805a4da81b",
+      "name_key": "exercise.dumbbell_fly",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 1,
+      "secondary_muscle_ids": [
+        2
+      ]
+    },
+    {
+      "id": "4953b2c5-5bc3-5072-aee6-096cdb8d0b2a",
+      "name_key": "exercise.incline_dumbbell_fly",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 1,
+      "secondary_muscle_ids": [
+        2
+      ]
+    },
+    {
+      "id": "3b817eeb-0224-5819-92ee-f19baf2b8d3c",
+      "name_key": "exercise.dumbbell_pullover",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 1,
+      "secondary_muscle_ids": [
+        5,
+        9
+      ]
+    },
+    {
+      "id": "2c53aae2-11e0-50bf-acf7-3d180dcf33bc",
+      "name_key": "exercise.machine_chest_press",
+      "modality": "machine",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 1,
+      "secondary_muscle_ids": [
+        2,
+        9
+      ]
+    },
+    {
+      "id": "b7692026-7b98-5b8f-9461-75082c9613b7",
+      "name_key": "exercise.incline_machine_chest_press",
+      "modality": "machine",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 1,
+      "secondary_muscle_ids": [
+        2,
+        9
+      ]
+    },
+    {
+      "id": "89e6f6ac-3e19-5d3b-aef2-705eba06e897",
+      "name_key": "exercise.pec_deck",
+      "modality": "machine",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 1,
+      "secondary_muscle_ids": [
+        2
+      ]
+    },
+    {
+      "id": "00ed635f-5cf4-5fa2-92b0-8c94321d1ae6",
+      "name_key": "exercise.cable_crossover",
+      "modality": "cable",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 1,
+      "secondary_muscle_ids": [
+        2
+      ]
+    },
+    {
+      "id": "10a1f462-0e72-53ef-a0d3-2f536432e14d",
+      "name_key": "exercise.low_to_high_cable_fly",
+      "modality": "cable",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 1,
+      "secondary_muscle_ids": [
+        2
+      ]
+    },
+    {
+      "id": "4f41e51e-bf80-5f20-82d8-b36a7ebec4f6",
+      "name_key": "exercise.incline_cable_fly",
+      "modality": "cable",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 1,
+      "secondary_muscle_ids": [
+        2
+      ]
+    },
+    {
+      "id": "83926b91-ca38-5cfa-9fe8-ca974c7aa1ac",
+      "name_key": "exercise.standing_cable_chest_press",
+      "modality": "cable",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 1,
+      "secondary_muscle_ids": [
+        2,
+        9
+      ]
+    },
+    {
+      "id": "ade6a1d7-3e7d-5a5d-8d59-25f52bfcc9be",
+      "name_key": "exercise.push_up",
+      "modality": "bodyweight",
+      "tracking": "reps_only",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 8,
+      "default_max_reps": 20,
+      "primary_muscle_id": 1,
+      "secondary_muscle_ids": [
+        2,
+        9
+      ]
+    },
+    {
+      "id": "3adbd3da-9d5c-56a1-9700-568666ca6122",
+      "name_key": "exercise.incline_push_up",
+      "modality": "bodyweight",
+      "tracking": "reps_only",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 10,
+      "default_max_reps": 20,
+      "primary_muscle_id": 1,
+      "secondary_muscle_ids": [
+        2,
+        9
+      ]
+    },
+    {
+      "id": "3fa62e06-0dd3-5cef-a169-0f56d42d89d1",
+      "name_key": "exercise.decline_push_up",
+      "modality": "bodyweight",
+      "tracking": "reps_only",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 8,
+      "default_max_reps": 20,
+      "primary_muscle_id": 1,
+      "secondary_muscle_ids": [
+        2,
+        9
+      ]
+    },
+    {
+      "id": "35d6cc24-1370-557f-a799-13224ad5a62a",
+      "name_key": "exercise.archer_push_up",
+      "modality": "bodyweight",
+      "tracking": "reps_only",
+      "is_unilateral": true,
+      "uses_bodyweight": true,
+      "default_min_reps": 5,
+      "default_max_reps": 10,
+      "primary_muscle_id": 1,
+      "secondary_muscle_ids": [
+        2,
+        9
+      ]
+    },
+    {
+      "id": "f271c974-c67b-50f5-ab1d-f21edc25c055",
+      "name_key": "exercise.chest_dip",
+      "modality": "bodyweight",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 6,
+      "default_max_reps": 12,
+      "primary_muscle_id": 1,
+      "secondary_muscle_ids": [
+        2,
+        9
+      ]
+    },
+    {
+      "id": "65a62a11-d2e8-5dbc-a86a-6f015ed9abf2",
+      "name_key": "exercise.ring_dip",
+      "modality": "bodyweight",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 5,
+      "default_max_reps": 10,
+      "primary_muscle_id": 1,
+      "secondary_muscle_ids": [
+        2,
+        9
+      ]
+    },
+    {
+      "id": "c9b6af96-d504-5ede-9c35-4a4284e0430e",
+      "name_key": "exercise.conventional_deadlift",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 3,
+      "default_max_reps": 6,
+      "primary_muscle_id": 16,
+      "secondary_muscle_ids": [
+        7,
+        10,
+        13,
+        14,
+        15
+      ]
+    },
+    {
+      "id": "570e01ff-4443-5226-b90e-b683b4832fb9",
+      "name_key": "exercise.sumo_deadlift",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 3,
+      "default_max_reps": 6,
+      "primary_muscle_id": 16,
+      "secondary_muscle_ids": [
+        13,
+        14,
+        15,
+        17
+      ]
+    },
+    {
+      "id": "ecd9818a-0668-50cc-beae-011ba9933f4d",
+      "name_key": "exercise.deficit_deadlift",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 3,
+      "default_max_reps": 6,
+      "primary_muscle_id": 16,
+      "secondary_muscle_ids": [
+        7,
+        13,
+        14,
+        15
+      ]
+    },
+    {
+      "id": "51cc8248-8038-5a14-a025-6eb7568c09b7",
+      "name_key": "exercise.trap_bar_deadlift",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 4,
+      "default_max_reps": 8,
+      "primary_muscle_id": 16,
+      "secondary_muscle_ids": [
+        7,
+        13,
+        14,
+        15
+      ]
+    },
+    {
+      "id": "9b72c94d-9649-5c96-a373-4ab9b8931bd3",
+      "name_key": "exercise.rack_pull",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 4,
+      "default_max_reps": 8,
+      "primary_muscle_id": 13,
+      "secondary_muscle_ids": [
+        7,
+        10,
+        15,
+        16
+      ]
+    },
+    {
+      "id": "d27e08ea-bac5-5056-bede-531480b08c26",
+      "name_key": "exercise.romanian_deadlift",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 6,
+      "default_max_reps": 10,
+      "primary_muscle_id": 15,
+      "secondary_muscle_ids": [
+        13,
+        16
+      ]
+    },
+    {
+      "id": "9f95aaf6-d951-5eb7-a0a5-f264953aefd0",
+      "name_key": "exercise.stiff_leg_deadlift",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 15,
+      "secondary_muscle_ids": [
+        13,
+        16
+      ]
+    },
+    {
+      "id": "28a4fd28-990e-51c3-a1a8-7aa20e8fa52d",
+      "name_key": "exercise.dumbbell_romanian_deadlift",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 15,
+      "secondary_muscle_ids": [
+        13,
+        16
+      ]
+    },
+    {
+      "id": "16dda89d-0c93-5e5c-93df-fdabf788c8e6",
+      "name_key": "exercise.single_leg_romanian_deadlift",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": true,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 15,
+      "secondary_muscle_ids": [
+        13,
+        16
+      ]
+    },
+    {
+      "id": "25811fbc-c35f-52ca-af67-87b15bd96d16",
+      "name_key": "exercise.good_morning",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 15,
+      "secondary_muscle_ids": [
+        13,
+        16
+      ]
+    },
+    {
+      "id": "88e98237-1f14-55da-ab72-650defa2b193",
+      "name_key": "exercise.barbell_row",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 6,
+      "default_max_reps": 10,
+      "primary_muscle_id": 6,
+      "secondary_muscle_ids": [
+        4,
+        5,
+        8,
+        13
+      ]
+    },
+    {
+      "id": "ab03a181-ef7d-523c-bc78-155d7abddd44",
+      "name_key": "exercise.pendlay_row",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 5,
+      "default_max_reps": 8,
+      "primary_muscle_id": 6,
+      "secondary_muscle_ids": [
+        4,
+        5,
+        8
+      ]
+    },
+    {
+      "id": "db64fee7-4289-5e97-80e3-2d2c5be1b83f",
+      "name_key": "exercise.t_bar_row",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 6,
+      "default_max_reps": 10,
+      "primary_muscle_id": 6,
+      "secondary_muscle_ids": [
+        4,
+        5,
+        8,
+        13
+      ]
+    },
+    {
+      "id": "2dc91ef1-c9da-54cd-bbe7-95e33e1770b2",
+      "name_key": "exercise.seal_row",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 6,
+      "secondary_muscle_ids": [
+        4,
+        5,
+        8
+      ]
+    },
+    {
+      "id": "135ad162-b454-578c-9978-036298530c39",
+      "name_key": "exercise.meadows_row",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": true,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 5,
+      "secondary_muscle_ids": [
+        4,
+        6,
+        8
+      ]
+    },
+    {
+      "id": "004c1521-3077-516c-b3b3-8c19753bc502",
+      "name_key": "exercise.dumbbell_row",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": true,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 5,
+      "secondary_muscle_ids": [
+        4,
+        6,
+        8
+      ]
+    },
+    {
+      "id": "18f71375-48ff-534f-9346-0640fca3d39a",
+      "name_key": "exercise.chest_supported_dumbbell_row",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 6,
+      "secondary_muscle_ids": [
+        4,
+        5,
+        8
+      ]
+    },
+    {
+      "id": "7097797d-4df1-571f-9ec2-2a50bb6e316b",
+      "name_key": "exercise.seated_cable_row",
+      "modality": "cable",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 6,
+      "secondary_muscle_ids": [
+        4,
+        5,
+        8
+      ]
+    },
+    {
+      "id": "c153bb41-55d0-52c6-9305-0c9d5b4089b9",
+      "name_key": "exercise.single_arm_cable_row",
+      "modality": "cable",
+      "tracking": "weight_reps",
+      "is_unilateral": true,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 5,
+      "secondary_muscle_ids": [
+        6,
+        8
+      ]
+    },
+    {
+      "id": "0ee46779-6f64-5837-8635-d3f504e00bd6",
+      "name_key": "exercise.machine_row",
+      "modality": "machine",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 6,
+      "secondary_muscle_ids": [
+        4,
+        5,
+        8
+      ]
+    },
+    {
+      "id": "5b761e81-7248-581a-a440-de88d0789242",
+      "name_key": "exercise.plate_loaded_high_row",
+      "modality": "machine",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 6,
+      "secondary_muscle_ids": [
+        4,
+        5,
+        8
+      ]
+    },
+    {
+      "id": "bea73bc2-d0dd-5717-a38b-aaa507449c9c",
+      "name_key": "exercise.lat_pulldown",
+      "modality": "cable",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 5,
+      "secondary_muscle_ids": [
+        4,
+        6,
+        8
+      ]
+    },
+    {
+      "id": "e0d919ff-a2b5-5969-8162-988734285334",
+      "name_key": "exercise.close_grip_lat_pulldown",
+      "modality": "cable",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 5,
+      "secondary_muscle_ids": [
+        6,
+        8
+      ]
+    },
+    {
+      "id": "ff396900-1a69-50ac-9139-87ffd72ab22a",
+      "name_key": "exercise.single_arm_lat_pulldown",
+      "modality": "cable",
+      "tracking": "weight_reps",
+      "is_unilateral": true,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 5,
+      "secondary_muscle_ids": [
+        6,
+        8
+      ]
+    },
+    {
+      "id": "c2e5e5bb-5bc9-505b-a859-b2f198bc4090",
+      "name_key": "exercise.plate_loaded_lat_pulldown",
+      "modality": "machine",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 5,
+      "secondary_muscle_ids": [
+        6,
+        8
+      ]
+    },
+    {
+      "id": "d191d282-0f41-5394-b573-4b445b0126e1",
+      "name_key": "exercise.straight_arm_pulldown",
+      "modality": "cable",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 5,
+      "secondary_muscle_ids": [
+        6
+      ]
+    },
+    {
+      "id": "2ea282dd-548f-50f3-bd3b-303af285cbf2",
+      "name_key": "exercise.pull_up",
+      "modality": "bodyweight",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 5,
+      "default_max_reps": 10,
+      "primary_muscle_id": 5,
+      "secondary_muscle_ids": [
+        4,
+        6,
+        8
+      ]
+    },
+    {
+      "id": "f35142d1-a40d-522e-9f04-d26dd8a5a803",
+      "name_key": "exercise.chin_up",
+      "modality": "bodyweight",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 5,
+      "default_max_reps": 10,
+      "primary_muscle_id": 5,
+      "secondary_muscle_ids": [
+        6,
+        8
+      ]
+    },
+    {
+      "id": "c1662c7d-ef60-559a-b75c-75b7a0a4b022",
+      "name_key": "exercise.neutral_grip_pull_up",
+      "modality": "bodyweight",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 5,
+      "default_max_reps": 10,
+      "primary_muscle_id": 5,
+      "secondary_muscle_ids": [
+        6,
+        8
+      ]
+    },
+    {
+      "id": "88ebbf25-7d38-5281-8a9d-5c3805ac4f30",
+      "name_key": "exercise.assisted_pull_up",
+      "modality": "machine",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 5,
+      "secondary_muscle_ids": [
+        6,
+        8
+      ]
+    },
+    {
+      "id": "c37e933b-bee2-5373-aef7-29c5479545b7",
+      "name_key": "exercise.muscle_up",
+      "modality": "bodyweight",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 3,
+      "default_max_reps": 8,
+      "primary_muscle_id": 5,
+      "secondary_muscle_ids": [
+        1,
+        8,
+        9
+      ]
+    },
+    {
+      "id": "2e67c0ea-35d1-5a2e-a656-4d1f7842afb9",
+      "name_key": "exercise.inverted_row",
+      "modality": "bodyweight",
+      "tracking": "reps_only",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 8,
+      "default_max_reps": 15,
+      "primary_muscle_id": 6,
+      "secondary_muscle_ids": [
+        4,
+        5,
+        8
+      ]
+    },
+    {
+      "id": "a3f9ae21-0ba8-59de-b05d-39f100539406",
+      "name_key": "exercise.ring_row",
+      "modality": "bodyweight",
+      "tracking": "reps_only",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 8,
+      "default_max_reps": 15,
+      "primary_muscle_id": 6,
+      "secondary_muscle_ids": [
+        4,
+        5,
+        8
+      ]
+    },
+    {
+      "id": "0ec9ff69-43a8-5c45-b156-f043f371c167",
+      "name_key": "exercise.back_extension",
+      "modality": "bodyweight",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 13,
+      "secondary_muscle_ids": [
+        15,
+        16
+      ]
+    },
+    {
+      "id": "67b6409b-fe73-54cd-b3a3-e6cd55ced271",
+      "name_key": "exercise.barbell_shrug",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 7,
+      "secondary_muscle_ids": [
+        10
+      ]
+    },
+    {
+      "id": "d448abe9-3972-5b3c-9dfe-b13fbd3b8cf3",
+      "name_key": "exercise.dumbbell_shrug",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 7,
+      "secondary_muscle_ids": [
+        10
+      ]
+    },
+    {
+      "id": "ec6ef5e1-63df-57e5-8ae7-a5cfaf17c2e8",
+      "name_key": "exercise.overhead_press",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 5,
+      "default_max_reps": 8,
+      "primary_muscle_id": 2,
+      "secondary_muscle_ids": [
+        3,
+        7,
+        9
+      ]
+    },
+    {
+      "id": "63419831-4654-5984-a2e5-acff04833179",
+      "name_key": "exercise.push_press",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 3,
+      "default_max_reps": 6,
+      "primary_muscle_id": 2,
+      "secondary_muscle_ids": [
+        3,
+        9,
+        14
+      ]
+    },
+    {
+      "id": "e591ab89-b7e5-5768-b4ab-db3c4110819e",
+      "name_key": "exercise.z_press",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 5,
+      "default_max_reps": 8,
+      "primary_muscle_id": 2,
+      "secondary_muscle_ids": [
+        3,
+        9,
+        11
+      ]
+    },
+    {
+      "id": "b66a651c-86a4-5385-bc88-2815bbf65c43",
+      "name_key": "exercise.landmine_press",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": true,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 2,
+      "secondary_muscle_ids": [
+        1,
+        9
+      ]
+    },
+    {
+      "id": "96a9e19c-4ca0-5d61-9020-f6b55a21e194",
+      "name_key": "exercise.seated_dumbbell_shoulder_press",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 2,
+      "secondary_muscle_ids": [
+        3,
+        9
+      ]
+    },
+    {
+      "id": "4ef8fc66-3f2e-53ea-8e1b-035b69a32212",
+      "name_key": "exercise.standing_dumbbell_shoulder_press",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 2,
+      "secondary_muscle_ids": [
+        3,
+        9,
+        11
+      ]
+    },
+    {
+      "id": "6ac878e1-5f72-5f7b-9926-745c259596cf",
+      "name_key": "exercise.arnold_press",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 2,
+      "secondary_muscle_ids": [
+        3,
+        9
+      ]
+    },
+    {
+      "id": "f39cd4f5-3d26-5b49-bd57-610441139c65",
+      "name_key": "exercise.machine_shoulder_press",
+      "modality": "machine",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 2,
+      "secondary_muscle_ids": [
+        3,
+        9
+      ]
+    },
+    {
+      "id": "8785d2f5-2f99-503c-b3e5-0bf6c8b76f82",
+      "name_key": "exercise.dumbbell_lateral_raise",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 12,
+      "default_max_reps": 20,
+      "primary_muscle_id": 3,
+      "secondary_muscle_ids": [
+        7
+      ]
+    },
+    {
+      "id": "08cc87aa-47a9-59b5-b0a8-848cee4e78d2",
+      "name_key": "exercise.cable_lateral_raise",
+      "modality": "cable",
+      "tracking": "weight_reps",
+      "is_unilateral": true,
+      "uses_bodyweight": false,
+      "default_min_reps": 12,
+      "default_max_reps": 20,
+      "primary_muscle_id": 3,
+      "secondary_muscle_ids": [
+        7
+      ]
+    },
+    {
+      "id": "48524e0a-35bd-59b6-b20f-d7090e40c215",
+      "name_key": "exercise.machine_lateral_raise",
+      "modality": "machine",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 12,
+      "default_max_reps": 20,
+      "primary_muscle_id": 3,
+      "secondary_muscle_ids": [
+        7
+      ]
+    },
+    {
+      "id": "fc801b2a-18fd-5b53-925e-b8be1d2d8645",
+      "name_key": "exercise.dumbbell_front_raise",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 2,
+      "secondary_muscle_ids": [
+        3
+      ]
+    },
+    {
+      "id": "5b1c01a1-0bed-5ffb-8f3b-bfc1726bc630",
+      "name_key": "exercise.plate_front_raise",
+      "modality": "other",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 2,
+      "secondary_muscle_ids": [
+        3
+      ]
+    },
+    {
+      "id": "5d3192dc-5153-5ce4-9831-df2361b8c27d",
+      "name_key": "exercise.upright_row",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 3,
+      "secondary_muscle_ids": [
+        2,
+        7,
+        8
+      ]
+    },
+    {
+      "id": "b5a62a06-52ef-5d3d-b345-1fa8b215a2f7",
+      "name_key": "exercise.incline_y_raise",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 12,
+      "default_max_reps": 15,
+      "primary_muscle_id": 7,
+      "secondary_muscle_ids": [
+        3,
+        4
+      ]
+    },
+    {
+      "id": "ba4d7727-801d-57b9-ba1c-a1da525584b1",
+      "name_key": "exercise.face_pull",
+      "modality": "cable",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 12,
+      "default_max_reps": 20,
+      "primary_muscle_id": 4,
+      "secondary_muscle_ids": [
+        6,
+        7
+      ]
+    },
+    {
+      "id": "af8c9c7e-0707-51e0-8ef6-34b4b9d55b61",
+      "name_key": "exercise.reverse_pec_deck",
+      "modality": "machine",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 12,
+      "default_max_reps": 20,
+      "primary_muscle_id": 4,
+      "secondary_muscle_ids": [
+        6
+      ]
+    },
+    {
+      "id": "123801a2-baa6-54ea-8c25-ff0d3018c1f6",
+      "name_key": "exercise.rear_delt_dumbbell_fly",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 12,
+      "default_max_reps": 20,
+      "primary_muscle_id": 4,
+      "secondary_muscle_ids": [
+        6
+      ]
+    },
+    {
+      "id": "0b894564-0d9e-5c84-a57b-a5d52b377362",
+      "name_key": "exercise.band_pull_apart",
+      "modality": "band",
+      "tracking": "reps_only",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 15,
+      "default_max_reps": 25,
+      "primary_muscle_id": 4,
+      "secondary_muscle_ids": [
+        6
+      ]
+    },
+    {
+      "id": "69e2ba98-ce64-599f-b1ed-5d633360f4f3",
+      "name_key": "exercise.handstand_push_up",
+      "modality": "bodyweight",
+      "tracking": "reps_only",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 3,
+      "default_max_reps": 10,
+      "primary_muscle_id": 2,
+      "secondary_muscle_ids": [
+        3,
+        9
+      ]
+    },
+    {
+      "id": "31f16c31-57d5-5cb9-96af-740277482498",
+      "name_key": "exercise.pike_push_up",
+      "modality": "bodyweight",
+      "tracking": "reps_only",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 8,
+      "default_max_reps": 15,
+      "primary_muscle_id": 2,
+      "secondary_muscle_ids": [
+        1,
+        9
+      ]
+    },
+    {
+      "id": "5b8fe47c-0b55-50a4-941e-89b25bead27f",
+      "name_key": "exercise.barbell_curl",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 8,
+      "secondary_muscle_ids": [
+        10
+      ]
+    },
+    {
+      "id": "cd620880-8e93-5f1e-ab2e-e500499dea3f",
+      "name_key": "exercise.ez_bar_curl",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 8,
+      "secondary_muscle_ids": [
+        10
+      ]
+    },
+    {
+      "id": "f1277511-852b-5ca3-98c4-6d48d980b1a5",
+      "name_key": "exercise.drag_curl",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 8,
+      "secondary_muscle_ids": [
+        10
+      ]
+    },
+    {
+      "id": "b516a123-29c5-59d7-8c35-b8ac6ea14751",
+      "name_key": "exercise.preacher_curl",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 8,
+      "secondary_muscle_ids": [
+        10
+      ]
+    },
+    {
+      "id": "6375bc83-b5ba-53f3-ba52-e57f539f5eb8",
+      "name_key": "exercise.machine_preacher_curl",
+      "modality": "machine",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 8,
+      "secondary_muscle_ids": [
+        10
+      ]
+    },
+    {
+      "id": "3b6ce236-cc75-5075-bede-79f959224b44",
+      "name_key": "exercise.dumbbell_curl",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 8,
+      "secondary_muscle_ids": [
+        10
+      ]
+    },
+    {
+      "id": "c6cb3cef-acf3-5ce8-b064-bb53e2d444b0",
+      "name_key": "exercise.hammer_curl",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 8,
+      "secondary_muscle_ids": [
+        10
+      ]
+    },
+    {
+      "id": "1fc2550a-9754-5d16-b302-d517fa112b5d",
+      "name_key": "exercise.incline_dumbbell_curl",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 8,
+      "secondary_muscle_ids": [
+        10
+      ]
+    },
+    {
+      "id": "8db54e3e-4e23-56eb-ad14-552c25fc6aff",
+      "name_key": "exercise.concentration_curl",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": true,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 8,
+      "secondary_muscle_ids": []
+    },
+    {
+      "id": "26b303b1-bc23-5bdc-b043-8538a6d13033",
+      "name_key": "exercise.spider_curl",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 8,
+      "secondary_muscle_ids": []
+    },
+    {
+      "id": "5345ab39-235c-5303-8c39-fdd326c43332",
+      "name_key": "exercise.zottman_curl",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 8,
+      "secondary_muscle_ids": [
+        10
+      ]
+    },
+    {
+      "id": "30859a98-7e3d-524b-aa39-0a0d96bdea78",
+      "name_key": "exercise.cable_curl",
+      "modality": "cable",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 8,
+      "secondary_muscle_ids": [
+        10
+      ]
+    },
+    {
+      "id": "6b9c3be3-a923-56b1-87a0-f1a631cc3d0d",
+      "name_key": "exercise.bayesian_cable_curl",
+      "modality": "cable",
+      "tracking": "weight_reps",
+      "is_unilateral": true,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 8,
+      "secondary_muscle_ids": []
+    },
+    {
+      "id": "d5cd375b-b1aa-59b6-a028-11ec43e3e03e",
+      "name_key": "exercise.reverse_curl",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 10,
+      "secondary_muscle_ids": [
+        8
+      ]
+    },
+    {
+      "id": "dbc39fd2-92e4-52bc-b698-aea7553cca00",
+      "name_key": "exercise.triceps_pushdown",
+      "modality": "cable",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 9,
+      "secondary_muscle_ids": []
+    },
+    {
+      "id": "f0d48f97-cc45-5893-817e-1a2bb0d81e2f",
+      "name_key": "exercise.rope_triceps_pushdown",
+      "modality": "cable",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 9,
+      "secondary_muscle_ids": []
+    },
+    {
+      "id": "7e1d5043-2464-5d3c-a0e5-9f17160d3887",
+      "name_key": "exercise.overhead_cable_triceps_extension",
+      "modality": "cable",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 9,
+      "secondary_muscle_ids": []
+    },
+    {
+      "id": "409b5f15-0fb0-5aa1-8e23-ffe88971ea8b",
+      "name_key": "exercise.skull_crusher",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 9,
+      "secondary_muscle_ids": []
+    },
+    {
+      "id": "444b0f2b-e38d-5008-b18f-36715a21962c",
+      "name_key": "exercise.jm_press",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 6,
+      "default_max_reps": 10,
+      "primary_muscle_id": 9,
+      "secondary_muscle_ids": [
+        1
+      ]
+    },
+    {
+      "id": "f658961e-d6ec-5f91-a5f4-a48a1991766f",
+      "name_key": "exercise.dumbbell_overhead_triceps_extension",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 9,
+      "secondary_muscle_ids": []
+    },
+    {
+      "id": "8c8e11d8-206b-5775-84c5-ee82ec299212",
+      "name_key": "exercise.triceps_kickback",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": true,
+      "uses_bodyweight": false,
+      "default_min_reps": 12,
+      "default_max_reps": 15,
+      "primary_muscle_id": 9,
+      "secondary_muscle_ids": []
+    },
+    {
+      "id": "e296ea79-8210-51ce-87ad-3e41ad88b7d6",
+      "name_key": "exercise.machine_triceps_extension",
+      "modality": "machine",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 9,
+      "secondary_muscle_ids": []
+    },
+    {
+      "id": "a8e22333-c3e7-5a2e-9e38-48903a605f6c",
+      "name_key": "exercise.seated_dip_machine",
+      "modality": "machine",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 9,
+      "secondary_muscle_ids": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "6b8162c8-49ae-56ec-99e9-69a38860d36d",
+      "name_key": "exercise.triceps_dip",
+      "modality": "bodyweight",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 6,
+      "default_max_reps": 12,
+      "primary_muscle_id": 9,
+      "secondary_muscle_ids": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "c1085aba-f437-5800-a2a2-535ded5de14d",
+      "name_key": "exercise.bench_dip",
+      "modality": "bodyweight",
+      "tracking": "reps_only",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 10,
+      "default_max_reps": 20,
+      "primary_muscle_id": 9,
+      "secondary_muscle_ids": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "9cf588e2-74e8-5c75-acee-02a42fe8be3e",
+      "name_key": "exercise.diamond_push_up",
+      "modality": "bodyweight",
+      "tracking": "reps_only",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 8,
+      "default_max_reps": 15,
+      "primary_muscle_id": 9,
+      "secondary_muscle_ids": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "187e46a5-fc06-5d24-a9e7-814194fcfe39",
+      "name_key": "exercise.wrist_curl",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 12,
+      "default_max_reps": 20,
+      "primary_muscle_id": 10,
+      "secondary_muscle_ids": []
+    },
+    {
+      "id": "b7bf1ea3-9469-554f-8282-9f0dc924f75e",
+      "name_key": "exercise.reverse_wrist_curl",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 12,
+      "default_max_reps": 20,
+      "primary_muscle_id": 10,
+      "secondary_muscle_ids": []
+    },
+    {
+      "id": "1f3246fa-10ce-5833-8b0b-077200a41c7a",
+      "name_key": "exercise.farmers_walk",
+      "modality": "dumbbell",
+      "tracking": "distance_duration",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": null,
+      "default_max_reps": null,
+      "primary_muscle_id": 10,
+      "secondary_muscle_ids": [
+        7,
+        11,
+        14
+      ]
+    },
+    {
+      "id": "7f3f7aae-b761-5d6f-8a53-e80477c10a11",
+      "name_key": "exercise.suitcase_carry",
+      "modality": "dumbbell",
+      "tracking": "distance_duration",
+      "is_unilateral": true,
+      "uses_bodyweight": false,
+      "default_min_reps": null,
+      "default_max_reps": null,
+      "primary_muscle_id": 12,
+      "secondary_muscle_ids": [
+        7,
+        10
+      ]
+    },
+    {
+      "id": "a398baf2-c258-5484-8892-9a84d0930f73",
+      "name_key": "exercise.dead_hang",
+      "modality": "bodyweight",
+      "tracking": "duration",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": null,
+      "default_max_reps": null,
+      "primary_muscle_id": 10,
+      "secondary_muscle_ids": [
+        5
+      ]
+    },
+    {
+      "id": "6c202c5a-a3cf-5c51-b435-6e8057a25919",
+      "name_key": "exercise.plate_pinch",
+      "modality": "other",
+      "tracking": "duration",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": null,
+      "default_max_reps": null,
+      "primary_muscle_id": 10,
+      "secondary_muscle_ids": []
+    },
+    {
+      "id": "8c559ef3-9e94-53f4-a9de-e3f8b5eff741",
+      "name_key": "exercise.back_squat",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 4,
+      "default_max_reps": 8,
+      "primary_muscle_id": 14,
+      "secondary_muscle_ids": [
+        13,
+        16,
+        17
+      ]
+    },
+    {
+      "id": "6e7b73d0-6b94-5898-880c-8af7d21cecbc",
+      "name_key": "exercise.front_squat",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 4,
+      "default_max_reps": 8,
+      "primary_muscle_id": 14,
+      "secondary_muscle_ids": [
+        6,
+        11,
+        16
+      ]
+    },
+    {
+      "id": "b700bf41-3933-5c38-9c13-b951096e0f2e",
+      "name_key": "exercise.pause_squat",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 3,
+      "default_max_reps": 6,
+      "primary_muscle_id": 14,
+      "secondary_muscle_ids": [
+        16,
+        17
+      ]
+    },
+    {
+      "id": "654b5330-f9d7-57dc-b667-09f882ae1678",
+      "name_key": "exercise.box_squat",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 3,
+      "default_max_reps": 6,
+      "primary_muscle_id": 14,
+      "secondary_muscle_ids": [
+        15,
+        16,
+        17
+      ]
+    },
+    {
+      "id": "ce373661-0874-57d7-949a-9e0d7c0d2680",
+      "name_key": "exercise.zercher_squat",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 5,
+      "default_max_reps": 8,
+      "primary_muscle_id": 14,
+      "secondary_muscle_ids": [
+        6,
+        11,
+        16
+      ]
+    },
+    {
+      "id": "77841ce8-a645-577e-8e74-a030c50bbe83",
+      "name_key": "exercise.overhead_squat",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 3,
+      "default_max_reps": 6,
+      "primary_muscle_id": 14,
+      "secondary_muscle_ids": [
+        2,
+        11,
+        16
+      ]
+    },
+    {
+      "id": "5726bb8c-1f8a-58e8-a521-fd9d33af3c12",
+      "name_key": "exercise.landmine_squat",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 14,
+      "secondary_muscle_ids": [
+        11,
+        16
+      ]
+    },
+    {
+      "id": "f149d74e-0f8b-54b4-a450-2f2853481ba7",
+      "name_key": "exercise.goblet_squat",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 14,
+      "secondary_muscle_ids": [
+        11,
+        16,
+        17
+      ]
+    },
+    {
+      "id": "b30cef7d-aa90-51be-a0d3-3cee55a91fb2",
+      "name_key": "exercise.hack_squat",
+      "modality": "machine",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 14,
+      "secondary_muscle_ids": [
+        16
+      ]
+    },
+    {
+      "id": "f9512a3c-4445-5660-8b68-012e65706aaf",
+      "name_key": "exercise.pendulum_squat",
+      "modality": "machine",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 14,
+      "secondary_muscle_ids": [
+        16
+      ]
+    },
+    {
+      "id": "0a68d267-a4a3-563b-b91c-f4cff0968f52",
+      "name_key": "exercise.belt_squat",
+      "modality": "machine",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 14,
+      "secondary_muscle_ids": [
+        16,
+        17
+      ]
+    },
+    {
+      "id": "64bd50f3-9f1e-593f-ac45-64aa0f561f20",
+      "name_key": "exercise.smith_machine_squat",
+      "modality": "machine",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 14,
+      "secondary_muscle_ids": [
+        16
+      ]
+    },
+    {
+      "id": "2aec23ba-e531-5f01-bc8e-7a8ccfdbf876",
+      "name_key": "exercise.leg_press",
+      "modality": "machine",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 15,
+      "primary_muscle_id": 14,
+      "secondary_muscle_ids": [
+        16,
+        17
+      ]
+    },
+    {
+      "id": "dcc8ebea-1a6f-5ff4-bfe2-0885ffc17753",
+      "name_key": "exercise.single_leg_leg_press",
+      "modality": "machine",
+      "tracking": "weight_reps",
+      "is_unilateral": true,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 14,
+      "secondary_muscle_ids": [
+        16
+      ]
+    },
+    {
+      "id": "e2efcce6-165b-53d6-9e58-dba00c917be5",
+      "name_key": "exercise.leg_extension",
+      "modality": "machine",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 14,
+      "secondary_muscle_ids": []
+    },
+    {
+      "id": "dbec506e-18c9-5b9c-877e-6cd7773672bc",
+      "name_key": "exercise.bulgarian_split_squat",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": true,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 14,
+      "secondary_muscle_ids": [
+        16,
+        17
+      ]
+    },
+    {
+      "id": "fc38f74c-2fb9-5ec0-bdb0-aa71ad11334d",
+      "name_key": "exercise.walking_lunge",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": true,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 16,
+      "primary_muscle_id": 14,
+      "secondary_muscle_ids": [
+        16,
+        17
+      ]
+    },
+    {
+      "id": "76c4bda4-4b37-5330-b20f-2ebed05efa05",
+      "name_key": "exercise.reverse_lunge",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": true,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 14,
+      "secondary_muscle_ids": [
+        16
+      ]
+    },
+    {
+      "id": "f9a84be9-0ce5-5709-b1ec-2834240c9a7e",
+      "name_key": "exercise.barbell_lunge",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": true,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 14,
+      "secondary_muscle_ids": [
+        16
+      ]
+    },
+    {
+      "id": "68d3de3b-3136-5f96-8e4e-917bfc96d4a2",
+      "name_key": "exercise.step_up",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": true,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 14,
+      "secondary_muscle_ids": [
+        16
+      ]
+    },
+    {
+      "id": "9e924f92-007d-5f03-9f18-04a43eae5f65",
+      "name_key": "exercise.pistol_squat",
+      "modality": "bodyweight",
+      "tracking": "reps_only",
+      "is_unilateral": true,
+      "uses_bodyweight": true,
+      "default_min_reps": 5,
+      "default_max_reps": 10,
+      "primary_muscle_id": 14,
+      "secondary_muscle_ids": [
+        16
+      ]
+    },
+    {
+      "id": "b187b5a9-c7f8-53b7-b234-c2ee26a0914b",
+      "name_key": "exercise.sissy_squat",
+      "modality": "bodyweight",
+      "tracking": "reps_only",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 14,
+      "secondary_muscle_ids": []
+    },
+    {
+      "id": "81ea4a90-29b2-5ae0-b17d-fd1fb0db9176",
+      "name_key": "exercise.bodyweight_squat",
+      "modality": "bodyweight",
+      "tracking": "reps_only",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 15,
+      "default_max_reps": 30,
+      "primary_muscle_id": 14,
+      "secondary_muscle_ids": [
+        16
+      ]
+    },
+    {
+      "id": "a039c24f-2c8e-590f-8c2f-7cfaa49c11c9",
+      "name_key": "exercise.wall_sit",
+      "modality": "bodyweight",
+      "tracking": "duration",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": null,
+      "default_max_reps": null,
+      "primary_muscle_id": 14,
+      "secondary_muscle_ids": [
+        16
+      ]
+    },
+    {
+      "id": "25f079ea-bd5d-563b-891d-7d0650c46c22",
+      "name_key": "exercise.lying_leg_curl",
+      "modality": "machine",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 15,
+      "secondary_muscle_ids": [
+        19
+      ]
+    },
+    {
+      "id": "d5d4c4cf-5b2c-5012-a508-4ed98ba58e0d",
+      "name_key": "exercise.seated_leg_curl",
+      "modality": "machine",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 15,
+      "secondary_muscle_ids": []
+    },
+    {
+      "id": "ef56f71e-7536-5241-a137-11b831fb6e66",
+      "name_key": "exercise.standing_leg_curl",
+      "modality": "machine",
+      "tracking": "weight_reps",
+      "is_unilateral": true,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 15,
+      "secondary_muscle_ids": []
+    },
+    {
+      "id": "a44e0660-b867-5234-b93f-35c47e7813d8",
+      "name_key": "exercise.nordic_hamstring_curl",
+      "modality": "bodyweight",
+      "tracking": "reps_only",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 4,
+      "default_max_reps": 8,
+      "primary_muscle_id": 15,
+      "secondary_muscle_ids": [
+        19
+      ]
+    },
+    {
+      "id": "99f97375-e0da-5bde-a07d-f2b4ed0624f7",
+      "name_key": "exercise.glute_ham_raise",
+      "modality": "bodyweight",
+      "tracking": "reps_only",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 6,
+      "default_max_reps": 10,
+      "primary_muscle_id": 15,
+      "secondary_muscle_ids": [
+        16,
+        19
+      ]
+    },
+    {
+      "id": "7f5775c5-bf10-5882-b90c-e0467dc535df",
+      "name_key": "exercise.barbell_hip_thrust",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 16,
+      "secondary_muscle_ids": [
+        15
+      ]
+    },
+    {
+      "id": "d216910a-cc8f-59f1-9fd2-55fe4ca421d7",
+      "name_key": "exercise.machine_hip_thrust",
+      "modality": "machine",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 16,
+      "secondary_muscle_ids": [
+        15
+      ]
+    },
+    {
+      "id": "4d104fff-2908-54da-9a7f-805f1fc1b48f",
+      "name_key": "exercise.single_leg_hip_thrust",
+      "modality": "bodyweight",
+      "tracking": "reps_only",
+      "is_unilateral": true,
+      "uses_bodyweight": true,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 16,
+      "secondary_muscle_ids": [
+        15
+      ]
+    },
+    {
+      "id": "8241d88e-16a6-59fa-ab8f-25469d97e1a6",
+      "name_key": "exercise.barbell_glute_bridge",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 12,
+      "primary_muscle_id": 16,
+      "secondary_muscle_ids": [
+        15
+      ]
+    },
+    {
+      "id": "8624b94f-97ad-5703-a01a-eb30b62bb5f0",
+      "name_key": "exercise.glute_bridge",
+      "modality": "bodyweight",
+      "tracking": "reps_only",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 12,
+      "default_max_reps": 20,
+      "primary_muscle_id": 16,
+      "secondary_muscle_ids": [
+        15
+      ]
+    },
+    {
+      "id": "4131970b-6fa3-578f-ad82-63020f16d80a",
+      "name_key": "exercise.cable_pull_through",
+      "modality": "cable",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 16,
+      "secondary_muscle_ids": [
+        13,
+        15
+      ]
+    },
+    {
+      "id": "97b7c946-65db-5074-8a46-edc93549be0b",
+      "name_key": "exercise.cable_glute_kickback",
+      "modality": "cable",
+      "tracking": "weight_reps",
+      "is_unilateral": true,
+      "uses_bodyweight": false,
+      "default_min_reps": 12,
+      "default_max_reps": 15,
+      "primary_muscle_id": 16,
+      "secondary_muscle_ids": [
+        15
+      ]
+    },
+    {
+      "id": "5fbf0f56-7340-5e76-b7eb-0780110aa0e3",
+      "name_key": "exercise.reverse_hyperextension",
+      "modality": "machine",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 16,
+      "secondary_muscle_ids": [
+        13,
+        15
+      ]
+    },
+    {
+      "id": "832fbdf1-dde2-5e6e-a14d-9eb670a13d9a",
+      "name_key": "exercise.kettlebell_swing",
+      "modality": "other",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 12,
+      "default_max_reps": 20,
+      "primary_muscle_id": 16,
+      "secondary_muscle_ids": [
+        11,
+        13,
+        15
+      ]
+    },
+    {
+      "id": "89166eeb-2d3b-5974-a9e3-3953f59c83dd",
+      "name_key": "exercise.hip_abduction_machine",
+      "modality": "machine",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 12,
+      "default_max_reps": 20,
+      "primary_muscle_id": 18,
+      "secondary_muscle_ids": [
+        16
+      ]
+    },
+    {
+      "id": "3a64b148-41e8-543a-baa9-3a7d9ea2acaf",
+      "name_key": "exercise.hip_adduction_machine",
+      "modality": "machine",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 12,
+      "default_max_reps": 20,
+      "primary_muscle_id": 17,
+      "secondary_muscle_ids": []
+    },
+    {
+      "id": "2f811a9e-a57b-541f-8044-984f92570c20",
+      "name_key": "exercise.banded_lateral_walk",
+      "modality": "band",
+      "tracking": "reps_only",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 20,
+      "primary_muscle_id": 18,
+      "secondary_muscle_ids": [
+        16
+      ]
+    },
+    {
+      "id": "0373e8f5-69c8-53d6-b322-73c2eb4a4914",
+      "name_key": "exercise.copenhagen_plank",
+      "modality": "bodyweight",
+      "tracking": "duration",
+      "is_unilateral": true,
+      "uses_bodyweight": true,
+      "default_min_reps": null,
+      "default_max_reps": null,
+      "primary_muscle_id": 17,
+      "secondary_muscle_ids": [
+        11,
+        12
+      ]
+    },
+    {
+      "id": "8dce4ad5-8efb-5178-b893-057bc339eb91",
+      "name_key": "exercise.standing_calf_raise",
+      "modality": "machine",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 20,
+      "primary_muscle_id": 19,
+      "secondary_muscle_ids": []
+    },
+    {
+      "id": "8286b1df-4385-512b-9d6e-5ae93775f0a1",
+      "name_key": "exercise.seated_calf_raise",
+      "modality": "machine",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 20,
+      "primary_muscle_id": 19,
+      "secondary_muscle_ids": []
+    },
+    {
+      "id": "01bde547-43d0-510f-b6b9-e71010e0d6bc",
+      "name_key": "exercise.leg_press_calf_raise",
+      "modality": "machine",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 20,
+      "primary_muscle_id": 19,
+      "secondary_muscle_ids": []
+    },
+    {
+      "id": "29814521-e920-5c8f-af1d-d009fba84679",
+      "name_key": "exercise.donkey_calf_raise",
+      "modality": "machine",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 20,
+      "primary_muscle_id": 19,
+      "secondary_muscle_ids": []
+    },
+    {
+      "id": "5d573e4d-f043-5502-b464-d09e7f9717f4",
+      "name_key": "exercise.single_leg_calf_raise",
+      "modality": "bodyweight",
+      "tracking": "weight_reps",
+      "is_unilateral": true,
+      "uses_bodyweight": true,
+      "default_min_reps": 10,
+      "default_max_reps": 20,
+      "primary_muscle_id": 19,
+      "secondary_muscle_ids": []
+    },
+    {
+      "id": "d47a28cb-dc55-5d06-ad08-40b87d9ef84a",
+      "name_key": "exercise.plank",
+      "modality": "bodyweight",
+      "tracking": "duration",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": null,
+      "default_max_reps": null,
+      "primary_muscle_id": 11,
+      "secondary_muscle_ids": [
+        12,
+        13
+      ]
+    },
+    {
+      "id": "d019dc72-118b-5fbf-8a4f-98dc41ac2de0",
+      "name_key": "exercise.side_plank",
+      "modality": "bodyweight",
+      "tracking": "duration",
+      "is_unilateral": true,
+      "uses_bodyweight": true,
+      "default_min_reps": null,
+      "default_max_reps": null,
+      "primary_muscle_id": 12,
+      "secondary_muscle_ids": [
+        11,
+        18
+      ]
+    },
+    {
+      "id": "2061f8fe-f801-5e6b-8be6-3d5fc30c2a3f",
+      "name_key": "exercise.hollow_body_hold",
+      "modality": "bodyweight",
+      "tracking": "duration",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": null,
+      "default_max_reps": null,
+      "primary_muscle_id": 11,
+      "secondary_muscle_ids": [
+        20
+      ]
+    },
+    {
+      "id": "1aebdf93-ec5c-5b0d-a9f2-a6028ce6cbd5",
+      "name_key": "exercise.l_sit",
+      "modality": "bodyweight",
+      "tracking": "duration",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": null,
+      "default_max_reps": null,
+      "primary_muscle_id": 11,
+      "secondary_muscle_ids": [
+        9,
+        20
+      ]
+    },
+    {
+      "id": "73522930-1420-510e-9b2f-f2401b98591e",
+      "name_key": "exercise.crunch",
+      "modality": "bodyweight",
+      "tracking": "reps_only",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 15,
+      "default_max_reps": 25,
+      "primary_muscle_id": 11,
+      "secondary_muscle_ids": []
+    },
+    {
+      "id": "dea03c4d-1416-5695-b846-a114f8567f96",
+      "name_key": "exercise.bicycle_crunch",
+      "modality": "bodyweight",
+      "tracking": "reps_only",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 15,
+      "default_max_reps": 30,
+      "primary_muscle_id": 12,
+      "secondary_muscle_ids": [
+        11,
+        20
+      ]
+    },
+    {
+      "id": "dc344e5c-6653-5750-81e1-de0f65877cc2",
+      "name_key": "exercise.decline_sit_up",
+      "modality": "bodyweight",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 10,
+      "default_max_reps": 20,
+      "primary_muscle_id": 11,
+      "secondary_muscle_ids": [
+        20
+      ]
+    },
+    {
+      "id": "cd852b01-13d2-5d4e-b9d2-f062dbbc3c89",
+      "name_key": "exercise.cable_crunch",
+      "modality": "cable",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 11,
+      "secondary_muscle_ids": [
+        12
+      ]
+    },
+    {
+      "id": "e637257a-20c2-5bdd-92aa-2ce0c0221075",
+      "name_key": "exercise.machine_crunch",
+      "modality": "machine",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 11,
+      "secondary_muscle_ids": []
+    },
+    {
+      "id": "6847c2c6-899a-591e-a2d3-48095995296e",
+      "name_key": "exercise.hanging_leg_raise",
+      "modality": "bodyweight",
+      "tracking": "reps_only",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 8,
+      "default_max_reps": 15,
+      "primary_muscle_id": 11,
+      "secondary_muscle_ids": [
+        10,
+        20
+      ]
+    },
+    {
+      "id": "550fb976-5eea-5188-b655-5d8ebb15509d",
+      "name_key": "exercise.hanging_knee_raise",
+      "modality": "bodyweight",
+      "tracking": "reps_only",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 11,
+      "secondary_muscle_ids": [
+        20
+      ]
+    },
+    {
+      "id": "1bf9f644-e891-5f89-9416-9dcf57d17cff",
+      "name_key": "exercise.lying_leg_raise",
+      "modality": "bodyweight",
+      "tracking": "reps_only",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 10,
+      "default_max_reps": 20,
+      "primary_muscle_id": 11,
+      "secondary_muscle_ids": [
+        20
+      ]
+    },
+    {
+      "id": "fd059097-6dbb-59c2-ab01-89d9e209832b",
+      "name_key": "exercise.dragon_flag",
+      "modality": "bodyweight",
+      "tracking": "reps_only",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 4,
+      "default_max_reps": 8,
+      "primary_muscle_id": 11,
+      "secondary_muscle_ids": [
+        20
+      ]
+    },
+    {
+      "id": "f510e3c5-8166-5a61-8c1a-e173ae580e0a",
+      "name_key": "exercise.ab_wheel_rollout",
+      "modality": "other",
+      "tracking": "reps_only",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 8,
+      "default_max_reps": 15,
+      "primary_muscle_id": 11,
+      "secondary_muscle_ids": [
+        5,
+        12
+      ]
+    },
+    {
+      "id": "523a12aa-4e1c-52b2-bc29-fae4d2b801aa",
+      "name_key": "exercise.dead_bug",
+      "modality": "bodyweight",
+      "tracking": "reps_only",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 10,
+      "default_max_reps": 20,
+      "primary_muscle_id": 11,
+      "secondary_muscle_ids": [
+        20
+      ]
+    },
+    {
+      "id": "1d8e9836-364d-5710-a06c-467e882cd99d",
+      "name_key": "exercise.mountain_climber",
+      "modality": "bodyweight",
+      "tracking": "reps_only",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 20,
+      "default_max_reps": 40,
+      "primary_muscle_id": 11,
+      "secondary_muscle_ids": [
+        2,
+        20
+      ]
+    },
+    {
+      "id": "6dbb2824-8ffe-5387-b21c-377334d46012",
+      "name_key": "exercise.russian_twist",
+      "modality": "other",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 12,
+      "default_max_reps": 20,
+      "primary_muscle_id": 12,
+      "secondary_muscle_ids": [
+        11
+      ]
+    },
+    {
+      "id": "7f00486a-95c2-53f4-b7fe-d66c58a6466c",
+      "name_key": "exercise.dumbbell_side_bend",
+      "modality": "dumbbell",
+      "tracking": "weight_reps",
+      "is_unilateral": true,
+      "uses_bodyweight": false,
+      "default_min_reps": 12,
+      "default_max_reps": 20,
+      "primary_muscle_id": 12,
+      "secondary_muscle_ids": []
+    },
+    {
+      "id": "d097751f-41ea-5cbd-b455-db255d24e52a",
+      "name_key": "exercise.pallof_press",
+      "modality": "cable",
+      "tracking": "weight_reps",
+      "is_unilateral": true,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 12,
+      "secondary_muscle_ids": [
+        11
+      ]
+    },
+    {
+      "id": "463bf6c4-1424-5ae3-9ffc-1b6aa0457cbe",
+      "name_key": "exercise.cable_woodchop",
+      "modality": "cable",
+      "tracking": "weight_reps",
+      "is_unilateral": true,
+      "uses_bodyweight": false,
+      "default_min_reps": 10,
+      "default_max_reps": 15,
+      "primary_muscle_id": 12,
+      "secondary_muscle_ids": [
+        11
+      ]
+    },
+    {
+      "id": "f918788f-9994-5c9c-ac0d-4104369b2496",
+      "name_key": "exercise.weighted_neck_flexion",
+      "modality": "other",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 12,
+      "default_max_reps": 20,
+      "primary_muscle_id": 21,
+      "secondary_muscle_ids": []
+    },
+    {
+      "id": "77166815-7493-5715-8b5e-02e958ae7993",
+      "name_key": "exercise.weighted_neck_extension",
+      "modality": "other",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 12,
+      "default_max_reps": 20,
+      "primary_muscle_id": 21,
+      "secondary_muscle_ids": [
+        7
+      ]
+    },
+    {
+      "id": "5d37f6f0-4818-5109-82d8-b78db70626d4",
+      "name_key": "exercise.power_clean",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 2,
+      "default_max_reps": 5,
+      "primary_muscle_id": 16,
+      "secondary_muscle_ids": [
+        6,
+        7,
+        14,
+        15
+      ]
+    },
+    {
+      "id": "f091429f-0340-533e-8fe1-828b396b51c3",
+      "name_key": "exercise.hang_clean",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 2,
+      "default_max_reps": 5,
+      "primary_muscle_id": 16,
+      "secondary_muscle_ids": [
+        7,
+        14,
+        15
+      ]
+    },
+    {
+      "id": "477f73ef-76c9-5856-be66-687220ecb52c",
+      "name_key": "exercise.clean_and_jerk",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 1,
+      "default_max_reps": 3,
+      "primary_muscle_id": 14,
+      "secondary_muscle_ids": [
+        2,
+        7,
+        9,
+        16
+      ]
+    },
+    {
+      "id": "0b3a8770-e6a9-5be2-a388-af4bb77ae6b5",
+      "name_key": "exercise.snatch",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 1,
+      "default_max_reps": 3,
+      "primary_muscle_id": 14,
+      "secondary_muscle_ids": [
+        2,
+        7,
+        15,
+        16
+      ]
+    },
+    {
+      "id": "7a373602-71fb-51cf-807a-da1262fb1179",
+      "name_key": "exercise.power_snatch",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 2,
+      "default_max_reps": 4,
+      "primary_muscle_id": 16,
+      "secondary_muscle_ids": [
+        2,
+        7,
+        15
+      ]
+    },
+    {
+      "id": "d8a0d623-95cf-563b-aa91-d923a995e982",
+      "name_key": "exercise.barbell_thruster",
+      "modality": "barbell",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 6,
+      "default_max_reps": 10,
+      "primary_muscle_id": 14,
+      "secondary_muscle_ids": [
+        2,
+        9,
+        16
+      ]
+    },
+    {
+      "id": "010627c2-cf7e-5757-887f-3a7fdc028dee",
+      "name_key": "exercise.box_jump",
+      "modality": "bodyweight",
+      "tracking": "reps_only",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 5,
+      "default_max_reps": 10,
+      "primary_muscle_id": 14,
+      "secondary_muscle_ids": [
+        16,
+        19
+      ]
+    },
+    {
+      "id": "0b9bfada-9994-5e53-a694-3f8f67314921",
+      "name_key": "exercise.broad_jump",
+      "modality": "bodyweight",
+      "tracking": "reps_only",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 3,
+      "default_max_reps": 6,
+      "primary_muscle_id": 16,
+      "secondary_muscle_ids": [
+        14,
+        15,
+        19
+      ]
+    },
+    {
+      "id": "9704e790-e0e6-5cf9-b4aa-18e254054297",
+      "name_key": "exercise.medicine_ball_slam",
+      "modality": "other",
+      "tracking": "weight_reps",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": 8,
+      "default_max_reps": 15,
+      "primary_muscle_id": 5,
+      "secondary_muscle_ids": [
+        2,
+        9,
+        11
+      ]
+    },
+    {
+      "id": "8e9b23ce-bcc8-5721-921a-939e156d51e0",
+      "name_key": "exercise.burpee",
+      "modality": "bodyweight",
+      "tracking": "reps_only",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": 10,
+      "default_max_reps": 20,
+      "primary_muscle_id": 14,
+      "secondary_muscle_ids": [
+        1,
+        2,
+        9,
+        11
+      ]
+    },
+    {
+      "id": "f39b98e5-0002-593d-8529-590e136a77c6",
+      "name_key": "exercise.turkish_get_up",
+      "modality": "other",
+      "tracking": "weight_reps",
+      "is_unilateral": true,
+      "uses_bodyweight": false,
+      "default_min_reps": 1,
+      "default_max_reps": 5,
+      "primary_muscle_id": 11,
+      "secondary_muscle_ids": [
+        2,
+        12,
+        16
+      ]
+    },
+    {
+      "id": "9cc4a21b-2567-54fe-890d-2503bf8e144c",
+      "name_key": "exercise.kettlebell_clean_and_press",
+      "modality": "other",
+      "tracking": "weight_reps",
+      "is_unilateral": true,
+      "uses_bodyweight": false,
+      "default_min_reps": 5,
+      "default_max_reps": 10,
+      "primary_muscle_id": 2,
+      "secondary_muscle_ids": [
+        9,
+        15,
+        16
+      ]
+    },
+    {
+      "id": "34a6a559-e738-5c00-9f61-969bbd572568",
+      "name_key": "exercise.sled_push",
+      "modality": "other",
+      "tracking": "distance_duration",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": null,
+      "default_max_reps": null,
+      "primary_muscle_id": 14,
+      "secondary_muscle_ids": [
+        1,
+        16,
+        19
+      ]
+    },
+    {
+      "id": "26ddc1df-e879-5f9f-929c-fc6bcc64aea5",
+      "name_key": "exercise.backward_sled_drag",
+      "modality": "other",
+      "tracking": "distance_duration",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": null,
+      "default_max_reps": null,
+      "primary_muscle_id": 14,
+      "secondary_muscle_ids": [
+        16,
+        19
+      ]
+    },
+    {
+      "id": "11b3eefa-8231-5e74-b63f-be18c97e5758",
+      "name_key": "exercise.bear_crawl",
+      "modality": "bodyweight",
+      "tracking": "distance_duration",
+      "is_unilateral": false,
+      "uses_bodyweight": true,
+      "default_min_reps": null,
+      "default_max_reps": null,
+      "primary_muscle_id": 11,
+      "secondary_muscle_ids": [
+        2,
+        14
+      ]
+    },
+    {
+      "id": "290c6fcf-9944-58e9-abd8-d69dc97385e3",
+      "name_key": "exercise.battle_ropes",
+      "modality": "other",
+      "tracking": "duration",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": null,
+      "default_max_reps": null,
+      "primary_muscle_id": 2,
+      "secondary_muscle_ids": [
+        10,
+        11
+      ]
+    },
+    {
+      "id": "e7fcd5b3-45de-51d7-a983-11fd0a6f1734",
+      "name_key": "exercise.jump_rope",
+      "modality": "other",
+      "tracking": "duration",
+      "is_unilateral": false,
+      "uses_bodyweight": false,
+      "default_min_reps": null,
+      "default_max_reps": null,
+      "primary_muscle_id": 19,
+      "secondary_muscle_ids": [
+        14
+      ]
+    }
+  ]
+}

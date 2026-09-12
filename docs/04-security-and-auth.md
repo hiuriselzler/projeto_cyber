@@ -46,7 +46,7 @@ With real users, an account they cannot recover is an account they lose. These a
   data hostage — but cannot change their email or receive a data export until verified.
 - **Email change** requires the current password and confirmation at the new address, with a
   notification to the old one.
-- **Account deletion** with a 7-day grace period (§7).
+- **Account deletion** with a 7-day grace period (§7), counted from `users.deletion_requested_at`.
 - **Session list**: the user can see their signed-in devices and revoke any of them.
 - **Notification on security events**: password changed, email changed, new device signed in.
 - **Every email is sent in the user's language** (`users.locale`, [ADR-008](decisions/ADR-008.md)).

@@ -99,7 +99,9 @@ at boot ([ADR-011](decisions/ADR-011.md)) — rate limiting, dependency-injectio
 ## apps/api/alembic/ · seeds/ · tests/
 
 - **alembic/** — migrations only, expand/contract, hand-reviewed ([06 §4](06-operations.md)).
-- **seeds/** — the global exercise catalog and muscle groups. Idempotent, re-runnable.
+- **seeds/** — the reference data: muscle groups, the global exercise catalog, increments, sport
+  profiles, tracks and achievements. Idempotent, re-runnable, and exported to `packages/shared/seeds/` for
+  the app's first launch.
 - **tests/** — `unit/` (domain, no I/O, fast), `integration/` (real Postgres), and
   `fixtures/` (shared JSON cases, loaded from `packages/shared/`).
 
@@ -264,7 +266,8 @@ and `cyberathlete_app` — run by the compose init step locally, and once by han
 ## packages/shared/
 
 **Responsible for:** TypeScript types generated from the API's OpenAPI schema, the shared domain
-fixtures consumed by both test suites, and **the message catalogs** — `i18n/en.json` and
+fixtures consumed by both test suites, the reference-data export the app seeds from before it has ever
+synced (`seeds/reference.json`, generated from `apps/api/seeds/`), and **the message catalogs** — `i18n/en.json` and
 `i18n/pt-BR.json` — read by the app for its UI and by the API for emails and exports, so the two
 cannot drift into separate wording (INV-27, [ADR-008](decisions/ADR-008.md)).
 

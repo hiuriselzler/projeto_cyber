@@ -1,8 +1,8 @@
 {
+  "id": "0a7a6260-5e91-42e6-aee4-5507a3e74de1",
+  "prevId": "a76b2658-af77-42f5-acbd-b298d19fdda1",
   "version": "6",
   "dialect": "sqlite",
-  "id": "a76b2658-af77-42f5-acbd-b298d19fdda1",
-  "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "achievements": {
       "name": "achievements",
@@ -56,15 +56,15 @@
         "achievements_track_gamification_tracks_track_fk": {
           "name": "achievements_track_gamification_tracks_track_fk",
           "tableFrom": "achievements",
-          "tableTo": "gamification_tracks",
           "columnsFrom": [
             "track"
           ],
+          "tableTo": "gamification_tracks",
           "columnsTo": [
             "track"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -228,28 +228,28 @@
         "activity_segments_user_id_users_id_fk": {
           "name": "activity_segments_user_id_users_id_fk",
           "tableFrom": "activity_segments",
-          "tableTo": "users",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "users",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "activity_segments_activity_id_cardio_activities_id_fk": {
           "name": "activity_segments_activity_id_cardio_activities_id_fk",
           "tableFrom": "activity_segments",
-          "tableTo": "cardio_activities",
           "columnsFrom": [
             "activity_id"
           ],
+          "tableTo": "cardio_activities",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -320,28 +320,28 @@
         "activity_streams_user_id_users_id_fk": {
           "name": "activity_streams_user_id_users_id_fk",
           "tableFrom": "activity_streams",
-          "tableTo": "users",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "users",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "activity_streams_activity_id_cardio_activities_id_fk": {
           "name": "activity_streams_activity_id_cardio_activities_id_fk",
           "tableFrom": "activity_streams",
-          "tableTo": "cardio_activities",
           "columnsFrom": [
             "activity_id"
           ],
+          "tableTo": "cardio_activities",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {
@@ -441,15 +441,15 @@
         "adherence_streaks_user_id_users_id_fk": {
           "name": "adherence_streaks_user_id_users_id_fk",
           "tableFrom": "adherence_streaks",
-          "tableTo": "users",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "users",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -531,15 +531,15 @@
         "body_weight_log_user_id_users_id_fk": {
           "name": "body_weight_log_user_id_users_id_fk",
           "tableFrom": "body_weight_log",
-          "tableTo": "users",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "users",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -818,41 +818,41 @@
         "cardio_activities_user_id_users_id_fk": {
           "name": "cardio_activities_user_id_users_id_fk",
           "tableFrom": "cardio_activities",
-          "tableTo": "users",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "users",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "cardio_activities_planned_cardio_session_id_planned_cardio_sessions_id_fk": {
           "name": "cardio_activities_planned_cardio_session_id_planned_cardio_sessions_id_fk",
           "tableFrom": "cardio_activities",
-          "tableTo": "planned_cardio_sessions",
           "columnsFrom": [
             "planned_cardio_session_id"
           ],
+          "tableTo": "planned_cardio_sessions",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "set null"
         },
         "cardio_activities_sport_sport_profiles_sport_fk": {
           "name": "cardio_activities_sport_sport_profiles_sport_fk",
           "tableFrom": "cardio_activities",
-          "tableTo": "sport_profiles",
           "columnsFrom": [
             "sport"
           ],
+          "tableTo": "sport_profiles",
           "columnsTo": [
             "sport"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -920,41 +920,41 @@
         "cardio_plan_cycle_targets_user_id_users_id_fk": {
           "name": "cardio_plan_cycle_targets_user_id_users_id_fk",
           "tableFrom": "cardio_plan_cycle_targets",
-          "tableTo": "users",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "users",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "cardio_plan_cycle_targets_cardio_plan_microcycle_id_cardio_plan_microcycles_id_fk": {
           "name": "cardio_plan_cycle_targets_cardio_plan_microcycle_id_cardio_plan_microcycles_id_fk",
           "tableFrom": "cardio_plan_cycle_targets",
-          "tableTo": "cardio_plan_microcycles",
           "columnsFrom": [
             "cardio_plan_microcycle_id"
           ],
+          "tableTo": "cardio_plan_microcycles",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "cardio_plan_cycle_targets_sport_sport_profiles_sport_fk": {
           "name": "cardio_plan_cycle_targets_sport_sport_profiles_sport_fk",
           "tableFrom": "cardio_plan_cycle_targets",
-          "tableTo": "sport_profiles",
           "columnsFrom": [
             "sport"
           ],
+          "tableTo": "sport_profiles",
           "columnsTo": [
             "sport"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -1101,28 +1101,28 @@
         "cardio_plan_microcycles_user_id_users_id_fk": {
           "name": "cardio_plan_microcycles_user_id_users_id_fk",
           "tableFrom": "cardio_plan_microcycles",
-          "tableTo": "users",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "users",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "cardio_plan_microcycles_cardio_plan_id_cardio_plans_id_fk": {
           "name": "cardio_plan_microcycles_cardio_plan_id_cardio_plans_id_fk",
           "tableFrom": "cardio_plan_microcycles",
-          "tableTo": "cardio_plans",
           "columnsFrom": [
             "cardio_plan_id"
           ],
+          "tableTo": "cardio_plans",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -1275,15 +1275,15 @@
         "cardio_plans_user_id_users_id_fk": {
           "name": "cardio_plans_user_id_users_id_fk",
           "tableFrom": "cardio_plans",
-          "tableTo": "users",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "users",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -1338,28 +1338,28 @@
         "exercise_secondary_muscles_exercise_id_exercises_id_fk": {
           "name": "exercise_secondary_muscles_exercise_id_exercises_id_fk",
           "tableFrom": "exercise_secondary_muscles",
-          "tableTo": "exercises",
           "columnsFrom": [
             "exercise_id"
           ],
+          "tableTo": "exercises",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "exercise_secondary_muscles_muscle_group_id_muscle_groups_id_fk": {
           "name": "exercise_secondary_muscles_muscle_group_id_muscle_groups_id_fk",
           "tableFrom": "exercise_secondary_muscles",
-          "tableTo": "muscle_groups",
           "columnsFrom": [
             "muscle_group_id"
           ],
+          "tableTo": "muscle_groups",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -1515,57 +1515,57 @@
             "owner_user_id",
             "lower(\"name\")"
           ],
-          "isUnique": true,
-          "where": "\"exercises\".\"deleted_at\" IS NULL AND \"exercises\".\"name\" IS NOT NULL"
+          "where": "\"exercises\".\"deleted_at\" IS NULL AND \"exercises\".\"name\" IS NOT NULL",
+          "isUnique": true
         },
         "exercises_name_key_key": {
           "name": "exercises_name_key_key",
           "columns": [
             "name_key"
           ],
-          "isUnique": true,
-          "where": "\"exercises\".\"name_key\" IS NOT NULL"
+          "where": "\"exercises\".\"name_key\" IS NOT NULL",
+          "isUnique": true
         }
       },
       "foreignKeys": {
         "exercises_owner_user_id_users_id_fk": {
           "name": "exercises_owner_user_id_users_id_fk",
           "tableFrom": "exercises",
-          "tableTo": "users",
           "columnsFrom": [
             "owner_user_id"
           ],
+          "tableTo": "users",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "exercises_forked_from_id_exercises_id_fk": {
           "name": "exercises_forked_from_id_exercises_id_fk",
           "tableFrom": "exercises",
-          "tableTo": "exercises",
           "columnsFrom": [
             "forked_from_id"
           ],
+          "tableTo": "exercises",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "set null"
         },
         "exercises_primary_muscle_id_muscle_groups_id_fk": {
           "name": "exercises_primary_muscle_id_muscle_groups_id_fk",
           "tableFrom": "exercises",
-          "tableTo": "muscle_groups",
           "columnsFrom": [
             "primary_muscle_id"
           ],
+          "tableTo": "muscle_groups",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -1707,15 +1707,15 @@
         "hr_zone_overrides_user_id_users_id_fk": {
           "name": "hr_zone_overrides_user_id_users_id_fk",
           "tableFrom": "hr_zone_overrides",
-          "tableTo": "users",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "users",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {
@@ -1885,28 +1885,28 @@
         "mesocycles_user_id_users_id_fk": {
           "name": "mesocycles_user_id_users_id_fk",
           "tableFrom": "mesocycles",
-          "tableTo": "users",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "users",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "mesocycles_default_rule_id_progression_rules_id_fk": {
           "name": "mesocycles_default_rule_id_progression_rules_id_fk",
           "tableFrom": "mesocycles",
-          "tableTo": "progression_rules",
           "columnsFrom": [
             "default_rule_id"
           ],
+          "tableTo": "progression_rules",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "set null"
         }
       },
       "compositePrimaryKeys": {},
@@ -2058,28 +2058,28 @@
         "microcycles_user_id_users_id_fk": {
           "name": "microcycles_user_id_users_id_fk",
           "tableFrom": "microcycles",
-          "tableTo": "users",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "users",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "microcycles_mesocycle_id_mesocycles_id_fk": {
           "name": "microcycles_mesocycle_id_mesocycles_id_fk",
           "tableFrom": "microcycles",
-          "tableTo": "mesocycles",
           "columnsFrom": [
             "mesocycle_id"
           ],
+          "tableTo": "mesocycles",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -2424,41 +2424,41 @@
         "planned_cardio_sessions_user_id_users_id_fk": {
           "name": "planned_cardio_sessions_user_id_users_id_fk",
           "tableFrom": "planned_cardio_sessions",
-          "tableTo": "users",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "users",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "planned_cardio_sessions_cardio_plan_microcycle_id_cardio_plan_microcycles_id_fk": {
           "name": "planned_cardio_sessions_cardio_plan_microcycle_id_cardio_plan_microcycles_id_fk",
           "tableFrom": "planned_cardio_sessions",
-          "tableTo": "cardio_plan_microcycles",
           "columnsFrom": [
             "cardio_plan_microcycle_id"
           ],
+          "tableTo": "cardio_plan_microcycles",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "planned_cardio_sessions_sport_sport_profiles_sport_fk": {
           "name": "planned_cardio_sessions_sport_sport_profiles_sport_fk",
           "tableFrom": "planned_cardio_sessions",
-          "tableTo": "sport_profiles",
           "columnsFrom": [
             "sport"
           ],
+          "tableTo": "sport_profiles",
           "columnsTo": [
             "sport"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -2592,54 +2592,54 @@
         "planned_exercises_user_id_users_id_fk": {
           "name": "planned_exercises_user_id_users_id_fk",
           "tableFrom": "planned_exercises",
-          "tableTo": "users",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "users",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "planned_exercises_planned_session_id_planned_sessions_id_fk": {
           "name": "planned_exercises_planned_session_id_planned_sessions_id_fk",
           "tableFrom": "planned_exercises",
-          "tableTo": "planned_sessions",
           "columnsFrom": [
             "planned_session_id"
           ],
+          "tableTo": "planned_sessions",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "planned_exercises_exercise_id_exercises_id_fk": {
           "name": "planned_exercises_exercise_id_exercises_id_fk",
           "tableFrom": "planned_exercises",
-          "tableTo": "exercises",
           "columnsFrom": [
             "exercise_id"
           ],
+          "tableTo": "exercises",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "planned_exercises_progression_rule_id_progression_rules_id_fk": {
           "name": "planned_exercises_progression_rule_id_progression_rules_id_fk",
           "tableFrom": "planned_exercises",
-          "tableTo": "progression_rules",
           "columnsFrom": [
             "progression_rule_id"
           ],
+          "tableTo": "progression_rules",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "set null"
         }
       },
       "compositePrimaryKeys": {},
@@ -2736,28 +2736,28 @@
         "planned_sessions_user_id_users_id_fk": {
           "name": "planned_sessions_user_id_users_id_fk",
           "tableFrom": "planned_sessions",
-          "tableTo": "users",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "users",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "planned_sessions_microcycle_id_microcycles_id_fk": {
           "name": "planned_sessions_microcycle_id_microcycles_id_fk",
           "tableFrom": "planned_sessions",
-          "tableTo": "microcycles",
           "columnsFrom": [
             "microcycle_id"
           ],
+          "tableTo": "microcycles",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -2911,28 +2911,28 @@
         "planned_sets_user_id_users_id_fk": {
           "name": "planned_sets_user_id_users_id_fk",
           "tableFrom": "planned_sets",
-          "tableTo": "users",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "users",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "planned_sets_planned_exercise_id_planned_exercises_id_fk": {
           "name": "planned_sets_planned_exercise_id_planned_exercises_id_fk",
           "tableFrom": "planned_sets",
-          "tableTo": "planned_exercises",
           "columnsFrom": [
             "planned_exercise_id"
           ],
+          "tableTo": "planned_exercises",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -3040,15 +3040,15 @@
         "privacy_zones_user_id_users_id_fk": {
           "name": "privacy_zones_user_id_users_id_fk",
           "tableFrom": "privacy_zones",
-          "tableTo": "users",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "users",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -3247,15 +3247,15 @@
         "progression_rules_user_id_users_id_fk": {
           "name": "progression_rules_user_id_users_id_fk",
           "tableFrom": "progression_rules",
-          "tableTo": "users",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "users",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -3527,41 +3527,41 @@
         "routine_exercises_user_id_users_id_fk": {
           "name": "routine_exercises_user_id_users_id_fk",
           "tableFrom": "routine_exercises",
-          "tableTo": "users",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "users",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "routine_exercises_routine_id_routines_id_fk": {
           "name": "routine_exercises_routine_id_routines_id_fk",
           "tableFrom": "routine_exercises",
-          "tableTo": "routines",
           "columnsFrom": [
             "routine_id"
           ],
+          "tableTo": "routines",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "routine_exercises_exercise_id_exercises_id_fk": {
           "name": "routine_exercises_exercise_id_exercises_id_fk",
           "tableFrom": "routine_exercises",
-          "tableTo": "exercises",
           "columnsFrom": [
             "exercise_id"
           ],
+          "tableTo": "exercises",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -3662,15 +3662,15 @@
         "routines_user_id_users_id_fk": {
           "name": "routines_user_id_users_id_fk",
           "tableFrom": "routines",
-          "tableTo": "users",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "users",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -3817,49 +3817,49 @@
           "columns": [
             "planned_set_id"
           ],
-          "isUnique": false,
-          "where": "\"set_logs\".\"planned_set_id\" IS NOT NULL"
+          "where": "\"set_logs\".\"planned_set_id\" IS NOT NULL",
+          "isUnique": false
         }
       },
       "foreignKeys": {
         "set_logs_user_id_users_id_fk": {
           "name": "set_logs_user_id_users_id_fk",
           "tableFrom": "set_logs",
-          "tableTo": "users",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "users",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "set_logs_workout_exercise_id_workout_exercises_id_fk": {
           "name": "set_logs_workout_exercise_id_workout_exercises_id_fk",
           "tableFrom": "set_logs",
-          "tableTo": "workout_exercises",
           "columnsFrom": [
             "workout_exercise_id"
           ],
+          "tableTo": "workout_exercises",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "set_logs_planned_set_id_planned_sets_id_fk": {
           "name": "set_logs_planned_set_id_planned_sets_id_fk",
           "tableFrom": "set_logs",
-          "tableTo": "planned_sets",
           "columnsFrom": [
             "planned_set_id"
           ],
+          "tableTo": "planned_sets",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "set null"
         }
       },
       "compositePrimaryKeys": {},
@@ -4012,15 +4012,15 @@
         "sport_profiles_xp_track_gamification_tracks_track_fk": {
           "name": "sport_profiles_xp_track_gamification_tracks_track_fk",
           "tableFrom": "sport_profiles",
-          "tableTo": "gamification_tracks",
           "columnsFrom": [
             "xp_track"
           ],
+          "tableTo": "gamification_tracks",
           "columnsTo": [
             "track"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -4143,15 +4143,15 @@
         "subscriptions_user_id_users_id_fk": {
           "name": "subscriptions_user_id_users_id_fk",
           "tableFrom": "subscriptions",
-          "tableTo": "users",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "users",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -4257,28 +4257,28 @@
         "user_achievements_user_id_users_id_fk": {
           "name": "user_achievements_user_id_users_id_fk",
           "tableFrom": "user_achievements",
-          "tableTo": "users",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "users",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "user_achievements_achievement_code_achievements_code_fk": {
           "name": "user_achievements_achievement_code_achievements_code_fk",
           "tableFrom": "user_achievements",
-          "tableTo": "achievements",
           "columnsFrom": [
             "achievement_code"
           ],
+          "tableTo": "achievements",
           "columnsTo": [
             "code"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -4587,54 +4587,54 @@
         "workout_exercises_user_id_users_id_fk": {
           "name": "workout_exercises_user_id_users_id_fk",
           "tableFrom": "workout_exercises",
-          "tableTo": "users",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "users",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "workout_exercises_workout_id_workouts_id_fk": {
           "name": "workout_exercises_workout_id_workouts_id_fk",
           "tableFrom": "workout_exercises",
-          "tableTo": "workouts",
           "columnsFrom": [
             "workout_id"
           ],
+          "tableTo": "workouts",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "workout_exercises_exercise_id_exercises_id_fk": {
           "name": "workout_exercises_exercise_id_exercises_id_fk",
           "tableFrom": "workout_exercises",
-          "tableTo": "exercises",
           "columnsFrom": [
             "exercise_id"
           ],
+          "tableTo": "exercises",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "workout_exercises_planned_exercise_id_planned_exercises_id_fk": {
           "name": "workout_exercises_planned_exercise_id_planned_exercises_id_fk",
           "tableFrom": "workout_exercises",
-          "tableTo": "planned_exercises",
           "columnsFrom": [
             "planned_exercise_id"
           ],
+          "tableTo": "planned_exercises",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "set null"
         }
       },
       "compositePrimaryKeys": {},
@@ -4780,41 +4780,41 @@
         "workouts_user_id_users_id_fk": {
           "name": "workouts_user_id_users_id_fk",
           "tableFrom": "workouts",
-          "tableTo": "users",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "users",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "workouts_routine_id_routines_id_fk": {
           "name": "workouts_routine_id_routines_id_fk",
           "tableFrom": "workouts",
-          "tableTo": "routines",
           "columnsFrom": [
             "routine_id"
           ],
+          "tableTo": "routines",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "set null"
         },
         "workouts_planned_session_id_planned_sessions_id_fk": {
           "name": "workouts_planned_session_id_planned_sessions_id_fk",
           "tableFrom": "workouts",
-          "tableTo": "planned_sessions",
           "columnsFrom": [
             "planned_session_id"
           ],
+          "tableTo": "planned_sessions",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "set null"
         }
       },
       "compositePrimaryKeys": {},
@@ -4937,23 +4937,23 @@
             "source_kind",
             "reason"
           ],
-          "isUnique": true,
-          "where": "\"source_id\" IS NULL"
+          "where": "\"source_id\" IS NULL",
+          "isUnique": true
         }
       },
       "foreignKeys": {
         "xp_awards_user_id_users_id_fk": {
           "name": "xp_awards_user_id_users_id_fk",
           "tableFrom": "xp_awards",
-          "tableTo": "users",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "users",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -4977,9 +4977,9 @@
   "views": {},
   "enums": {},
   "_meta": {
+    "columns": {},
     "schemas": {},
-    "tables": {},
-    "columns": {}
+    "tables": {}
   },
   "internal": {
     "indexes": {

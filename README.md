@@ -37,7 +37,7 @@ docker compose up -d                      # postgres:16 on 5432, adminer on 8080
 cd apps/api
 uv sync
 uv run alembic upgrade head               # connects as cyberathlete_migrator
-uv run python -m seeds.exercises          # seed the global catalog (from task 002)
+uv run python -m seeds                    # seed the reference data: catalog, sports, tracks
 uv run uvicorn app.main:app --reload      # http://localhost:8000/docs
 
 # Terminal 2 — mobile, from the repository root
@@ -81,9 +81,10 @@ themselves (`apps/api/tests/conftest.py`). Linux, and so CI and production, is u
 
 | | Command |
 |---|---|
-| API | `uv run ruff check .` · `uv run ruff format --check .` · `uv run mypy app tests scripts alembic/env.py` · `uv run lint-imports` · `uv run pytest` |
-| Mobile | `pnpm typecheck` · `pnpm lint` · `pnpm lint:fixtures` · `pnpm check:platform-files` · `pnpm test` |
-| Shared types | `uv run python -m scripts.export_openapi` (in `apps/api`), then `pnpm --filter @cyberathlete/shared generate:api` |
+| API | `uv run ruff check .` · `uv run ruff format --check .` · `uv run mypy app tests scripts seeds alembic/env.py` · `uv run lint-imports` · `uv run pytest` |
+| Schema | `uv run alembic upgrade head` · `uv run python -m seeds` · `uv run python -m scripts.check_schema` (in `apps/api`) |
+| Mobile | `pnpm typecheck` · `pnpm lint` · `pnpm lint:fixtures` · `pnpm check:platform-files` · `pnpm test` · `pnpm db:generate` must leave `src/db/migrations` unchanged |
+| Shared | `uv run python -m scripts.export_openapi` and `uv run python -m seeds.export` (in `apps/api`), then `pnpm --filter @cyberathlete/shared generate:api` |
 | Release config | `pnpm prebuild` then `pnpm check:release-cleartext` (in `apps/mobile`) |
 
 API integration tests need the local Postgres and skip without it; CI runs them against a real one.

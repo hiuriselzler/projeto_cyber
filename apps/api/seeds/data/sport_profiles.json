@@ -1,0 +1,282 @@
+[
+  {
+    "sport": "run",
+    "name_key": "sport.run",
+    "xp_track": "run",
+    "recording_mode": "gps",
+    "primary_metric": "distance",
+    "pace_unit_metric": "min_per_km",
+    "pace_unit_imperial": "min_per_mi",
+    "split_unit_m_metric": "1000.000",
+    "split_unit_m_imperial": "1609.344",
+    "has_route": true,
+    "has_elevation": true,
+    "autopause_threshold_mps": "0.80",
+    "live_fields": ["elapsed_time", "distance", "current_pace", "average_pace", "moving_time", "elevation_gain", "heart_rate"],
+    "detail_sections": ["summary", "map", "splits", "elevation", "heart_rate", "notes"],
+    "session_types": ["easy", "long", "tempo", "interval", "recovery", "race"],
+    "metrics_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {}
+    }
+  },
+  {
+    "sport": "ride",
+    "name_key": "sport.ride",
+    "xp_track": "ride",
+    "recording_mode": "gps",
+    "primary_metric": "distance",
+    "pace_unit_metric": "km_per_h",
+    "pace_unit_imperial": "mph",
+    "split_unit_m_metric": "5000.000",
+    "split_unit_m_imperial": "8046.720",
+    "has_route": true,
+    "has_elevation": true,
+    "autopause_threshold_mps": "1.40",
+    "live_fields": ["elapsed_time", "distance", "current_speed", "average_speed", "moving_time", "elevation_gain", "heart_rate"],
+    "detail_sections": ["summary", "map", "splits", "elevation", "power", "heart_rate", "notes"],
+    "session_types": ["easy", "long", "tempo", "interval", "recovery", "race"],
+    "metrics_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "avg_watts": { "type": "integer", "minimum": 0 },
+        "normalized_power": { "type": "integer", "minimum": 0 },
+        "elevation_profile_type": { "enum": ["flat", "rolling", "hilly", "mountainous"] }
+      }
+    }
+  },
+  {
+    "sport": "walk",
+    "name_key": "sport.walk",
+    "xp_track": "walk",
+    "recording_mode": "gps",
+    "primary_metric": "distance",
+    "pace_unit_metric": "min_per_km",
+    "pace_unit_imperial": "min_per_mi",
+    "split_unit_m_metric": "1000.000",
+    "split_unit_m_imperial": "1609.344",
+    "has_route": true,
+    "has_elevation": true,
+    "autopause_threshold_mps": "0.40",
+    "live_fields": ["elapsed_time", "distance", "average_pace", "moving_time", "elevation_gain", "heart_rate"],
+    "detail_sections": ["summary", "map", "splits", "elevation", "heart_rate", "notes"],
+    "session_types": ["easy", "long", "recovery"],
+    "metrics_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {}
+    }
+  },
+  {
+    "sport": "swim_pool",
+    "name_key": "sport.swim_pool",
+    "xp_track": "swim_pool",
+    "recording_mode": "lap",
+    "primary_metric": "distance",
+    "pace_unit_metric": "min_per_100m",
+    "pace_unit_imperial": "min_per_100yd",
+    "split_unit_m_metric": null,
+    "split_unit_m_imperial": null,
+    "has_route": false,
+    "has_elevation": false,
+    "autopause_threshold_mps": null,
+    "live_fields": ["elapsed_time", "lengths", "distance", "average_pace", "last_length_time"],
+    "detail_sections": ["summary", "sets", "strokes", "swolf", "heart_rate", "notes"],
+    "session_types": ["easy", "long", "interval", "recovery", "technique", "drill", "race"],
+    "metrics_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pool_length_m", "pool_length_unit", "lengths"],
+      "properties": {
+        "pool_length_m": { "type": "number", "exclusiveMinimum": 0 },
+        "pool_length_unit": { "enum": ["m", "yd"] },
+        "lengths": { "type": "integer", "minimum": 1 },
+        "strokes": { "type": "integer", "minimum": 0 },
+        "swolf": { "type": "number", "minimum": 0 },
+        "stroke_mix": {
+          "type": "object",
+          "propertyNames": { "enum": ["freestyle", "backstroke", "breaststroke", "butterfly", "medley", "kick", "pull", "drill"] },
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        }
+      }
+    }
+  },
+  {
+    "sport": "treadmill",
+    "name_key": "sport.treadmill",
+    "xp_track": "treadmill",
+    "recording_mode": "manual",
+    "primary_metric": "distance",
+    "pace_unit_metric": "min_per_km",
+    "pace_unit_imperial": "min_per_mi",
+    "split_unit_m_metric": null,
+    "split_unit_m_imperial": null,
+    "has_route": false,
+    "has_elevation": false,
+    "autopause_threshold_mps": null,
+    "live_fields": [],
+    "detail_sections": ["summary", "intervals", "heart_rate", "notes"],
+    "session_types": ["easy", "long", "tempo", "interval", "recovery"],
+    "metrics_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "incline_bp": { "type": "integer", "minimum": -5000, "maximum": 5000 },
+        "avg_watts": { "type": "integer", "minimum": 0 }
+      }
+    }
+  },
+  {
+    "sport": "indoor_bike",
+    "name_key": "sport.indoor_bike",
+    "xp_track": "indoor_bike",
+    "recording_mode": "manual",
+    "primary_metric": "duration",
+    "pace_unit_metric": "km_per_h",
+    "pace_unit_imperial": "mph",
+    "split_unit_m_metric": null,
+    "split_unit_m_imperial": null,
+    "has_route": false,
+    "has_elevation": false,
+    "autopause_threshold_mps": null,
+    "live_fields": [],
+    "detail_sections": ["summary", "intervals", "power", "heart_rate", "notes"],
+    "session_types": ["easy", "long", "tempo", "interval", "recovery"],
+    "metrics_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "avg_watts": { "type": "integer", "minimum": 0 },
+        "resistance_level": { "type": "integer", "minimum": 0 }
+      }
+    }
+  },
+  {
+    "sport": "trail_run",
+    "name_key": "sport.trail_run",
+    "xp_track": "trail_run",
+    "recording_mode": "gps",
+    "primary_metric": "distance",
+    "pace_unit_metric": "min_per_km",
+    "pace_unit_imperial": "min_per_mi",
+    "split_unit_m_metric": "1000.000",
+    "split_unit_m_imperial": "1609.344",
+    "has_route": true,
+    "has_elevation": true,
+    "autopause_threshold_mps": "0.60",
+    "live_fields": ["elapsed_time", "distance", "elevation_gain", "average_pace", "moving_time", "heart_rate"],
+    "detail_sections": ["summary", "map", "elevation", "splits", "heart_rate", "notes"],
+    "session_types": ["easy", "long", "tempo", "recovery", "race"],
+    "metrics_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {}
+    }
+  },
+  {
+    "sport": "hike",
+    "name_key": "sport.hike",
+    "xp_track": "hike",
+    "recording_mode": "gps",
+    "primary_metric": "distance",
+    "pace_unit_metric": "min_per_km",
+    "pace_unit_imperial": "min_per_mi",
+    "split_unit_m_metric": "1000.000",
+    "split_unit_m_imperial": "1609.344",
+    "has_route": true,
+    "has_elevation": true,
+    "autopause_threshold_mps": "0.30",
+    "live_fields": ["elapsed_time", "distance", "elevation_gain", "moving_time", "heart_rate"],
+    "detail_sections": ["summary", "map", "elevation", "splits", "notes"],
+    "session_types": ["easy", "long"],
+    "metrics_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {}
+    }
+  },
+  {
+    "sport": "open_water_swim",
+    "name_key": "sport.open_water_swim",
+    "xp_track": "open_water_swim",
+    "recording_mode": "gps",
+    "primary_metric": "distance",
+    "pace_unit_metric": "min_per_100m",
+    "pace_unit_imperial": "min_per_100yd",
+    "split_unit_m_metric": "100.000",
+    "split_unit_m_imperial": "91.440",
+    "has_route": true,
+    "has_elevation": false,
+    "autopause_threshold_mps": "0.20",
+    "live_fields": ["elapsed_time", "distance", "average_pace", "heart_rate"],
+    "detail_sections": ["summary", "map", "splits", "notes"],
+    "session_types": ["easy", "long", "interval", "technique", "race"],
+    "metrics_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {}
+    }
+  },
+  {
+    "sport": "row_indoor",
+    "name_key": "sport.row_indoor",
+    "xp_track": "row_indoor",
+    "recording_mode": "manual",
+    "primary_metric": "distance",
+    "pace_unit_metric": "per_500m",
+    "pace_unit_imperial": "per_500m",
+    "split_unit_m_metric": null,
+    "split_unit_m_imperial": null,
+    "has_route": false,
+    "has_elevation": false,
+    "autopause_threshold_mps": null,
+    "live_fields": [],
+    "detail_sections": ["summary", "intervals", "power", "heart_rate", "notes"],
+    "session_types": ["easy", "long", "interval", "recovery", "race"],
+    "metrics_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "avg_split_s_per_500m": { "type": "number", "exclusiveMinimum": 0 },
+        "stroke_rate": { "type": "integer", "minimum": 0 },
+        "avg_watts": { "type": "integer", "minimum": 0 },
+        "drag_factor": { "type": "integer", "minimum": 0 }
+      }
+    }
+  },
+  {
+    "sport": "other",
+    "name_key": "sport.other",
+    "xp_track": "other",
+    "recording_mode": "manual",
+    "primary_metric": "duration",
+    "pace_unit_metric": "min_per_km",
+    "pace_unit_imperial": "min_per_mi",
+    "split_unit_m_metric": null,
+    "split_unit_m_imperial": null,
+    "has_route": false,
+    "has_elevation": false,
+    "autopause_threshold_mps": null,
+    "live_fields": [],
+    "detail_sections": ["summary", "heart_rate", "notes"],
+    "session_types": ["easy", "long", "interval", "recovery"],
+    "metrics_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {}
+    }
+  }
+]

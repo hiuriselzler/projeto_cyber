@@ -8,7 +8,7 @@ import {
   checkServerReadiness,
   type LanAddressCheck,
 } from '@/account/diagnostics';
-import { readLocalDatabaseState, recordLaunchOnce } from '@/db/diagnostics';
+import { EXPECTED_TABLES, readLocalDatabaseState } from '@/db/diagnostics';
 import { describePlatform } from '@/platform';
 
 import { useDiagnosticsStore } from './store';
@@ -25,10 +25,7 @@ export function DiagnosticsScreen() {
     queryFn: checkSecureStorage,
     staleTime: Infinity,
   });
-  const [database] = useState(() => {
-    recordLaunchOnce(new Date().toISOString());
-    return readLocalDatabaseState();
-  });
+  const [database] = useState(readLocalDatabaseState);
   const [lanBaseUrl, setLanBaseUrl] = useState('http://192.168.0.10:8000');
   const [lanCheck, setLanCheck] = useState<LanAddressCheck | null>(null);
   const taps = useDiagnosticsStore((state) => state.taps);
@@ -50,8 +47,8 @@ export function DiagnosticsScreen() {
       </Check>
       <Button title="Check again" onPress={() => void readiness.refetch()} />
 
-      <Check title="Local SQLite migration (relaunch: migrations stay at 1, launches grow)">
-        {`migrations applied: ${database.migrationsApplied} · launches recorded: ${database.launches}`}
+      <Check title="Local SQLite schema (relaunch: migrations applied must not change)">
+        {`migrations applied: ${database.migrationsApplied} · tables: ${database.tables} of ${EXPECTED_TABLES}`}
       </Check>
 
       <Check title="Secure storage (restart the app: the previous value must survive)">

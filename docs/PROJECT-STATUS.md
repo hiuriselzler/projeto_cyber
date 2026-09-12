@@ -15,13 +15,13 @@ when its own criteria are ticked. Tick the box here only then.
 
 | | |
 |---|---|
-| **Phase** | **Task 001 complete; task 002 next.** The API, the mobile app, the shared package and CI exist and are green. Everything that needs administrator rights — Docker, the device, the ADR-004 spike — is [task 017](tasks/017-local-toolchain-device-spike.md), which must finish before task 004 |
+| **Phase** | **Task 001 complete; task 002 built** — every criterion proven by tests that pass locally; it closes when CI is green on its pull request. Everything that needs administrator rights — Docker, the device, the ADR-004 spike — is [task 017](tasks/017-local-toolchain-device-spike.md), which must finish before task 004 |
 | **Repository** | Private GitHub repository `hiuriselzler/projeto_cyber`. `main` holds the documentation and task 001's merged work (pull request #1); each further piece arrives by pull request, with CI green before merge |
-| **Docs** | 43 files, internally consistent, all cross-links resolving |
-| **Decisions** | 12 ADRs. Eleven accepted outright; [ADR-004](decisions/ADR-004.md) accepted *conditionally* |
+| **Docs** | 44 files, internally consistent, all cross-links resolving |
+| **Decisions** | 13 ADRs. Twelve accepted outright; [ADR-004](decisions/ADR-004.md) accepted *conditionally* |
 | **Tasks** | 15 for v1 (Android), 2 after launch — iOS platform, Coach tier. **1 complete** (001) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | [Task 002](tasks/002-database.md) — the database and schema, tested in CI. Then 011 and 003; then [task 017](tasks/017-local-toolchain-device-spike.md) once administrator rights are available, before task 004 |
+| **Next action** | Open task 002's pull request and let CI prove it; have a native speaker who trains review the Portuguese exercise names. Then 011 and 003; then [task 017](tasks/017-local-toolchain-device-spike.md) once administrator rights are available, before task 004 |
 
 ### The one decision still genuinely open
 
@@ -85,24 +85,28 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
 
 #### ☐ 002 — Database and schema · **L** · depends: 001 · blocks: 003–009
 > **The last chance to change the schema freely.** Schema churn is far cheaper before there is data.
-- [ ] Postgres: all of [03](03-database-schema.md) in one pass, cardio and planning tables included
-- [ ] Enums → users/auth → catalog → routines → workouts/sets → planner → **`gamification_tracks`**
+> **Built (2026-09-12):** every criterion in the task file is proven by a test that passes locally. The
+> box is ticked once CI is green on its pull request.
+- [x] Postgres: all of [03](03-database-schema.md) in one pass, cardio and planning tables included
+- [x] Enums → users/auth → catalog → routines → workouts/sets → planner → **`gamification_tracks`**
       → **`sport_profiles`** → cardio → cardio plans → remaining gamification tables
       (`sport_profiles.xp_track` is an FK into the track catalog, so the catalog must exist first)
-- [ ] Every CHECK from the doc, especially `rir BETWEEN 0 AND 10` (INV-03) and `max_reps >= min_reps`
-- [ ] FK delete semantics per [03 §10](03-database-schema.md) — `exercises` is **RESTRICT**, not CASCADE
-- [ ] `‹sync›` applied by mixin to every **root** in [03 §11](03-database-schema.md) and to nothing else
-- [ ] **DB trigger backstop for INV-06**; `day_index` trigger against the parent's `length_days`
-- [ ] **RLS enabled and `FORCE`d, failing closed** on user-owned tables; pre-authentication lookups as
-      `SECURITY DEFINER` functions, never a bypass role ([04 §4](04-security-and-auth.md))
-- [ ] SQLite mirror per [03 §8](03-database-schema.md), including the five documented differences
-- [ ] Seeds: muscle groups, **~200 exercises** (real data-entry work — do it properly once),
-      increment defaults, **all `sport_profiles` including deferred sports**
-- [ ] Seeds exported as a JSON asset the app can seed from before it has ever synced
-- [ ] **Increments for both unit systems at `numeric(10,6)`; every reference row keyed; both
+- [x] Every CHECK from the doc, especially `rir BETWEEN 0 AND 10` (INV-03) and `max_reps >= min_reps`
+- [x] FK delete semantics per [03 §10](03-database-schema.md) — `exercises` is **NO ACTION**, not CASCADE
+      and not `RESTRICT` ([ADR-013](decisions/ADR-013.md))
+- [x] `‹sync›` applied by mixin to every **root** in [03 §11](03-database-schema.md) and to nothing else
+- [x] **DB trigger backstop for INV-06**; `day_index` trigger against the parent's `length_days`
+- [x] **RLS enabled and `FORCE`d, failing closed** on user-owned tables — every child table included
+      ([ADR-013](decisions/ADR-013.md)); pre-authentication lookups as `SECURITY DEFINER` functions,
+      never a bypass role ([04 §4](04-security-and-auth.md))
+- [x] SQLite mirror per [03 §8](03-database-schema.md), including its documented differences
+- [x] Seeds: muscle groups, **~200 exercises** (201), increment defaults, **all `sport_profiles`
+      including deferred sports**
+- [x] Seeds exported as a JSON asset the app can seed from before it has ever synced
+- [x] **Increments for both unit systems at `numeric(10,6)`; every reference row keyed; both
       catalogs complete** ([ADR-008](decisions/ADR-008.md)) — prove an imperial block stays on the
       5 lb grid
-- [ ] **Schema-comparison script**: Alembic vs Drizzle names, *plus* [§11](03-database-schema.md)
+- [x] **Schema-comparison script**: Alembic vs Drizzle names, *plus* [§11](03-database-schema.md)
       enforcement. Prove it fails when `‹sync›` is misplaced
 
 #### ☐ 011 — Brand assets and design system · **M** · depends: 001
@@ -437,6 +441,7 @@ reopen for iOS** ([09 §2](09-business-model.md)).
 | 2026-09-11 | [ADR-010](decisions/ADR-010.md) Exact numbers — bodyweight e1RM, per-set RIR, basis points, the safety rail, the XP curve |
 | 2026-09-11 | [ADR-011](decisions/ADR-011.md) Database roles — the API connects as a role that cannot skip RLS; unscoped reads are allowlisted functions |
 | 2026-09-11 | [ADR-012](decisions/ADR-012.md) Mobile boundaries before bootstrap — an account layer, one importer of the core, INV-10's gates |
+| 2026-09-12 | [ADR-013](decisions/ADR-013.md) The schema enforces itself — `user_id` on every child row, `NO ACTION` for exercises, the INV-06 marker carried by the row, INV-21's key with no NULL hole |
 
 ### 2026-09-08 — documentation reconciliation pass
 
@@ -810,3 +815,39 @@ Rather than hold every later task behind that, the work was split.
   patched version. It is reached only through Metro at build time and never ships in the app. The gate
   stays at "high" and ignores only those two ids, with the reason beside them in `pnpm-workspace.yaml`;
   revisit when a patch exists.
+
+### 2026-09-12 — task 002 built: the schema, in both databases, enforcing itself
+
+- **[ADR-013](decisions/ADR-013.md)**, from planning the task. Thirteen child tables had no owner column, so
+  row-level security had nothing to compare — and Postgres checks foreign keys without RLS, so a guessed
+  UUID could attach a row to another user's workout. Every child now carries `user_id`, and its reference
+  to the parent is composite, so a cross-user reference fails as a foreign-key violation. Exercise
+  references are `NO ACTION` rather than `RESTRICT`, which would have failed account deletion depending
+  on cascade order. The INV-06 trigger reads a marker the row already carries (`origin`,
+  `last_write_kind`), because SQLite has no session variables and replication must pass it. And
+  `xp_awards`' key treats a NULL `source_id` as equal. `invariants.md` is unchanged.
+- **Gaps closed in [03](03-database-schema.md)**, each small, each found building: `users.deletion_requested_at`
+  (the grace-period sweep had no column to read); treadmill `incline_bp`, not `incline_pct` (ADR-010);
+  swim `pool_length_unit`, since a 25 yd pool stored as 22.86 m cannot say it was yards; `rounding` gains
+  `up` (ADR-010 amendment); the catch-all `other` sport gets a track and the neutral hue; unique token
+  hashes; a 24-byte nonce check; `level_scale_bp` capped at its default; a planned cardio session's type
+  checked against its sport's profile; and the device omits all three auth tables and `users.password_hash`.
+- **The schema check** (`apps/api/scripts/check_schema.py`, in CI after migrating and seeding): the 03 §11
+  classification, sync columns (`created_at` alone is allowed anywhere — the token tables use it),
+  RLS enabled, `FORCE`d and scoped in `USING` and `WITH CHECK` alike, an owner index, read-only reference
+  tables, ADR-011's function allowlist, no `day_of_week`, `_pct` or non-integer `_bp`, INV-02 precision,
+  and Postgres vs Drizzle names. **Every rule is seen failing** in tests; the ones task 002 names are also
+  broken for real, in rolled-back DDL against the live schema.
+- **The device schema is proven without a device.** pytest applies the committed Drizzle migrations to an
+  in-memory SQLite and exercises the same triggers. A device run is still task 017's.
+- **Seeds:** `uv run python -m seeds` (was `seeds.exercises`) — 201 exercises, 21 muscle groups, both
+  unit systems' increments, all 11 sport profiles, 16 tracks and 16 achievements, idempotent (a second run
+  writes nothing). The message catalogs now exist, nested JSON in `packages/shared/i18n/`, and the app's
+  first-launch export is `packages/shared/seeds/reference.json`, which CI regenerates and diffs. **The
+  Portuguese names are a draft**: the native-speaker review in the launch blockers covers them.
+- **Found, and worked round:** drizzle-kit 0.31 splits an index expression on its commas, so
+  `coalesce(source_id, '')` produced an invalid index; SQLite gets a second, partial unique index instead.
+  The precision test needs `round_to_increment` before task 017 decides where it lives, so it uses a
+  test-only oracle checked against the shared fixture — not domain code.
+- **Also:** the models are checked against the migrated schema by a drift test; task 001's throwaway
+  `launches` table is gone, and the diagnostics screen shows the migration count and the table count (36).
