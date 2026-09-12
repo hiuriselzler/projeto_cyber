@@ -51,7 +51,7 @@ holds `MIGRATION_DATABASE_URL`.
 
 **Device note:** Expo Go will not work — background location and (later) BLE need a development
 build (`npx expo run:android`, or `eas build --profile development --platform android`). Build it
-once during [task 001](tasks/001-project-bootstrap.md); after that, JS changes hot-reload normally.
+once during [task 017](tasks/017-local-toolchain-device-spike.md); after that, JS changes hot-reload normally.
 
 **Reaching the API from the phone:** over USB with `adb reverse`, so the device's `localhost` is this
 machine's. Debug builds may use `http://` to `localhost` and nothing else; release builds allow no

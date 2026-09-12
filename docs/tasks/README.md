@@ -5,37 +5,44 @@
 > This file explains the *order and why*. Live status, per-task checklists, the cross-cutting
 > launch blockers and the decision log live in [PROJECT-STATUS.md](../PROJECT-STATUS.md).
 
-File numbers reflect the order tasks were *written*, not the order they should be *built* — two
-were added after the multi-user, gamification and brand requirements arrived. This is the real
-order.
+File numbers reflect the order tasks were *written*, not the order they should be *built* — three
+were added late: two after the multi-user, gamification and brand requirements arrived, and one when the
+development machine turned out to lack administrator rights. This is the real order.
 
 ## Recommended sequence
 
 | # | Task | Size | Why here |
 |---|---|---|---|
-| 1 | [001 Project bootstrap](001-project-bootstrap.md) | L | Everything depends on it. Contains the [ADR-004](../decisions/ADR-004.md) Rust spike — a 2-day go/no-go |
+| 1 | [001 Project bootstrap](001-project-bootstrap.md) | L | Everything depends on it. **Complete** |
 | 2 | [002 Database](002-database.md) | L | Last chance to change the schema freely |
 | 3 | [011 Design system](011-design-system.md) | M | **Before any feature UI.** Task 004 builds the set row — the most important component in the app — and it should be built from a system, not retrofitted into one |
 | 4 | [003 Authentication](003-authentication.md) | L | Includes password reset and email verification, now v1 blockers |
-| 5 | [004 Catalog and logging](004-exercise-catalog-and-logging.md) | XL | The core loop. Usable, offline, local-only |
-| 6 | [005 Progression planner](005-strength-progression-planner.md) | XL | The reason the product exists |
-| 7 | [006 Sync layer](006-sync-layer.md) | L | Turns on multi-device. The hardest task |
-| 8 | [007 Sport profiles + GPS](007-cardio-recording.md) | XL | The framework, then run/ride/walk |
-| 9 | [008 Non-GPS sports](008-non-gps-sports.md) | M | Pool swim, treadmill, indoor bike. Proves the framework |
-| 10 | [009 Cardio planner](009-cardio-planner.md) | L | Reuses the 005 engine's shape |
-| 11 | [013 Gamification](013-gamification.md) | L | **Must follow 005** — the scorer takes a prescription as input (INV-22) |
-| 12 | [010 Calendar and analytics](010-unified-calendar-and-analytics.md) | M | Makes the two halves feel like one app |
-| 13 | [014 Subscriptions](014-subscriptions.md) | M | **After 005** — the planner is what Pro gates. Nothing to sell before it exists |
-| 14 | [012 Onboarding](012-onboarding.md) | M | **Last, deliberately** — you cannot onboard someone into features that do not exist yet |
+| 5 | [017 Local toolchain, device and core spike](017-local-toolchain-device-spike.md) | L | Everything that needs administrator rights, and every check only a phone can settle. **Must come before 004** — it holds the [ADR-004](../decisions/ADR-004.md) Rust spike, a 2-day go/no-go |
+| 6 | [004 Catalog and logging](004-exercise-catalog-and-logging.md) | XL | The core loop. Usable, offline, local-only |
+| 7 | [005 Progression planner](005-strength-progression-planner.md) | XL | The reason the product exists |
+| 8 | [006 Sync layer](006-sync-layer.md) | L | Turns on multi-device. The hardest task |
+| 9 | [007 Sport profiles + GPS](007-cardio-recording.md) | XL | The framework, then run/ride/walk |
+| 10 | [008 Non-GPS sports](008-non-gps-sports.md) | M | Pool swim, treadmill, indoor bike. Proves the framework |
+| 11 | [009 Cardio planner](009-cardio-planner.md) | L | Reuses the 005 engine's shape |
+| 12 | [013 Gamification](013-gamification.md) | L | **Must follow 005** — the scorer takes a prescription as input (INV-22) |
+| 13 | [010 Calendar and analytics](010-unified-calendar-and-analytics.md) | M | Makes the two halves feel like one app |
+| 14 | [014 Subscriptions](014-subscriptions.md) | M | **After 005** — the planner is what Pro gates. Nothing to sell before it exists |
+| 15 | [012 Onboarding](012-onboarding.md) | M | **Last, deliberately** — you cannot onboard someone into features that do not exist yet |
 
-## Two ordering rules worth stating
+## Three ordering rules worth stating
 
 **Design system early (position 3).** [Task 004](004-exercise-catalog-and-logging.md) builds the
 set row, and [07 §6](../07-brand-and-ui.md) calls it "the product". Building it against ad-hoc
 styles and retrofitting a token system later is the expensive path, and it is how dark mode ends
 up broken.
 
-**Gamification late, and never before the planner (position 11).** The scorer's input is *the
+**The administrator-rights task before task 004 (position 5), not at the end.**
+[Task 017](017-local-toolchain-device-spike.md) was split out of task 001 because the development
+machine had no administrator rights. It can wait while 002, 011 and 003 are built — none of them holds
+shared domain logic — but not past them: its spike decides whether task 004 writes e1RM and the set
+logic once, in Rust, or twice, in Python and TypeScript.
+
+**Gamification late, and never before the planner (position 12).** The scorer's input is *the
 prescription* ([ADR-005](../decisions/ADR-005.md)). Any scoring built before a planner exists
 would have to score volume — the single thing INV-22 forbids. The dependency is structural, not
 scheduling convenience.
@@ -44,7 +51,7 @@ scheduling convenience.
 
 | Milestone | Through | You can… |
 |---|---|---|
-| **Usable alone** | 001–005 + 011 | Plan a block and train it, offline, on one device |
+| **Usable alone** | 001–005, 011, 017 | Plan a block and train it, offline, on one device |
 | **Multi-device** | + 006 | Train on a phone and a tablet |
 | **Both halves** | + 007–009 | Run, ride, swim and lift, planned |
 | **Feature complete** | + 010, 013 | One calendar, and tracks for the sports you actually do |

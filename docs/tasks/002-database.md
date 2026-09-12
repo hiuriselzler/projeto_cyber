@@ -2,6 +2,10 @@
 
 **Depends on:** 001 · **Blocks:** 003–009 · **Size:** L
 
+> **Until [task 017](017-local-toolchain-device-spike.md) (2026-09-12):** there is no local Docker, so the Postgres integration tests
+> run in CI. The two criteria that need a physical device — the Drizzle schema on a device and the
+> SQLite round trip — moved to task 017.
+
 ## Goal
 Both schemas exist, in both engines, with the seeded exercise catalog, and with the invariants
 that *can* be enforced by the database actually enforced there.
@@ -110,9 +114,6 @@ the very first migration after this one. This task is the last chance to change 
 - [ ] Inserting a row whose `user_id` is not the scoped user is rejected by the policy's `WITH CHECK`
 - [ ] A `SECURITY DEFINER` function **not** on the [ADR-011](../decisions/ADR-011.md) allowlist fails the
       schema script — add one, watch it fail, remove it
-- [ ] The Drizzle schema creates successfully on-device and every table in [03 §8](../03-database-schema.md) exists
-- [ ] A round-trip test writes a workout + exercise + 3 sets to SQLite and reads them back with
-      correct types (booleans as 0/1, timestamps as epoch ms)
 - [ ] The schema-comparison script **fails** when `‹sync›` is added to `cardio_plan_cycle_targets`
       or removed from `hr_zone_overrides` — verify by doing both and watching it break, then revert
 - [ ] `SELECT *` on `privacy_zones` yields an id, a user id, a blob and a nonce, and nothing that

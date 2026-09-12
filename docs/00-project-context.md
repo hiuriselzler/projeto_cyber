@@ -154,8 +154,9 @@ they will eventually disagree. One Rust crate compiled for both removes that cla
 the cost of a native module and no over-the-air updates for domain changes.
 
 The only real unknown is whether the UniFFI + PyO3 + EAS toolchain behaves, so
-[task 001](tasks/001-project-bootstrap.md) spends **two days** proving the chain on one trivial
-function and then records a go/no-go in [ADR-004](decisions/ADR-004.md). Nothing else waits on it.
+[task 017](tasks/017-local-toolchain-device-spike.md) spends **two days** proving the chain on one trivial
+function and then records a go/no-go in [ADR-004](decisions/ADR-004.md), before task 004. Nothing
+earlier waits on it.
 
 The one tension to name up front: a **custom backend** was chosen, but a gym has no signal. The
 resolution is that the phone owns a full local database and the server is a *sync target*, not

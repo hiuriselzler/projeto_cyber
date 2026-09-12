@@ -15,18 +15,18 @@ when its own criteria are ticked. Tick the box here only then.
 
 | | |
 |---|---|
-| **Phase** | **Task 001 in progress.** The API, the mobile app, the shared package and CI exist, and CI is green; the device, the local Docker run and the ADR-004 spike are still ahead |
+| **Phase** | **Task 001 complete; task 002 next.** The API, the mobile app, the shared package and CI exist and are green. Everything that needs administrator rights — Docker, the device, the ADR-004 spike — is [task 017](tasks/017-local-toolchain-device-spike.md), which must finish before task 004 |
 | **Repository** | Private GitHub repository `hiuriselzler/projeto_cyber`. `main` holds the documentation and task 001's merged work (pull request #1); each further piece arrives by pull request, with CI green before merge |
-| **Docs** | 42 files, internally consistent, all cross-links resolving |
+| **Docs** | 43 files, internally consistent, all cross-links resolving |
 | **Decisions** | 12 ADRs. Eleven accepted outright; [ADR-004](decisions/ADR-004.md) accepted *conditionally* |
-| **Tasks** | 14 for v1 (Android), 2 after launch — iOS platform, Coach tier. **0 complete** |
+| **Tasks** | 15 for v1 (Android), 2 after launch — iOS platform, Coach tier. **1 complete** (001) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | [Task 001](tasks/001-project-bootstrap.md) — with admin rights: Docker, the development build on a device, and the ADR-004 spike |
+| **Next action** | [Task 002](tasks/002-database.md) — the database and schema, tested in CI. Then 011 and 003; then [task 017](tasks/017-local-toolchain-device-spike.md) once administrator rights are available, before task 004 |
 
 ### The one decision still genuinely open
 
 **[ADR-004](decisions/ADR-004.md) — the Rust domain core.** Accepted subject to a **two-day
-timeboxed spike** in task 001: prove UniFFI + PyO3 + EAS cross-compilation works by calling one
+timeboxed spike** in task 017 — moved from task 001, still before task 004: prove UniFFI + PyO3 + EAS cross-compilation works by calling one
 trivial function from FastAPI and from the Expo app on a *physical* Android device. Its iOS half is
 moved, not dropped — it is gate 1 of task 016 ([ADR-009](decisions/ADR-009.md)).
 
@@ -50,36 +50,33 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
 ### Milestone 1 — Usable alone
 *Plan a block and train it, offline, on one device.*
 
-#### ☐ 001 — Project bootstrap · **L** · depends: nothing · blocks: everything
+#### ☑ 001 — Project bootstrap · **L** · depends: nothing · blocks: everything
+> **Complete (2026-09-12).** What needed administrator rights — the local Docker run, the device, the
+> ADR-004 spike — moved to [task 017](tasks/017-local-toolchain-device-spike.md).
 - [x] `git init` and a **private GitHub repository**, `.gitignore`, `.editorconfig`, `README.md`; pnpm workspace + `uv` for the API
-- [ ] Directory skeleton exactly as [02 §2](02-architecture.md)
-- [ ] API boots: config with a **boot-time assertion that `JWT_SECRET` is not a dev default**,
+- [x] Directory skeleton exactly as [02 §2](02-architecture.md); `core-rs/` arrives with the spike, task 017
+- [x] API: config with a **boot-time assertion that `JWT_SECRET` is not a dev default**,
       structured JSON logging with request-ID propagation, `/health` and `/health/ready` separate —
-      readiness includes migrations at head
+      readiness includes migrations at head. Booted against a local database: task 017
 - [x] **Two database roles** — `cyberathlete_migrator` owns the schema, `cyberathlete_app` runs the API;
       the API **refuses to boot** as a superuser, a `BYPASSRLS` role or a table owner ([04 §4](04-security-and-auth.md));
       grants through `ALTER DEFAULT PRIVILEGES FOR ROLE cyberathlete_migrator`
-- [ ] **Debug builds reach the API over `adb reverse`, cleartext to `localhost` only**; release builds
-      permit no cleartext, proven by CI ([04 §5](04-security-and-auth.md))
+- [x] **Release builds permit no cleartext, proven by CI** ([04 §5](04-security-and-auth.md)); debug builds
+      reaching the API over `adb reverse` on a device: task 017
 - [x] Node 24 LTS pinned (`.nvmrc`, `engines`); CI runs `pnpm audit`, not `npm audit`
-- [ ] `docker-compose.yml` with `postgres:16` at the **repository root**; Alembic initialised against an empty schema
-- [ ] Mobile: Expo pinned, TypeScript strict, `expo-router`; **development build installed on a
-      physical Android device** (not Expo Go — background location needs it). iOS: task 016
+- [x] `docker-compose.yml` with `postgres:16` at the **repository root**; Alembic initialised against an empty schema. First run locally: task 017
+- [x] Mobile: Expo pinned, TypeScript strict, `expo-router`; a development build, never Expo Go. On a
+      physical Android device: task 017. iOS: task 016
 - [x] **`src/platform/` created, with a lint rule forbidding OS checks anywhere else** — prove it by
       writing `Platform.OS` into a feature and watching CI fail (INV-28)
 - [x] **`src/account/` created** as the only route from screens to the network and the privacy key, and
       **only `src/domain/` imports the core binding** ([ADR-012](decisions/ADR-012.md))
-- [ ] **`android/` generated, never committed** (`expo prebuild`); native settings in config plugins; a
-      debug-only diagnostics screen runs the on-device checks through `src/account/`
+- [x] **`android/` generated, never committed** (`expo prebuild`); native settings in config plugins; a
+      debug-only diagnostics screen for the on-device checks, run in task 017
 - [x] **Every scope item has an acceptance criterion** (logging, OpenAPI codegen, fixtures in both
       suites, smoke tests, `cargo deny` + clippy)
-- [ ] `expo-sqlite` + Drizzle proving migrations run at startup and are idempotent on second launch
+- [x] `expo-sqlite` + Drizzle wired to migrate at startup; idempotent on a device: task 017
 - [x] `packages/shared` builds; OpenAPI type generation wired; `fixtures/` loader used by both suites
-- [ ] **⚠ ADR-004 spike — 2 days, hard timebox.** `round_to_increment()` through both bindings,
-      called from FastAPI *and* from a physical Android device: `41.6 → 42.5`, and the tie `41.25 → 40`.
-      Success defined in advance; WSL2 allowed locally; **the clock starts once a dev build runs on the
-      device**. The iOS half is gate 1 of task 016
-- [ ] **⚠ ADR-004 outcome written into the ADR.** This task is not done while that is open
 - [x] CI green both sides, with **the boundary rules written now, while there is nothing to fix** —
       import-linter + ruff `banned-api` (API), ESLint folder and package fences (mobile), including the
       ADR-011 fence on unscoped reads and one home each for network, crypto, secure storage and location
@@ -135,11 +132,32 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
       though nothing encrypts anything until task 007; retrofitting it is a migration with no
       derivable answer
 - [ ] **Wrapping KDF argon2id `m=64 MiB, t=3, p=1`, never cheaper than the login hash**, parameters in
-      `users.privacy_key_kdf`; all crypto in `src/crypto/` on libsodium, confirmed on-device first
-- [ ] Offline sign-in: a returning user with a valid refresh token reaches the app with no network
+      `users.privacy_key_kdf`; all crypto in `src/crypto/` on libsodium, confirmed on a device in task 017
+- [ ] Offline sign-in: a returning user with a valid refresh token reaches the app with no network —
+      built here, proven on a device in task 017
 - [ ] **Account flows in `src/account/`** — no screen imports `src/sync/` or `src/crypto/`
       ([ADR-012](decisions/ADR-012.md))
 - [ ] **Prove RLS**: break the repository scope deliberately and assert 0 rows come back (NFR-9)
+
+#### ☐ 017 — Local toolchain, device and core spike · **L** · depends: 001, administrator rights · blocks: 004 onward
+> Everything that needs administrator rights on the development machine, and every check only a phone
+> can settle. **Must finish before task 004**: its spike decides how domain logic is written.
+- [ ] Administrator installs: Windows long paths, WSL2, Docker Desktop, Android Studio (SDK, NDK,
+      platform tools), Visual Studio Build Tools and Rust with the Android targets and `cargo-ndk`
+- [ ] Local stack: `docker compose up`, roles created by the init hook, integration tests run locally,
+      every README command verified on Windows
+- [ ] **Development build on a physical Android device**, with hot reload; the API over `adb reverse`;
+      a LAN address refused; the SQLite migration idempotent; secure storage surviving a restart
+- [ ] A release build refuses an `http://` API base URL, and its bundle carries no diagnostics code
+- [ ] Device checks moved from tasks 002, 011 and 003 — the Drizzle schema on a device, token changes,
+      live numerals and TalkBack, the libsodium binding, offline sign-in, the key-derivation timing
+- [ ] **⚠ ADR-004 spike — 2 days, hard timebox** (moved from task 001). `round_to_increment()` through
+      both bindings, called from FastAPI *and* from a physical Android device: `41.6 → 42.5`, and the tie
+      `41.25 → 40`. Success defined in advance; WSL2 allowed locally; **the clock starts once a dev build
+      runs on the device**. The iOS half is gate 1 of task 016
+- [ ] Rust CI job — `cargo deny`, clippy, fmt, Android cross-compilation — with `rand` and
+      `SystemTime::now` each watched failing
+- [ ] **⚠ ADR-004 outcome written into the ADR.** Task 004 does not start while it is open
 
 #### ☐ 004 — Exercise catalog and workout logging · **XL** · depends: 002 · blocks: 005, 009
 > The core loop. Local-only, no sync. **This deserves more care than any other UI in the project.**
@@ -410,7 +428,7 @@ reopen for iOS** ([09 §2](09-business-model.md)).
 | 2026-09-07 | [ADR-001](decisions/ADR-001.md) Phone owns a full local database; server is a sync target |
 | 2026-09-07 | [ADR-002](decisions/ADR-002.md) Plans are materialised rows, re-projected by a pure engine |
 | 2026-09-07 | [ADR-003](decisions/ADR-003.md) GPS tracks as typed streams + polyline, not point rows |
-| 2026-09-07 | [ADR-004](decisions/ADR-004.md) Single Rust core — **conditional, pending the task 001 spike** |
+| 2026-09-07 | [ADR-004](decisions/ADR-004.md) Single Rust core — **conditional, pending the spike (task 017)** |
 | 2026-09-08 | [ADR-005](decisions/ADR-005.md) Gamification rewards adherence and recovery, never volume |
 | 2026-09-08 | [ADR-006](decisions/ADR-006.md) Subscription monetisation, and the line the paywall never crosses |
 | 2026-09-08 | [ADR-007](decisions/ADR-007.md) Privacy zones sync as ciphertext under a key the server never stores (claim narrowed 2026-09-11) |
@@ -744,6 +762,28 @@ rights, a database, a device or Rust is still ahead. Settled while building, and
   lint and was caught only by the fixture self-test — which is what that check exists for. The
   branches were deleted afterwards. Still open: a non-debug build refusing an `http://` base URL on a
   device, and the two Rust proofs that come with the spike.
+
+### 2026-09-12 — task 001 closed; the work needing administrator rights becomes task 017
+
+The development machine has no administrator rights yet, and everything left in task 001 needed them.
+Rather than hold every later task behind that, the work was split.
+
+- **Task 001 is complete.** Its remaining criteria moved, word for word, to [task 017](tasks/017-local-toolchain-device-spike.md):
+  the local Docker run, the development build and every on-device check, a non-debug build refusing
+  `http://`, the Rust CI proofs, and the ADR-004 spike.
+- **Task 017 comes before task 004, not at the end.** The spike decides whether domain logic is written
+  once in Rust or twice in Python and TypeScript, and task 004 writes the first of it. ADR-004 carries a
+  dated note; its procedure is otherwise unchanged. Tasks 002, 011 and 003 hold no shared domain logic.
+- **The new order:** 001 → 002 → 011 → 003 → **017** → 004 onward.
+- **Device-only criteria from tasks 002, 011 and 003 moved to 017 as well**, so those tasks can close on
+  what CI proves: the Drizzle schema on a device; token changes, live numerals and TalkBack; the libsodium
+  binding, offline sign-in, the privacy-key flows and the key-derivation timing.
+- **Risks accepted:** database tests run only in CI until Docker is available, a few minutes per push;
+  and nothing has run on a real phone yet, so a native-build problem would surface in 017, after 011 and
+  003 exist. Task 003's mobile flows are built against `src/crypto/`'s interface and tested in Jest; 017
+  confirms the native binding before anything relies on it.
+- **Offered, not yet decided:** a portable Postgres in the user profile for local database tests, and an
+  early development build through Expo's cloud service, to find native-build problems before 017.
 - **Two audit findings accepted, by id.** `pnpm audit --audit-level high` reports two advisories in
   `image-size` (GHSA-w3rx-r6r6-pgpr, GHSA-5p2g-fcmc-qvqq): denial of service from a crafted image, with no
   patched version. It is reached only through Metro at build time and never ships in the app. The gate
