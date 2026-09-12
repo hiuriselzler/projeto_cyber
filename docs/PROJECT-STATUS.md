@@ -16,12 +16,12 @@ when its own criteria are ticked. Tick the box here only then.
 | | |
 |---|---|
 | **Phase** | **Task 001 in progress.** The API, the mobile app, the shared package and CI exist, and CI is green; the device, the local Docker run and the ADR-004 spike are still ahead |
-| **Repository** | Private GitHub repository `hiuriselzler/projeto_cyber`. `main` holds the agreed documentation; task 001's work is pull request #1 from `task/001-bootstrap` |
+| **Repository** | Private GitHub repository `hiuriselzler/projeto_cyber`. `main` holds the documentation and task 001's merged work (pull request #1); each further piece arrives by pull request, with CI green before merge |
 | **Docs** | 42 files, internally consistent, all cross-links resolving |
 | **Decisions** | 12 ADRs. Eleven accepted outright; [ADR-004](decisions/ADR-004.md) accepted *conditionally* |
 | **Tasks** | 14 for v1 (Android), 2 after launch — iOS platform, Coach tier. **0 complete** |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | [Task 001](tasks/001-project-bootstrap.md) — prove the gates by watching CI fail; then, with admin rights, Docker, the development build on a device and the ADR-004 spike |
+| **Next action** | [Task 001](tasks/001-project-bootstrap.md) — with admin rights: Docker, the development build on a device, and the ADR-004 spike |
 
 ### The one decision still genuinely open
 
@@ -65,7 +65,7 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
 - [ ] `docker-compose.yml` with `postgres:16` at the **repository root**; Alembic initialised against an empty schema
 - [ ] Mobile: Expo pinned, TypeScript strict, `expo-router`; **development build installed on a
       physical Android device** (not Expo Go — background location needs it). iOS: task 016
-- [ ] **`src/platform/` created, with a lint rule forbidding OS checks anywhere else** — prove it by
+- [x] **`src/platform/` created, with a lint rule forbidding OS checks anywhere else** — prove it by
       writing `Platform.OS` into a feature and watching CI fail (INV-28)
 - [x] **`src/account/` created** as the only route from screens to the network and the privacy key, and
       **only `src/domain/` imports the core binding** ([ADR-012](decisions/ADR-012.md))
@@ -83,7 +83,7 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
 - [x] CI green both sides, with **the boundary rules written now, while there is nothing to fix** —
       import-linter + ruff `banned-api` (API), ESLint folder and package fences (mobile), including the
       ADR-011 fence on unscoped reads and one home each for network, crypto, secure storage and location
-- [ ] Prove the gates: write a `sqlalchemy` import into `domain/` and watch CI fail; **every rule has a
+- [x] Prove the gates: write a `sqlalchemy` import into `domain/` and watch CI fail; **every rule has a
       known-bad fixture that CI proves is caught**
 
 #### ☐ 002 — Database and schema · **L** · depends: 001 · blocks: 003–009
@@ -737,6 +737,13 @@ rights, a database, a device or Rust is still ahead. Settled while building, and
   Node jobs failed before any check ran (setup-node looked for pnpm before it was installed), fixed by
   installing pnpm first. The second run passed all four jobs, and the criteria it proves are ticked
   in task 001 — the "watch CI fail" proofs, the device and the spike are still open.
+- **The gates fail when broken — in CI, not only locally.** Four throwaway `proof/…` branches each
+  broke one rule: an `sqlalchemy` import in `app/domain`, `Platform.OS` in a feature, a typo in one
+  folder's lint glob, and a release network config allowing cleartext. Each turned exactly its own
+  job red at the expected step, with every other job green. The glob typo left real code passing
+  lint and was caught only by the fixture self-test — which is what that check exists for. The
+  branches were deleted afterwards. Still open: a non-debug build refusing an `http://` base URL on a
+  device, and the two Rust proofs that come with the spike.
 - **Two audit findings accepted, by id.** `pnpm audit --audit-level high` reports two advisories in
   `image-size` (GHSA-w3rx-r6r6-pgpr, GHSA-5p2g-fcmc-qvqq): denial of service from a crafted image, with no
   patched version. It is reached only through Metro at build time and never ships in the app. The gate

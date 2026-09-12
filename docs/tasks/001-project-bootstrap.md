@@ -248,11 +248,11 @@ Every scope item above has a criterion here. A scope item without one can quietl
 - [x] One fixture in `packages/shared/fixtures/` is loaded and asserted by **both** pytest and Jest
 
 **Every gate proven by breaking it**
-- [ ] CI fails if a file in `app/domain/` imports `sqlalchemy` — **write that import, watch CI fail**,
+- [x] CI fails if a file in `app/domain/` imports `sqlalchemy` — **write that import, watch CI fail**,
       then remove it
-- [ ] CI fails if a feature contains `Platform.OS` — **write it, watch CI fail**, then remove it
+- [x] CI fails if a feature contains `Platform.OS` — **write it, watch CI fail**, then remove it
       (INV-28)
-- [ ] **Every boundary rule has a known-bad fixture that CI proves is caught** — each import-linter
+- [x] **Every boundary rule has a known-bad fixture that CI proves is caught** — each import-linter
       contract, the `banned-api` list, and each ESLint folder, package and global rule, with the
       unscoped-reads fence, `fetch` outside `src/sync/`, `expo-location` in a feature, a feature importing
       `src/crypto/`, and the core binding imported outside `src/domain/` among them.
