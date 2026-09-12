@@ -11,6 +11,16 @@ allowBuilds:
   esbuild: true
   unrs-resolver: true
 
+# CI fails on any high or critical audit finding (04 §10), except these, each accepted with its reason.
+# Revisit whenever a patched version exists, or if the package ever reaches the app bundle.
+auditConfig:
+  ignoreGhsas:
+    # image-size ≤2.0.2, denial of service from a crafted image (ICNS; JXL/HEIF). No patched version.
+    # Reached only through Metro, which bundles images the project itself provides, at build time on a
+    # developer's machine or in CI. Nothing in it ships in the app or parses user input.
+    - GHSA-w3rx-r6r6-pgpr
+    - GHSA-5p2g-fcmc-qvqq
+
 minimumReleaseAgeExclude:
   - '@expo/cli@57.0.24'
   - '@expo/fingerprint@0.20.13'

@@ -733,3 +733,11 @@ rights, a database, a device or Rust is still ahead. Settled while building, and
 - **Git:** commits as `hiuriselzler`; the remote is the private `hiuriselzler/projeto_cyber` on GitHub.
   `main` holds the agreed documentation; task 001's work sits on its own branch, so CI runs on its pull
   request before anything reaches `main`.
+- **First CI run:** the API job passed — integration tests included, against a real Postgres. The three
+  Node jobs failed before any check ran (setup-node looked for pnpm before it was installed), fixed by
+  installing pnpm first.
+- **Two audit findings accepted, by id.** `pnpm audit --audit-level high` reports two advisories in
+  `image-size` (GHSA-w3rx-r6r6-pgpr, GHSA-5p2g-fcmc-qvqq): denial of service from a crafted image, with no
+  patched version. It is reached only through Metro at build time and never ships in the app. The gate
+  stays at "high" and ignores only those two ids, with the reason beside them in `pnpm-workspace.yaml`;
+  revisit when a patch exists.
