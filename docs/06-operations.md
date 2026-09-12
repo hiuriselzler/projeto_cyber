@@ -40,6 +40,11 @@ build may use cleartext to `localhost` and nothing else, so a LAN address would 
 `docker compose` provides Postgres only. The API runs on the host so the debugger and reloader
 work without container gymnastics.
 
+**Without Docker:** until [task 017](tasks/017-local-toolchain-device-spike.md), a portable PostgreSQL in
+the user profile stands in for it, with the same roles and the same `.env` — see the README. On Windows,
+run `uvicorn` with `--reload`: psycopg's async driver cannot use the event loop a plain `uvicorn` process
+gets there.
+
 **Two database roles, locally exactly as in production** ([ADR-011](decisions/ADR-011.md)). The
 compose init step runs `infra/postgres/roles.sql`, which creates `cyberathlete_migrator`, used by
 Alembic, seeds and backfills through `MIGRATION_DATABASE_URL`, and `cyberathlete_app`, used by the API

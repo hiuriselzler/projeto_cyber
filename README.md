@@ -54,6 +54,29 @@ The API refuses to start with a development `JWT_SECRET`, or on a database role 
 row-level security. The development build talks `http://` to `localhost` only; a release build talks
 `https://` only ([04 §5](docs/04-security-and-auth.md)).
 
+### A local PostgreSQL without Docker (Windows, no administrator rights)
+
+Until Docker is available ([task 017](docs/tasks/017-local-toolchain-device-spike.md)), a portable
+PostgreSQL 16 stands in for it. The binaries are in `%LOCALAPPDATA%\Programs\pgsql-16.15` — EDB build
+16.15-1, whose zip matches the hash in Scoop's manifest and whose programs match zonky's copy on Maven
+Central — and the data is in `%LOCALAPPDATA%\cyberathlete\postgres-16`. It listens on `127.0.0.1:5432`
+only, with password authentication, and holds the same two roles as the Docker setup, so `.env` and the
+commands above stay exactly the same. It does not start with Windows; in PowerShell:
+
+```powershell
+$pg   = "$env:LOCALAPPDATA\Programs\pgsql-16.15\bin"
+$home16 = "$env:LOCALAPPDATA\cyberathlete\postgres-16"
+& "$pg\pg_ctl.exe" --pgdata "$home16\data" --log "$home16\server.log" start   # before working
+& "$pg\pg_ctl.exe" --pgdata "$home16\data" stop                               # when done
+```
+
+Stop it before `docker compose up`: both use port 5432.
+
+**On Windows, run the API with `--reload`**, as above. psycopg's async driver cannot use the event loop a
+plain `uvicorn` process gets on Windows, and the API then refuses to start — with a message that blames
+an unreachable database. Under `--reload` it runs with a compatible loop. The tests select that loop
+themselves (`apps/api/tests/conftest.py`). Linux, and so CI and production, is unaffected.
+
 ## Checks
 
 | | Command |
