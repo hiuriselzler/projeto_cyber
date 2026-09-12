@@ -15,13 +15,13 @@ when its own criteria are ticked. Tick the box here only then.
 
 | | |
 |---|---|
-| **Phase** | Pre-code. Documentation and decisions complete; **no source exists yet** |
-| **Repository** | Not a git repository. `git init`, pushed to a **private GitHub repository**, is the first act of [task 001](tasks/001-project-bootstrap.md) |
+| **Phase** | **Task 001 in progress.** The API, the mobile app, the shared package and CI exist, and CI is green; the device, the local Docker run and the ADR-004 spike are still ahead |
+| **Repository** | Private GitHub repository `hiuriselzler/projeto_cyber`. `main` holds the agreed documentation; task 001's work is pull request #1 from `task/001-bootstrap` |
 | **Docs** | 42 files, internally consistent, all cross-links resolving |
 | **Decisions** | 12 ADRs. Eleven accepted outright; [ADR-004](decisions/ADR-004.md) accepted *conditionally* |
 | **Tasks** | 14 for v1 (Android), 2 after launch — iOS platform, Coach tier. **0 complete** |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | [Task 001](tasks/001-project-bootstrap.md) — repository and code first; admin installs, the device and the spike last |
+| **Next action** | [Task 001](tasks/001-project-bootstrap.md) — prove the gates by watching CI fail; then, with admin rights, Docker, the development build on a device and the ADR-004 spike |
 
 ### The one decision still genuinely open
 
