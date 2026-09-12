@@ -1,0 +1,18 @@
+[
+  { "code": "first_block", "name_key": "achievement.first_block.name", "description_key": "achievement.first_block.description", "track": "consistency", "tier": 1, "unit_system": null },
+  { "code": "first_deload", "name_key": "achievement.first_deload.name", "description_key": "achievement.first_deload.description", "track": "recovery", "tier": 1, "unit_system": null },
+  { "code": "four_blocks", "name_key": "achievement.four_blocks.name", "description_key": "achievement.four_blocks.description", "track": "consistency", "tier": 2, "unit_system": null },
+  { "code": "rir_sets_100", "name_key": "achievement.rir_sets_100.name", "description_key": "achievement.rir_sets_100.description", "track": "precision", "tier": 1, "unit_system": null },
+  { "code": "block_adherence_90", "name_key": "achievement.block_adherence_90.name", "description_key": "achievement.block_adherence_90.description", "track": "consistency", "tier": 2, "unit_system": null },
+  { "code": "rest_days_cycle", "name_key": "achievement.rest_days_cycle.name", "description_key": "achievement.rest_days_cycle.description", "track": "recovery", "tier": 1, "unit_system": null },
+  { "code": "first_5k", "name_key": "achievement.first_5k.name", "description_key": "achievement.first_5k.description", "track": "run", "tier": 1, "unit_system": null },
+  { "code": "sub_25_5k", "name_key": "achievement.sub_25_5k.name", "description_key": "achievement.sub_25_5k.description", "track": "run", "tier": 2, "unit_system": null },
+  { "code": "first_100km_month", "name_key": "achievement.first_100km_month.name", "description_key": "achievement.first_100km_month.description", "track": "run", "tier": 2, "unit_system": "metric" },
+  { "code": "first_100mi_month", "name_key": "achievement.first_100mi_month.name", "description_key": "achievement.first_100mi_month.description", "track": "run", "tier": 2, "unit_system": "imperial" },
+  { "code": "bodyweight_bench", "name_key": "achievement.bodyweight_bench.name", "description_key": "achievement.bodyweight_bench.description", "track": "strength", "tier": 2, "unit_system": null },
+  { "code": "double_bodyweight_deadlift", "name_key": "achievement.double_bodyweight_deadlift.name", "description_key": "achievement.double_bodyweight_deadlift.description", "track": "strength", "tier": 3, "unit_system": null },
+  { "code": "swim_1km_session", "name_key": "achievement.swim_1km_session.name", "description_key": "achievement.swim_1km_session.description", "track": "swim_pool", "tier": 1, "unit_system": "metric" },
+  { "code": "swim_1mi_session", "name_key": "achievement.swim_1mi_session.name", "description_key": "achievement.swim_1mi_session.description", "track": "swim_pool", "tier": 2, "unit_system": "imperial" },
+  { "code": "consecutive_cycles_12", "name_key": "achievement.consecutive_cycles_12.name", "description_key": "achievement.consecutive_cycles_12.description", "track": "consistency", "tier": 2, "unit_system": null },
+  { "code": "one_year_logged", "name_key": "achievement.one_year_logged.name", "description_key": "achievement.one_year_logged.description", "track": null, "tier": 3, "unit_system": null }
+]

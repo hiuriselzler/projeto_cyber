@@ -1,27 +1,22 @@
-import { db, sqlite } from './client';
-import { launches } from './schema';
+import { sqlite } from './client';
+
+/** Every table in 03 §8 — 33 shared with Postgres, plus raw_gps_points, outbox and sync_state. */
+export const EXPECTED_TABLES = 36;
 
 export interface LocalDatabaseState {
-  /** Rows in Drizzle's migration log. Stays at 1 across launches if migrations are idempotent. */
+  /** Rows in Drizzle's migration log. Unchanged across launches if migrations are idempotent. */
   readonly migrationsApplied: number;
-  /** Grows by one per launch, proving writes persist. */
-  readonly launches: number;
-}
-
-let launchRecorded = false;
-
-/** Records this launch once, however many times React runs the effect that calls it. */
-export function recordLaunchOnce(launchedAt: string): void {
-  if (launchRecorded) {
-    return;
-  }
-  db.insert(launches).values({ launchedAt }).run();
-  launchRecorded = true;
+  /** Application tables present, for task 017's check that the whole device schema exists. */
+  readonly tables: number;
 }
 
 export function readLocalDatabaseState(): LocalDatabaseState {
   const migrations = sqlite.getFirstSync<{ count: number }>(
     'SELECT count(*) AS count FROM __drizzle_migrations',
   );
-  return { migrationsApplied: migrations?.count ?? 0, launches: db.$count(launches) as unknown as number };
+  const tables = sqlite.getFirstSync<{ count: number }>(
+    "SELECT count(*) AS count FROM sqlite_master WHERE type = 'table' " +
+      "AND name NOT LIKE 'sqlite_%' AND name <> '__drizzle_migrations'",
+  );
+  return { migrationsApplied: migrations?.count ?? 0, tables: tables?.count ?? 0 };
 }

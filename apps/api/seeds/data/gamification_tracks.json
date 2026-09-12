@@ -1,0 +1,18 @@
+[
+  { "track": "strength", "kind": "discipline", "hue_token": "strength", "level_scale_bp": 10000 },
+  { "track": "run", "kind": "discipline", "hue_token": "run", "level_scale_bp": 10000 },
+  { "track": "ride", "kind": "discipline", "hue_token": "ride", "level_scale_bp": 10000 },
+  { "track": "walk", "kind": "discipline", "hue_token": "walk", "level_scale_bp": 10000 },
+  { "track": "swim_pool", "kind": "discipline", "hue_token": "swim", "level_scale_bp": 10000 },
+  { "track": "treadmill", "kind": "discipline", "hue_token": "run", "level_scale_bp": 10000 },
+  { "track": "indoor_bike", "kind": "discipline", "hue_token": "ride", "level_scale_bp": 10000 },
+  { "track": "trail_run", "kind": "discipline", "hue_token": "run", "level_scale_bp": 10000 },
+  { "track": "hike", "kind": "discipline", "hue_token": "walk", "level_scale_bp": 10000 },
+  { "track": "open_water_swim", "kind": "discipline", "hue_token": "swim", "level_scale_bp": 10000 },
+  { "track": "row_indoor", "kind": "discipline", "hue_token": "row", "level_scale_bp": 10000 },
+  { "track": "other", "kind": "discipline", "hue_token": "quality", "level_scale_bp": 10000 },
+  { "track": "consistency", "kind": "quality", "hue_token": "quality", "level_scale_bp": 10000 },
+  { "track": "recovery", "kind": "quality", "hue_token": "quality", "level_scale_bp": 10000 },
+  { "track": "precision", "kind": "quality", "hue_token": "quality", "level_scale_bp": 10000 },
+  { "track": "progression", "kind": "quality", "hue_token": "quality", "level_scale_bp": 10000 }
+]

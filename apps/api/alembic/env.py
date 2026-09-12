@@ -6,13 +6,15 @@ from alembic import context
 from sqlalchemy import create_engine, pool, text
 
 from app.core.config import MigrationSettings
+from app.models import Base
 
 config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name, disable_existing_loggers=False)
 
-# No models yet. Task 002 points this at the declarative metadata.
-target_metadata = None
+# For drafting a revision with --autogenerate only. Every migration is written and reviewed by hand
+# (06 §4); a test keeps the models and the migrated schema in step.
+target_metadata = Base.metadata
 
 
 def _database_url() -> str:

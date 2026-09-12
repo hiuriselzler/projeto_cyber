@@ -56,8 +56,15 @@ jobs:
       - run: uv sync --locked
       - run: uv run ruff check .
       - run: uv run ruff format --check .
-      - run: uv run mypy app tests scripts alembic/env.py
+      - run: uv run mypy app tests scripts seeds alembic/env.py
       - run: uv run lint-imports
+      # Task 002: the migration applies, the seeds run, and the schema passes 03 §8 and §11, ADR-011
+      # and ADR-013 — compared with the committed Drizzle snapshot, name for name.
+      - name: Migrate, seed and check the schema
+        run: |
+          uv run alembic upgrade head
+          uv run python -m seeds
+          uv run python -m scripts.check_schema
       - run: uv run pytest
       - run: uv run pip-audit
 
@@ -75,12 +82,13 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Regenerate the OpenAPI schema and TypeScript types
+      - name: Regenerate the OpenAPI schema, the TypeScript types and the reference-data export
         run: |
           (cd apps/api && uv sync --locked && uv run python -m scripts.export_openapi)
+          (cd apps/api && uv run python -m seeds.export)
           pnpm --filter @cyberathlete/shared generate:api
       - name: Fail if the committed copies are stale
-        run: git diff --exit-code -- packages/shared/api
+        run: git diff --exit-code -- packages/shared/api packages/shared/seeds
       - run: pnpm --filter @cyberathlete/shared typecheck
 
   mobile:
@@ -99,6 +107,12 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
       - run: pnpm lint
+      # The schema check in the API job reads the committed snapshot, so it must match schema.ts.
+      - name: The committed device migrations match the Drizzle schema
+        run: |
+          pnpm db:generate
+          git diff --exit-code -- src/db/migrations
+          test -z "$(git status --porcelain -- src/db/migrations)"
       - name: Every boundary rule reports its known-bad fixture
         run: pnpm lint:fixtures
       - run: pnpm check:platform-files

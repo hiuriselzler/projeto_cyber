@@ -7,7 +7,9 @@
     "./api": {
       "types": "./api/schema.d.ts"
     },
-    "./fixtures/*": "./fixtures/*"
+    "./fixtures/*": "./fixtures/*",
+    "./i18n/*": "./i18n/*",
+    "./seeds/*": "./seeds/*"
   },
   "scripts": {
     "generate:api": "openapi-typescript ./api/openapi.json --output ./api/schema.d.ts",

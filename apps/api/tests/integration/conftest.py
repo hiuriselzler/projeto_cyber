@@ -8,7 +8,8 @@ skip into a failure.
 
 import os
 import uuid
-from collections.abc import AsyncIterator, Awaitable, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable, Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 
 import pytest
@@ -16,11 +17,13 @@ from alembic import command
 from alembic.config import Config
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from sqlalchemy import make_url, text
+from sqlalchemy import Connection, Engine, create_engine, make_url, text
 from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.pool import NullPool
 
 from app.core.config import ENV_FILE
 from app.core.migrations import API_ROOT
+from seeds.reference import seed
 
 
 class _IntegrationEnvironment(BaseSettings):
@@ -69,6 +72,41 @@ def database_urls() -> DatabaseUrls:
 def migrated(database_urls: DatabaseUrls) -> DatabaseUrls:
     command.upgrade(alembic_config(database_urls.migrator), "head")
     return database_urls
+
+
+@pytest.fixture(scope="module")
+def migrator_engine(migrated: DatabaseUrls) -> Iterator[Engine]:
+    engine = create_engine(migrated.migrator, poolclass=NullPool)
+    yield engine
+    engine.dispose()
+
+
+@pytest.fixture(scope="module")
+def app_engine(migrated: DatabaseUrls) -> Iterator[Engine]:
+    engine = create_engine(migrated.app, poolclass=NullPool)
+    yield engine
+    engine.dispose()
+
+
+@pytest.fixture(scope="module")
+def seeded(migrated: DatabaseUrls, migrator_engine: Engine) -> DatabaseUrls:
+    """Reference data present. Per module, because the readiness test migrates down and back up."""
+    command.upgrade(alembic_config(migrated.migrator), "head")
+    with migrator_engine.begin() as connection:
+        seed(connection)
+    return migrated
+
+
+@contextmanager
+def scoped(engine: Engine, user_id: uuid.UUID | None) -> Iterator[Connection]:
+    """A transaction as the app sees it: `SET LOCAL app.user_id`, or no scope at all (ADR-011)."""
+    with engine.begin() as connection:
+        if user_id is not None:
+            connection.execute(
+                text("SELECT set_config('app.user_id', :user_id, true)"),
+                {"user_id": str(user_id)},
+            )
+        yield connection
 
 
 MakeRole = Callable[..., Awaitable[str]]

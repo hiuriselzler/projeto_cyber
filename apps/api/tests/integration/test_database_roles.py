@@ -9,6 +9,7 @@ from sqlalchemy.exc import ProgrammingError
 
 from app.core.config import get_settings
 from app.core.db import UnsafeDatabaseRoleError, assert_database_role_is_safe, create_engine
+from app.core.migrations import migration_tree
 from app.main import create_app, lifespan
 
 pytestmark = pytest.mark.integration
@@ -80,7 +81,7 @@ async def test_the_app_role_reads_alembic_version_without_a_manual_grant(migrate
     try:
         async with engine.connect() as connection:
             revision = await connection.execute(text("SELECT version_num FROM alembic_version"))
-            assert revision.scalar_one() == "0001"
+            assert revision.scalar_one() == migration_tree().head
     finally:
         await engine.dispose()
 
