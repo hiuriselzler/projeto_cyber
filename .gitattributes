@@ -1,0 +1,12 @@
+# Line endings are normalised to LF in the repository and on checkout, on every OS. The shared
+# fixtures are read byte-for-byte by pytest, Jest and Rust, and a CRLF checkout on Windows would make
+# them disagree.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ttf binary
+*.otf binary
+*.jar binary
