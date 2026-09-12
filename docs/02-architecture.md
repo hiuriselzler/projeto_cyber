@@ -80,7 +80,7 @@ Both sides need it. The phone must project the next cycle's numbers while offlin
 able to recompute authoritatively. If the two implementations ever disagree, sync thrashes.
 
 **How it is implemented is [ADR-004](decisions/ADR-004.md)** — accepted, subject to a two-day
-toolchain spike in [task 001](tasks/001-project-bootstrap.md):
+toolchain spike in [task 017](tasks/017-local-toolchain-device-spike.md), before task 004:
 
 - **Primary:** one Rust crate, `core-rs`, exposed to FastAPI via PyO3 and to the Expo app via
   UniFFI. Written once, tested once, structurally identical on both sides.

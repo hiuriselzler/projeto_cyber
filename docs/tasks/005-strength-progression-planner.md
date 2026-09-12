@@ -18,12 +18,12 @@ Implements [01 §3](../01-business-requirements.md) on the storage model of
 
 ### Phase A — the engine (build this first, and alone)
 
-The progression core, in whichever form [ADR-004](../decisions/ADR-004.md)'s task-001 spike
+The progression core, in whichever form [ADR-004](../decisions/ADR-004.md)'s task-017 spike
 settled on — one Rust crate, or Python mirrored in TypeScript. **Pure: no I/O, no clock, no
 randomness** (INV-10). `now` is a parameter.
 
-> That decision is already made by the time this task starts ([task 001](001-project-bootstrap.md)
-> is not complete until ADR-004 has a recorded outcome). Do not reopen it here.
+> That decision is already made by the time this task starts ([task 017](017-local-toolchain-device-spike.md)
+> is not complete until ADR-004 has a recorded outcome, and task 004 waits for it). Do not reopen it here.
 
 ```
 generate(mesocycle_spec, cycle1, rules, now)  -> planned microcycles 2..N

@@ -2,6 +2,10 @@
 
 **Depends on:** 001 · **Blocks:** 004 onward (in practice) · **Size:** M
 
+> **Device checks (2026-09-12):** there is no physical device before [task 017](../tasks/017-local-toolchain-device-spike.md), so the
+> three criteria that can only be seen on one — token changes on screen, live numerals, TalkBack — moved
+> there. This task closes on the rest.
+
 > **Build order note:** numbered 011 because it was added late, but it belongs **immediately after
 > [task 001](001-project-bootstrap.md)** — before [task 004](004-exercise-catalog-and-logging.md)
 > builds the set row. See [README.md](README.md). Building the app's most important component
@@ -70,15 +74,13 @@ Priority order, most valuable first:
       prompting toward the answer
 - [ ] Light and dark both pass contrast: body 4.5:1, UI 3:1, workout numerals 7:1 (INV-24)
 - [ ] A grep for hex literals in `src/features/` returns nothing (INV-23)
-- [ ] Changing one token value visibly updates every screen using it
 - [ ] Every state that uses colour also carries an icon, label or shape (INV-24)
-- [ ] All changing numbers use tabular figures — verified by watching a live pace readout not jitter
-- [ ] TalkBack can complete a full set-logging flow (VoiceOver: [task 016](016-ios-platform.md))
 - [ ] Reduce-motion produces no animation longer than a cross-fade
 
 ## Notes and risks
 - **The set row is the product** ([task 004](004-exercise-catalog-and-logging.md)). Prototype it on
-  a real phone, with sweaty hands, before building anything around it.
+  a real phone, with sweaty hands, before building anything around it — in task 017, the first moment a
+  phone is available, and before task 004.
 - The tone gate on the mark is the part most likely to drift. "Serious and logical" is easy to
   agree with and hard to hold — every iteration will be tempted toward friendlier.
 - Resist designing screens here. This task produces the vocabulary; the feature tasks write the

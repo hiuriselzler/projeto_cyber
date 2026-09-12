@@ -2,6 +2,10 @@
 
 **Depends on:** 002 · **Blocks:** 006 (sync), 012, 014 · **Size:** L
 
+> **Device checks (2026-09-12):** there is no physical device before [task 017](../tasks/017-local-toolchain-device-spike.md). The
+> criteria that need one — the libsodium binding, offline sign-in, the privacy-key flows, the
+> key-derivation timing — moved there; this task closes on what the API tests, Jest and lint prove.
+
 > **Resized for multi-user.** Password reset and email verification moved here from "deferred"
 > ([04 §2a](../04-security-and-auth.md)); they are v1 blockers now that users are not the author.
 
@@ -66,9 +70,10 @@ migration with no way to derive the missing keys.
 - **The wrapping KDF is never cheaper than the login hash** — memory and iterations each at least the
   server's. The wrapped key is a password-guessing oracle for anyone holding a dump, so a cheaper KDF
   here would make it the cheapest route to the password itself ([ADR-007](../decisions/ADR-007.md)).
-- **All of it lives in `apps/mobile/src/crypto/`**, on libsodium through a native binding. Confirm the
-  candidate, `react-native-libsodium` (argon2id, XChaCha20-Poly1305, `randombytes`), works in the dev
-  build **before** building the flows on it. The derivation must not freeze the screen.
+- **All of it lives in `apps/mobile/src/crypto/`**, on libsodium through a native binding. The flows are
+  built against `src/crypto/`'s interface and tested in Jest; confirming the candidate,
+  `react-native-libsodium` (argon2id, XChaCha20-Poly1305, `randombytes`), in a development build is
+  [task 017](../tasks/017-local-toolchain-device-spike.md)'s, before anything relies on it. The derivation must not freeze the screen.
 - **On sign-in from a new device:** unwrap with the password just entered, before it leaves scope.
   There is exactly one moment when the plaintext password is available on the client; the flow has
   to use it or the key is unrecoverable.
@@ -99,29 +104,19 @@ migration with no way to derive the missing keys.
 - [ ] With RLS on, a deliberately unscoped repository query returns 0 rows rather than data —
       write this test, prove the second line of defence works
 - [ ] Login attempts for an existing and a non-existent email differ by < 20 ms across 100 runs
-- [ ] Airplane mode, app killed and reopened: the user is still signed in and lands on the home
-      screen with no spinner and no error
 - [ ] Rate limit returns 429 with `Retry-After` after 10 failed logins
 - [ ] A password reset completes, and **every other device is signed out**
 - [ ] A used reset token is rejected; an expired one is rejected
 - [ ] Reset-request responses are identical for a registered and an unregistered email
 - [ ] An unverified user can log in and log a workout, but cannot request a data export
 - [ ] The session list shows both devices and revoking one signs only that one out
-- [ ] A privacy key created on device A is unwrapped correctly by device B after sign-in, and the
-      server never receives it in the clear — verified by inspecting the request bodies
-- [ ] Changing the password leaves existing encrypted rows decryptable; resetting it does not, and
-      the reset screen warned about that before the user confirmed
 - [ ] The client wrapping-KDF constants are at least the server's login-hash memory and iterations; a
       test fails if either side changes so the client falls below ([ADR-007](../decisions/ADR-007.md))
-- [ ] `privacy_key_kdf` is stored with every wrap; a key wrapped under older parameters still
-      unwraps, and is re-wrapped under the current ones at the next password entry
 - [ ] Only `src/crypto/` imports the crypto library or reads the privacy key from secure storage —
       enforced by lint
 - [ ] No route or feature imports `src/sync/` or `src/crypto/`; sign-in, registration and password
       change reach both only through `src/account/` — enforced by lint
       ([ADR-012](../decisions/ADR-012.md))
-- [ ] The key derivation on a mid-range Android phone does not freeze the screen, and its measured
-      duration is written into this task's notes
 
 ## Notes and risks
 - Password reset is the flow attackers probe first. The enumeration-safe response and the
@@ -134,3 +129,6 @@ migration with no way to derive the missing keys.
   [task 007](007-cardio-recording.md) needs it, and expensive by then — every existing account
   would have no key and no password to derive one from. Build it now even though nothing encrypts
   anything yet.
+- **Until task 017, the libsodium binding is unconfirmed on a device.** If it fails there, only
+  `src/crypto/`'s internals change, because the flows depend on its interface — the reason to hold that
+  interface narrow.

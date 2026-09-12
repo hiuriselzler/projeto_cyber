@@ -581,7 +581,7 @@ Specified in [09-business-model.md](09-business-model.md) under
 - **`cycle_pattern` is v2** (§3.2e). Its main use case is already served by `linear_load` plus a
   deload every four microcycles; the column exists so adding it later is not a migration.
 - **The Rust core is conditionally accepted** — a two-day spike in
-  [task 001](tasks/001-project-bootstrap.md) decides it ([ADR-004](decisions/ADR-004.md)).
+  [task 017](tasks/017-local-toolchain-device-spike.md) decides it, before task 004 ([ADR-004](decisions/ADR-004.md)).
 
 *Answered 2026-09-09 — the four questions that were open:*
 
