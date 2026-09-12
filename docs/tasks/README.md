@@ -14,7 +14,7 @@ development machine turned out to lack administrator rights. This is the real or
 | # | Task | Size | Why here |
 |---|---|---|---|
 | 1 | [001 Project bootstrap](001-project-bootstrap.md) | L | Everything depends on it. **Complete** |
-| 2 | [002 Database](002-database.md) | L | Last chance to change the schema freely |
+| 2 | [002 Database](002-database.md) | L | Last chance to change the schema freely. **Complete** |
 | 3 | [011 Design system](011-design-system.md) | M | **Before any feature UI.** Task 004 builds the set row — the most important component in the app — and it should be built from a system, not retrofitted into one |
 | 4 | [003 Authentication](003-authentication.md) | L | Includes password reset and email verification, now v1 blockers |
 | 5 | [017 Local toolchain, device and core spike](017-local-toolchain-device-spike.md) | L | Everything that needs administrator rights, and every check only a phone can settle. **Must come before 004** — it holds the [ADR-004](../decisions/ADR-004.md) Rust spike, a 2-day go/no-go |

@@ -15,13 +15,13 @@ when its own criteria are ticked. Tick the box here only then.
 
 | | |
 |---|---|
-| **Phase** | **Task 001 complete; task 002 built** — every criterion proven by tests that pass locally; it closes when CI is green on its pull request. Everything that needs administrator rights — Docker, the device, the ADR-004 spike — is [task 017](tasks/017-local-toolchain-device-spike.md), which must finish before task 004 |
+| **Phase** | **Tasks 001 and 002 complete; task 011 next.** The schema exists in Postgres and SQLite, seeded and enforcing itself, with CI green. Everything that needs administrator rights — Docker, the device, the ADR-004 spike — is [task 017](tasks/017-local-toolchain-device-spike.md), which must finish before task 004 |
 | **Repository** | Private GitHub repository `hiuriselzler/projeto_cyber`. `main` holds the documentation and task 001's merged work (pull request #1); each further piece arrives by pull request, with CI green before merge |
 | **Docs** | 44 files, internally consistent, all cross-links resolving |
 | **Decisions** | 13 ADRs. Twelve accepted outright; [ADR-004](decisions/ADR-004.md) accepted *conditionally* |
-| **Tasks** | 15 for v1 (Android), 2 after launch — iOS platform, Coach tier. **1 complete** (001) |
+| **Tasks** | 15 for v1 (Android), 2 after launch — iOS platform, Coach tier. **2 complete** (001, 002) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | Open task 002's pull request and let CI prove it; have a native speaker who trains review the Portuguese exercise names. Then 011 and 003; then [task 017](tasks/017-local-toolchain-device-spike.md) once administrator rights are available, before task 004 |
+| **Next action** | [Task 011](tasks/011-design-system.md) — brand assets and the design system. Then 003; then [task 017](tasks/017-local-toolchain-device-spike.md) once administrator rights are available, before task 004. Separately: a native speaker who trains reviews the Portuguese exercise names |
 
 ### The one decision still genuinely open
 
@@ -83,10 +83,10 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
 - [x] Prove the gates: write a `sqlalchemy` import into `domain/` and watch CI fail; **every rule has a
       known-bad fixture that CI proves is caught**
 
-#### ☐ 002 — Database and schema · **L** · depends: 001 · blocks: 003–009
+#### ☑ 002 — Database and schema · **L** · depends: 001 · blocks: 003–009
 > **The last chance to change the schema freely.** Schema churn is far cheaper before there is data.
-> **Built (2026-09-12):** every criterion in the task file is proven by a test that passes locally. The
-> box is ticked once CI is green on its pull request.
+> **Complete (2026-09-12).** Every criterion in the task file is proven by a test, and CI was green on
+> all four jobs of pull request #5. The two device checks remain in task 017.
 - [x] Postgres: all of [03](03-database-schema.md) in one pass, cardio and planning tables included
 - [x] Enums → users/auth → catalog → routines → workouts/sets → planner → **`gamification_tracks`**
       → **`sport_profiles`** → cardio → cardio plans → remaining gamification tables
