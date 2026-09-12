@@ -21,7 +21,7 @@ docker compose up -d                      # postgres:16 on 5432, adminer on 8080
 cd apps/api
 uv sync
 uv run alembic upgrade head               # connects as cyberathlete_migrator
-uv run python -m seeds.exercises          # seed the global catalog, from apps/api/seeds/
+uv run python -m seeds                    # seed the reference data, from apps/api/seeds/
 uv run uvicorn app.main:app --reload      # http://localhost:8000/docs
 
 # Terminal 2 — mobile, from the repository root

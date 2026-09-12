@@ -83,5 +83,9 @@ summary appears before its charts ([ADR-003](../decisions/ADR-003.md)).
   server's at the **same** engine version when its `updated_at` is newer. Same version means the same
   function, but not always the same inputs — a device may lack logs the server already has. Decide how
   the two rules combine, and write it into 02 §7, before building conflict resolution.
+- **Applying a resolved cycle must pass the INV-06 backstop** ([ADR-013](../decisions/ADR-013.md)). The
+  trigger rejects a changed prescription in a cycle that is no longer `projected` unless the set is
+  `user_edited`. Apply a winning cycle's children before its new status, or replace them; never look for
+  a way round the trigger.
 - If this task overruns badly, that is the signal in [ADR-001 § Revisit if](../decisions/ADR-001.md)
   — evaluate PowerSync or ElectricSQL over the existing Postgres rather than pushing on.
