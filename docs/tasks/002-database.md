@@ -34,15 +34,19 @@ Non-negotiable in this task:
 - All CHECK constraints from the schema doc, especially `rir BETWEEN 0 AND 10` (INV-03) and
   `max_reps >= min_reps` (INV-05).
 - FK delete semantics per [03 §10](../03-database-schema.md) — in particular `exercises` is
-  **RESTRICT**, not CASCADE (INV-11). Getting this wrong is discovered a year later.
-- `user_id` indexed on every owned table (INV-15).
+  **NO ACTION**, not CASCADE (INV-11), and not `RESTRICT`, which breaks account deletion
+  ([ADR-013](../decisions/ADR-013.md)). Getting this wrong is discovered a year later.
+- `user_id` on every owned table **and every child of one**, indexed, with composite references to the
+  parent so no row can point at another user's row (INV-15, [ADR-013](../decisions/ADR-013.md)).
 - The `‹sync›` column set (`created_at`, `updated_at`, `deleted_at`, `sync_version`) on every
   table classified **root** in [03 §11](../03-database-schema.md), applied by a mixin so it cannot
   be forgotten — and on **no** dependent, reference, derived or local-only table, because a sync
   column on a table that never syncs implies a conflict question that does not exist.
-- A DB trigger backstop for INV-06: reject an UPDATE to a `planned_set` whose microcycle status is
-  not `projected`, unless the session flags itself as a user edit — **and reject an engine write that
-  would lower a microcycle's `engine_version`** ([ADR-004](../decisions/ADR-004.md)). Both triggers
+- A DB trigger backstop for INV-06: reject an UPDATE that changes a `planned_set`'s prescription while
+  its microcycle status is not `projected`, unless the row marks itself `origin = 'user_edited'` — **and
+  reject an engine write that would lower a microcycle's `engine_version`** ([ADR-004](../decisions/ADR-004.md)).
+  The marker is carried by the row, not the session, so the trigger is identical in SQLite
+  ([03 § The INV-06 backstop](../03-database-schema.md), [ADR-013](../decisions/ADR-013.md)). Both triggers
   exist in SQLite as well as Postgres, because an offline device on an older engine is exactly where
   the second one earns its keep.
 - **No `day_of_week` column on any planning table** (INV-25). `planned_sessions.day_index` and
@@ -93,40 +97,40 @@ and `sync_state`.
 the very first migration after this one. This task is the last chance to change the schema freely.
 
 ## Acceptance criteria
-- [ ] `alembic upgrade head` then `downgrade base` runs clean on an empty database
-- [ ] Seeds run twice with no duplicates and no errors
-- [ ] Attempting to delete an exercise that has `set_logs` fails with a FK violation
-- [ ] `INSERT` with `rir = 11` is rejected by the database, not just by Pydantic
-- [ ] A `swim_pool` activity validates with `{pool_length_m, lengths, swolf}` in `sport_metrics`
-      and is rejected with a running-shaped payload, per its profile's schema (INV-19)
-- [ ] A mesocycle of 24 microcycles with `deload_mode = 'none'` is valid and produces no deload
-- [ ] A microcycle with `length_days = 9` accepts a session at `day_index = 9` and rejects one at
+- [x] `alembic upgrade head` then `downgrade base` runs clean on an empty database
+- [x] Seeds run twice with no duplicates and no errors
+- [x] Attempting to delete an exercise that has `set_logs` fails with a FK violation
+- [x] `INSERT` with `rir = 11` is rejected by the database, not just by Pydantic
+- [x] A `swim_pool` activity validates with `{pool_length_m, pool_length_unit, lengths, swolf}` in
+      `sport_metrics` and is rejected with a running-shaped payload, per its profile's schema (INV-19)
+- [x] A mesocycle of 24 microcycles with `deload_mode = 'none'` is valid and produces no deload
+- [x] A microcycle with `length_days = 9` accepts a session at `day_index = 9` and rejects one at
       `day_index = 10` (INV-25)
-- [ ] A grep for `day_of_week` across the schema returns nothing
-- [ ] With RLS on and `app.user_id` set to user A, a query for user B's workouts returns 0 rows
+- [x] A grep for `day_of_week` across the schema returns nothing
+- [x] With RLS on and `app.user_id` set to user A, a query for user B's workouts returns 0 rows
       even with an explicitly wrong `WHERE`
-- [ ] With `app.user_id` **unset**, `cyberathlete_app` reads 0 rows from every user-owned table — the
+- [x] With `app.user_id` **unset**, `cyberathlete_app` reads 0 rows from every user-owned table — the
       policies fail closed, never open
-- [ ] The schema-comparison script fails on any user-owned table without both RLS **and** `FORCE ROW
+- [x] The schema-comparison script fails on any user-owned table without both RLS **and** `FORCE ROW
       LEVEL SECURITY` — remove one, watch it fail, revert
-- [ ] `cyberathlete_app` cannot read `users` without a scope; login finds a user only through its
+- [x] `cyberathlete_app` cannot read `users` without a scope; login finds a user only through its
       `SECURITY DEFINER` lookup
-- [ ] Inserting a row whose `user_id` is not the scoped user is rejected by the policy's `WITH CHECK`
-- [ ] A `SECURITY DEFINER` function **not** on the [ADR-011](../decisions/ADR-011.md) allowlist fails the
+- [x] Inserting a row whose `user_id` is not the scoped user is rejected by the policy's `WITH CHECK`
+- [x] A `SECURITY DEFINER` function **not** on the [ADR-011](../decisions/ADR-011.md) allowlist fails the
       schema script — add one, watch it fail, remove it
-- [ ] The schema-comparison script **fails** when `‹sync›` is added to `cardio_plan_cycle_targets`
+- [x] The schema-comparison script **fails** when `‹sync›` is added to `cardio_plan_cycle_targets`
       or removed from `hr_zone_overrides` — verify by doing both and watching it break, then revert
-- [ ] `SELECT *` on `privacy_zones` yields an id, a user id, a blob and a nonce, and nothing that
+- [x] `SELECT *` on `privacy_zones` yields an id, a user id, a blob and a nonce, and nothing that
       is or implies a coordinate, a radius or a label ([ADR-007](../decisions/ADR-007.md))
-- [ ] **An imperial user's 52-cycle linear block stays on the 5 lb grid** after storage rounding —
+- [x] **An imperial user's 52-cycle linear block stays on the 5 lb grid** after storage rounding —
       run the INV-02 precision property against the real columns, not against in-memory numbers
-- [ ] A metric and an imperial user resolve **different** default increments for the same global
+- [x] A metric and an imperial user resolve **different** default increments for the same global
       barbell exercise, from `modality_increments`, with no increment set on the exercise itself
-- [ ] Every seeded reference row has a key, and **both** `en.json` and `pt-BR.json` resolve every
+- [x] Every seeded reference row has a key, and **both** `en.json` and `pt-BR.json` resolve every
       one of them — no seed may reference a string missing from either catalog (INV-27)
-- [ ] An exercise cannot list its own primary muscle as a secondary muscle — the insert is rejected
+- [x] An exercise cannot list its own primary muscle as a secondary muscle — the insert is rejected
       by trigger, because it would credit that muscle 1.2 sets per set (FR-2.16)
-- [ ] **No percentage is stored as `numeric`** — every percentage column is an integer `_bp`, and the
+- [x] **No percentage is stored as `numeric`** — every percentage column is an integer `_bp`, and the
       schema-comparison script fails on any column ending in `_pct` (ADR-010)
 
 ## Notes and risks
