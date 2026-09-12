@@ -51,36 +51,36 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
 *Plan a block and train it, offline, on one device.*
 
 #### ☐ 001 — Project bootstrap · **L** · depends: nothing · blocks: everything
-- [ ] `git init` and a **private GitHub repository**, `.gitignore`, `.editorconfig`, `README.md`; pnpm workspace + `uv` for the API
+- [x] `git init` and a **private GitHub repository**, `.gitignore`, `.editorconfig`, `README.md`; pnpm workspace + `uv` for the API
 - [ ] Directory skeleton exactly as [02 §2](02-architecture.md)
 - [ ] API boots: config with a **boot-time assertion that `JWT_SECRET` is not a dev default**,
       structured JSON logging with request-ID propagation, `/health` and `/health/ready` separate —
       readiness includes migrations at head
-- [ ] **Two database roles** — `cyberathlete_migrator` owns the schema, `cyberathlete_app` runs the API;
+- [x] **Two database roles** — `cyberathlete_migrator` owns the schema, `cyberathlete_app` runs the API;
       the API **refuses to boot** as a superuser, a `BYPASSRLS` role or a table owner ([04 §4](04-security-and-auth.md));
       grants through `ALTER DEFAULT PRIVILEGES FOR ROLE cyberathlete_migrator`
 - [ ] **Debug builds reach the API over `adb reverse`, cleartext to `localhost` only**; release builds
       permit no cleartext, proven by CI ([04 §5](04-security-and-auth.md))
-- [ ] Node 24 LTS pinned (`.nvmrc`, `engines`); CI runs `pnpm audit`, not `npm audit`
+- [x] Node 24 LTS pinned (`.nvmrc`, `engines`); CI runs `pnpm audit`, not `npm audit`
 - [ ] `docker-compose.yml` with `postgres:16` at the **repository root**; Alembic initialised against an empty schema
 - [ ] Mobile: Expo pinned, TypeScript strict, `expo-router`; **development build installed on a
       physical Android device** (not Expo Go — background location needs it). iOS: task 016
 - [ ] **`src/platform/` created, with a lint rule forbidding OS checks anywhere else** — prove it by
       writing `Platform.OS` into a feature and watching CI fail (INV-28)
-- [ ] **`src/account/` created** as the only route from screens to the network and the privacy key, and
+- [x] **`src/account/` created** as the only route from screens to the network and the privacy key, and
       **only `src/domain/` imports the core binding** ([ADR-012](decisions/ADR-012.md))
 - [ ] **`android/` generated, never committed** (`expo prebuild`); native settings in config plugins; a
       debug-only diagnostics screen runs the on-device checks through `src/account/`
-- [ ] **Every scope item has an acceptance criterion** (logging, OpenAPI codegen, fixtures in both
+- [x] **Every scope item has an acceptance criterion** (logging, OpenAPI codegen, fixtures in both
       suites, smoke tests, `cargo deny` + clippy)
 - [ ] `expo-sqlite` + Drizzle proving migrations run at startup and are idempotent on second launch
-- [ ] `packages/shared` builds; OpenAPI type generation wired; `fixtures/` loader used by both suites
+- [x] `packages/shared` builds; OpenAPI type generation wired; `fixtures/` loader used by both suites
 - [ ] **⚠ ADR-004 spike — 2 days, hard timebox.** `round_to_increment()` through both bindings,
       called from FastAPI *and* from a physical Android device: `41.6 → 42.5`, and the tie `41.25 → 40`.
       Success defined in advance; WSL2 allowed locally; **the clock starts once a dev build runs on the
       device**. The iOS half is gate 1 of task 016
 - [ ] **⚠ ADR-004 outcome written into the ADR.** This task is not done while that is open
-- [ ] CI green both sides, with **the boundary rules written now, while there is nothing to fix** —
+- [x] CI green both sides, with **the boundary rules written now, while there is nothing to fix** —
       import-linter + ruff `banned-api` (API), ESLint folder and package fences (mobile), including the
       ADR-011 fence on unscoped reads and one home each for network, crypto, secure storage and location
 - [ ] Prove the gates: write a `sqlalchemy` import into `domain/` and watch CI fail; **every rule has a
@@ -735,7 +735,8 @@ rights, a database, a device or Rust is still ahead. Settled while building, and
   request before anything reaches `main`.
 - **First CI run:** the API job passed — integration tests included, against a real Postgres. The three
   Node jobs failed before any check ran (setup-node looked for pnpm before it was installed), fixed by
-  installing pnpm first.
+  installing pnpm first. The second run passed all four jobs, and the criteria it proves are ticked
+  in task 001 — the "watch CI fail" proofs, the device and the spike are still open.
 - **Two audit findings accepted, by id.** `pnpm audit --audit-level high` reports two advisories in
   `image-size` (GHSA-w3rx-r6r6-pgpr, GHSA-5p2g-fcmc-qvqq): denial of service from a crafted image, with no
   patched version. It is reached only through Metro at build time and never ships in the app. The gate
