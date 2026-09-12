@@ -1,0 +1,10 @@
+{
+  "name": "cyberathlete",
+  "private": true,
+  "description": "CyberAthlete monorepo — see docs/00-project-context.md",
+  "packageManager": "pnpm@12.4.1",
+  "engines": {
+    "node": ">=24.21.0 <25",
+    "pnpm": ">=12.4.1"
+  }
+}

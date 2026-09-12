@@ -224,17 +224,17 @@ Every scope item above has a criterion here. A scope item without one can quietl
 **It runs**
 - [ ] `docker compose up -d` from the repository root, then `uv run uvicorn app.main:app` in
       `apps/api`, serves `/health/ready` → 200
-- [ ] `/health/ready` returns 503 when Postgres is stopped, and when the schema is behind the latest
+- [x] `/health/ready` returns 503 when Postgres is stopped, and when the schema is behind the latest
       Alembic revision
-- [ ] The API **refuses to boot** when `JWT_SECRET` is missing or equals a known development default
-- [ ] The API **refuses to boot** when `DATABASE_URL` connects as `postgres`, as `cyberathlete_migrator`,
+- [x] The API **refuses to boot** when `JWT_SECRET` is missing or equals a known development default
+- [x] The API **refuses to boot** when `DATABASE_URL` connects as `postgres`, as `cyberathlete_migrator`,
       or as any role with `BYPASSRLS` — try each. `alembic upgrade head` runs as the migrator, and the
       API's role cannot run DDL
-- [ ] `cyberathlete_app` can read `alembic_version`, created by the migrator, with no manual grant — the
+- [x] `cyberathlete_app` can read `alembic_version`, created by the migrator, with no manual grant — the
       default privileges `FOR ROLE cyberathlete_migrator` work
 - [ ] The dev build on a physical device reaches `http://localhost:8000/health/ready` through
       `adb reverse`, and an `http://` request to the machine's LAN IP is refused by the app
-- [ ] Every request produces one structured JSON log line with a request ID, and a request ID sent by
+- [x] Every request produces one structured JSON log line with a request ID, and a request ID sent by
       the client is the one logged
 - [ ] The dev build opens on a physical Android device and hot-reloads a JS change
 - [ ] A local SQLite migration runs on first launch and is idempotent on the second
@@ -242,10 +242,10 @@ Every scope item above has a criterion here. A scope item without one can quietl
       and a value written to secure storage survives an app restart
 
 **Shared**
-- [ ] `openapi-typescript` regenerates the types in `packages/shared` from the API's OpenAPI schema —
+- [x] `openapi-typescript` regenerates the types in `packages/shared` from the API's OpenAPI schema —
       exactly what it serves at `/openapi.json`, exported from the application without a server or a
       database — and CI fails if the committed schema or types are stale
-- [ ] One fixture in `packages/shared/fixtures/` is loaded and asserted by **both** pytest and Jest
+- [x] One fixture in `packages/shared/fixtures/` is loaded and asserted by **both** pytest and Jest
 
 **Every gate proven by breaking it**
 - [ ] CI fails if a file in `app/domain/` imports `sqlalchemy` — **write that import, watch CI fail**,
@@ -262,7 +262,7 @@ Every scope item above has a criterion here. A scope item without one can quietl
       then remove them (INV-10)
 - [ ] CI fails if the release build's Android configuration permits cleartext traffic — **allow it, watch
       CI fail**, then revert. A non-debug build given an `http://` API base URL refuses to start
-- [ ] No secret is committed; `.env.example` documents every key, including both database URLs
+- [x] No secret is committed; `.env.example` documents every key, including both database URLs
 
 **The decision**
 - [ ] `round_to_increment(41.6, 2.5, nearest)` returns **42.5** and `round_to_increment(41.25, 2.5, nearest)`

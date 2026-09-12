@@ -1,0 +1,15 @@
+target-version = "py312"
+line-length = 100
+# Known-bad examples that CI proves the rules catch; they are linted only by the lint self-tests.
+extend-exclude = ["lint_fixtures"]
+
+[lint]
+select = ["E", "W", "F", "I", "B", "UP", "S", "ASYNC", "RUF", "TID", "SIM", "PT"]
+
+[lint.per-file-ignores]
+"tests/**" = ["S101", "S105", "S106", "S603", "S608"]
+
+[lint.isort]
+known-first-party = ["app", "seeds", "tests"]
+# The local alembic/ migrations folder would otherwise make the installed package look first-party.
+known-third-party = ["alembic"]

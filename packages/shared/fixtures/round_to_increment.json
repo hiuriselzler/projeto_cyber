@@ -1,0 +1,15 @@
+{
+  "function": "round_to_increment",
+  "spec": "INV-02 and ADR-010 § Amendment. Modes are nearest, down and up; a value exactly halfway between two steps goes to the lighter load. The result is expected_steps × increment_kg, compared in the consumer's own arithmetic, so no float is written here.",
+  "cases": [
+    { "name": "nearest rounds up past the midpoint", "weight_kg": 41.6, "increment_kg": 2.5, "mode": "nearest", "expected_steps": 17 },
+    { "name": "a tie goes to the lighter load", "weight_kg": 41.25, "increment_kg": 2.5, "mode": "nearest", "expected_steps": 16 },
+    { "name": "every tie goes to the lighter load", "weight_kg": 43.75, "increment_kg": 2.5, "mode": "nearest", "expected_steps": 17 },
+    { "name": "nearest rounds down below the midpoint", "weight_kg": 41.2, "increment_kg": 2.5, "mode": "nearest", "expected_steps": 16 },
+    { "name": "down never rounds up", "weight_kg": 41.6, "increment_kg": 2.5, "mode": "down", "expected_steps": 16 },
+    { "name": "up never rounds down", "weight_kg": 41.6, "increment_kg": 2.5, "mode": "up", "expected_steps": 17 },
+    { "name": "a load on the grid stays put under up", "weight_kg": 40.0, "increment_kg": 2.5, "mode": "up", "expected_steps": 16 },
+    { "name": "a load on the grid stays put under down", "weight_kg": 40.0, "increment_kg": 2.5, "mode": "down", "expected_steps": 16 },
+    { "name": "a 5 lb plate grid, stored as exact kilograms (ADR-008)", "weight_kg": 61.2, "increment_kg": 2.267962, "mode": "nearest", "expected_steps": 27 }
+  ]
+}

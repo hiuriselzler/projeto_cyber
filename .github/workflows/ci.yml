@@ -1,0 +1,133 @@
+# Quality gates — docs/06-operations.md §3 and docs/tasks/001-project-bootstrap.md § CI.
+# Every boundary rule runs against known-bad fixtures here, so a rule that silently stops working fails.
+# The Rust job (cargo deny, clippy, fmt, Android cross-compilation) arrives with the ADR-004 spike.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api:
+    name: API
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          # A throwaway container that exists for this job only; these are not secrets.
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci-admin
+          POSTGRES_DB: cyberathlete
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready --username postgres --dbname cyberathlete"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql+psycopg://cyberathlete_app:ci-app@127.0.0.1:5432/cyberathlete
+      MIGRATION_DATABASE_URL: postgresql+psycopg://cyberathlete_migrator:ci-migrator@127.0.0.1:5432/cyberathlete
+      TEST_ADMIN_DATABASE_URL: postgresql+psycopg://postgres:ci-admin@127.0.0.1:5432/cyberathlete
+      # An integration test that skips for want of a database is a failure here.
+      CYBERATHLETE_REQUIRE_INTEGRATION: "1"
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Create the two database roles (ADR-011)
+        env:
+          PGPASSWORD: ci-admin
+        run: >-
+          psql --no-psqlrc -v ON_ERROR_STOP=1 --host 127.0.0.1 --username postgres --dbname cyberathlete
+          -v dbname=cyberathlete -v migrator_password=ci-migrator -v app_password=ci-app
+          -f ../../infra/postgres/roles.sql
+      - run: uv sync --locked
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy app tests scripts alembic/env.py
+      - run: uv run lint-imports
+      - run: uv run pytest
+      - run: uv run pip-audit
+
+  shared:
+    name: Shared types are current
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+      # pnpm before Node: setup-node caches the pnpm store, so pnpm must already exist. The version comes
+      # from the packageManager pin in package.json.
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Regenerate the OpenAPI schema and TypeScript types
+        run: |
+          (cd apps/api && uv sync --locked && uv run python -m scripts.export_openapi)
+          pnpm --filter @cyberathlete/shared generate:api
+      - name: Fail if the committed copies are stale
+        run: git diff --exit-code -- packages/shared/api
+      - run: pnpm --filter @cyberathlete/shared typecheck
+
+  mobile:
+    name: Mobile
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - name: Every boundary rule reports its known-bad fixture
+        run: pnpm lint:fixtures
+      - run: pnpm check:platform-files
+      - run: pnpm test --ci
+      - run: pnpm audit --audit-level high
+
+  android-config:
+    name: Release build permits no cleartext
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm prebuild
+        env:
+          EXPO_NO_GIT_STATUS: "1"
+      - name: Merge the release manifest, libraries included
+        working-directory: apps/mobile/android
+        run: ./gradlew :app:processReleaseMainManifest --no-daemon
+      - run: pnpm check:release-cleartext

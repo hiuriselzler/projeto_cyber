@@ -1,0 +1,15 @@
+# INV-10: "now" and identifiers are parameters, never calls. import-linter sees imports, not calls, so
+# the calls are banned here. Ruff resolves qualified names, so an aliased import is caught as well.
+extend = "../../ruff.toml"
+
+[lint.flake8-tidy-imports.banned-api]
+"datetime.datetime.now".msg = "INV-10: the domain reads no clock; pass `now` in as a parameter"
+"datetime.datetime.utcnow".msg = "INV-10: the domain reads no clock; pass `now` in as a parameter"
+"datetime.datetime.today".msg = "INV-10: the domain reads no clock; pass `now` in as a parameter"
+"datetime.date.today".msg = "INV-10: the domain reads no clock; pass the date in as a parameter"
+"time.time".msg = "INV-10: the domain reads no clock; pass `now` in as a parameter"
+"time.monotonic".msg = "INV-10: the domain reads no clock; pass `now` in as a parameter"
+"uuid.uuid1".msg = "INV-10: the domain mints no identifiers; pass them in"
+"uuid.uuid4".msg = "INV-10: the domain mints no identifiers; pass them in"
+"os.environ".msg = "INV-10: the domain reads no environment"
+"os.getenv".msg = "INV-10: the domain reads no environment"

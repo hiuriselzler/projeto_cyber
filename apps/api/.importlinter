@@ -1,0 +1,74 @@
+# Import boundaries for the API — docs/tasks/001-project-bootstrap.md § Boundary rules.
+#
+# import-linter sees imports, not calls. Clock, identifier and environment reads inside app.domain are
+# banned by ruff instead (app/domain/ruff.toml). Every contract here has a known-bad fixture that the
+# lint self-tests prove is caught, so a typo that switches a contract off fails CI.
+
+[importlinter]
+root_packages =
+    app
+include_external_packages = True
+
+[importlinter:contract:layers]
+name = Layers: app.api -> app.services -> app.repositories -> app.models (02 §5)
+type = layers
+layers =
+    app.api
+    app.services
+    app.repositories
+    app.models
+
+[importlinter:contract:routers-skip-nothing]
+name = Routers skip nothing: app.api imports no repository, model or SQLAlchemy
+type = forbidden
+source_modules =
+    app.api
+forbidden_modules =
+    app.repositories
+    app.models
+    sqlalchemy
+allow_indirect_imports = True
+
+[importlinter:contract:domain-is-pure]
+name = Domain is pure: app.domain imports no other app package and no I/O (INV-10)
+type = forbidden
+source_modules =
+    app.domain
+forbidden_modules =
+    app.api
+    app.core
+    app.main
+    app.models
+    app.repositories
+    app.schemas
+    app.services
+    sqlalchemy
+    fastapi
+    pydantic
+    httpx
+    socket
+    os
+    time
+    random
+    secrets
+
+[importlinter:contract:core-knows-no-domain]
+name = Core knows no domain: app.core imports no domain, service, repository, router or model
+type = forbidden
+source_modules =
+    app.core
+forbidden_modules =
+    app.api
+    app.domain
+    app.models
+    app.repositories
+    app.services
+
+[importlinter:contract:unscoped-reads-fenced]
+name = Unscoped reads are fenced: only auth and maintenance import app.repositories.unscoped (ADR-011)
+type = protected
+protected_modules =
+    app.repositories.unscoped
+allowed_importers =
+    app.services.auth
+    app.services.maintenance

@@ -1,0 +1,36 @@
+# Local development only (06 §1). Staging and production use managed Postgres, provisioned with the
+# same infra/postgres/roles.sql run once by hand (ADR-011).
+#
+# The `postgres` superuser exists only to create the two application roles on first start. Nothing
+# connects as it afterwards: Alembic uses cyberathlete_migrator, the API uses cyberathlete_app.
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:?set POSTGRES_ADMIN_PASSWORD in .env}
+      POSTGRES_DB: cyberathlete
+      CYBERATHLETE_MIGRATOR_PASSWORD: ${CYBERATHLETE_MIGRATOR_PASSWORD:?set CYBERATHLETE_MIGRATOR_PASSWORD in .env}
+      CYBERATHLETE_APP_PASSWORD: ${CYBERATHLETE_APP_PASSWORD:?set CYBERATHLETE_APP_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./infra/postgres:/infra/postgres:ro
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready --username postgres --dbname cyberathlete"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  adminer:
+    image: adminer
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      - postgres
+
+volumes:
+  postgres-data:
