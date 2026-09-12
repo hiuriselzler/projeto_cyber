@@ -1,0 +1,20 @@
+{
+  "name": "@cyberathlete/shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Generated API types, shared domain fixtures and message catalogs. Data only, never runtime code (responsibility-map).",
+  "exports": {
+    "./api": {
+      "types": "./api/schema.d.ts"
+    },
+    "./fixtures/*": "./fixtures/*"
+  },
+  "scripts": {
+    "generate:api": "openapi-typescript ./api/openapi.json --output ./api/schema.d.ts",
+    "typecheck": "tsc --noEmit --project tsconfig.json"
+  },
+  "devDependencies": {
+    "openapi-typescript": "7.13.0",
+    "typescript": "~6.0.3"
+  }
+}

@@ -1,0 +1,2 @@
+# The fixture is linted under exactly the configuration app/domain/ uses.
+extend = "../../app/domain/ruff.toml"

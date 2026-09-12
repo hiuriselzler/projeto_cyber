@@ -1,0 +1,66 @@
+# CyberAthlete
+
+A mobile fitness app with two co-equal halves — a strength logger and planner, and a GPS cardio tracker
+and planner — built on one offline-first core. Android first.
+
+**Start with the docs.** [docs/00-project-context.md](docs/00-project-context.md) explains what and why,
+[docs/PROJECT-STATUS.md](docs/PROJECT-STATUS.md) is the live to-do list, and
+[.agents/AGENTS.md](.agents/AGENTS.md) holds the rules for anyone — human or agent — changing this
+repository.
+
+| Path | What |
+|---|---|
+| `apps/api` | FastAPI service (Python 3.12, uv) |
+| `apps/mobile` | Expo app (React Native, TypeScript, pnpm) — Android |
+| `packages/shared` | Generated API types, shared domain fixtures, message catalogs |
+| `infra/postgres` | The database-role script for every environment ([ADR-011](docs/decisions/ADR-011.md)) |
+| `docs` | Requirements, architecture, invariants, ADRs, tasks |
+
+## Prerequisites
+
+Python 3.12, **Node 24 LTS** (`.nvmrc`), `pnpm` through corepack, `uv`, Docker Desktop, and Android
+Studio with the SDK and NDK. A physical Android device with USB debugging. No Mac is needed
+([ADR-009](docs/decisions/ADR-009.md)). The Rust toolchain joins with the ADR-004 spike.
+
+On Windows, enable long paths before the first Android build — React Native's native build inside
+pnpm's store can pass the 260-character limit — and `git config core.longpaths true`.
+
+## Local development
+
+Every command below runs unchanged in PowerShell and in bash. Start at the repository root with `.env`
+created from [.env.example](.env.example); generate each secret with
+`python -c "import secrets; print(secrets.token_urlsafe(48))"`.
+
+```sh
+# Terminal 1 — database and API, from the repository root
+docker compose up -d                      # postgres:16 on 5432, adminer on 8080
+cd apps/api
+uv sync
+uv run alembic upgrade head               # connects as cyberathlete_migrator
+uv run python -m seeds.exercises          # seed the global catalog (from task 002)
+uv run uvicorn app.main:app --reload      # http://localhost:8000/docs
+
+# Terminal 2 — mobile, from the repository root
+corepack enable
+pnpm install
+adb reverse tcp:8000 tcp:8000             # the phone's localhost:8000 → this machine's API
+adb reverse tcp:8081 tcp:8081             # Metro
+cd apps/mobile
+pnpm android                              # first time: builds and installs the development build
+pnpm start                                # afterwards: Metro for the installed development build
+```
+
+The API refuses to start with a development `JWT_SECRET`, or on a database role that could skip
+row-level security. The development build talks `http://` to `localhost` only; a release build talks
+`https://` only ([04 §5](docs/04-security-and-auth.md)).
+
+## Checks
+
+| | Command |
+|---|---|
+| API | `uv run ruff check .` · `uv run ruff format --check .` · `uv run mypy app tests scripts alembic/env.py` · `uv run lint-imports` · `uv run pytest` |
+| Mobile | `pnpm typecheck` · `pnpm lint` · `pnpm lint:fixtures` · `pnpm check:platform-files` · `pnpm test` |
+| Shared types | `uv run python -m scripts.export_openapi` (in `apps/api`), then `pnpm --filter @cyberathlete/shared generate:api` |
+| Release config | `pnpm prebuild` then `pnpm check:release-cleartext` (in `apps/mobile`) |
+
+API integration tests need the local Postgres and skip without it; CI runs them against a real one.
