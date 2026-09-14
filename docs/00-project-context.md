@@ -2,7 +2,8 @@
 
 > # CyberAthlete
 >
-> Status: pre-code. Nothing in this repo is implemented yet.
+> Status: in development, Android first. What is built and what comes next is in
+> [PROJECT-STATUS.md](PROJECT-STATUS.md).
 > The directory is still `projeto_SHS`; the paths are not worth churning.
 
 ## What we are building

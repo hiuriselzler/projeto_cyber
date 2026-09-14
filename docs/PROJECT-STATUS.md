@@ -15,13 +15,13 @@ when its own criteria are ticked. Tick the box here only then.
 
 | | |
 |---|---|
-| **Phase** | **Tasks 001, 002 and 011 complete; task 003 next.** The schema exists in Postgres and SQLite, seeded and enforcing itself, and the design system exists in `src/ui/`, token-driven and tested in both languages, both unit systems and both themes. Everything that needs administrator rights — Docker, the device, the ADR-004 spike — is [task 017](tasks/017-local-toolchain-device-spike.md), which must finish before task 004 |
-| **Repository** | Private GitHub repository `hiuriselzler/projeto_cyber`. `main` holds the documentation and task 001's merged work (pull request #1); each further piece arrives by pull request, with CI green before merge |
+| **Phase** | **Tasks 001, 002, 011 and 003 complete; task 019 next.** The schema exists in Postgres and SQLite, seeded and enforcing itself; the design system exists in `src/ui/`, token-driven and tested in both languages, both unit systems and both themes; and accounts, sessions and the privacy key exist on both sides, with row-level security proven under the API's own role. Everything that needs administrator rights — Docker, the device, the ADR-004 spike — is [task 017](tasks/017-local-toolchain-device-spike.md), which must finish before task 004 |
+| **Repository** | Private GitHub repository `hiuriselzler/projeto_cyber`. `main` holds the documentation and tasks 001, 002, 011 and 003, each merged by pull request (#1; #5; #7 and #8; #9); each further piece arrives the same way, with CI green before merge |
 | **Docs** | 49 files, internally consistent, all cross-links resolving |
 | **Decisions** | 15 ADRs. Fourteen accepted outright; [ADR-004](decisions/ADR-004.md) accepted *conditionally* |
-| **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **3 complete** (001, 002, 011) |
+| **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **4 complete** (001, 002, 011, 003) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | [Task 003](tasks/003-authentication.md) — built; closed once CI passes on its pull request. Then [task 019](tasks/019-account-deletion.md), account deletion, and [task 017](tasks/017-local-toolchain-device-spike.md) once administrator rights are available, before task 004. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
+| **Next action** | [Task 019](tasks/019-account-deletion.md), account deletion — planned 2026-09-14, with two questions left open inside it, neither blocking the API half. Then [task 017](tasks/017-local-toolchain-device-spike.md) once administrator rights are available, before task 004. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
 
 ### The one decision still genuinely open
 
@@ -127,34 +127,41 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
 - [x] Contrast **proven by a test over the corrected palette**: body 4.5:1, UI 3:1, **workout numerals 7:1**;
       tabular figures in every numeric style
 
-#### ☐ 003 — Authentication and authorization · **L** · depends: 002 · blocks: 006, 012, 014
+#### ☑ 003 — Authentication and authorization · **L** · depends: 002 · blocks: 006, 012, 014
 > The authorization half matters more than the authentication half.
-- [ ] Auth endpoints + **v1 account lifecycle**: password reset and change, enforced email verification,
+> **Complete (2026-09-14).** Every criterion in the task file is proven by a test or a lint fixture, and CI was green on
+> all four jobs of pull request #9, merged to `main` as `425a970`. The device checks — libsodium, offline sign-in, the
+> privacy-key flows, the derivation timing — are task 017's; tuning argon2id to ~250 ms waits for a deploy target.
+- [x] Auth endpoints + **v1 account lifecycle**: password reset and change, enforced email verification,
       email change, session list, security notification emails — every one in both languages
-- [ ] argon2id ~250 ms; the bundled breach list; **constant-time login** whether or not the email exists
-- [ ] Access JWT 15 min with no PII; opaque refresh token 60 days, rotated, **with reuse detection** and a
+- [x] argon2id ~250 ms; the bundled breach list; **constant-time login** whether or not the email exists
+- [x] Access JWT 15 min with no PII; opaque refresh token 60 days, rotated, **with reuse detection** and a
       60-second grace window for a lost response ([ADR-015](decisions/ADR-015.md))
-- [ ] Rate limits per IP and per account, **counted in Postgres** so they hold across instances (ADR-015)
-- [ ] **Base repository whose every method requires `user_id`, as a type error not a runtime one**
-- [ ] `SET LOCAL app.user_id` per transaction so RLS engages; **404 never 403** for someone else's row
-- [ ] **⚠ Privacy key lifecycle ([ADR-007](decisions/ADR-007.md))** — generate at registration, wrap
+- [x] Rate limits per IP and per account, **counted in Postgres** so they hold across instances (ADR-015)
+- [x] **Base repository whose every method requires `user_id`, as a type error not a runtime one**
+- [x] `SET LOCAL app.user_id` per transaction so RLS engages; **404 never 403** for someone else's row
+- [x] **⚠ Privacy key lifecycle ([ADR-007](decisions/ADR-007.md))** — generate at registration, wrap
       client-side, unwrap on new-device sign-in, re-wrap on password change. Build it here even
       though nothing encrypts anything until task 007; retrofitting it is a migration with no
       derivable answer
-- [ ] **Wrapping KDF argon2id `m=64 MiB, t=3, p=1`, never cheaper than the login hash**, parameters in
+- [x] **Wrapping KDF argon2id `m=64 MiB, t=3, p=1`, never cheaper than the login hash**, parameters in
       `users.privacy_key_kdf`; all crypto in `src/crypto/` on libsodium, confirmed on a device in task 017
-- [ ] Offline sign-in: a returning user with a valid refresh token reaches the app with no network —
+- [x] Offline sign-in: a returning user with a valid refresh token reaches the app with no network —
       built here, proven on a device in task 017
-- [ ] **Account flows in `src/account/`** — no screen imports `src/sync/` or `src/crypto/`
+- [x] **Account flows in `src/account/`** — no screen imports `src/sync/` or `src/crypto/`
       ([ADR-012](decisions/ADR-012.md))
-- [ ] **Prove RLS**: break the repository scope deliberately and assert 0 rows come back (NFR-9)
+- [x] **Prove RLS**: break the repository scope deliberately and assert 0 rows come back (NFR-9)
 
 #### ☐ 019 — Account deletion · **M** · depends: 003 · blocks: the store listing
 > Added 2026-09-14, closing open question 11. Needs no administrator rights, so it goes ahead while task 017 waits.
-- [ ] Deletion requested with the password, cancellable for 7 days, announced by email in the user's language
+> **Planned 2026-09-14:** other devices stay signed in; the web page's link opens a page, and only its button schedules
+> the deletion. Two questions stay open in the task file, neither blocking the API half.
+- [ ] Deletion requested with the password, cancellable for 7 days from any signed-in device, announced by email in the
+      user's language
 - [ ] **The sweep deletes every row of the account, inside its own scope** — a test over 03 §11 covers tables added later
-- [ ] The web deletion page Google Play links to, answering identically for any address
-- [ ] One scheduled command for the deletion sweep and the retention purges, documented in 06
+- [ ] The web deletion page Google Play links to, answering identically for any address; **opening its link schedules
+      nothing**
+- [ ] One scheduled command, in `app/jobs/`, for the deletion sweep and the retention purges, documented in 06
 
 #### ☐ 017 — Local toolchain, device and core spike · **L** · depends: 001, administrator rights · blocks: 004 onward
 > Everything that needs administrator rights on the development machine, and every check only a phone
@@ -449,6 +456,7 @@ None are blocking; each has a stated assumption that will be built unless correc
 | 7 | The Android application id. **Permanent after the first Play Store upload** | `com.cyberathlete.app`, a placeholder in `apps/mobile/app.json` | Before the first Play upload |
 | 8 | Android backups: the generated manifest has `allowBackup="true"`, so local data — raw GPS points included — would reach device backups | Unchanged for now | Before [task 007](tasks/007-cardio-recording.md) |
 | 9 | What the RIR `5+` chip stores: 5, or a choice from 5 to 10 (the schema allows 0–10, INV-03) | Nothing yet — task 011's chips take their values as a prop and store nothing | [Task 004](tasks/004-exercise-catalog-and-logging.md) |
+| 12 | Which address the per-IP rate limits count ([04 §5](04-security-and-auth.md)). The API reads the socket's peer, `request.client.host`; behind a hosting platform's proxy that is the proxy for everyone, so registration would allow 5 an hour across all users | The client address comes from the platform's forwarded header, trusted only when the request arrives from the platform's own proxy — configured once the host is chosen ([05 §5](05-integrations.md)) | Before the first deploy |
 
 **Closed 2026-09-09** — target RIR granularity (now `rir_mode` on the progression rule);
 cardio intensity (both zones and pace ranges); bodyweight volume (summed); and the octopus
@@ -1037,3 +1045,39 @@ Rather than hold every later task behind that, the work was split.
   *Trilha*. **The native-speaker review stays a launch blocker**; the pre-check does not replace it.
 - 07 §9's glossary gains *aparelho* (a device, never a gym machine), *entrar* and *sair*, *zona de privacidade* and
   *carga*.
+
+### 2026-09-14 — task 003 closed, the documents brought up to date, and task 019 planned
+
+- **Task 003 is complete.** CI was green on all four jobs of pull request #9, confirmed by the project owner, and the
+  work is merged to `main` as `425a970`. All 19 criteria are ticked. One is proven partly by construction: a password
+  shorter than ten characters is refused at change and reset by the one check registration uses, unit-tested for length,
+  while the breach list is refused at each route in integration — accepted.
+- **Found by the closing review, and recorded:**
+  - **The per-IP rate limits count the socket's peer**, which behind a hosting platform's proxy is the proxy for
+    everyone: registration would allow 5 an hour across all users. Open question 12, before the first deploy; 04 §5
+    points to it.
+  - **Only one lost refresh response is forgiven.** A second retry of the same token inside the window is reuse. Added
+    to [ADR-015](decisions/ADR-015.md)'s accepted consequences; the rotation id under its *Revisit if* covers it.
+  - **Revoking a session from a list older than that device's last refresh answers 404**, because the list names each
+    device's newest token. Recorded in task 003.
+- **Stale text corrected:** 00's status line still said nothing was implemented; [ADR-007](decisions/ADR-007.md) still
+  sent the libsodium check and the key-derivation timing to task 003, both moved to task 017 on 2026-09-12; 02 §5's list
+  of auth routes; and this file's Phase, Repository, Tasks and Next action rows.
+- **Task 019 planned**, before any of it is built:
+  - **Other devices stay signed in** when deletion is requested, so any of them can cancel — the task's first open
+    question, closed by the project owner. 04 §2a says so.
+  - **The web page's link opens a page; only its button schedules the deletion.** Mail providers and link scanners open
+    links on their own.
+  - **The link's token has its own table**, `account_deletion_tokens` (03 §1, §8, §11), **and its own allowlisted
+    lookup**, `auth_redeem_deletion_token` — [ADR-011](decisions/ADR-011.md)'s seventh function, noted there. A purpose
+    column on an existing token table was rejected: a reset or verification link could then be replayed at the deletion
+    route.
+  - **The in-app request counts against the login limit**, as a password change does; the web page's link shares the
+    email-sending limit ([04 §5](04-security-and-auth.md)).
+  - **"Account deleted" is sent after the deletion commits**, like every email since task 003. The task had said "before
+    the row is gone", which could announce a deletion that then failed.
+  - **Scheduled commands get a folder, `app/jobs/`**, standing where a router does (02 §5, the responsibility map). The
+    web page is the one router outside `v1/`, in `app/api/web/`, and the only route besides `/health` outside `/api/v1`.
+  - Still open in the task: what a device does with its local data once the account is gone, and which scheduler runs
+    the daily command.
+- No invariant changed and no ADR was added: 49 documents, 15 ADRs.
