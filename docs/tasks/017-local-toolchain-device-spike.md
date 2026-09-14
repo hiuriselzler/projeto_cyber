@@ -142,7 +142,7 @@ an FFI chain that takes a week to stand up has already answered the question.
 - [ ] Changing the password leaves existing encrypted rows decryptable; resetting it does not, and
       the reset screen warned about that before the user confirmed
 - [ ] `privacy_key_kdf` is stored with every wrap; a key wrapped under older parameters still
-      unwraps, and is re-wrapped under the current ones at the next password entry
+      unwraps, and is re-wrapped under the current ones at the next password change
 - [ ] The key derivation on a mid-range Android phone does not freeze the screen, and its measured
       duration is written into task 003's notes
 

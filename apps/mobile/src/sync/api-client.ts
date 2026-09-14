@@ -8,6 +8,16 @@
 
 export type BuildKind = 'debug' | 'release';
 
+export type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE';
+
+export interface ApiRequest {
+  readonly method: HttpMethod;
+  readonly path: string;
+  readonly body?: unknown;
+  /** Held in memory by the session client and put here per request; never stored (04 §3). */
+  readonly accessToken?: string;
+}
+
 export interface ApiResponse {
   readonly status: number;
   readonly body: string;
@@ -16,12 +26,21 @@ export interface ApiResponse {
 export interface ApiClient {
   readonly baseUrl: string;
   get(path: string): Promise<ApiResponse>;
+  send(request: ApiRequest): Promise<ApiResponse>;
 }
 
 export class InsecureApiBaseUrlError extends Error {
   constructor(reason: string) {
     super(`refusing the API base URL: ${reason} (04 §5)`);
     this.name = 'InsecureApiBaseUrlError';
+  }
+}
+
+/** No response at all: offline, a timeout, or nothing listening. A session survives it (NFR-1). */
+export class ApiUnreachableError extends Error {
+  constructor() {
+    super('the API could not be reached');
+    this.name = 'ApiUnreachableError';
   }
 }
 
@@ -59,18 +78,36 @@ export function assertApiBaseUrlAllowed(baseUrl: string, build: BuildKind): stri
 
 export function createApiClient(baseUrl: string, build: BuildKind): ApiClient {
   const allowedBaseUrl = assertApiBaseUrlAllowed(baseUrl, build);
+
+  async function send({ method, path, body, accessToken }: ApiRequest): Promise<ApiResponse> {
+    const headers: Record<string, string> = { Accept: 'application/json' };
+    if (body !== undefined) {
+      headers['Content-Type'] = 'application/json';
+    }
+    if (accessToken !== undefined) {
+      headers.Authorization = `Bearer ${accessToken}`;
+    }
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    try {
+      const response = await fetch(`${allowedBaseUrl}${path}`, {
+        method,
+        headers,
+        body: body === undefined ? undefined : JSON.stringify(body),
+        signal: controller.signal,
+      });
+      return { status: response.status, body: await response.text() };
+    } catch {
+      throw new ApiUnreachableError();
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
   return {
     baseUrl: allowedBaseUrl,
-    async get(path) {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-      try {
-        const response = await fetch(`${allowedBaseUrl}${path}`, { signal: controller.signal });
-        return { status: response.status, body: await response.text() };
-      } finally {
-        clearTimeout(timeout);
-      }
-    },
+    get: (path) => send({ method: 'GET', path }),
+    send,
   };
 }
 

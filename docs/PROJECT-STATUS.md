@@ -951,7 +951,7 @@ Rather than hold every later task behind that, the work was split.
   - **Refresh rotation gets a 60-second grace window.** Strict reuse detection signed out anyone whose refresh response
     was lost — ordinary in a gym — and told them their token was stolen. A replaced token is accepted once more only
     while its successor is unused and under 60 s old; theft is still caught at the legitimate device's next refresh.
-  - **The breach list is the NCSC's top 100 000**, cut to the 9 307 entries of 10 or more characters and stored as
+  - **The breach list is the NCSC's top 100 000**, cut to the 9 248 distinct entries of 10 or more characters and stored as
     SHA-1 digests. 04 §2's "k-anonymity offline set" named two different things. The NCSC's own URL now serves a
     "site currently unavailable" page, so the source is SecLists' mirror (MIT),
     `Passwords/Common-Credentials/100k-most-used-passwords-NCSC.txt`: 99 840 lines, SHA-256
@@ -976,3 +976,29 @@ Rather than hold every later task behind that, the work was split.
 - Fixed in passing: ADR-014 was missing from the decision-log table above.
 - **Branching:** task 011's pull request is not merged yet, and task 003 builds on its design system and i18n, so
   `feat/task-003-authentication` starts from task 011's branch.
+
+### 2026-09-14 — task 003 built: accounts, sessions and the privacy key, on both sides
+
+- **API:** seventeen routes under `/api/v1` — the auth lifecycle, and a minimal workouts read and write. Every lookup
+  before a user is known goes through ADR-011's existing functions; no new one was needed. argon2id runs off the event
+  loop; migration `0003` adds `rate_limit_buckets`; a retention service purges revoked tokens and old windows, not yet
+  scheduled. A deployed API refuses to boot until an email provider exists (open question 10).
+- **Mobile:** `src/crypto` wraps, unwraps and re-wraps the privacy key on libsodium; `src/sync` keeps the refresh token
+  in secure storage and the access token in memory, with single-flight refresh; `src/account` holds the flows and
+  restores a session from the device with no network; `src/ui` gains a text field and a button; the account screens
+  and their routes — the email links included — are in `src/features/account`. Language and units follow the account
+  once someone signs in.
+- **Proven locally:** 279 API tests, integration included, against the local Postgres — the constant-time login with
+  the production hasher among them; the schema check (39 tables); mypy, ruff and the five import contracts; 427 Jest
+  tests; ESLint and all 47 lint fixtures; both catalogs at 445 messages. **Task 003's criteria are ticked once CI
+  passes on its pull request**, as for 002 and 011.
+- **Found while building:**
+  - FastAPI 0.141 keeps included routers lazily, so `app.routes` no longer lists their routes; the route-table test
+    reads `iter_route_contexts`.
+  - `react-native-libsodium` has one install script, which unpacks the prebuilt libsodium shipped in its own package
+    and downloads nothing. Allowed in `pnpm-workspace.yaml`, with the reason beside it.
+  - Jest maps the native binding onto `libsodium-wrappers-sumo`, so the privacy-key tests run the real algorithms — a
+    64 MiB argon2id takes a second or two there.
+  - The email-sending routes get their own limit, and task 017's re-wrap criterion says "password change"; both, with
+    the reset-request timing and the 15-minute access token, are in task 003's *Settled while building*.
+- **The Portuguese account screens and emails are a draft**, for the native-speaker review with the rest.

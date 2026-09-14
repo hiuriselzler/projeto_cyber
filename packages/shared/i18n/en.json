@@ -430,6 +430,105 @@
       "title": "Level {level}"
     }
   },
+  "account": {
+    "working": "Securing your account…",
+    "fields": {
+      "email": "Email",
+      "password": "Password",
+      "display_name": "Your name",
+      "current_password": "Current password",
+      "new_password": "New password",
+      "new_email": "New email"
+    },
+    "sign_in": {
+      "title": "Sign in",
+      "submit": "Sign in",
+      "to_register": "Create an account",
+      "to_reset": "Forgot your password?"
+    },
+    "register": {
+      "title": "Create your account",
+      "password_hint": "At least 10 characters. A few words you will remember work well.",
+      "submit": "Create account",
+      "to_sign_in": "I already have an account"
+    },
+    "reset": {
+      "title": "Reset your password",
+      "request_submit": "Send a reset link",
+      "request_sent": "If an account uses {email}, a link to reset its password is on its way. It works for 30 minutes.",
+      "zones_warning": "Resetting your password removes your privacy zones. They are encrypted with your password, so nobody can recover them, including us. You can draw them again afterwards.",
+      "confirm_submit": "Reset password and remove privacy zones",
+      "done": "Your password is reset and every device is signed out. Sign in with your new password.",
+      "to_sign_in": "Sign in"
+    },
+    "verify": {
+      "title": "Confirm your email",
+      "working": "Confirming your email…",
+      "done": "Your email is confirmed.",
+      "continue": "Continue"
+    },
+    "password": {
+      "title": "Change your password",
+      "submit": "Change password",
+      "done": "Your password is changed. Your other devices stay signed in."
+    },
+    "email": {
+      "title": "Change your email",
+      "submit": "Send a confirmation link",
+      "sent": "We sent a link to {email}. Your address changes when you open it."
+    },
+    "sessions": {
+      "title": "Signed-in devices",
+      "this_device": "This device",
+      "unnamed_device": "Unnamed device",
+      "sign_out_device": "Sign out this device",
+      "sign_out": "Sign out",
+      "sign_out_everywhere": "Sign out everywhere"
+    },
+    "errors": {
+      "invalid_credentials": "That email and password do not match an account.",
+      "email_unavailable": "An account already uses this email. Sign in, or reset its password.",
+      "email_unchanged": "That is already your email.",
+      "password_too_short": "Use at least 10 characters.",
+      "password_too_long": "Use at most 1024 characters.",
+      "password_breached": "This password appears in known data breaches. Choose another one.",
+      "password_incorrect": "Your current password is not right.",
+      "invalid_token": "This link has expired or has already been used. Ask for a new one.",
+      "email_unverified": "Confirm your email address first.",
+      "rate_limited": "Too many attempts. Wait a few minutes and try again.",
+      "offline": "No connection. Try again when you are online.",
+      "signed_out": "You have been signed out. Sign in again.",
+      "privacy_key_missing": "This device does not hold your privacy key, so your password cannot be changed here. Change it on a device where you signed in with your password.",
+      "unknown": "Something went wrong. Try again."
+    }
+  },
+  "email": {
+    "verify_email": {
+      "subject": "Confirm your email for CyberAthlete",
+      "body": "Hi {name},\n\nConfirm that this address belongs to your CyberAthlete account by opening this link on your phone:\n\n{link}\n\nThe link works for 24 hours. If you did not create an account, ignore this email."
+    },
+    "password_reset": {
+      "subject": "Reset your CyberAthlete password",
+      "body": "Hi {name},\n\nSomeone asked to reset the password for this account. If it was you, open this link on your phone within 30 minutes:\n\n{link}\n\nResetting your password removes your privacy zones. They are encrypted with your password, and nobody, including us, can recover them. You can draw them again afterwards.\n\nIf you did not ask for this, ignore this email. Your password stays as it is."
+    },
+    "password_changed": {
+      "subject": "Your CyberAthlete password was changed",
+      "body": "Hi {name},\n\nThe password for your account was just changed. If this was you, there is nothing to do.\n\nIf it was not, reset your password from the sign-in screen straight away."
+    },
+    "email_changed": {
+      "subject": "Your CyberAthlete email address was changed",
+      "body": "Hi {name},\n\nThe email address for your account was changed from this address to {new_email}. If this was you, there is nothing to do.\n\nIf it was not, your account may be in someone else's hands: sign in, change your password and sign out every other device."
+    },
+    "new_device": {
+      "subject": "New sign-in to your CyberAthlete account",
+      "body": "Hi {name},\n\nYour account was just signed in on a new device: {device}.\n\nIf this was you, there is nothing to do. If it was not, change your password and sign that device out from your list of signed-in devices.",
+      "unnamed_device": "an unnamed device"
+    },
+    "refresh_reuse": {
+      "subject": "A device was signed out of your CyberAthlete account",
+      "body": "Hi {name},\n\nThe sign-in on one of your devices was used in a way that suggests it was copied, so that device has been signed out. You will need to sign in on it again.\n\nIf you did not expect this, change your password."
+    }
+  },
   "a11y": {
     "quantity": "{value} {unit}",
     "set_row": "Set {number}, {weight}, {reps}, {rir}, {status}",

@@ -7,11 +7,13 @@ skip into a failure.
 """
 
 import os
+import secrets
 import uuid
 from collections.abc import AsyncIterator, Awaitable, Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 
+import httpx
 import pytest
 from alembic import command
 from alembic.config import Config
@@ -21,9 +23,15 @@ from sqlalchemy import Connection, Engine, create_engine, make_url, text
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.pool import NullPool
 
-from app.core.config import ENV_FILE
+from app.api.deps import get_clock, get_email_sender, get_password_hasher, get_rate_limiter
+from app.core.config import ENV_FILE, get_settings
+from app.core.db import dispose_database, init_database
+from app.core.email import MemoryEmailSender
 from app.core.migrations import API_ROOT
+from app.core.security import PasswordHasher
+from app.main import create_app
 from seeds.reference import seed
+from tests.integration.api_support import FAST_HASHER, Api, FakeClock, NoRateLimits
 
 
 class _IntegrationEnvironment(BaseSettings):
@@ -147,3 +155,56 @@ async def make_role(database_urls: DatabaseUrls) -> AsyncIterator[MakeRole]:
             await connection.execute(text(f"DROP OWNED BY {name}"))
             await connection.execute(text(f"DROP ROLE IF EXISTS {name}"))
     await admin.dispose()
+
+
+ApiFactory = Callable[..., Awaitable[Api]]
+
+
+@pytest.fixture
+async def api_factory(
+    migrated: DatabaseUrls, monkeypatch: pytest.MonkeyPatch
+) -> AsyncIterator[ApiFactory]:
+    """In-process API instances over the real database, as `cyberathlete_app` (ADR-011).
+
+    Each instance has its own clock, its own outbox and its own client address. Rate limits are off
+    unless a test asks for them, and passwords are hashed cheaply unless a test passes the
+    production hasher.
+    """
+    monkeypatch.setenv("DATABASE_URL", migrated.app)
+    monkeypatch.setenv("JWT_SECRET", secrets.token_urlsafe(48))
+    monkeypatch.setenv("ENVIRONMENT", "test")
+    monkeypatch.setenv("EMAIL_TRANSPORT", "memory")
+    get_settings.cache_clear()
+    init_database(migrated.app)
+    clients: list[httpx.AsyncClient] = []
+
+    async def make(
+        *,
+        hasher: PasswordHasher = FAST_HASHER,
+        rate_limits: bool = False,
+        client_ip: str | None = None,
+        clock: FakeClock | None = None,
+    ) -> Api:
+        clock = clock or FakeClock()
+        mail = MemoryEmailSender()
+        app = create_app()
+        app.dependency_overrides[get_clock] = lambda: clock
+        app.dependency_overrides[get_password_hasher] = lambda: hasher
+        app.dependency_overrides[get_email_sender] = lambda: mail
+        if not rate_limits:
+            app.dependency_overrides[get_rate_limiter] = NoRateLimits
+        address = (
+            client_ip
+            or f"10.{secrets.randbelow(250)}.{secrets.randbelow(250)}.{secrets.randbelow(250)}"
+        )
+        transport = httpx.ASGITransport(app=app, client=(address, 50_000))
+        client = httpx.AsyncClient(transport=transport, base_url="http://test")
+        clients.append(client)
+        return Api(app, client, clock, mail)
+
+    yield make
+
+    for client in clients:
+        await client.aclose()
+    await dispose_database()
+    get_settings.cache_clear()

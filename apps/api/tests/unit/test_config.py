@@ -65,6 +65,13 @@ def test_the_migrator_url_is_refused_in_a_deployed_environment():
         assert_settings_are_safe(make_settings(environment="production"), environ=environ)
 
 
+@pytest.mark.parametrize("environment", ["staging", "production"])
+def test_a_deployed_api_refuses_to_boot_without_an_email_provider(environment):
+    """A deployed API that cannot send a reset link locks out everyone who forgets a password."""
+    with pytest.raises(InsecureConfigurationError, match="email provider"):
+        assert_settings_are_safe(make_settings(environment=environment), environ={})
+
+
 @pytest.mark.parametrize("environment", ["local", "test"])
 def test_the_migrator_url_is_allowed_in_local_development(environment):
     environ = {"MIGRATION_DATABASE_URL": "postgresql+psycopg://cyberathlete_migrator@db/x"}

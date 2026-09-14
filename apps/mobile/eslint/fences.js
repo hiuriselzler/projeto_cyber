@@ -88,6 +88,13 @@ const fences = [
     imports: [{ name: 'expo-secure-store' }],
   },
   {
+    // src/sync may use secure storage for session tokens, so the import fence alone would let it read the key too.
+    id: 'privacy-key-storage',
+    allowedIn: ['crypto'],
+    reason: 'only src/crypto reads or writes the privacy key in secure storage (ADR-007)',
+    syntax: [{ selector: 'Literal[value=/cyberathlete\\.privacy-key/]', what: "the privacy key's storage name" }],
+  },
+  {
     id: 'location',
     allowedIn: ['recording', 'platform'],
     reason: 'location is the most sensitive asset; no feature requests it on its own (04 §1)',

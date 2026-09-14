@@ -9,6 +9,7 @@
     },
     "./fixtures/*": "./fixtures/*",
     "./i18n/*": "./i18n/*",
+    "./security/*": "./security/*",
     "./seeds/*": "./seeds/*"
   },
   "scripts": {

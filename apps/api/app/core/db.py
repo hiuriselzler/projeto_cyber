@@ -1,6 +1,9 @@
-"""The database engine, and the boot-time proof that the API's role cannot skip RLS (ADR-011)."""
+"""The database engine, the per-transaction user scope, and the boot-time proof that the API's role
+cannot skip RLS (ADR-011)."""
 
 import asyncio
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 from sqlalchemy import text
 from sqlalchemy.exc import InterfaceError, OperationalError
@@ -10,6 +13,8 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
+
+from app.core.scope import UserId
 
 CONNECT_TIMEOUT_S = 5
 
@@ -128,3 +133,37 @@ def get_session_factory() -> async_sessionmaker[AsyncSession]:
     if _session_factory is None:
         raise RuntimeError("the database is not initialised; the app lifespan has not run")
     return _session_factory
+
+
+# --- the user scope -------------------------------------------------------------------------------
+
+
+@asynccontextmanager
+async def transaction(
+    session_factory: async_sessionmaker[AsyncSession],
+) -> AsyncIterator[AsyncSession]:
+    """One transaction with no user scope: every user-owned table reads as empty (ADR-011).
+
+    Commits when the block ends, rolls back if it raises.
+    """
+    async with session_factory() as session, session.begin():
+        yield session
+
+
+async def set_user_scope(session: AsyncSession, user_id: UserId) -> None:
+    """`SET LOCAL app.user_id`, written as `set_config(…, true)`: it ends with the transaction, so a
+    pooled connection cannot carry one user into another's request. A plain `SET` is banned
+    (ADR-011), and a test scans the API for one."""
+    await session.execute(
+        text("SELECT set_config('app.user_id', :user_id, true)"), {"user_id": str(user_id)}
+    )
+
+
+@asynccontextmanager
+async def user_transaction(
+    session_factory: async_sessionmaker[AsyncSession], user_id: UserId
+) -> AsyncIterator[AsyncSession]:
+    """One transaction in which row-level security sees `user_id`'s rows and nobody else's."""
+    async with transaction(session_factory) as session:
+        await set_user_scope(session, user_id)
+        yield session

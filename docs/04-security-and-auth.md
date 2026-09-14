@@ -136,7 +136,9 @@ With real users, an account they cannot recover is an account they lose. These a
     place INV-28 allows it.
 - **Rate limits** (per IP *and* per account, whichever trips first):
   `POST /auth/login` 10/15 min · `POST /auth/register` 5/hour ·
-  `POST /auth/refresh` 60/hour · `POST /sync/push` 120/hour · everything else 600/hour.
+  `POST /auth/refresh` 60/hour · `POST /sync/push` 120/hour · the three routes that send an email on
+  request — the reset request, a new verification link, an email change — 10/15 min together ·
+  everything else 600/hour.
   The counters live in shared storage, never in process memory, so the limits hold across more than
   one API instance (NFR-12). That storage is **Postgres** — `rate_limit_buckets`, fixed windows, one
   atomic upsert per hit, the IP and the email held only as an HMAC — and a tripped limit answers

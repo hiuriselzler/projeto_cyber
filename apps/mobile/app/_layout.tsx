@@ -1,7 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
+import { useEffect } from 'react';
 
-import { bootstrapAccount } from '@/account/bootstrap';
+import { bootstrapAccount, restoreAccountSession } from '@/account/bootstrap';
 import { useLocalMigrations } from '@/db/migrate';
 import { PreferencesProvider } from '@/features/settings';
 
@@ -13,6 +14,14 @@ const queryClient = new QueryClient();
 
 export default function RootLayout() {
   const migrations = useLocalMigrations();
+
+  // The session is restored from the local database, so only once its migrations have run — and never over the
+  // network (NFR-1).
+  useEffect(() => {
+    if (migrations.success) {
+      void restoreAccountSession();
+    }
+  }, [migrations.success]);
 
   if (migrations.error) {
     throw migrations.error;

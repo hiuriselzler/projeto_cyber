@@ -36,6 +36,11 @@ KNOWN_DEVELOPMENT_SECRETS = frozenset(
 Environment = Literal["local", "test", "staging", "production"]
 DEVELOPMENT_ENVIRONMENTS = frozenset({"local", "test"})
 
+# No provider is chosen yet (05 §5, open question 10), so only the two development transports exist:
+# a git-ignored folder, and memory for tests. A deployed API refuses to boot until a provider
+# adapter joins them.
+EmailTransport = Literal["folder", "memory"]
+
 
 class InsecureConfigurationError(RuntimeError):
     """Configuration that would run the API unsafely. Messages name settings, never their values."""
@@ -49,6 +54,10 @@ class Settings(BaseSettings):
     jwt_secret: SecretStr
     database_connect_attempts: int = Field(default=10, ge=1)
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
+    email_transport: EmailTransport = "folder"
+    email_folder: Path = REPO_ROOT / "apps" / "api" / ".mail"
+    # Where links in emails point: the app's deep-link scheme, from apps/mobile/app.json.
+    app_link_base: str = "cyberathlete://"
 
 
 class MigrationSettings(BaseSettings):
@@ -72,6 +81,14 @@ def assert_settings_are_safe(settings: Settings, environ: Mapping[str, str] = os
     if settings.environment not in DEVELOPMENT_ENVIRONMENTS and "MIGRATION_DATABASE_URL" in environ:
         raise InsecureConfigurationError(
             "MIGRATION_DATABASE_URL must not be in a deployed API's environment (ADR-011)"
+        )
+    if settings.environment not in DEVELOPMENT_ENVIRONMENTS:
+        # Only the development transports exist, and a deployed API that cannot send a reset link
+        # has locked out anyone who forgets a password. Refusing to start says so on day one
+        # instead.
+        raise InsecureConfigurationError(
+            "no email provider is configured for a deployed API; "
+            "choosing one is open question 10 (05 §5)"
         )
 
 

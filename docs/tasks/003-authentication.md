@@ -182,3 +182,19 @@ migration with no way to derive the missing keys.
 - **Until task 017, the libsodium binding is unconfirmed on a device.** If it fails there, only
   `src/crypto/`'s internals change, because the flows depend on its interface — the reason to hold that
   interface narrow.
+
+## Settled while building (2026-09-14)
+- **A reset request for a registered address takes longer** than one for an unknown address: it writes a token and
+  sends an email. The response is identical, the timing is not. Accepted for now; doing that work after the response
+  is the fix if it matters.
+- **A wrap is re-wrapped under current parameters at a password change, not at every sign-in.** Replacing a wrap
+  without a password change would need a route of its own, and in v1 no wrap cheaper than current can exist — the API
+  refuses one. Task 017's criterion says "next password change".
+- **A wrap that will not open does not stop a sign-in.** Training never waits on the privacy key; zones stay unavailable
+  on that device.
+- **An access token outlives a logout or a revoked session by up to 15 minutes** — it is a stateless JWT (04 §8). What
+  signs a device out is its refresh token failing, and that is what the tests assert.
+- **The three routes that send an email on request share a 10-per-15-minutes limit.** Under 04 §5's "everything else",
+  anyone could have aimed 600 emails an hour at one inbox. 04 §5 now lists them.
+- **No screen links to the password, email and session screens yet.** They are routes (`/account/…`) and the auth
+  screens are reached through the session gate and the email links; a settings screen that lists them comes later.

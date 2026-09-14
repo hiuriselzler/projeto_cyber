@@ -430,6 +430,105 @@
       "title": "Nível {level}"
     }
   },
+  "account": {
+    "working": "Protegendo sua conta…",
+    "fields": {
+      "email": "E-mail",
+      "password": "Senha",
+      "display_name": "Seu nome",
+      "current_password": "Senha atual",
+      "new_password": "Nova senha",
+      "new_email": "Novo e-mail"
+    },
+    "sign_in": {
+      "title": "Entrar",
+      "submit": "Entrar",
+      "to_register": "Criar uma conta",
+      "to_reset": "Esqueceu sua senha?"
+    },
+    "register": {
+      "title": "Crie sua conta",
+      "password_hint": "Pelo menos 10 caracteres. Algumas palavras que você vai lembrar funcionam bem.",
+      "submit": "Criar conta",
+      "to_sign_in": "Já tenho uma conta"
+    },
+    "reset": {
+      "title": "Redefinir sua senha",
+      "request_submit": "Enviar link de redefinição",
+      "request_sent": "Se houver uma conta com {email}, um link para redefinir a senha está a caminho. Ele vale por 30 minutos.",
+      "zones_warning": "Redefinir a senha apaga suas zonas de privacidade. Elas são criptografadas com a sua senha, então ninguém consegue recuperá-las, nem nós. Você pode desenhá-las de novo depois.",
+      "confirm_submit": "Redefinir senha e apagar zonas de privacidade",
+      "done": "Sua senha foi redefinida e todos os aparelhos foram desconectados. Entre com a nova senha.",
+      "to_sign_in": "Entrar"
+    },
+    "verify": {
+      "title": "Confirme seu e-mail",
+      "working": "Confirmando seu e-mail…",
+      "done": "Seu e-mail está confirmado.",
+      "continue": "Continuar"
+    },
+    "password": {
+      "title": "Alterar sua senha",
+      "submit": "Alterar senha",
+      "done": "Sua senha foi alterada. Seus outros aparelhos continuam conectados."
+    },
+    "email": {
+      "title": "Alterar seu e-mail",
+      "submit": "Enviar link de confirmação",
+      "sent": "Enviamos um link para {email}. Seu endereço muda quando você abrir o link."
+    },
+    "sessions": {
+      "title": "Aparelhos conectados",
+      "this_device": "Este aparelho",
+      "unnamed_device": "Aparelho sem nome",
+      "sign_out_device": "Desconectar este aparelho",
+      "sign_out": "Sair",
+      "sign_out_everywhere": "Sair de todos os aparelhos"
+    },
+    "errors": {
+      "invalid_credentials": "Esse e-mail e essa senha não correspondem a uma conta.",
+      "email_unavailable": "Já existe uma conta com este e-mail. Entre, ou redefina a senha dela.",
+      "email_unchanged": "Esse já é o seu e-mail.",
+      "password_too_short": "Use pelo menos 10 caracteres.",
+      "password_too_long": "Use no máximo 1024 caracteres.",
+      "password_breached": "Esta senha aparece em vazamentos de dados conhecidos. Escolha outra.",
+      "password_incorrect": "Sua senha atual não está certa.",
+      "invalid_token": "Este link expirou ou já foi usado. Peça um novo.",
+      "email_unverified": "Confirme seu endereço de e-mail primeiro.",
+      "rate_limited": "Tentativas demais. Espere alguns minutos e tente de novo.",
+      "offline": "Sem conexão. Tente de novo quando estiver on-line.",
+      "signed_out": "Você foi desconectado. Entre de novo.",
+      "privacy_key_missing": "Este aparelho não tem sua chave de privacidade, então a senha não pode ser alterada aqui. Altere-a em um aparelho onde você entrou com a sua senha.",
+      "unknown": "Algo deu errado. Tente de novo."
+    }
+  },
+  "email": {
+    "verify_email": {
+      "subject": "Confirme seu e-mail no CyberAthlete",
+      "body": "Olá, {name}.\n\nConfirme que este endereço pertence à sua conta do CyberAthlete abrindo este link no seu celular:\n\n{link}\n\nO link vale por 24 horas. Se você não criou uma conta, ignore este e-mail."
+    },
+    "password_reset": {
+      "subject": "Redefina sua senha do CyberAthlete",
+      "body": "Olá, {name}.\n\nAlguém pediu para redefinir a senha desta conta. Se foi você, abra este link no seu celular em até 30 minutos:\n\n{link}\n\nRedefinir a senha apaga suas zonas de privacidade. Elas são criptografadas com a sua senha, e ninguém, nem nós, consegue recuperá-las. Você pode desenhá-las de novo depois.\n\nSe você não pediu isso, ignore este e-mail. Sua senha continua a mesma."
+    },
+    "password_changed": {
+      "subject": "Sua senha do CyberAthlete foi alterada",
+      "body": "Olá, {name}.\n\nA senha da sua conta acabou de ser alterada. Se foi você, não é preciso fazer nada.\n\nSe não foi, redefina sua senha na tela de entrada imediatamente."
+    },
+    "email_changed": {
+      "subject": "O e-mail da sua conta do CyberAthlete foi alterado",
+      "body": "Olá, {name}.\n\nO endereço de e-mail da sua conta foi alterado deste endereço para {new_email}. Se foi você, não é preciso fazer nada.\n\nSe não foi, sua conta pode estar nas mãos de outra pessoa: entre, altere sua senha e desconecte todos os outros aparelhos."
+    },
+    "new_device": {
+      "subject": "Novo acesso à sua conta do CyberAthlete",
+      "body": "Olá, {name}.\n\nSua conta acabou de ser acessada em um novo aparelho: {device}.\n\nSe foi você, não é preciso fazer nada. Se não foi, altere sua senha e desconecte esse aparelho na lista de aparelhos conectados.",
+      "unnamed_device": "um aparelho sem nome"
+    },
+    "refresh_reuse": {
+      "subject": "Um aparelho foi desconectado da sua conta do CyberAthlete",
+      "body": "Olá, {name}.\n\nO acesso de um dos seus aparelhos foi usado de um jeito que indica que foi copiado, então esse aparelho foi desconectado. Você vai precisar entrar nele de novo.\n\nSe você não esperava isso, altere sua senha."
+    }
+  },
   "a11y": {
     "quantity": "{value} {unit}",
     "set_row": "Série {number}, {weight}, {reps}, {rir}, {status}",

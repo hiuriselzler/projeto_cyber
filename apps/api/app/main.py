@@ -5,7 +5,9 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from app.api.errors import install_error_handlers
 from app.api.health import router as health_router
+from app.api.v1 import api_router
 from app.core.config import get_settings
 from app.core.db import dispose_database, init_database, verify_database_role
 from app.core.logging import configure_logging
@@ -29,7 +31,9 @@ def create_app() -> FastAPI:
     configure_logging()
     app = FastAPI(title="CyberAthlete API", version="0.1.0", lifespan=lifespan)
     app.add_middleware(RequestContextMiddleware)
+    install_error_handlers(app)
     app.include_router(health_router)
+    app.include_router(api_router)
     return app
 
 

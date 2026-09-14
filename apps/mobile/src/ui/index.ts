@@ -19,6 +19,7 @@ export { easingOf, houseEasing, motionFor, type MotionKind, type MotionSpec } fr
 export { useReduceMotion } from './motion/useReduceMotion';
 
 export { AppText, unitVariantOf, type AppTextProps, type TextTone } from './components/AppText';
+export { Button, type ButtonProps } from './components/Button';
 export { Chip, type ChipProps } from './components/Chip';
 export { CycleCell, type CycleStatus } from './components/CycleCell';
 export { EmptyState } from './components/EmptyState';
@@ -40,4 +41,5 @@ export { Screen } from './components/Screen';
 export { SegmentedControl, type SegmentedOption } from './components/SegmentedControl';
 export { SetRow, type PreviousSet, type SetRowField, type SetRowProps } from './components/SetRow';
 export { Sheet } from './components/Sheet';
+export { TextField, type TextFieldProps } from './components/TextField';
 export { TrackRow } from './components/TrackRow';

@@ -7,4 +7,9 @@ module.exports = {
   ],
   // Known-bad lint fixtures are code on purpose; they are never tests.
   testPathIgnorePatterns: ['/node_modules/', '/lint-fixtures/'],
+  // The native libsodium binding cannot load under Node. Its functions come from libsodium's JavaScript build
+  // instead, so the privacy-key tests run the real algorithms (task 003).
+  moduleNameMapper: {
+    '^react-native-libsodium$': '<rootDir>/src/crypto/testing/libsodium-node.ts',
+  },
 };
