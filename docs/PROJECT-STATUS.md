@@ -15,13 +15,13 @@ when its own criteria are ticked. Tick the box here only then.
 
 | | |
 |---|---|
-| **Phase** | **Tasks 001 and 002 complete; task 011 next.** The schema exists in Postgres and SQLite, seeded and enforcing itself, with CI green. Everything that needs administrator rights — Docker, the device, the ADR-004 spike — is [task 017](tasks/017-local-toolchain-device-spike.md), which must finish before task 004 |
+| **Phase** | **Tasks 001, 002 and 011 complete; task 003 next.** The schema exists in Postgres and SQLite, seeded and enforcing itself, and the design system exists in `src/ui/`, token-driven and tested in both languages, both unit systems and both themes. Everything that needs administrator rights — Docker, the device, the ADR-004 spike — is [task 017](tasks/017-local-toolchain-device-spike.md), which must finish before task 004 |
 | **Repository** | Private GitHub repository `hiuriselzler/projeto_cyber`. `main` holds the documentation and task 001's merged work (pull request #1); each further piece arrives by pull request, with CI green before merge |
 | **Docs** | 46 files, internally consistent, all cross-links resolving |
 | **Decisions** | 14 ADRs. Thirteen accepted outright; [ADR-004](decisions/ADR-004.md) accepted *conditionally* |
-| **Tasks** | 16 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **2 complete** (001, 002) |
+| **Tasks** | 16 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **3 complete** (001, 002, 011) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | [Task 011](tasks/011-design-system.md) — the design system, **in progress**. Then 003; then [task 017](tasks/017-local-toolchain-device-spike.md) once administrator rights are available, before task 004. Separately: a native speaker who trains reviews the Portuguese exercise names, and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
+| **Next action** | [Task 003](tasks/003-authentication.md) — authentication and authorization, the privacy-key lifecycle included. Then [task 017](tasks/017-local-toolchain-device-spike.md) once administrator rights are available, before task 004. Separately: a native speaker who trains reviews the Portuguese exercise names, and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
 
 ### The one decision still genuinely open
 
@@ -109,19 +109,22 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
 - [x] **Schema-comparison script**: Alembic vs Drizzle names, *plus* [§11](03-database-schema.md)
       enforcement. Prove it fails when `‹sync›` is misplaced
 
-#### ☐ 011 — Brand assets and design system · **L** · depends: 001
+#### ☑ 011 — Brand assets and design system · **L** · depends: 001
 > Numbered late, built third. Task 004 builds the set row, and it should come out of a system
-> rather than be retrofitted into one. **In progress.** The mark itself moved to [task 018](tasks/018-brand-mark.md).
-- [ ] **Every slot the mark fills holds a plainly marked placeholder** — icon, splash, notification icon, favicon —
+> rather than be retrofitted into one. The mark itself moved to [task 018](tasks/018-brand-mark.md).
+> **Complete (2026-09-14).** Every criterion in the task file is proven by a test, a lint fixture or a script, each
+> run in CI on the task's pull request. The device checks — 200 % font scale, the keypad beside the row, plurals under
+> Hermes, TalkBack — are task 017's.
+- [x] **Every slot the mark fills holds a plainly marked placeholder** — icon, splash, notification icon, favicon —
       rendered by a step CI runs again; never a stand-in octopus
-- [ ] Token file `src/ui/tokens.ts` (INV-23), both themes end to end with a device-only override, **lint banning
+- [x] Token file `src/ui/tokens.ts` (INV-23), both themes end to end with a device-only override, **lint banning
       literal colour, size and duration, and every spring** ([ADR-014](decisions/ADR-014.md))
-- [ ] The set row · the custom numeric keypad · RIR chips · metric tile · cycle cell · sheet · chip
-- [ ] **Track row** — the whole Progress screen is a list of these; works at 6 rows and at 15
-- [ ] **i18n wired, literal-string lint rule, catalog key- and argument-parity check in CI**; every component
+- [x] The set row · the custom numeric keypad · RIR chips · metric tile · cycle cell · sheet · chip
+- [x] **Track row** — the whole Progress screen is a list of these; works at 6 rows and at 15
+- [x] **i18n wired, literal-string lint rule, catalog key- and argument-parity check in CI**; every component
       tested in both languages and both unit systems, in both themes (INV-27)
-- [ ] Damped house easing `cubic-bezier(0.18, 0, 0.06, 1)`, **no spring**; reduce-motion gives 120 ms cross-fades
-- [ ] Contrast **proven by a test over the corrected palette**: body 4.5:1, UI 3:1, **workout numerals 7:1**;
+- [x] Damped house easing `cubic-bezier(0.18, 0, 0.06, 1)`, **no spring**; reduce-motion gives 120 ms cross-fades
+- [x] Contrast **proven by a test over the corrected palette**: body 4.5:1, UI 3:1, **workout numerals 7:1**;
       tabular figures in every numeric style
 
 #### ☐ 003 — Authentication and authorization · **L** · depends: 002 · blocks: 006, 012, 014

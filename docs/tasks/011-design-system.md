@@ -83,23 +83,23 @@ Priority order, most valuable first:
 - System font scale to 200 % without loss of function (Dynamic Type: [task 016](016-ios-platform.md)).
 
 ## Acceptance criteria
-- [ ] Light and dark both pass contrast, proven by a test over every token against every background of its theme:
+- [x] Light and dark both pass contrast, proven by a test over every token against every background of its theme:
       body 4.5:1, UI 3:1, workout numerals 7:1 ([07 §3](../07-brand-and-ui.md), INV-24)
-- [ ] A grep for hex literals in `src/features/` returns nothing (INV-23)
-- [ ] The `design-tokens`, `no-bounce` and literal-string lint rules each report a known-bad fixture in CI
+- [x] A grep for hex literals in `src/features/` returns nothing (INV-23)
+- [x] The `design-tokens`, `no-bounce` and literal-string lint rules each report a known-bad fixture in CI
       ([ADR-014](../decisions/ADR-014.md))
-- [ ] Every state that uses colour also carries an icon, label or shape (INV-24)
-- [ ] Reduce-motion produces no animation longer than a cross-fade
-- [ ] `en.json` and `pt-BR.json` have the same keys, and every message takes the same arguments in both, checked in
+- [x] Every state that uses colour also carries an icon, label or shape (INV-24)
+- [x] Reduce-motion produces no animation longer than a cross-fade
+- [x] `en.json` and `pt-BR.json` have the same keys, and every message takes the same arguments in both, checked in
       CI (INV-27)
-- [ ] The formatting module shows every load on a 5 lb grid, after storage precision, as an exact multiple of 5 lb;
+- [x] The formatting module shows every load on a 5 lb grid, after storage precision, as an exact multiple of 5 lb;
       pt-BR shows a decimal comma; keypad input with `,` or `.` parses to the same kilograms in both languages
       (INV-01, INV-02)
-- [ ] Every component in §3 is tested in both languages and both unit systems, in both themes — all eight
+- [x] Every component in §3 is tested in both languages and both unit systems, in both themes — all eight
       combinations; the set row's accessibility label is one sentence in each, and a blank RIR reads as not recorded
       (INV-03)
-- [ ] The theme follows the system setting, and a manual override wins over it and is stored on the device
-- [ ] Every slot the mark fills holds a placeholder, and CI fails if a committed PNG differs from its render
+- [x] The theme follows the system setting, and a manual override wins over it and is stored on the device
+- [x] Every slot the mark fills holds a placeholder, and CI fails if a committed PNG differs from its render
 
 ## Notes and risks
 - **The set row is the product** ([task 004](004-exercise-catalog-and-logging.md)). Prototype it on
