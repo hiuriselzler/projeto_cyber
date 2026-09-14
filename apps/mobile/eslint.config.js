@@ -9,7 +9,7 @@ const { defineConfig } = require('eslint/config');
 const expoConfig = require('eslint-config-expo/flat');
 const boundaries = require('eslint-plugin-boundaries');
 
-const { FOLDERS, fences, folderRules, NO_CONSOLE_FOLDERS } = require('./eslint/fences');
+const { FOLDERS, SUBSCOPES, fences, folderRules, NO_CONSOLE_FOLDERS } = require('./eslint/fences');
 
 const SOURCE_FILES = '**/*.{js,jsx,ts,tsx}';
 
@@ -24,10 +24,19 @@ function listRule(entries) {
   return entries.length > 0 ? ['error', ...entries] : 'off';
 }
 
-/** The combined restrictions for one folder, or for files outside every folder when `folder` is null. */
-function restrictionsFor(folder) {
-  const active = fences.filter((fence) => !fence.allowedIn.includes(folder));
-  const restrictions = folderRules[folder] ? [...active, folderRules[folder]] : active;
+/** Whether `scope` — a folder, or a sub-scope such as `ui/tokens.ts` — is named by `list` itself or by its folder. */
+function names(list, scope) {
+  return scope !== null && (list.includes(scope) || list.includes(scope.split('/')[0]));
+}
+
+/**
+ * The combined restrictions for one folder or sub-scope (ADR-014), or for files outside every folder when `scope` is
+ * null. A sub-scope gets its folder's rules minus only the one that exempts it by name.
+ */
+function restrictionsFor(scope) {
+  const active = fences.filter((fence) => !names(fence.allowedIn, scope));
+  const scoped = folderRules.filter((rule) => names(rule.appliesIn, scope) && !(rule.exemptIn ?? []).includes(scope));
+  const restrictions = [...active, ...scoped];
 
   const paths = [];
   const patterns = [];
@@ -50,7 +59,7 @@ function restrictionsFor(folder) {
     'no-restricted-globals': listRule(globals),
     'no-restricted-properties': listRule(properties),
     'no-restricted-syntax': listRule(syntax),
-    'no-console': NO_CONSOLE_FOLDERS.includes(folder) ? 'error' : 'off',
+    'no-console': names(NO_CONSOLE_FOLDERS, scope) ? 'error' : 'off',
   };
 }
 
@@ -119,6 +128,8 @@ module.exports = defineConfig([
   },
   { files: [SOURCE_FILES], rules: restrictionsFor(null) },
   ...FOLDERS.map((folder) => ({ files: filesOf(folder), rules: restrictionsFor(folder) })),
+  // After the folders, so a sub-scope's block replaces its folder's options for its own files (ADR-014).
+  ...SUBSCOPES.map(({ name, files }) => ({ files, rules: restrictionsFor(name) })),
   {
     files: [SOURCE_FILES],
     plugins: { boundaries },

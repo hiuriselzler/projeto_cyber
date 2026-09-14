@@ -92,9 +92,46 @@ for (const result of results) {
   }
 }
 
-for (const restriction of [...fences, ...Object.values(folderRules)]) {
+for (const restriction of [...fences, ...folderRules]) {
   if (!coveredTags.has(`[fence:${restriction.id}]`)) {
     failures.push(`fence ${restriction.id} has no fixture proving it`);
+  }
+}
+
+// A sub-scope lifts exactly the rule that names it (ADR-014): the same code is caught one folder over, and a
+// neighbouring fence still fires inside the sub-scope. Built without literals this file's own lint would reject.
+const HEX = ['#', '4A9FD4'].join('');
+const SUBSCOPE_PROOFS = [
+  {
+    code: `export const accent = '${HEX}';\n`,
+    exempt: 'src/ui/tokens.ts',
+    caughtAt: 'src/ui/not-the-token-file.ts',
+    tag: '[fence:design-tokens]',
+  },
+  {
+    code: "import { Text } from 'react-native';\nexport const Title = () => <Text>Diagnostics</Text>;\n",
+    exempt: 'src/features/diagnostics/Title.tsx',
+    caughtAt: 'src/features/another-feature/Title.tsx',
+    tag: '[fence:literal-strings]',
+  },
+];
+const NEIGHBOUR = { code: "export const ping = () => fetch('/health');\n", tag: '[fence:network]' };
+
+async function tagsAt(code, relativePath) {
+  const [result] = await eslint.lintText(code, { filePath: path.join(FIXTURES, relativePath) });
+  return result.messages.map((message) => message.message);
+}
+
+for (const { code, exempt, caughtAt, tag } of SUBSCOPE_PROOFS) {
+  if ((await tagsAt(code, exempt)).some((message) => message.includes(tag))) {
+    failures.push(`sub-scope ${exempt} is not exempt from ${tag}`);
+  }
+  if (!(await tagsAt(code, caughtAt)).some((message) => message.includes(tag))) {
+    failures.push(`${tag} is not reported at ${caughtAt}`);
+  }
+  const extension = path.extname(exempt);
+  if (!(await tagsAt(NEIGHBOUR.code, exempt.replace(extension, `-neighbour${extension}`))).some((m) => m.includes(NEIGHBOUR.tag))) {
+    failures.push(`sub-scope ${exempt} switched off its neighbour ${NEIGHBOUR.tag}`);
   }
 }
 for (const folder of NO_CONSOLE_FOLDERS) {

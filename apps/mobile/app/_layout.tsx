@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 
 import { bootstrapAccount } from '@/account/bootstrap';
 import { useLocalMigrations } from '@/db/migrate';
+import { PreferencesProvider } from '@/features/settings';
 
 // The root layout calls exactly two entry points below it (ADR-012 § Amendment). The bootstrap runs
 // before anything renders, so a build given an API base URL it may not use refuses to start (04 §5).
@@ -20,8 +21,10 @@ export default function RootLayout() {
     return null;
   }
   return (
-    <QueryClientProvider client={queryClient}>
-      <Stack screenOptions={{ headerShown: false }} />
-    </QueryClientProvider>
+    <PreferencesProvider>
+      <QueryClientProvider client={queryClient}>
+        <Stack screenOptions={{ headerShown: false }} />
+      </QueryClientProvider>
+    </PreferencesProvider>
   );
 }
