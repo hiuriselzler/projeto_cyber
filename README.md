@@ -83,7 +83,7 @@ themselves (`apps/api/tests/conftest.py`). Linux, and so CI and production, is u
 |---|---|
 | API | `uv run ruff check .` · `uv run ruff format --check .` · `uv run mypy app tests scripts seeds alembic/env.py` · `uv run lint-imports` · `uv run pytest` |
 | Schema | `uv run alembic upgrade head` · `uv run python -m seeds` · `uv run python -m scripts.check_schema` (in `apps/api`) |
-| Mobile | `pnpm typecheck` · `pnpm lint` · `pnpm lint:fixtures` · `pnpm check:platform-files` · `pnpm test` · `pnpm db:generate` must leave `src/db/migrations` unchanged |
+| Mobile | `pnpm typecheck` · `pnpm lint` · `pnpm lint:fixtures` · `pnpm check:platform-files` · `pnpm test` · `pnpm db:generate` must leave `src/db/migrations` unchanged · `pnpm check:catalogs` · `pnpm render:brand` must leave `assets/images` and `src/ui/brand` unchanged |
 | Shared | `uv run python -m scripts.export_openapi` and `uv run python -m seeds.export` (in `apps/api`), then `pnpm --filter @cyberathlete/shared generate:api` |
 | Release config | `pnpm prebuild` then `pnpm check:release-cleartext` (in `apps/mobile`) |
 
