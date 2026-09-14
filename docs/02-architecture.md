@@ -144,12 +144,15 @@ model       ORM tables. Data shape only.
 domain      Pure. Called by services. Imports nothing from the layers above.
 ```
 
-Import-linter enforces this in CI, so it stays true.
+Import-linter enforces this in CI, so it stays true. A **job** (`app/jobs/`, from
+[task 019](tasks/019-account-deletion.md)) stands where a router does: a scheduled command that calls services and
+nothing below them.
 
 **Endpoint groups** (`/api/v1`):
 
 ```
-auth/        register, login, refresh, logout, me
+auth/        register, login, refresh, logout, me, password reset and change, email
+             verification and change, sessions (04 §2a); deletion (task 019)
 exercises/   catalog + custom CRUD
 routines/    templates CRUD
 workouts/    CRUD, sets, history, PRs

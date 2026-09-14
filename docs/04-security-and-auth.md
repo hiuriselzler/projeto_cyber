@@ -56,7 +56,10 @@ With real users, an account they cannot recover is an account they lose. These a
 - **Registration discloses an existing account** — `409` — behind its rate limit (§5). Login and the
   reset request disclose nothing; registration cannot hide it without breaking the offline first
   set ([ADR-015](decisions/ADR-015.md)).
-- **Account deletion** with a 7-day grace period (§7), counted from `users.deletion_requested_at`.
+- **Account deletion** with a 7-day grace period (§7), counted from `users.deletion_requested_at` — requested in the
+  app with the password, or from a web page through a link sent to the account's address. **Other devices stay signed
+  in**, so any of them can cancel; every session ends when the account is deleted
+  ([task 019](tasks/019-account-deletion.md)).
 - **Session list**: the user can see their signed-in devices and revoke any of them.
 - **Notification on security events**: password changed, email changed, new device signed in, and
   refresh-token reuse detected (§3).
@@ -136,13 +139,17 @@ With real users, an account they cannot recover is an account they lose. These a
     place INV-28 allows it.
 - **Rate limits** (per IP *and* per account, whichever trips first):
   `POST /auth/login` 10/15 min · `POST /auth/register` 5/hour ·
-  `POST /auth/refresh` 60/hour · `POST /sync/push` 120/hour · the three routes that send an email on
-  request — the reset request, a new verification link, an email change — 10/15 min together ·
-  everything else 600/hour.
+  `POST /auth/refresh` 60/hour · `POST /sync/push` 120/hour · the routes that send an email on
+  request — the reset request, a new verification link, an email change and, from task 019, the web
+  deletion page's link — 10/15 min together · everything else 600/hour.
+  A request that checks the current password outside sign-in — a password change, and from task 019 a
+  deletion request — counts against the login limit.
   The counters live in shared storage, never in process memory, so the limits hold across more than
   one API instance (NFR-12). That storage is **Postgres** — `rate_limit_buckets`, fixed windows, one
   atomic upsert per hit, the IP and the email held only as an HMAC — and a tripped limit answers
   `429` with `Retry-After` ([ADR-015](decisions/ADR-015.md)).
+  **Which address counts as the IP is not yet settled** (PROJECT-STATUS, open question 12): behind a hosting
+  platform's proxy every request arrives from the proxy, and one shared address would put every user in one bucket.
 - Request body caps: 2 MB general, 20 MB for a stream upload. Stream uploads are the one large
   payload and go to their own endpoint with its own limit.
 - CORS: not needed (no browser client in v1). Leave it off rather than setting `*`.

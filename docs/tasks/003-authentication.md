@@ -2,6 +2,9 @@
 
 **Depends on:** 002 · **Blocks:** 006 (sync), 012, 014 · **Size:** L
 
+> **Complete (2026-09-14).** CI was green on all four jobs of pull request #9, merged to `main` as `425a970`, and every
+> criterion below is ticked. What the closing review found is at the end of this file.
+
 > **Device checks (2026-09-12):** there is no physical device before [task 017](../tasks/017-local-toolchain-device-spike.md). The
 > criteria that need one — the libsodium binding, offline sign-in, the privacy-key flows, the
 > key-derivation timing — moved there; this task closes on what the API tests, Jest and lint prove.
@@ -127,38 +130,40 @@ migration with no way to derive the missing keys.
   kept in the local `users` row, so language and units come from the account from then on, not the device.
 
 ## Acceptance criteria
-- [ ] Register → login → refresh → access a protected route, on two devices simultaneously
-- [ ] Replaying an already-used refresh token revokes that device's whole chain, and sends the reuse notification
-- [ ] A refresh token presented again within 60 s of its rotation, while its successor is unused, receives a new
+- [x] Register → login → refresh → access a protected route, on two devices simultaneously
+- [x] Replaying an already-used refresh token revokes that device's whole chain, and sends the reuse notification
+- [x] A refresh token presented again within 60 s of its rotation, while its successor is unused, receives a new
       successor instead; once the successor is used, or after 60 s, it is reuse ([ADR-015](../decisions/ADR-015.md))
-- [ ] Logout on device A leaves device B signed in; logout-all signs both out
-- [ ] `GET /workouts/{id}` for another user's workout returns **404**
-- [ ] With RLS on, a deliberately unscoped repository query returns 0 rows rather than data —
+- [x] Logout on device A leaves device B signed in; logout-all signs both out
+- [x] `GET /workouts/{id}` for another user's workout returns **404**
+- [x] With RLS on, a deliberately unscoped repository query returns 0 rows rather than data —
       write this test, prove the second line of defence works
-- [ ] A repository call without `user_id` fails mypy — a known-bad fixture proves it; and every route outside
+- [x] A repository call without `user_id` fails mypy — a known-bad fixture proves it; and every route outside
       `/auth` and `/health` depends on `get_current_user` — a test over the route table proves it
-- [ ] Login attempts for an existing and a non-existent email differ by < 20 ms across 100 runs
-- [ ] Rate limit returns 429 with `Retry-After` after 10 failed logins, and the count holds across two API instances
+- [x] Login attempts for an existing and a non-existent email differ by < 20 ms across 100 runs
+- [x] Rate limit returns 429 with `Retry-After` after 10 failed logins, and the count holds across two API instances
       sharing one database
-- [ ] A password reset completes, and **every other device is signed out**
-- [ ] A used reset token is rejected; an expired one is rejected
-- [ ] Reset-request responses are identical for a registered and an unregistered email
-- [ ] A password change keeps other devices signed in, replaces the wrapped key, and rejects the old password afterwards
-- [ ] A password on the breach list, or shorter than 10 characters, is refused at registration, change and reset
-- [ ] An unverified user can log in and log a workout, but cannot change their email, and is refused by the
+- [x] A password reset completes, and **every other device is signed out**
+- [x] A used reset token is rejected; an expired one is rejected
+- [x] Reset-request responses are identical for a registered and an unregistered email
+- [x] A password change keeps other devices signed in, replaces the wrapped key, and rejects the old password afterwards
+- [x] A password on the breach list, or shorter than 10 characters, is refused at registration, change and reset —
+      *the length rule at change and reset is proven through the one check all three routes call, unit-tested, while
+      the breach list is refused at each route in integration; accepted at the close, 2026-09-14*
+- [x] An unverified user can log in and log a workout, but cannot change their email, and is refused by the
       verified-email gate the data export will sit behind — proven on a route the test mounts, since the export is
       task 020's
-- [ ] The session list shows both devices and revoking one signs only that one out
-- [ ] Every email renders in `en` and `pt-BR` from the shared catalogs, with plain arguments only
-- [ ] The client wrapping-KDF constants are at least the server's login-hash memory and iterations; a
+- [x] The session list shows both devices and revoking one signs only that one out
+- [x] Every email renders in `en` and `pt-BR` from the shared catalogs, with plain arguments only
+- [x] The client wrapping-KDF constants are at least the server's login-hash memory and iterations; a
       test fails if either side changes so the client falls below ([ADR-007](../decisions/ADR-007.md))
-- [ ] Only `src/crypto/` imports the crypto library or reads the privacy key from secure storage —
+- [x] Only `src/crypto/` imports the crypto library or reads the privacy key from secure storage —
       enforced by lint
-- [ ] No route or feature imports `src/sync/` or `src/crypto/`; sign-in, registration and password
+- [x] No route or feature imports `src/sync/` or `src/crypto/`; sign-in, registration and password
       change reach both only through `src/account/` — enforced by lint
       ([ADR-012](../decisions/ADR-012.md))
-- [ ] Ten parallel requests that meet a 401 trigger exactly one refresh; the access token is never written to storage
-- [ ] With no network, a launch holding an unexpired refresh token reaches the signed-in app — proven in Jest here,
+- [x] Ten parallel requests that meet a 401 trigger exactly one refresh; the access token is never written to storage
+- [x] With no network, a launch holding an unexpired refresh token reaches the signed-in app — proven in Jest here,
       on a device in task 017
 
 ## Notes and risks
@@ -198,3 +203,13 @@ migration with no way to derive the missing keys.
   anyone could have aimed 600 emails an hour at one inbox. 04 §5 now lists them.
 - **No screen links to the password, email and session screens yet.** They are routes (`/account/…`) and the auth
   screens are reached through the session gate and the email links; a settings screen that lists them comes later.
+
+## Found at the close (2026-09-14)
+- **Per-IP limits count the socket's peer**, `request.client.host`. Behind a hosting platform's proxy that is the proxy,
+  for every user at once. Open question 12 in PROJECT-STATUS, to settle before the first deploy.
+- **Only one lost refresh response is forgiven.** A grace refresh retires the unused successor, so the same replaced
+  token presented again inside the window is reuse. Added to [ADR-015](../decisions/ADR-015.md)'s accepted consequences.
+- **Revoking a session can answer 404** when the session list is older than that device's last refresh: the list names
+  each device's newest token, and a refresh retires it. Left as it is for now.
+- **The retention purges are unscheduled**, so `rate_limit_buckets` gains a row per limited request until
+  [task 019](019-account-deletion.md) adds the daily command.

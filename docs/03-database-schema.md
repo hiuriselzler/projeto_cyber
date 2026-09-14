@@ -93,6 +93,16 @@ email_verification_tokens (
 INDEX (user_id)
 UNIQUE (token_hash)
 
+account_deletion_tokens (        -- task 019: the web deletion page's confirmation link (04 §2a)
+  id uuid PK, user_id uuid NOT NULL → users,
+  token_hash text NOT NULL, expires_at timestamptz NOT NULL,   -- 30 min
+  used_at timestamptz NULL, created_at timestamptz NOT NULL
+)
+INDEX (user_id) WHERE used_at IS NULL
+UNIQUE (token_hash)                -- looked up by hash, before the user is known (ADR-011)
+-- A table of its own rather than a purpose column on another token table, so no reset or
+-- verification link can be replayed at the deletion route. Planned 2026-09-14; task 019's migration.
+
 refresh_tokens (
   id            uuid PK,
   user_id       uuid NOT NULL → users,
@@ -841,8 +851,8 @@ one.
 
 Same tables, with these differences:
 
-1. **Omitted:** the three server-only auth tables — `refresh_tokens` (tokens live in the OS keychain,
-   04 §3), `password_reset_tokens` and `email_verification_tokens` — the server's
+1. **Omitted:** the four server-only auth tables — `refresh_tokens` (tokens live in the OS keychain,
+   04 §3), `password_reset_tokens`, `email_verification_tokens` and `account_deletion_tokens` (task 019) — the server's
    `rate_limit_buckets` ([ADR-015](decisions/ADR-015.md)), and **both derived
    caches** — `personal_records` (recomputed from local `set_logs`) and `user_track_progress`
    (folded from local `xp_awards`). Both ledgers sync, so the device can always rebuild the
@@ -962,7 +972,8 @@ decides whether a table has `‹sync›`, never whether it has an owner.
 > This is the rule that tells you what to do with the next cache somebody adds.
 
 **Local-only** — `raw_gps_points`, `outbox`, `sync_state` (§8), plus the server-only
-`refresh_tokens`, `password_reset_tokens` and `email_verification_tokens`, which are auth state
+`refresh_tokens`, `password_reset_tokens`, `email_verification_tokens` and `account_deletion_tokens` (task 019),
+which are auth state
 rather than user data and never sync anywhere, and `rate_limit_buckets`, which holds nobody's data at
 all and so has no owner and no row-level security ([ADR-015](decisions/ADR-015.md)).
 

@@ -51,6 +51,20 @@ HTTP status codes, serialization.
 **Must NOT contain:** business rules, ORM queries, transaction management, calls into `domain/`.
 A router calls exactly one service method and shapes the result.
 
+**The one router outside `v1/`:** the web account-deletion page ([task 019](tasks/019-account-deletion.md)), in
+`app/api/web/`. It serves HTML under the same rules, with every string from the shared catalogs (INV-27).
+
+---
+
+## apps/api/app/jobs/ — scheduled commands
+
+**Responsible for:** the entry points a host's scheduler runs — from [task 019](tasks/019-account-deletion.md), one daily
+command for the account-deletion sweep and the retention purges ([04 §7](04-security-and-auth.md)). A job wires its
+services and calls them, as a router does.
+
+**Must NOT contain:** queries, business rules or HTTP. It connects as `cyberathlete_app`, like the API, and never with
+the migrator's credentials ([ADR-011](decisions/ADR-011.md)).
+
 ---
 
 ## apps/api/app/services/ — orchestration
