@@ -152,7 +152,8 @@ divergence the ADR exists to prevent.
 ## apps/mobile/src/db/ — local database
 
 **Responsible for:** the Drizzle schema, local migrations, typed queries, the pre-migration
-backup step ([06 §4](06-operations.md)).
+backup step ([06 §4](06-operations.md)), and device-only preferences — the theme override — in
+`expo-sqlite`'s key-value store, outside the schema and never synced ([07 §3](07-brand-and-ui.md)).
 
 **Must NOT contain:** network calls, or React components.
 
@@ -236,15 +237,20 @@ decrypts, so a shared implementation would buy nothing.
 
 ## apps/mobile/src/ui/ — design system
 
-**Responsible for:** the token source (INV-23) and primitives — button, chip, sheet, numeric
-keypad, set row, metric tile, cycle cell, the octopus mark. Theming, typography, motion. **The one
-formatting module** that turns SI values into the user's unit system and locale — kg to lb, a
-decimal comma in pt-BR — and is the only place a unit is ever converted (INV-01, ADR-008).
+**Responsible for:** the token file, `tokens.ts` (INV-23, [ADR-014](decisions/ADR-014.md)), and
+primitives — button, chip, sheet, numeric keypad, set row, metric tile, cycle cell, track row, and the
+slots of the octopus mark. Theming — the system setting, and an override handed in by its caller —
+typography, motion. **The i18n runtime**: i18next over the shared catalogs, and the language and unit-system
+defaults read from the device. **The one formatting module** that turns SI values into the user's unit
+system and locale — kg to lb, a decimal comma in pt-BR — parses keypad input back to SI, and is the only
+place a unit is ever converted (INV-01, ADR-008).
 
 **Must NOT contain:**
 - feature knowledge. A `SetRow` takes props; it does not know what a mesocycle is
 - **any literal hex value, font size, or animation duration** — those live in the token file
   (INV-23), and a hardcoded colour is how dark mode silently breaks
+- **a spring animation**, even a critically damped one — motion is a timing on the house curve
+  ([ADR-014](decisions/ADR-014.md))
 - **any literal user-facing string** — every label is a catalog key (INV-27). A hardcoded English
   string is how the Portuguese build silently ships half-translated
 

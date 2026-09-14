@@ -126,6 +126,11 @@ an FFI chain that takes a week to stand up has already answered the question.
 - [ ] Changing one token value visibly updates every screen using it
 - [ ] All changing numbers use tabular figures — verified by watching a live pace readout not jitter
 - [ ] TalkBack can complete a full set-logging flow (VoiceOver: [task 016](016-ios-platform.md))
+- [ ] The set row in Portuguese, in pounds, at 200 % system font size keeps every value readable and every control
+      usable — reflowed, never truncated
+- [ ] The numeric keypad never covers the set row it is editing, on a short screen as well as a tall one
+- [ ] Portuguese plurals and the decimal comma render correctly under Hermes — the `Intl` polyfills are loaded
+- [ ] A manual theme override survives an app restart
 
 **From task 003**
 - [ ] `react-native-libsodium` — argon2id, XChaCha20-Poly1305 and `randombytes` — works in the
