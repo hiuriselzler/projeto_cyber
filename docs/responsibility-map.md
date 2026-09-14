@@ -75,6 +75,10 @@ cycle's weight inline has stolen work from `domain/`.
 the authentication and maintenance services — enforced by import-linter. Nothing else in the API reads
 a row without a user.
 
+**Not an exception:** tables that hold nobody's data — the schema version, the rate-limit windows
+([ADR-015](decisions/ADR-015.md)) — are outside INV-15, so their repositories take no user scope, and say
+why in their docstring.
+
 ---
 
 ## apps/api/app/models/ — ORM
@@ -90,7 +94,8 @@ methods. A model is a shape, not a service.
 
 **Responsible for:** settings, logging config, password hashing, JWT encode/decode, the DB session
 factory — which sets `app.user_id` with `SET LOCAL` in every transaction and checks the connecting role
-at boot ([ADR-011](decisions/ADR-011.md)) — rate limiting, dependency-injection wiring.
+at boot ([ADR-011](decisions/ADR-011.md)) — rate-limit rules and keys ([ADR-015](decisions/ADR-015.md)), the
+breach-list check, the email transport behind one interface, dependency-injection wiring.
 
 **Must NOT contain:** anything domain-specific. Nothing in `core/` should know what a mesocycle is.
 
@@ -275,7 +280,9 @@ and `cyberathlete_app` — run by the compose init step locally, and once by han
 fixtures consumed by both test suites, the reference-data export the app seeds from before it has ever
 synced (`seeds/reference.json`, generated from `apps/api/seeds/`), and **the message catalogs** — `i18n/en.json` and
 `i18n/pt-BR.json` — read by the app for its UI and by the API for emails and exports, so the two
-cannot drift into separate wording (INV-27, [ADR-008](decisions/ADR-008.md)).
+cannot drift into separate wording (INV-27, [ADR-008](decisions/ADR-008.md)). And **the login hash's cost**,
+`security/password-kdf.json`: the API's test holds its hasher to it and the app's test holds the wrapping KDF at
+or above it, so neither side can change alone ([ADR-007](decisions/ADR-007.md)).
 
 **Must NOT contain:** hand-written types that duplicate generated ones, or any runtime code.
 Catalogs and fixtures are data.

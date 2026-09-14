@@ -17,8 +17,8 @@ when its own criteria are ticked. Tick the box here only then.
 |---|---|
 | **Phase** | **Tasks 001, 002 and 011 complete; task 003 next.** The schema exists in Postgres and SQLite, seeded and enforcing itself, and the design system exists in `src/ui/`, token-driven and tested in both languages, both unit systems and both themes. Everything that needs administrator rights — Docker, the device, the ADR-004 spike — is [task 017](tasks/017-local-toolchain-device-spike.md), which must finish before task 004 |
 | **Repository** | Private GitHub repository `hiuriselzler/projeto_cyber`. `main` holds the documentation and task 001's merged work (pull request #1); each further piece arrives by pull request, with CI green before merge |
-| **Docs** | 46 files, internally consistent, all cross-links resolving |
-| **Decisions** | 14 ADRs. Thirteen accepted outright; [ADR-004](decisions/ADR-004.md) accepted *conditionally* |
+| **Docs** | 47 files, internally consistent, all cross-links resolving |
+| **Decisions** | 15 ADRs. Fourteen accepted outright; [ADR-004](decisions/ADR-004.md) accepted *conditionally* |
 | **Tasks** | 16 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **3 complete** (001, 002, 011) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
 | **Next action** | [Task 003](tasks/003-authentication.md) — authentication and authorization, the privacy-key lifecycle included. Then [task 017](tasks/017-local-toolchain-device-spike.md) once administrator rights are available, before task 004. Separately: a native speaker who trains reviews the Portuguese exercise names, and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
@@ -129,10 +129,12 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
 
 #### ☐ 003 — Authentication and authorization · **L** · depends: 002 · blocks: 006, 012, 014
 > The authorization half matters more than the authentication half.
-- [ ] Auth endpoints + **v1 account lifecycle**: password reset, enforced email verification,
-      email change, session list, security notification emails
-- [ ] argon2id ~250 ms; breach-list check; **constant-time login** whether or not the email exists
-- [ ] Access JWT 15 min with no PII; opaque refresh token 60 days, rotated, **with reuse detection**
+- [ ] Auth endpoints + **v1 account lifecycle**: password reset and change, enforced email verification,
+      email change, session list, security notification emails — every one in both languages
+- [ ] argon2id ~250 ms; the bundled breach list; **constant-time login** whether or not the email exists
+- [ ] Access JWT 15 min with no PII; opaque refresh token 60 days, rotated, **with reuse detection** and a
+      60-second grace window for a lost response ([ADR-015](decisions/ADR-015.md))
+- [ ] Rate limits per IP and per account, **counted in Postgres** so they hold across instances (ADR-015)
 - [ ] **Base repository whose every method requires `user_id`, as a type error not a runtime one**
 - [ ] `SET LOCAL app.user_id` per transaction so RLS engages; **404 never 403** for someone else's row
 - [ ] **⚠ Privacy key lifecycle ([ADR-007](decisions/ADR-007.md))** — generate at registration, wrap
@@ -384,7 +386,10 @@ These are real blockers scattered across the docs. Nothing will surface them at 
       retroactive**. (The Apple Small Business Program has the same rule and moves to task 016.)
 - [ ] Google Play Console registration ($25 once). (Apple Developer Program: task 016.)
 - [ ] Storage region chosen and stated in the privacy policy
-- [ ] Transactional email provider live — **on the critical path for task 003**, not later
+- [ ] Transactional email provider live — **on the critical path for task 003**, not later. Task 003 builds against a
+      sender interface; choosing Resend or Postmark is open question 10, and a deployed API refuses to boot without one
+- [ ] **Data export and account deletion (FR-1.4) belong to no task.** Both are legal requirements (04 §7) and store
+      requirements; task 003 builds only the verified-email gate the export sits behind. Open question 11
 - [ ] Google Maps API key restricted by package name + signing certificate
 - [ ] **ADR-004's four conditions in place before the first user who is not the developer** — under
       option B; tasks 005 and 006 ([ADR-004](decisions/ADR-004.md))
@@ -429,6 +434,8 @@ None are blocking; each has a stated assumption that will be built unless correc
 | 7 | The Android application id. **Permanent after the first Play Store upload** | `com.cyberathlete.app`, a placeholder in `apps/mobile/app.json` | Before the first Play upload |
 | 8 | Android backups: the generated manifest has `allowBackup="true"`, so local data — raw GPS points included — would reach device backups | Unchanged for now | Before [task 007](tasks/007-cardio-recording.md) |
 | 9 | What the RIR `5+` chip stores: 5, or a choice from 5 to 10 (the schema allows 0–10, INV-03) | Nothing yet — task 011's chips take their values as a prop and store nothing | [Task 004](tasks/004-exercise-catalog-and-logging.md) |
+| 10 | Transactional email provider: Resend or Postmark ([05 §5](05-integrations.md)) | Neither yet — task 003 sends through an interface, with an in-memory sender in tests and a git-ignored folder locally | Before the first staging deploy |
+| 11 | Which task builds the data export and account deletion (FR-1.4, [04 §7](04-security-and-auth.md)) | A new task after [006](tasks/006-sync-layer.md), since the export reads what devices have synced; task 003 builds only the verified-email gate | Before task 006 closes |
 
 **Closed 2026-09-09** — target RIR granularity (now `rir_mode` on the progression rule);
 cardio intensity (both zones and pace ranges); bodyweight volume (summed); and the octopus
@@ -458,6 +465,8 @@ reopen for iOS** ([09 §2](09-business-model.md)).
 | 2026-09-11 | [ADR-011](decisions/ADR-011.md) Database roles — the API connects as a role that cannot skip RLS; unscoped reads are allowlisted functions |
 | 2026-09-11 | [ADR-012](decisions/ADR-012.md) Mobile boundaries before bootstrap — an account layer, one importer of the core, INV-10's gates |
 | 2026-09-12 | [ADR-013](decisions/ADR-013.md) The schema enforces itself — `user_id` on every child row, `NO ACTION` for exercises, the INV-06 marker carried by the row, INV-21's key with no NULL hole |
+| 2026-09-12 | [ADR-014](decisions/ADR-014.md) The design system enforces itself — tokens, contrast, motion and strings by gate |
+| 2026-09-14 | [ADR-015](decisions/ADR-015.md) Account security in practice — rate limits in Postgres, a 60-second rotation grace window, a bundled breach list, registration's `409` |
 
 ### 2026-09-08 — documentation reconciliation pass
 
@@ -930,3 +939,40 @@ Rather than hold every later task behind that, the work was split.
 - **Components are tested in all eight combinations** of language, unit system and theme. The first matrix paired
   English with kilograms and Portuguese with pounds, which crossed both axes but never rendered the pairs users
   actually see — Portuguese with kilograms, English with pounds. Task 011's criterion was reworded to match.
+
+### 2026-09-14 — task 003 planning: four mechanisms 04 left open, and two features nobody owned
+
+- **[ADR-015](decisions/ADR-015.md)**, from planning the task against [04](04-security-and-auth.md). `invariants.md` is
+  unchanged.
+  - **Rate limits are counted in Postgres**, in `rate_limit_buckets`: fixed windows, one atomic upsert per hit, the IP
+    and the email held only as an HMAC. No Redis — a second stateful service for a few counters. The table holds
+    nobody's data, so it has no owner and no row-level security, and [ADR-011](decisions/ADR-011.md) gains a note
+    saying so rather than an allowlist entry.
+  - **Refresh rotation gets a 60-second grace window.** Strict reuse detection signed out anyone whose refresh response
+    was lost — ordinary in a gym — and told them their token was stolen. A replaced token is accepted once more only
+    while its successor is unused and under 60 s old; theft is still caught at the legitimate device's next refresh.
+  - **The breach list is the NCSC's top 100 000**, cut to the 9 307 entries of 10 or more characters and stored as
+    SHA-1 digests. 04 §2's "k-anonymity offline set" named two different things. The NCSC's own URL now serves a
+    "site currently unavailable" page, so the source is SecLists' mirror (MIT),
+    `Passwords/Common-Credentials/100k-most-used-passwords-NCSC.txt`: 99 840 lines, SHA-256
+    `c2e5696882c603b76bb67a47ee970897e5a76fc4c3f5547abe3d0ca340c576e0`.
+  - **Registration discloses an existing account with `409`**, behind its rate limit: an enumeration-safe registration
+    could not hand a new user a session at once, which the offline first set needs.
+- **Task 003 corrected before building.** It had no password-change endpoint, though the privacy key's re-wrap needs
+  one; now `POST /auth/password/change`, plus `POST /auth/email/verification` to send a link again. Routes sit under
+  `/api/v1` as [02 §5](02-architecture.md) says. Verification links last 24 hours. The reuse notification, required by
+  04 §3, joins the task's email list. **A password change leaves other devices signed in** — signing them out would
+  strand an offline device's queued workouts.
+- **The first owned routes arrive here:** a minimal `POST` and `GET /workouts/{id}`, so "404 for someone else's workout"
+  and "an unverified user can log a workout" test a real route. Task 004 extends them.
+- **Found: the data export and account deletion (FR-1.4) belong to no task.** Both are legal and store requirements.
+  Added to the launch blockers as open question 11; task 003 builds only the verified-email gate, proven on a route its
+  test mounts, and its criterion is reworded to say so.
+- **The email provider is still open** (question 10). Task 003 sends through one interface — in memory in tests, a
+  git-ignored folder locally — and a deployed API refuses to boot without a provider. Email messages take plain
+  arguments only, because the API carries no ICU plural engine.
+- **The login hash's cost is recorded once**, in `packages/shared/security/password-kdf.json`, so a test on each side
+  holds the client's wrapping KDF at or above it (ADR-007).
+- Fixed in passing: ADR-014 was missing from the decision-log table above.
+- **Branching:** task 011's pull request is not merged yet, and task 003 builds on its design system and i18n, so
+  `feat/task-003-authentication` starts from task 011's branch.

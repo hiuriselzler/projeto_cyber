@@ -74,7 +74,7 @@ is additive.
 | Postgres | Managed (Neon / Supabase Postgres / RDS) | Managed, for PITR backups. We use it as a plain database — no vendor SDK, no lock-in |
 | API hosting | Fly.io or Railway | Container deploy, cheap, region-pinned (04 §7) |
 | Object storage | Cloudflare R2 or S3 | Data exports, activity photos (v2). Presigned URLs only; the API never proxies bytes |
-| Email | Resend or Postmark | Verification, password reset, export-ready. Transactional only. Templates in **both languages**, chosen by `users.locale` ([ADR-008](decisions/ADR-008.md)) |
+| Email | Resend or Postmark — **not yet chosen** ([PROJECT-STATUS](PROJECT-STATUS.md) open question 10) | Verification, password reset, security notifications, export-ready. Transactional only. Templates in **both languages**, chosen by `users.locale` ([ADR-008](decisions/ADR-008.md)). The API sends through one interface in `app/core/`, so the provider is an adapter: tests use an in-memory sender, local development writes messages to a git-ignored folder, and a deployed API refuses to boot with neither a provider nor a key |
 
 **Email flows are v1, not v2.** An earlier version of this paragraph deferred them, on the grounds
 that the only user was the author and could be recovered by direct database access. Multi-user

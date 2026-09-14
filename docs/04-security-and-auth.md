@@ -26,8 +26,10 @@ nobody. It is now a data breach. INV-15 is the invariant that matters most here 
   `parallelism=4`. Tuned to ~250 ms on the deploy target and re-tuned when hardware changes.
 - Minimum 10 characters. Length is the only rule; no composition requirements — they push users
   toward `Password1!` and weaken outcomes.
-- Check candidate passwords against a local breach list (k-anonymity offline set, not a call to
-  a third party — that would leak a password prefix).
+- Check candidate passwords — at registration, password change and password reset — against a
+  bundled list of the most common breached passwords, cut to the ones the length rule still admits
+  ([ADR-015](decisions/ADR-015.md)). Never a call to a third party: that would send a password-hash
+  prefix out of the building, and make registration depend on someone else's uptime.
 - Hash parameters are stored inside the argon2 string, so they can be upgraded and rehashed
   transparently on next successful login.
 - The login endpoint must take constant-ish time whether or not the email exists: always run a
@@ -43,12 +45,21 @@ With real users, an account they cannot recover is an account they lose. These a
   refresh token** for that user, on every device, and **discards their privacy zones** (§6) — the
   reset screen must say so before the user commits, not afterwards.
 - **Email verification, enforced.** Unverified accounts can log in and train — never hold training
-  data hostage — but cannot change their email or receive a data export until verified.
+  data hostage — but cannot change their email or receive a data export until verified. A
+  verification link expires after **24 hours**, and a new one can be requested.
 - **Email change** requires the current password and confirmation at the new address, with a
   notification to the old one.
+- **Password change** requires the current password, re-wraps the privacy key (§6), invalidates any
+  unused reset token, and sends a notification. **Other devices stay signed in**: signing them out
+  would strand an offline device's queued workouts (NFR-1), and the session list is the tool for
+  that.
+- **Registration discloses an existing account** — `409` — behind its rate limit (§5). Login and the
+  reset request disclose nothing; registration cannot hide it without breaking the offline first
+  set ([ADR-015](decisions/ADR-015.md)).
 - **Account deletion** with a 7-day grace period (§7), counted from `users.deletion_requested_at`.
 - **Session list**: the user can see their signed-in devices and revoke any of them.
-- **Notification on security events**: password changed, email changed, new device signed in.
+- **Notification on security events**: password changed, email changed, new device signed in, and
+  refresh-token reuse detected (§3).
 - **Every email is sent in the user's language** (`users.locale`, [ADR-008](decisions/ADR-008.md)).
   A password-reset email the user cannot read is a locked-out user, and a security notification they
   cannot read is one they ignore.
@@ -62,6 +73,10 @@ With real users, an account they cannot recover is an account they lose. These a
 - **Refresh reuse detection:** rotation writes `replaced_by`. If a token that has already been
   replaced is presented, the whole chain for that device is revoked and the user is notified.
   That is the signal that a refresh token was stolen.
+- **Except within 60 seconds of rotation, while the successor is unused** — a timed-out response or
+  an immediate relaunch, which in a gym is ordinary. The replaced token then receives a new
+  successor and the unused one is retired; theft is still caught the next time the legitimate
+  device refreshes ([ADR-015](decisions/ADR-015.md)).
 - **Client storage:** refresh token in `expo-secure-store` (iOS Keychain / Android Keystore).
   Access token in memory only — never `AsyncStorage`, never SQLite.
 - Logout revokes the device's refresh token server-side; "log out everywhere" revokes all.
@@ -123,7 +138,9 @@ With real users, an account they cannot recover is an account they lose. These a
   `POST /auth/login` 10/15 min · `POST /auth/register` 5/hour ·
   `POST /auth/refresh` 60/hour · `POST /sync/push` 120/hour · everything else 600/hour.
   The counters live in shared storage, never in process memory, so the limits hold across more than
-  one API instance (NFR-12).
+  one API instance (NFR-12). That storage is **Postgres** — `rate_limit_buckets`, fixed windows, one
+  atomic upsert per hit, the IP and the email held only as an HMAC — and a tripped limit answers
+  `429` with `Retry-After` ([ADR-015](decisions/ADR-015.md)).
 - Request body caps: 2 MB general, 20 MB for a stream upload. Stream uploads are the one large
   payload and go to their own endpoint with its own limit.
 - CORS: not needed (no browser client in v1). Leave it off rather than setting `*`.
@@ -204,7 +221,8 @@ Requirements:
   30 days, with a 7-day grace period during which it can be cancelled. This is the documented
   exception to INV-11.
 - Data is stored in one region; the region is stated in the privacy policy.
-- Retention: revoked refresh tokens purged after 90 days; access logs after 30.
+- Retention: revoked refresh tokens purged after 90 days; access logs after 30; rate-limit windows
+  after one day.
 - **A privacy policy and terms of service are now required** — by Google Play at launch and the App Store when iOS ships, and
   by GDPR/LGPD. They must state what is collected (including location), where it is stored, how
   long it is kept, and how to export or delete it. This is a v1 blocker for store submission, not
