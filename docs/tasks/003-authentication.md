@@ -13,7 +13,7 @@
 > counted in Postgres, a 60-second grace window on refresh rotation, the bundled breach list, and registration's `409`.
 > Also settled: the password-change endpoint, which the list below lacked; routes under `/api/v1`; and a minimal
 > `workouts` read and write, so the ownership criteria have a real route to test. **The data export and account
-> deletion (FR-1.4) belong to no task yet** — this task builds the verified-email gate the export will sit behind, and
+> deletion (FR-1.4) belonged to no task** (now tasks 019 and 020) — this task builds the verified-email gate the export will sit behind, and
 > proves it on a route the test mounts.
 
 ## Goal
@@ -55,8 +55,8 @@ retrofitting it means auditing every query ever written.
   `locale` and `unit_system` are set at registration from the device and editable via
   `PATCH /auth/me`.
 - **Email goes through one sender interface** in `app/core/`: an in-memory sender in tests, a git-ignored folder in local
-  development, and a provider adapter once one is chosen ([05 §5](../05-integrations.md), open question 10). A deployed
-  API refuses to boot without one. Mail is sent after the transaction commits; a failure to send is logged, without the
+  development, and Resend, chosen for the prototype on 2026-09-14 ([05 §5](../05-integrations.md)). A deployed API
+  boots only with Resend and its key. Mail is sent after the transaction commits; a failure to send is logged, without the
   address, and never fails the request.
 - argon2id hashing, tuned to ~250 ms on the deploy target, params recorded in the hash string. It runs off the event
   loop. **Raising them raises the floor for the client's wrapping KDF too** ([ADR-007](../decisions/ADR-007.md)): the
@@ -146,8 +146,8 @@ migration with no way to derive the missing keys.
 - [ ] A password change keeps other devices signed in, replaces the wrapped key, and rejects the old password afterwards
 - [ ] A password on the breach list, or shorter than 10 characters, is refused at registration, change and reset
 - [ ] An unverified user can log in and log a workout, but cannot change their email, and is refused by the
-      verified-email gate the data export will sit behind — proven on a route the test mounts, since the export has
-      no task yet
+      verified-email gate the data export will sit behind — proven on a route the test mounts, since the export is
+      task 020's
 - [ ] The session list shows both devices and revoking one signs only that one out
 - [ ] Every email renders in `en` and `pt-BR` from the shared catalogs, with plain arguments only
 - [ ] The client wrapping-KDF constants are at least the server's login-hash memory and iterations; a
@@ -165,8 +165,8 @@ migration with no way to derive the missing keys.
 - Password reset is the flow attackers probe first. The enumeration-safe response and the
   revoke-all-on-reset behaviour are the two things most often got wrong.
 - Reset and verification both need working transactional email
-  ([05 §5](../05-integrations.md)) — no longer optional infrastructure. **The provider is not chosen yet**: everything
-  here is built and tested against the sender interface, and choosing is open question 10.
+  ([05 §5](../05-integrations.md)) — no longer optional infrastructure. **The provider is Resend** (2026-09-14):
+  everything here is built and tested against the sender interface, and Resend is one adapter behind it.
 - The single-flight refresh lock is the classic source of a token-refresh stampede that revokes
   the user's own session through reuse detection. Test it with concurrent requests specifically.
 - **A refresh killed in flight and relaunched more than 60 seconds later still signs the device out**

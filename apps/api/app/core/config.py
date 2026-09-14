@@ -36,10 +36,10 @@ KNOWN_DEVELOPMENT_SECRETS = frozenset(
 Environment = Literal["local", "test", "staging", "production"]
 DEVELOPMENT_ENVIRONMENTS = frozenset({"local", "test"})
 
-# No provider is chosen yet (05 §5, open question 10), so only the two development transports exist:
-# a git-ignored folder, and memory for tests. A deployed API refuses to boot until a provider
-# adapter joins them.
-EmailTransport = Literal["folder", "memory"]
+# 05 §5. `resend` is the provider, chosen on 2026-09-14 for the prototype's free tier. `folder`
+# writes messages into a git-ignored folder and `memory` keeps them for tests; neither boots a
+# deployed API.
+EmailTransport = Literal["folder", "memory", "resend"]
 
 
 class InsecureConfigurationError(RuntimeError):
@@ -56,6 +56,10 @@ class Settings(BaseSettings):
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
     email_transport: EmailTransport = "folder"
     email_folder: Path = REPO_ROOT / "apps" / "api" / ".mail"
+    resend_api_key: SecretStr | None = None
+    # Resend's shared test sender reaches only the Resend account owner's own address; real users
+    # need a verified domain here.
+    email_from: str = "CyberAthlete <onboarding@resend.dev>"
     # Where links in emails point: the app's deep-link scheme, from apps/mobile/app.json.
     app_link_base: str = "cyberathlete://"
 
@@ -82,13 +86,19 @@ def assert_settings_are_safe(settings: Settings, environ: Mapping[str, str] = os
         raise InsecureConfigurationError(
             "MIGRATION_DATABASE_URL must not be in a deployed API's environment (ADR-011)"
         )
-    if settings.environment not in DEVELOPMENT_ENVIRONMENTS:
-        # Only the development transports exist, and a deployed API that cannot send a reset link
-        # has locked out anyone who forgets a password. Refusing to start says so on day one
-        # instead.
+    if settings.email_transport == "resend" and settings.resend_api_key is None:
         raise InsecureConfigurationError(
-            "no email provider is configured for a deployed API; "
-            "choosing one is open question 10 (05 §5)"
+            "EMAIL_TRANSPORT is resend, but RESEND_API_KEY is not set (05 §5)"
+        )
+    if (
+        settings.environment not in DEVELOPMENT_ENVIRONMENTS
+        and settings.email_transport != "resend"
+    ):
+        # A deployed API that cannot send a reset link has locked out anyone who forgets a
+        # password. Refusing to start says so on day one instead.
+        raise InsecureConfigurationError(
+            "a deployed API needs an email provider: set EMAIL_TRANSPORT=resend and RESEND_API_KEY "
+            "(05 §5)"
         )
 
 

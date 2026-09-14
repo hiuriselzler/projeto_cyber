@@ -17,11 +17,11 @@ when its own criteria are ticked. Tick the box here only then.
 |---|---|
 | **Phase** | **Tasks 001, 002 and 011 complete; task 003 next.** The schema exists in Postgres and SQLite, seeded and enforcing itself, and the design system exists in `src/ui/`, token-driven and tested in both languages, both unit systems and both themes. Everything that needs administrator rights — Docker, the device, the ADR-004 spike — is [task 017](tasks/017-local-toolchain-device-spike.md), which must finish before task 004 |
 | **Repository** | Private GitHub repository `hiuriselzler/projeto_cyber`. `main` holds the documentation and task 001's merged work (pull request #1); each further piece arrives by pull request, with CI green before merge |
-| **Docs** | 47 files, internally consistent, all cross-links resolving |
+| **Docs** | 49 files, internally consistent, all cross-links resolving |
 | **Decisions** | 15 ADRs. Fourteen accepted outright; [ADR-004](decisions/ADR-004.md) accepted *conditionally* |
-| **Tasks** | 16 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **3 complete** (001, 002, 011) |
+| **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **3 complete** (001, 002, 011) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | [Task 003](tasks/003-authentication.md) — authentication and authorization, the privacy-key lifecycle included. Then [task 017](tasks/017-local-toolchain-device-spike.md) once administrator rights are available, before task 004. Separately: a native speaker who trains reviews the Portuguese exercise names, and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
+| **Next action** | [Task 003](tasks/003-authentication.md) — built; closed once CI passes on its pull request. Then [task 019](tasks/019-account-deletion.md), account deletion, and [task 017](tasks/017-local-toolchain-device-spike.md) once administrator rights are available, before task 004. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
 
 ### The one decision still genuinely open
 
@@ -148,6 +148,13 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
 - [ ] **Account flows in `src/account/`** — no screen imports `src/sync/` or `src/crypto/`
       ([ADR-012](decisions/ADR-012.md))
 - [ ] **Prove RLS**: break the repository scope deliberately and assert 0 rows come back (NFR-9)
+
+#### ☐ 019 — Account deletion · **M** · depends: 003 · blocks: the store listing
+> Added 2026-09-14, closing open question 11. Needs no administrator rights, so it goes ahead while task 017 waits.
+- [ ] Deletion requested with the password, cancellable for 7 days, announced by email in the user's language
+- [ ] **The sweep deletes every row of the account, inside its own scope** — a test over 03 §11 covers tables added later
+- [ ] The web deletion page Google Play links to, answering identically for any address
+- [ ] One scheduled command for the deletion sweep and the retention purges, documented in 06
 
 #### ☐ 017 — Local toolchain, device and core spike · **L** · depends: 001, administrator rights · blocks: 004 onward
 > Everything that needs administrator rights on the development machine, and every check only a phone
@@ -326,6 +333,13 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
 
 ### Milestone 6 — Ready for strangers
 
+#### ☐ 020 — Data export · **M** · depends: 006, 007, 013, 014 · blocks: the store listing
+> Added 2026-09-14, closing open question 11. Built late so it holds every kind of data the app keeps.
+- [ ] Needs a verified email, never an entitlement — **an expired account can export** (INV-26)
+- [ ] **Every user-owned table in the archive**, SI units in field names, a GPX file per GPS activity
+- [ ] A signed, expiring link to object storage, and an "export ready" email in the user's language
+- [ ] Object storage chosen at the start of the task, free tier first
+
 #### ☐ 018 — The mark · **M** · made by the project owner, by hand · blocks: the store listing
 > Split from 011 on 2026-09-12. Outside the build sequence: task 011 leaves a placeholder in every slot, so nothing
 > waits on the drawing but the launch.
@@ -381,15 +395,16 @@ These are real blockers scattered across the docs. Nothing will surface them at 
 - [ ] **Everything user-facing exists in both languages** ([ADR-008](decisions/ADR-008.md)) — ~200
       exercise names, every explainer, every email template, both store listings, the paywall and
       the subscription disclosure. Content work on the critical path, not a polish pass
-- [ ] **Portuguese terminology reviewed by a native speaker who trains** ([07 §9](07-brand-and-ui.md))
+- [ ] **Portuguese terminology reviewed by a native speaker who trains** ([07 §9](07-brand-and-ui.md)) — an AI
+      pre-check was run on 2026-09-14; this review is still the bar before strangers
 - [ ] **Google Play's reduced-fee tier — enrol *before* launch.** 15 % vs 30 %, and **not
       retroactive**. (The Apple Small Business Program has the same rule and moves to task 016.)
 - [ ] Google Play Console registration ($25 once). (Apple Developer Program: task 016.)
 - [ ] Storage region chosen and stated in the privacy policy
-- [ ] Transactional email provider live — **on the critical path for task 003**, not later. Task 003 builds against a
-      sender interface; choosing Resend or Postmark is open question 10, and a deployed API refuses to boot without one
-- [ ] **Data export and account deletion (FR-1.4) belong to no task.** Both are legal requirements (04 §7) and store
-      requirements; task 003 builds only the verified-email gate the export sits behind. Open question 11
+- [ ] Transactional email live — **Resend**, chosen for the prototype (2026-09-14). Before real users: a verified
+      sending domain, the key in every deployed environment, and the free tier's limits checked against volume
+- [ ] **Account deletion and data export (FR-1.4)** — [task 019](tasks/019-account-deletion.md) and
+      [task 020](tasks/020-data-export.md), the web deletion page Google Play requires included
 - [ ] Google Maps API key restricted by package name + signing certificate
 - [ ] **ADR-004's four conditions in place before the first user who is not the developer** — under
       option B; tasks 005 and 006 ([ADR-004](decisions/ADR-004.md))
@@ -434,8 +449,6 @@ None are blocking; each has a stated assumption that will be built unless correc
 | 7 | The Android application id. **Permanent after the first Play Store upload** | `com.cyberathlete.app`, a placeholder in `apps/mobile/app.json` | Before the first Play upload |
 | 8 | Android backups: the generated manifest has `allowBackup="true"`, so local data — raw GPS points included — would reach device backups | Unchanged for now | Before [task 007](tasks/007-cardio-recording.md) |
 | 9 | What the RIR `5+` chip stores: 5, or a choice from 5 to 10 (the schema allows 0–10, INV-03) | Nothing yet — task 011's chips take their values as a prop and store nothing | [Task 004](tasks/004-exercise-catalog-and-logging.md) |
-| 10 | Transactional email provider: Resend or Postmark ([05 §5](05-integrations.md)) | Neither yet — task 003 sends through an interface, with an in-memory sender in tests and a git-ignored folder locally | Before the first staging deploy |
-| 11 | Which task builds the data export and account deletion (FR-1.4, [04 §7](04-security-and-auth.md)) | A new task after [006](tasks/006-sync-layer.md), since the export reads what devices have synced; task 003 builds only the verified-email gate | Before task 006 closes |
 
 **Closed 2026-09-09** — target RIR granularity (now `rir_mode` on the progression rule);
 cardio intensity (both zones and pace ranges); bodyweight volume (summed); and the octopus
@@ -445,6 +458,8 @@ dashboard (dropped — the mark is brand-only). See the decision log.
 
 **Closed 2026-09-11** — the founding-price window opens once, at the Android launch, and **does not
 reopen for iOS** ([09 §2](09-business-model.md)).
+
+**Closed 2026-09-14** — the email provider (Resend, for the prototype), and who builds FR-1.4 (tasks 019 and 020). See the decision log.
 
 ---
 
@@ -1002,3 +1017,23 @@ Rather than hold every later task behind that, the work was split.
   - The email-sending routes get their own limit, and task 017's re-wrap criterion says "password change"; both, with
     the reset-request timing and the 15-minute access token, are in task 003's *Settled while building*.
 - **The Portuguese account screens and emails are a draft**, for the native-speaker review with the rest.
+
+### 2026-09-14 — three decisions: Resend, two tasks for FR-1.4, an AI pre-check of the Portuguese
+
+- **Email: Resend**, for its free tier. The prototype is to cost nothing at first. Resend is one adapter behind the
+  sender interface, so Postmark or SES can replace it without touching a flow. A deployed API now boots only with
+  `EMAIL_TRANSPORT=resend` and `RESEND_API_KEY`. Resend's shared test sender reaches only the account owner's own
+  address, so a verified domain comes before real users ([05 §5](05-integrations.md)).
+- **FR-1.4 is two tasks.** [Task 019](tasks/019-account-deletion.md), account deletion, needs only task 003 and goes next,
+  with the web deletion page Google Play requires and the project's first scheduled job.
+  [Task 020](tasks/020-data-export.md), data export, comes after 013 and 014, so it holds every kind of data. Each carries
+  its open questions. v1 now has 18 tasks.
+- **Portuguese: an AI pre-check**, run over both catalogs against 07 §9's glossary and Brazilian gym usage
+  ([07 §9](07-brand-and-ui.md)). Fixed: *Rosca direta com halteres* (it is not alternated), *Rosca inclinada com
+  halteres*, *Voador inverso* to match *Voador*, *Paralelas na máquina*, *Ponte glútea*, *Slam com medicine ball* (no
+  longer confusable with *Arremesso*, the clean and jerk), nouns for the sled and bear-crawl names, *Válida* for a
+  working set as the glossary says, "mês do calendário" in the two monthly achievements, and four account messages —
+  one of them gendered, now neutral. Found and left open: the gamification track and the sport *hike* are both
+  *Trilha*. **The native-speaker review stays a launch blocker**; the pre-check does not replace it.
+- 07 §9's glossary gains *aparelho* (a device, never a gym machine), *entrar* and *sair*, *zona de privacidade* and
+  *carga*.

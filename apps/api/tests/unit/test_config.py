@@ -72,6 +72,24 @@ def test_a_deployed_api_refuses_to_boot_without_an_email_provider(environment):
         assert_settings_are_safe(make_settings(environment=environment), environ={})
 
 
+@pytest.mark.parametrize("environment", ["staging", "production"])
+def test_a_deployed_api_boots_with_resend_configured(environment):
+    settings = make_settings(
+        environment=environment,
+        email_transport="resend",
+        resend_api_key=f"re_{secrets.token_urlsafe(24)}",
+    )
+
+    assert_settings_are_safe(settings, environ={})
+
+
+def test_resend_without_its_key_is_refused_without_echoing_anything():
+    with pytest.raises(InsecureConfigurationError, match="RESEND_API_KEY") as error:
+        assert_settings_are_safe(make_settings(email_transport="resend"), environ={})
+
+    assert "re_" not in str(error.value)
+
+
 @pytest.mark.parametrize("environment", ["local", "test"])
 def test_the_migrator_url_is_allowed_in_local_development(environment):
     environ = {"MIGRATION_DATABASE_URL": "postgresql+psycopg://cyberathlete_migrator@db/x"}

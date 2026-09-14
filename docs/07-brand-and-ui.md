@@ -510,12 +510,21 @@ Not a checklist item; the operating conditions demand it.
   | Microcycle · Mesocycle | Microciclo · Mesociclo | Standard periodisation vocabulary |
   | Deload | Deload | Used untranslated in Brazilian gyms; *semana leve* only in explanations |
   | Set · Rep | Série · Repetição | |
-  | Working set · Warm-up | Série válida · Aquecimento | |
-  | Track (gamification) | Trilha | |
+  | Working set · Warm-up | Série válida · Aquecimento | The set-type chip reads *Válida* |
+  | Track (gamification) | Trilha | **Conflict:** the sport *hike* is also *Trilha*. Open — see below |
   | Pace | Ritmo | |
+  | Device (signed in) | Aparelho | Only for phones and tablets; a gym machine is always *máquina* |
+  | Sign in · Sign out | Entrar · Sair | |
+  | Privacy zone | Zona de privacidade | |
+  | Weight (on a set) | Carga | Never *peso*, which is body weight |
 
   The Portuguese column is a starting position, **to be reviewed by a native speaker who trains**.
   Terminology that reads as translated rather than native is its own kind of bug.
+
+  **An AI pre-check was run on 2026-09-14** over both catalogs — every exercise name, every screen and
+  email — against this table and ordinary Brazilian gym usage. It fixed what it could and left two
+  questions: the *Trilha* conflict above, and whether *Afundo* and *Avanço* should stay two words for
+  lunges. It does not replace the native-speaker review, which stays a launch blocker.
 
 **Open**
 1. **Trademark clearance on "CyberAthlete"** (§1, Naming due diligence) — needed before any store
