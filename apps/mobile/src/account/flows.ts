@@ -1,5 +1,6 @@
 /**
- * The account flows (ADR-012, task 003): registration, sign-in, sign-out, passwords, email and sessions.
+ * The account flows (ADR-012, tasks 003 and 019): registration, sign-in, sign-out, passwords, email, sessions and
+ * deleting the account.
  *
  * This folder decides when the privacy key is generated, unwrapped or re-wrapped (ADR-007); `src/crypto` does it.
  * Passwords pass through here, so nothing in this folder logs anything.
@@ -66,6 +67,15 @@ export async function restoreSession(services: AccountServices): Promise<Session
     setSessionState({ status: 'signed-out' });
   }
   return getSessionState();
+}
+
+/**
+ * The server ended this device's session — the device was signed out elsewhere, the password was reset, or the account
+ * was deleted. The session is already gone; the privacy key and the account's row follow it (task 019).
+ */
+export async function forgetEndedSession(services: AccountServices): Promise<void> {
+  await forgetHere(services).catch(() => undefined);
+  setSessionState({ status: 'signed-out' });
 }
 
 // --- registration and sign-in -------------------------------------------------------------------------------------
@@ -234,6 +244,32 @@ export async function changeEmail(
   }
 }
 
+// --- deletion -------------------------------------------------------------------------------------------------------
+
+/**
+ * Asks for the account to be deleted, confirmed with its password (task 019). Nothing is deleted for seven days, and
+ * this device and every other stay signed in until then, so any of them can cancel.
+ */
+export async function requestAccountDeletion(services: AccountServices, password: string): Promise<LocalAccount> {
+  try {
+    const response = await services.session.request({ method: 'POST', path: `${AUTH}/deletion`, body: { password } });
+    const body = expect<Schemas['DeletionResponse']>(response, 200);
+    return await withPendingDeletion(services, Date.parse(body.deletion_requested_at));
+  } catch (error) {
+    throw asAccountError(error);
+  }
+}
+
+/** Keeps the account. With no deletion pending, nothing changes. */
+export async function cancelAccountDeletion(services: AccountServices): Promise<LocalAccount> {
+  try {
+    expectStatus(await services.session.request({ method: 'DELETE', path: `${AUTH}/deletion` }), 204);
+    return await withPendingDeletion(services, null);
+  } catch (error) {
+    throw asAccountError(error);
+  }
+}
+
 // --- the account and its devices ----------------------------------------------------------------------------------
 
 export async function refreshAccount(services: AccountServices): Promise<LocalAccount> {
@@ -303,7 +339,20 @@ function signedIn(services: AccountServices, body: Schemas['AccountResponse']): 
     unitSystem: body.unit_system,
     locale: body.locale,
     timezone: body.timezone,
+    deletionRequestedAt: body.deletion_requested_at == null ? null : Date.parse(body.deletion_requested_at),
   };
+  services.accounts.save(account, services.now());
+  setSessionState({ status: 'signed-in', account });
+  return account;
+}
+
+/** The signed-in account with its pending deletion changed, kept on the device and shown on every screen at once. */
+async function withPendingDeletion(services: AccountServices, deletionRequestedAt: number | null): Promise<LocalAccount> {
+  const state = getSessionState();
+  if (state.status !== 'signed-in') {
+    return refreshAccount(services);
+  }
+  const account: LocalAccount = { ...state.account, deletionRequestedAt };
   services.accounts.save(account, services.now());
   setSessionState({ status: 'signed-in', account });
   return account;
@@ -311,8 +360,17 @@ function signedIn(services: AccountServices, body: Schemas['AccountResponse']): 
 
 async function endHere(services: AccountServices): Promise<void> {
   await services.session.end();
-  await services.keys.forget();
+  await forgetHere(services);
   setSessionState({ status: 'signed-out' });
+}
+
+/** What this device holds of the account once its session is over: the privacy key, and the account's row. */
+async function forgetHere(services: AccountServices): Promise<void> {
+  const state = getSessionState();
+  await services.keys.forget();
+  if (state.status === 'signed-in') {
+    services.accounts.forget(state.account.id);
+  }
 }
 
 function toWire(wrapped: WrappedPrivacyKey) {

@@ -5,7 +5,8 @@ import { users } from './schema';
 
 /**
  * The signed-in account's own row, kept on the device so that a launch with no network still knows who is signed in,
- * and in which language and units (NFR-1, ADR-008). Written from the API's answers until task 006 syncs it.
+ * in which language and units, and whether its deletion is pending (NFR-1, ADR-008, task 019). Written from the API's
+ * answers until task 006 syncs it.
  */
 export interface LocalAccount {
   readonly id: string;
@@ -15,6 +16,8 @@ export interface LocalAccount {
   readonly unitSystem: 'metric' | 'imperial';
   readonly locale: 'en' | 'pt-BR';
   readonly timezone: string;
+  /** When a deletion still pending was asked for, in epoch milliseconds; null when none is. */
+  readonly deletionRequestedAt: number | null;
 }
 
 export function saveLocalAccount(account: LocalAccount, nowMs: number): void {
@@ -24,6 +27,7 @@ export function saveLocalAccount(account: LocalAccount, nowMs: number): void {
     unitSystem: account.unitSystem,
     locale: account.locale,
     timezone: account.timezone,
+    deletionRequestedAt: account.deletionRequestedAt,
     updatedAt: nowMs,
   };
   db.insert(users)
@@ -57,5 +61,14 @@ export function readLocalAccount(id: string): LocalAccount | null {
     unitSystem: row.unitSystem,
     locale: row.locale,
     timezone: row.timezone,
+    deletionRequestedAt: row.deletionRequestedAt,
   };
+}
+
+/**
+ * The account's row leaves the device with the session (task 019). What a device keeps of training data once its
+ * session ends is task 006's to settle; there is none on a device before then.
+ */
+export function forgetLocalAccount(id: string): void {
+  db.delete(users).where(eq(users.id, id)).run();
 }

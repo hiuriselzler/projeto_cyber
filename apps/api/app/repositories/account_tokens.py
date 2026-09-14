@@ -1,12 +1,12 @@
-"""Single-use tokens sent by email: password reset (30 minutes) and email verification (24 hours) —
-04 §2a."""
+"""Single-use tokens sent by email: password reset (30 minutes), email verification (24 hours) —
+04 §2a — and the web deletion page's confirmation link (30 minutes, task 019)."""
 
 from datetime import datetime
 
 from sqlalchemy import update
 
 from app.core.scope import UserId
-from app.models.identity import EmailVerificationToken, PasswordResetToken
+from app.models.identity import AccountDeletionToken, EmailVerificationToken, PasswordResetToken
 from app.repositories.base import ScopedRepository
 
 
@@ -73,3 +73,24 @@ class EmailVerificationTokenRepository(ScopedRepository[EmailVerificationToken])
             .execution_options(synchronize_session=False)
         )
         return len((await self._session.execute(statement)).all())
+
+
+class AccountDeletionTokenRepository(ScopedRepository[AccountDeletionToken]):
+    model = AccountDeletionToken
+
+    async def redeem(self, user_id: UserId, token_hash: str, now: datetime) -> bool:
+        """Marks the link used if it is still unused and unexpired. False if it was not — or was
+        just taken."""
+        statement = (
+            update(AccountDeletionToken)
+            .where(
+                AccountDeletionToken.user_id == user_id,
+                AccountDeletionToken.token_hash == token_hash,
+                AccountDeletionToken.used_at.is_(None),
+                AccountDeletionToken.expires_at > now,
+            )
+            .values(used_at=now)
+            .returning(AccountDeletionToken.id)
+            .execution_options(synchronize_session=False)
+        )
+        return len((await self._session.execute(statement)).all()) == 1

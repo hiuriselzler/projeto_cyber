@@ -14,6 +14,7 @@ export { spokenQuantity } from './i18n/spoken';
 
 export * from './format/number';
 export * from './format/quantities';
+export * from './format/dates';
 
 export { easingOf, houseEasing, motionFor, type MotionKind, type MotionSpec } from './motion/motion';
 export { useReduceMotion } from './motion/useReduceMotion';

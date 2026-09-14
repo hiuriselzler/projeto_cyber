@@ -4,6 +4,27 @@
  */
 
 export interface paths {
+    "/api/v1/auth/deletion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request Deletion
+         * @description Schedules the account's deletion for seven days on, and says when (task 019).
+         */
+        post: operations["request_deletion_api_v1_auth_deletion_post"];
+        /** Cancel Deletion */
+        delete: operations["cancel_deletion_api_v1_auth_deletion_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/email/change": {
         parameters: {
             query?: never;
@@ -345,6 +366,8 @@ export interface components {
         AccountResponse: {
             /** Birth Date */
             birth_date: string | null;
+            /** Deletion Requested At */
+            deletion_requested_at: string | null;
             /** Display Name */
             display_name: string;
             /** Email */
@@ -402,6 +425,27 @@ export interface components {
             timezone?: string | null;
             /** Unit System */
             unit_system?: ("metric" | "imperial") | null;
+        };
+        /** DeletionRequest */
+        DeletionRequest: {
+            /** Password */
+            password: string;
+        };
+        /**
+         * DeletionResponse
+         * @description When the deletion was asked for, and the moment from which the account is deleted.
+         */
+        DeletionResponse: {
+            /**
+             * Deleted From
+             * Format: date-time
+             */
+            deleted_from: string;
+            /**
+             * Deletion Requested At
+             * Format: date-time
+             */
+            deletion_requested_at: string;
         };
         /** EmailChangeRequest */
         EmailChangeRequest: {
@@ -689,6 +733,93 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    request_deletion_api_v1_auth_deletion_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeletionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeletionResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    cancel_deletion_api_v1_auth_deletion_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     change_email_api_v1_auth_email_change_post: {
         parameters: {
             query?: never;

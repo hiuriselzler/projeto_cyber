@@ -162,3 +162,18 @@ class Api:
             for message in self.mail.sent
             if message.to.casefold() == address.casefold() and kind in (None, message.kind)
         ]
+
+    async def me(self, device: Device) -> dict[str, Any]:
+        response = await self.client.get(f"{API}/auth/me", headers=bearer(device.access_token))
+        assert response.status_code == 200, response.text
+        body: dict[str, Any] = response.json()
+        return body
+
+    async def request_deletion(
+        self, device: Device, password: str = STRONG_PASSWORD
+    ) -> httpx.Response:
+        return await self.client.post(
+            f"{API}/auth/deletion",
+            headers=bearer(device.access_token),
+            json={"password": password},
+        )

@@ -12,6 +12,7 @@ import sqlalchemy
 
 import fixture_app.api
 import fixture_app.core
+import fixture_app.jobs
 import fixture_app.main
 import fixture_app.models
 import fixture_app.repositories

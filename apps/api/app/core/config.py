@@ -62,6 +62,9 @@ class Settings(BaseSettings):
     email_from: str = "CyberAthlete <onboarding@resend.dev>"
     # Where links in emails point: the app's deep-link scheme, from apps/mobile/app.json.
     app_link_base: str = "cyberathlete://"
+    # The API's own public address, for links in emails that open its web pages — the account-
+    # deletion page (task 019). A deployed API must give an https:// address (04 §5).
+    public_base_url: str = "http://localhost:8000"
 
 
 class MigrationSettings(BaseSettings):
@@ -74,6 +77,7 @@ class MigrationSettings(BaseSettings):
 
 def assert_settings_are_safe(settings: Settings, environ: Mapping[str, str] = os.environ) -> None:
     secret = settings.jwt_secret.get_secret_value()
+    deployed = settings.environment not in DEVELOPMENT_ENVIRONMENTS
     if secret.strip().lower() in KNOWN_DEVELOPMENT_SECRETS:
         raise InsecureConfigurationError(
             "JWT_SECRET is a known development default; generate a random one (04 §8)"
@@ -82,7 +86,7 @@ def assert_settings_are_safe(settings: Settings, environ: Mapping[str, str] = os
         raise InsecureConfigurationError(
             f"JWT_SECRET must be at least {MIN_JWT_SECRET_LENGTH} random characters (04 §8)"
         )
-    if settings.environment not in DEVELOPMENT_ENVIRONMENTS and "MIGRATION_DATABASE_URL" in environ:
+    if deployed and "MIGRATION_DATABASE_URL" in environ:
         raise InsecureConfigurationError(
             "MIGRATION_DATABASE_URL must not be in a deployed API's environment (ADR-011)"
         )
@@ -90,15 +94,17 @@ def assert_settings_are_safe(settings: Settings, environ: Mapping[str, str] = os
         raise InsecureConfigurationError(
             "EMAIL_TRANSPORT is resend, but RESEND_API_KEY is not set (05 §5)"
         )
-    if (
-        settings.environment not in DEVELOPMENT_ENVIRONMENTS
-        and settings.email_transport != "resend"
-    ):
+    if deployed and settings.email_transport != "resend":
         # A deployed API that cannot send a reset link has locked out anyone who forgets a
         # password. Refusing to start says so on day one instead.
         raise InsecureConfigurationError(
             "a deployed API needs an email provider: set EMAIL_TRANSPORT=resend and RESEND_API_KEY "
             "(05 §5)"
+        )
+    if deployed and not settings.public_base_url.startswith("https://"):
+        # Links in emails carry single-use tokens; over http:// they could be read on the way.
+        raise InsecureConfigurationError(
+            "PUBLIC_BASE_URL must be an https:// address in a deployed API (04 §5)"
         )
 
 

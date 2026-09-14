@@ -49,6 +49,9 @@ GRAPH = [
                                               created_at)
        VALUES (gen_random_uuid(), :user_id, :email, :verification_hash, now() + interval '1 day',
                now())""",
+    """INSERT INTO account_deletion_tokens (id, user_id, token_hash, expires_at, created_at)
+       VALUES (gen_random_uuid(), :user_id, :deletion_hash, now() + interval '30 minutes',
+               now())""",
     """INSERT INTO refresh_tokens (id, user_id, token_hash, device_id, issued_at, expires_at)
        VALUES (gen_random_uuid(), :user_id, :refresh_hash, 'device-1', now(),
                now() + interval '60 days')""",
@@ -148,7 +151,16 @@ def create_user_graph(connection: Connection) -> UserGraph:
         "reset_hash": f"reset-{uuid.uuid4().hex}",
         "verification_hash": f"verify-{uuid.uuid4().hex}",
         "refresh_hash": f"refresh-{uuid.uuid4().hex}",
+        "deletion_hash": f"deletion-{uuid.uuid4().hex}",
     }
     for statement in GRAPH:
         connection.execute(text(statement), params)
     return graph
+
+
+def account_exists(connection: Connection, user_id: uuid.UUID | str) -> bool:
+    """Read as the migrator, so a row that row-level security would hide still counts."""
+    found = connection.execute(
+        text("SELECT count(*) FROM users WHERE id = :id"), {"id": str(user_id)}
+    ).scalar_one()
+    return bool(found)

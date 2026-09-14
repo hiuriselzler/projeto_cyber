@@ -72,15 +72,36 @@ def test_a_deployed_api_refuses_to_boot_without_an_email_provider(environment):
         assert_settings_are_safe(make_settings(environment=environment), environ={})
 
 
+def deployed(environment: str, **overrides: Any) -> Settings:
+    """Settings a staging or production API boots with; `overrides` replace any of them."""
+    values: dict[str, Any] = {
+        "environment": environment,
+        "email_transport": "resend",
+        "resend_api_key": f"re_{secrets.token_urlsafe(24)}",
+        "public_base_url": "https://api.example.com",
+        **overrides,
+    }
+    return make_settings(**values)
+
+
 @pytest.mark.parametrize("environment", ["staging", "production"])
 def test_a_deployed_api_boots_with_resend_configured(environment):
-    settings = make_settings(
-        environment=environment,
-        email_transport="resend",
-        resend_api_key=f"re_{secrets.token_urlsafe(24)}",
-    )
+    assert_settings_are_safe(deployed(environment), environ={})
 
-    assert_settings_are_safe(settings, environ={})
+
+@pytest.mark.parametrize("environment", ["staging", "production"])
+def test_a_deployed_api_refuses_a_public_address_that_is_not_https(environment):
+    """Links in emails carry single-use tokens (task 019)."""
+    settings = deployed(environment, public_base_url="http://api.example.com")
+
+    with pytest.raises(InsecureConfigurationError, match="PUBLIC_BASE_URL"):
+        assert_settings_are_safe(settings, environ={})
+
+
+@pytest.mark.parametrize("environment", ["local", "test"])
+def test_local_development_links_to_the_local_api(environment):
+    assert make_settings(environment=environment).public_base_url == "http://localhost:8000"
+    assert_settings_are_safe(make_settings(environment=environment), environ={})
 
 
 def test_resend_without_its_key_is_refused_without_echoing_anything():

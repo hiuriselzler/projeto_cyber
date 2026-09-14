@@ -69,6 +69,11 @@ summary appears before its charts ([ADR-003](../decisions/ADR-003.md)).
 - [ ] A clean reinstall pulls full history and reaches the home screen in reasonable time
 
 ## Notes and risks
+- **Open, from [task 019](019-account-deletion.md): what a device erases when its account is deleted or its session
+  ends.** Today a device erases the session, the privacy key and the account's local row. Once this task gives a device
+  training data of its own, decide what happens to it — including an outbox not yet pushed, which is the one copy of a
+  workout that exists — when a refresh is refused because the account is gone, and when it is refused for any other
+  reason. The server cannot tell the two apart for the device without saying which addresses have accounts.
 - **Test with two real devices**, not two simulators against one database. Clock skew, real
   network flakiness, and backgrounding behaviour are where the bugs live.
 - The clock is untrustworthy: `updated_at` comes from the device and devices are wrong. For
