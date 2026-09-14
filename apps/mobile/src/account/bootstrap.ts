@@ -1,8 +1,8 @@
 import { createConfiguredApiClient, type ApiClient } from '@/sync';
 
-import { restoreSession } from './flows';
+import { forgetEndedSession, restoreSession } from './flows';
 import { createAccountServices, type AccountServices } from './services';
-import { setSessionState, type SessionState } from './session';
+import type { SessionState } from './session';
 
 let services: AccountServices | null = null;
 
@@ -12,8 +12,9 @@ let services: AccountServices | null = null;
  */
 export function bootstrapAccount(): ApiClient {
   if (services === null) {
-    services = createAccountServices(createConfiguredApiClient());
-    services.session.onEnded(() => setSessionState({ status: 'signed-out' }));
+    const created = createAccountServices(createConfiguredApiClient());
+    created.session.onEnded(() => void forgetEndedSession(created));
+    services = created;
   }
   return services.api;
 }

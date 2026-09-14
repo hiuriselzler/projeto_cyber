@@ -92,6 +92,19 @@ class AccountResponse(BaseModel):
     resting_hr: int | None
     gamification_enabled: bool
     privacy_key: PrivacyKeyOut | None
+    # Set while a deletion is pending, so any signed-in device can show it and cancel (task 019).
+    deletion_requested_at: datetime | None
+
+
+class DeletionRequest(StrictModel):
+    password: Password
+
+
+class DeletionResponse(BaseModel):
+    """When the deletion was asked for, and the moment from which the account is deleted."""
+
+    deletion_requested_at: datetime
+    deleted_from: datetime
 
 
 class TokensResponse(BaseModel):

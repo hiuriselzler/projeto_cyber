@@ -9,20 +9,23 @@ root_packages =
     app
 include_external_packages = True
 
+# Routers and scheduled jobs are independent siblings at the top: neither imports the other
+# (responsibility-map, task 019).
 [importlinter:contract:layers]
-name = Layers: app.api -> app.services -> app.repositories -> app.models (02 §5)
+name = Layers: app.api and app.jobs -> app.services -> app.repositories -> app.models (02 §5)
 type = layers
 layers =
-    app.api
+    app.api | app.jobs
     app.services
     app.repositories
     app.models
 
 [importlinter:contract:routers-skip-nothing]
-name = Routers skip nothing: app.api imports no repository, model or SQLAlchemy
+name = Routers and jobs skip nothing: app.api and app.jobs import no repository, model or SQLAlchemy
 type = forbidden
 source_modules =
     app.api
+    app.jobs
 forbidden_modules =
     app.repositories
     app.models
@@ -37,6 +40,7 @@ source_modules =
 forbidden_modules =
     app.api
     app.core
+    app.jobs
     app.main
     app.models
     app.repositories
@@ -53,13 +57,14 @@ forbidden_modules =
     secrets
 
 [importlinter:contract:core-knows-no-domain]
-name = Core knows no domain: app.core imports no domain, service, repository, router or model
+name = Core knows no domain: app.core imports no domain, service, repository, router, job or model
 type = forbidden
 source_modules =
     app.core
 forbidden_modules =
     app.api
     app.domain
+    app.jobs
     app.models
     app.repositories
     app.services

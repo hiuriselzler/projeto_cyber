@@ -16,7 +16,10 @@ from app.core.db import user_transaction
 from app.core.scope import Principal
 from app.models.strength import Workout
 from app.repositories.workouts import WorkoutRepository
-from app.services.errors import ConflictError, NotFoundError
+from app.services.errors import ConflictError, NotFoundError, UnauthenticatedError
+
+# Postgres's SQLSTATE for a reference to a row that does not exist.
+FOREIGN_KEY_VIOLATION = "23503"
 
 
 @dataclass(frozen=True)
@@ -70,7 +73,11 @@ class WorkoutService:
             )
             try:
                 await workouts.add(principal.user_id, row)
-            except IntegrityError:
+            except IntegrityError as error:
+                if getattr(error.orig, "sqlstate", None) == FOREIGN_KEY_VIOLATION:
+                    # The account itself is gone — deleted while this access token still had
+                    # minutes to run (task 019). The device is signed out, not told of a conflict.
+                    raise UnauthenticatedError from None
                 # The id belongs to a row this user cannot see. Said as a conflict, never as whose
                 # it is.
                 raise ConflictError("id_unavailable") from None

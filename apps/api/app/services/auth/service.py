@@ -16,7 +16,7 @@ import ipaddress
 import uuid
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 import structlog
 from sqlalchemy.exc import IntegrityError
@@ -57,6 +57,7 @@ from app.services.errors import (
     NotFoundError,
     PasswordRejectedError,
     RefreshRejectedError,
+    UnauthenticatedError,
     WrongPasswordError,
 )
 from app.services.rate_limit import RateLimiter
@@ -154,6 +155,7 @@ class Account:
     resting_hr: int | None
     gamification_enabled: bool
     privacy_key: WrappedPrivacyKey | None
+    deletion_requested_at: datetime | None
 
 
 @dataclass(frozen=True)
@@ -475,7 +477,9 @@ class AuthService:
         token = new_opaque_token()
         now = self._clock()
         async with user_transaction(self._sessions, user_id) as session:
-            user = await _current_user(session, user_id)
+            user = await UserRepository(session).current(user_id)
+            if user is None:
+                return  # deleted since the lookup; the answer stays the same (04 §2a)
             await PasswordResetTokenRepository(session).add(
                 user_id,
                 PasswordResetToken(
@@ -678,9 +682,11 @@ class AuthService:
 
 
 async def _current_user(session: AsyncSession, user_id: UserId) -> User:
+    """The account a flow acts for. Missing only if it was deleted since the flow found it (task
+    019); a signed-in caller is then signed out, not told it does not exist."""
     user = await UserRepository(session).current(user_id)
     if user is None:
-        raise NotFoundError
+        raise UnauthenticatedError
     return user
 
 
@@ -706,6 +712,10 @@ def _account_of(user: User) -> Account:
         resting_hr=user.resting_hr,
         gamification_enabled=user.gamification_enabled,
         privacy_key=privacy_key,
+        # Postgres returns a timestamp in the connection's time zone; the API answers in UTC.
+        deletion_requested_at=None
+        if user.deletion_requested_at is None
+        else user.deletion_requested_at.astimezone(UTC),
     )
 
 

@@ -109,6 +109,7 @@ CLASSIFICATION: Mapping[str, Classified] = {
     "refresh_tokens": Classified(LOCAL_ONLY, SERVER, owner="user_id"),
     "password_reset_tokens": Classified(LOCAL_ONLY, SERVER, owner="user_id"),
     "email_verification_tokens": Classified(LOCAL_ONLY, SERVER, owner="user_id"),
+    "account_deletion_tokens": Classified(LOCAL_ONLY, SERVER, owner="user_id"),
     # Holds nobody's data, so no owner and no row-level security (ADR-015).
     "rate_limit_buckets": Classified(LOCAL_ONLY, SERVER),
     "raw_gps_points": Classified(LOCAL_ONLY, DEVICE),
@@ -132,6 +133,7 @@ UNSCOPED_FUNCTION_ALLOWLIST = frozenset(
         "auth_find_refresh_token",
         "auth_redeem_reset_token",
         "auth_redeem_verification_token",
+        "auth_redeem_deletion_token",
         "maintenance_purge_revoked_tokens",
         "maintenance_accounts_due_for_deletion",
     }

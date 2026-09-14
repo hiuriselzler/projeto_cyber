@@ -21,7 +21,7 @@ when its own criteria are ticked. Tick the box here only then.
 | **Decisions** | 15 ADRs. Fourteen accepted outright; [ADR-004](decisions/ADR-004.md) accepted *conditionally* |
 | **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **4 complete** (001, 002, 011, 003) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | [Task 017](tasks/017-local-toolchain-device-spike.md), in progress since administrator rights arrived 2026-09-16: the local stack runs, the app runs on the phone, and **the ADR-004 spike's own call is proven both ways** — PyO3 from FastAPI, and UniFFI from the app on the physical device, the same two values (42.5, 40.0) either way. `deny.toml` and the Rust CI job are written; the `rand` gate is proven locally but not yet through an actual CI run — nothing has been pushed since the job was added. **Next:** push and confirm the Rust CI job runs green; an Expo account, so the EAS build criterion can close; then ADR-004's outcome, which its own bar keeps open until both of those happen, whatever the toolchain has already shown. [Task 019](tasks/019-account-deletion.md) is **built on `feat/task-019-account-deletion` and not yet merged** — its criteria are ticked once CI passes on its pull request. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
+| **Next action** | [Task 019](tasks/019-account-deletion.md), account deletion — built on `feat/task-019-account-deletion`; its criteria are ticked once CI passes on its pull request. Then [task 017](tasks/017-local-toolchain-device-spike.md), in progress since administrator rights arrived 2026-09-16: the local stack runs, the app runs on the phone, and **the ADR-004 spike's own call is proven both ways** — PyO3 from FastAPI, and UniFFI from the app on the physical device, the same two values (42.5, 40.0) either way. `deny.toml` and the Rust CI job are written; the `rand` gate is proven locally but not yet through an actual CI run — nothing has been pushed since the job was added. **Next:** push and confirm the Rust CI job runs green; an Expo account, so the EAS build criterion can close; then ADR-004's outcome, which its own bar keeps open until both of those happen, whatever the toolchain has already shown. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
 
 ### The one decision still genuinely open
 
@@ -155,7 +155,8 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
 #### ☐ 019 — Account deletion · **M** · depends: 003 · blocks: the store listing
 > Added 2026-09-14, closing open question 11. Needs no administrator rights, so it goes ahead while task 017 waits.
 > **Planned 2026-09-14:** other devices stay signed in; the web page's link opens a page, and only its button schedules
-> the deletion. Two questions stay open in the task file, neither blocking the API half.
+> the deletion. **Built 2026-09-14** — ticked once CI passes on its pull request. Still open: which scheduler runs the
+> daily command, chosen with the host; what a device keeps of training data moved to task 006.
 - [ ] Deletion requested with the password, cancellable for 7 days from any signed-in device, announced by email in the
       user's language
 - [ ] **The sweep deletes every row of the account, inside its own scope** — a test over 03 §11 covers tables added later
@@ -1089,6 +1090,37 @@ Rather than hold every later task behind that, the work was split.
   - Still open in the task: what a device does with its local data once the account is gone, and which scheduler runs
     the daily command.
 - No invariant changed and no ADR was added: 49 documents, 15 ADRs.
+
+### 2026-09-14 — task 019 built: account deletion, in the app and on the web
+
+- **Decided with the project owner before building:** the pull request holding the plan merged first; when a session
+  ends on a device, the privacy key and the account's local row go with it, and what a device keeps of training data is
+  task 006's to settle ([task 006](tasks/006-sync-layer.md) carries it); a pending deletion shows on the home route,
+  with a "Delete account" link there until a settings screen exists; dates are written in numbers, in each language's
+  order.
+- **API:** `POST` and `DELETE /api/v1/auth/deletion`; the web page Google Play links to, at `/account-deletion`, whose
+  emailed link opens a page and schedules nothing until its button is pressed; migration `0004` adds
+  `account_deletion_tokens` and `auth_redeem_deletion_token`, ADR-011's seventh function; the sweep deletes each due
+  account inside its own scope and emails only after the commit; and one daily command,
+  `uv run python -m app.jobs.daily`, runs the sweep and the retention purges ([06 §5](06-operations.md)). Which scheduler
+  runs it is chosen with the host.
+- **Mobile:** the delete-account screen and its route; a pending deletion shown on the home route, with the way to keep
+  the account.
+- **Proven locally:** 332 API tests, integration included, against the local Postgres; the schema check (40 tables);
+  mypy, ruff and the five import contracts, which now place `app.jobs` beside `app.api`; 437 Jest tests; ESLint and all
+  47 lint fixtures; both catalogs at 474 messages. **Task 019's criteria are ticked once CI passes on its pull
+  request.**
+- **Found while building:**
+  - **Postgres returns a timestamp in the connection's time zone**, so the API answered one instant in two spellings —
+    `Z` and `-03:00` locally. Deletion timestamps are normalised to UTC; the session list's `last_active_at` is left for
+    task 006, which reads timestamps from the database throughout.
+  - **A deleted account's still-valid access token** got `404` from `/auth/me` and a misleading `409 id_unavailable` from
+    `POST /workouts`. Both now answer `401`, so the device signs out.
+  - **The email sender's selection moved into `app/core/email.py`**, so the daily command, which may not import a
+    router, sends through the same transport.
+  - A design-system sheet test failed once while pytest ran beside it, then passed alone and in the next full run: load,
+    not this change.
+- **The Portuguese emails, web page and delete screen are a draft**, for the native-speaker review with the rest.
 
 ### 2026-09-16 — administrator rights arrived; task 017's prerequisites installed
 

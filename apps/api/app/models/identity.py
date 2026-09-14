@@ -56,6 +56,18 @@ class EmailVerificationToken(OwnedByUser, Base):
     created_at: Mapped[datetime]
 
 
+class AccountDeletionToken(OwnedByUser, Base):
+    """The web deletion page's confirmation link (task 019): single-use, 30 minutes, hashed."""
+
+    __tablename__ = "account_deletion_tokens"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True)
+    token_hash: Mapped[str] = mapped_column(unique=True)
+    expires_at: Mapped[datetime]
+    used_at: Mapped[datetime | None]
+    created_at: Mapped[datetime]
+
+
 class RefreshToken(OwnedByUser, Base):
     __tablename__ = "refresh_tokens"
     __table_args__ = (

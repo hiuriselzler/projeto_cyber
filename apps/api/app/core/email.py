@@ -11,11 +11,13 @@ import json
 import uuid
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
+from functools import lru_cache
 from pathlib import Path
 from typing import Literal, Protocol
 
 import httpx
 
+from app.core.config import Settings
 from app.core.i18n import Locale, format_message
 
 EmailKind = Literal[
@@ -25,6 +27,10 @@ EmailKind = Literal[
     "email_changed",
     "new_device",
     "refresh_reuse",
+    "deletion_link",
+    "deletion_requested",
+    "deletion_cancelled",
+    "account_deleted",
 ]
 EMAIL_KINDS: tuple[EmailKind, ...] = (
     "verify_email",
@@ -33,6 +39,10 @@ EMAIL_KINDS: tuple[EmailKind, ...] = (
     "email_changed",
     "new_device",
     "refresh_reuse",
+    "deletion_link",
+    "deletion_requested",
+    "deletion_cancelled",
+    "account_deleted",
 )
 
 RESEND_ENDPOINT = "https://api.resend.com/emails"
@@ -127,3 +137,23 @@ class FolderEmailSender:
         (self._folder / name).write_text(
             json.dumps(asdict(message), ensure_ascii=False, indent=2), encoding="utf-8"
         )
+
+
+@lru_cache
+def _memory_sender() -> MemoryEmailSender:
+    return MemoryEmailSender()
+
+
+@lru_cache
+def _resend_sender(api_key: str, sender: str) -> ResendEmailSender:
+    return ResendEmailSender(api_key, sender)
+
+
+def email_sender(settings: Settings) -> EmailSender:
+    """The transport the settings name (05 §5), for the API and the daily command alike. Settings
+    refuse `resend` without its key at boot."""
+    if settings.email_transport == "memory":
+        return _memory_sender()
+    if settings.email_transport == "resend" and settings.resend_api_key is not None:
+        return _resend_sender(settings.resend_api_key.get_secret_value(), settings.email_from)
+    return FolderEmailSender(settings.email_folder)
