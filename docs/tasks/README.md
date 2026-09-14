@@ -5,17 +5,18 @@
 > This file explains the *order and why*. Live status, per-task checklists, the cross-cutting
 > launch blockers and the decision log live in [PROJECT-STATUS.md](../PROJECT-STATUS.md).
 
-File numbers reflect the order tasks were *written*, not the order they should be *built* — three
-were added late: two after the multi-user, gamification and brand requirements arrived, and one when the
-development machine turned out to lack administrator rights. This is the real order.
+File numbers reflect the order tasks were *written*, not the order they should be *built* — four
+were added late: two after the multi-user, gamification and brand requirements arrived, one when the
+development machine turned out to lack administrator rights, and one when the mark was split from the design system.
+This is the real order.
 
 ## Recommended sequence
 
 | # | Task | Size | Why here |
 |---|---|---|---|
 | 1 | [001 Project bootstrap](001-project-bootstrap.md) | L | Everything depends on it. **Complete** |
-| 2 | [002 Database](002-database.md) | L | Last chance to change the schema freely |
-| 3 | [011 Design system](011-design-system.md) | M | **Before any feature UI.** Task 004 builds the set row — the most important component in the app — and it should be built from a system, not retrofitted into one |
+| 2 | [002 Database](002-database.md) | L | Last chance to change the schema freely. **Complete** |
+| 3 | [011 Design system](011-design-system.md) | L | **Before any feature UI.** Task 004 builds the set row — the most important component in the app — and it should be built from a system, not retrofitted into one. **Complete** |
 | 4 | [003 Authentication](003-authentication.md) | L | Includes password reset and email verification, now v1 blockers |
 | 5 | [017 Local toolchain, device and core spike](017-local-toolchain-device-spike.md) | L | Everything that needs administrator rights, and every check only a phone can settle. **Must come before 004** — it holds the [ADR-004](../decisions/ADR-004.md) Rust spike, a 2-day go/no-go |
 | 6 | [004 Catalog and logging](004-exercise-catalog-and-logging.md) | XL | The core loop. Usable, offline, local-only |
@@ -28,6 +29,10 @@ development machine turned out to lack administrator rights. This is the real or
 | 13 | [010 Calendar and analytics](010-unified-calendar-and-analytics.md) | M | Makes the two halves feel like one app |
 | 14 | [014 Subscriptions](014-subscriptions.md) | M | **After 005** — the planner is what Pro gates. Nothing to sell before it exists |
 | 15 | [012 Onboarding](012-onboarding.md) | M | **Last, deliberately** — you cannot onboard someone into features that do not exist yet |
+
+**Outside the sequence: [018 The mark](018-brand-mark.md) — M.** Drawn by the project owner, by hand, whenever it is
+ready. Task 011 leaves a placeholder in every slot the mark fills, so no task waits on it; it blocks only the store
+listing, and so *Ready for strangers*.
 
 ## Three ordering rules worth stating
 
@@ -56,7 +61,7 @@ scheduling convenience.
 | **Both halves** | + 007–009 | Run, ride, swim and lift, planned |
 | **Feature complete** | + 010, 013 | One calendar, and tracks for the sports you actually do |
 | **Sellable** | + 014 | Three months free, then Pro |
-| **Ready for strangers** | + 012 | Ship it — on Android |
+| **Ready for strangers** | + 012, 018 | Ship it — on Android |
 | **Both platforms** | + 016 | CyberAthlete on iPhone, added rather than ported |
 
 Everything before *Ready for strangers* assumes a user who already knows the app. Onboarding is what

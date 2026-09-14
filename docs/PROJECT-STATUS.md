@@ -15,13 +15,13 @@ when its own criteria are ticked. Tick the box here only then.
 
 | | |
 |---|---|
-| **Phase** | **Task 001 complete; task 002 built** — every criterion proven by tests that pass locally; it closes when CI is green on its pull request. Everything that needs administrator rights — Docker, the device, the ADR-004 spike — is [task 017](tasks/017-local-toolchain-device-spike.md), which must finish before task 004 |
+| **Phase** | **Tasks 001, 002 and 011 complete; task 003 next.** The schema exists in Postgres and SQLite, seeded and enforcing itself, and the design system exists in `src/ui/`, token-driven and tested in both languages, both unit systems and both themes. Everything that needs administrator rights — Docker, the device, the ADR-004 spike — is [task 017](tasks/017-local-toolchain-device-spike.md), which must finish before task 004 |
 | **Repository** | Private GitHub repository `hiuriselzler/projeto_cyber`. `main` holds the documentation and task 001's merged work (pull request #1); each further piece arrives by pull request, with CI green before merge |
-| **Docs** | 44 files, internally consistent, all cross-links resolving |
-| **Decisions** | 13 ADRs. Twelve accepted outright; [ADR-004](decisions/ADR-004.md) accepted *conditionally* |
-| **Tasks** | 15 for v1 (Android), 2 after launch — iOS platform, Coach tier. **1 complete** (001) |
+| **Docs** | 46 files, internally consistent, all cross-links resolving |
+| **Decisions** | 14 ADRs. Thirteen accepted outright; [ADR-004](decisions/ADR-004.md) accepted *conditionally* |
+| **Tasks** | 16 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **3 complete** (001, 002, 011) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | Open task 002's pull request and let CI prove it; have a native speaker who trains review the Portuguese exercise names. Then 011 and 003; then [task 017](tasks/017-local-toolchain-device-spike.md) once administrator rights are available, before task 004 |
+| **Next action** | [Task 003](tasks/003-authentication.md) — authentication and authorization, the privacy-key lifecycle included. Then [task 017](tasks/017-local-toolchain-device-spike.md) once administrator rights are available, before task 004. Separately: a native speaker who trains reviews the Portuguese exercise names, and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
 
 ### The one decision still genuinely open
 
@@ -83,10 +83,10 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
 - [x] Prove the gates: write a `sqlalchemy` import into `domain/` and watch CI fail; **every rule has a
       known-bad fixture that CI proves is caught**
 
-#### ☐ 002 — Database and schema · **L** · depends: 001 · blocks: 003–009
+#### ☑ 002 — Database and schema · **L** · depends: 001 · blocks: 003–009
 > **The last chance to change the schema freely.** Schema churn is far cheaper before there is data.
-> **Built (2026-09-12):** every criterion in the task file is proven by a test that passes locally. The
-> box is ticked once CI is green on its pull request.
+> **Complete (2026-09-12).** Every criterion in the task file is proven by a test, and CI was green on
+> all four jobs of pull request #5. The two device checks remain in task 017.
 - [x] Postgres: all of [03](03-database-schema.md) in one pass, cardio and planning tables included
 - [x] Enums → users/auth → catalog → routines → workouts/sets → planner → **`gamification_tracks`**
       → **`sport_profiles`** → cardio → cardio plans → remaining gamification tables
@@ -109,19 +109,23 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
 - [x] **Schema-comparison script**: Alembic vs Drizzle names, *plus* [§11](03-database-schema.md)
       enforcement. Prove it fails when `‹sync›` is misplaced
 
-#### ☐ 011 — Brand assets and design system · **M** · depends: 001
+#### ☑ 011 — Brand assets and design system · **L** · depends: 001
 > Numbered late, built third. Task 004 builds the set row, and it should come out of a system
-> rather than be retrofitted into one.
-- [ ] The octopus mark on a strict radial grid, four reduction levels, **black on white first**
-- [ ] **Tone gate before anything else** — analytical, not cute. If it would work on a cereal box, restart
-- [ ] Token source (INV-23), both themes end to end, **lint rule banning literal hex / size / duration**
-- [ ] The set row · the custom numeric keypad · RIR chips · metric tile · cycle cell · sheet · chip
-- [ ] **Track row** — the whole Progress screen is a list of these; works at 6 rows and at 15
-- [ ] **i18n wired, literal-string lint rule, catalog key-parity check in CI**; every component
-      tested in pt-BR and in pounds (INV-27)
-- [ ] Damped house easing, **no spring bounce**; reduce-motion honoured
-- [ ] Contrast: body 4.5:1, UI 3:1, **workout numerals 7:1**; tabular figures everywhere
-- [ ] **One symmetric mark, never personalised.** No per-user octopus is built at all ([07 §2](07-brand-and-ui.md))
+> rather than be retrofitted into one. The mark itself moved to [task 018](tasks/018-brand-mark.md).
+> **Complete (2026-09-14).** Every criterion in the task file is proven by a test, a lint fixture or a script, each
+> run in CI on the task's pull request. The device checks — 200 % font scale, the keypad beside the row, plurals under
+> Hermes, TalkBack — are task 017's.
+- [x] **Every slot the mark fills holds a plainly marked placeholder** — icon, splash, notification icon, favicon —
+      rendered by a step CI runs again; never a stand-in octopus
+- [x] Token file `src/ui/tokens.ts` (INV-23), both themes end to end with a device-only override, **lint banning
+      literal colour, size and duration, and every spring** ([ADR-014](decisions/ADR-014.md))
+- [x] The set row · the custom numeric keypad · RIR chips · metric tile · cycle cell · sheet · chip
+- [x] **Track row** — the whole Progress screen is a list of these; works at 6 rows and at 15
+- [x] **i18n wired, literal-string lint rule, catalog key- and argument-parity check in CI**; every component
+      tested in both languages and both unit systems, in both themes (INV-27)
+- [x] Damped house easing `cubic-bezier(0.18, 0, 0.06, 1)`, **no spring**; reduce-motion gives 120 ms cross-fades
+- [x] Contrast **proven by a test over the corrected palette**: body 4.5:1, UI 3:1, **workout numerals 7:1**;
+      tabular figures in every numeric style
 
 #### ☐ 003 — Authentication and authorization · **L** · depends: 002 · blocks: 006, 012, 014
 > The authorization half matters more than the authentication half.
@@ -320,6 +324,15 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
 
 ### Milestone 6 — Ready for strangers
 
+#### ☐ 018 — The mark · **M** · made by the project owner, by hand · blocks: the store listing
+> Split from 011 on 2026-09-12. Outside the build sequence: task 011 leaves a placeholder in every slot, so nothing
+> waits on the drawing but the launch.
+- [ ] **The octopus drawn as a 19th-century engraved plate** — a drawn creature, never a logo shape ([07 §1](07-brand-and-ui.md))
+- [ ] **Tone gate before anything else** — analytical, not cute. If it would work on a cereal box, restart
+- [ ] 07's ladder by rendered size, **black on white first**; the glyph recognisable at 16 px
+- [ ] Every placeholder replaced; the wordmark; the store icon and feature graphic
+- [ ] **One canonical drawing, never personalised.** No per-user octopus is built at all ([07 §2](07-brand-and-ui.md))
+
 #### ☐ 012 — Onboarding and first run · **M** · depends: 003, 004, 011
 > **Last, deliberately** — you cannot onboard someone into features that do not exist.
 - [ ] Ask only units, what they train, and optionally experience. **Not a seven-screen wizard**
@@ -375,6 +388,8 @@ These are real blockers scattered across the docs. Nothing will surface them at 
 - [ ] Google Maps API key restricted by package name + signing certificate
 - [ ] **ADR-004's four conditions in place before the first user who is not the developer** — under
       option B; tasks 005 and 006 ([ADR-004](decisions/ADR-004.md))
+- [ ] **The mark drawn, with no placeholder left in a store build** ([task 018](tasks/018-brand-mark.md)) — the render
+      step reports every level still holding one
 
 ### Operations, from first deploy
 - [ ] Staging environment, for rehearsing migrations against realistic data
@@ -413,6 +428,7 @@ None are blocking; each has a stated assumption that will be built unless correc
 | 6 | How many users at once ([NFR-12](01-business-requirements.md)), and the load test that proves it | Design goal only: stateless API and pooling-safe database access from the first commit | Before launch |
 | 7 | The Android application id. **Permanent after the first Play Store upload** | `com.cyberathlete.app`, a placeholder in `apps/mobile/app.json` | Before the first Play upload |
 | 8 | Android backups: the generated manifest has `allowBackup="true"`, so local data — raw GPS points included — would reach device backups | Unchanged for now | Before [task 007](tasks/007-cardio-recording.md) |
+| 9 | What the RIR `5+` chip stores: 5, or a choice from 5 to 10 (the schema allows 0–10, INV-03) | Nothing yet — task 011's chips take their values as a prop and store nothing | [Task 004](tasks/004-exercise-catalog-and-logging.md) |
 
 **Closed 2026-09-09** — target RIR granularity (now `rir_mode` on the progression rule);
 cardio intensity (both zones and pace ranges); bodyweight volume (summed); and the octopus
@@ -851,3 +867,66 @@ Rather than hold every later task behind that, the work was split.
   test-only oracle checked against the shared fixture — not domain code.
 - **Also:** the models are checked against the migrated schema by a drift test; task 001's throwaway
   `launches` table is gone, and the diagnostics screen shows the migration count and the table count (36).
+
+### 2026-09-12 — task 011 planning: the mark as 07 draws it, and a palette that passes its own rule
+
+- **The mark is a drawn creature, as [07 §1](07-brand-and-ui.md) says:** a 19th-century engraved plate, not
+  a geometric abstraction. Task 011 and this file had drifted to "a strict radial grid", "one slot-pupil
+  eye" and "one symmetric mark" — the logo shape 07 bans. Both are corrected.
+- **The project owner draws it, by hand, later.** Task 011 fills every slot the mark occupies with a
+  plainly marked placeholder, never a stand-in octopus, which would become the mark by default. Its
+  acceptance criteria are split in two: the system's, and the mark's, ticked once the drawing exists.
+- **The reduction ladder is 07's, stated by rendered size** — dp on a device, px on the web. Task 011's
+  version had no full drawing, and split 16–32 px from the favicon with no different form between them.
+  One use moved: **the launcher icon is silhouette + eyes**, not the reduced drawing, because it is shown
+  about 48 dp across, where engraved hatching is noise. The Play Store icon matches it, the splash takes
+  the reduced drawing, and the notification icon and favicon take the glyph.
+- **The palette failed INV-24 as written**, and 07 §3 is corrected — by computation, not by eye. Dark
+  `text-muted` was 3.50:1 on `bg-elevated`, where the set row's previous-performance line sits; `danger`,
+  `ride` and `row` could not be text on an active row; `border-strong` could not mark a control; and light
+  mode lacked five tokens. Each failing colour moved in lightness only, hue and chroma kept (OKLCH), to
+  clear its floor by 0.1; nothing that passed changed, and no seeded hue token was renamed. Two tokens
+  are new, `text-on-accent` and `shadow-elevated`. The rule is now exact: every token against every
+  background of its theme, `text-primary` the only colour for a live numeral, and a selected state always
+  a fill, an edge and a label.
+- **Still to settle before task 011's code:** where the theme override is stored; spacing, radii and the
+  easing curve, which 07 does not yet give; the debug diagnostics screen under the literal-string rule;
+  and ADR-014, because INV-23 and INV-24 have no *Enforced* line. All settled the next day — next entry.
+
+### 2026-09-13 — task 011: the open questions settled, and the design system built
+
+- **[ADR-014](decisions/ADR-014.md)** — the design system enforces itself. INV-23 and INV-24 gain *Enforced* lines. The
+  token file is `apps/mobile/src/ui/tokens.ts`; lint fences `design-tokens` (literal colours, type sizes, durations)
+  and `no-bounce` (every spring API, with no exception); INV-27's literal-string rule exempts
+  `src/features/diagnostics/` by name, and nothing else. Exemptions are lint sub-scopes, and the fixture check proves
+  each lifts only its own rule.
+- **The mark is [task 018](tasks/018-brand-mark.md)**, drawn by the project owner, outside the build sequence and
+  blocking only the store listing. Task 011 built its slots: SVG sources holding a crossed-box placeholder, a render
+  step (`pnpm render:brand`) that CI re-runs and diffs, and a `Mark` component drawing the same sources.
+- **07 gained the values it lacked:** spacing on a 4 dp base; radii 4, 8 and 12; sizes (48 and 56 dp targets, 24 dp
+  icons, 1 and 2 dp edges); a face for each type style; and the house easing, `cubic-bezier(0.18, 0, 0.06, 1)` — a
+  fit to a critically damped step response, within 2.6 % and without overshoot. Under reduce motion, 120 ms
+  cross-fades and a static emphasis.
+- **The theme override lives on the device**, in expo-sqlite's key-value store, never synced. Language and units come
+  from the device (ADR-008's rule) until task 003 gives the account `users.locale` and `users.unit_system`.
+- **Fonts:** Inter 4.1's static cuts — Regular, Medium, SemiBold and Display SemiBold — bundled by the `expo-font`
+  plugin. The release publishes no checksum: the zip came from `rsms/inter`'s v4.1 GitHub release over HTTPS, with
+  SHA-256 `9883fdd4a49d4fb66bd8177ba6625ef9a64aa45899767dde3d36aa425756b11e`. Committed files: Inter-Regular
+  `40d692fc…0c82`, Inter-Medium `97ad806f…a872`, Inter-SemiBold `78a843fa…cde3`, InterDisplay-SemiBold
+  `0310d7a3…4e02`, LICENSE `262481e8…935a`.
+- **Numbers are formatted by hand for the two locales, not through `Intl.NumberFormat`**, so a test under Node and
+  the app under Hermes print the same characters. ICU plurals load the `@formatjs` polyfills Hermes needs, only where
+  the engine lacks them — proven in Jest by deleting `Intl.PluralRules`; on a phone, in task 017.
+- **The catalog check is a script, `pnpm check:catalogs`** — keys, each message's ICU arguments, and every key the app
+  names literally. It is not a Jest test because the app's TypeScript config deliberately has no Node types.
+- **The Portuguese interface strings are a draft**, like the exercise names, for the native-speaker review. The
+  spoken unit names in English use US spelling; they are read aloud, never shown.
+- **Found while building:** the React Compiler's lint rules reject reading a ref during render and setting state
+  synchronously in an effect, so animated values live in state; and a literal-string rule that searched a whole prop
+  expression flagged the catalog keys inside `t('…')` — it now looks only at strings shown as they stand.
+- **pnpm added release-age exclusions on its own**, in `pnpm-workspace.yaml`: `intl-messageformat` 11.2.15 and six
+  `@formatjs` packages it and the polyfills pull in were newer than pnpm's minimum release age when installed.
+  Recorded, not yet decided — the alternative is pinning versions old enough to pass the check.
+- **Components are tested in all eight combinations** of language, unit system and theme. The first matrix paired
+  English with kilograms and Portuguese with pounds, which crossed both axes but never rendered the pairs users
+  actually see — Portuguese with kilograms, English with pounds. Task 011's criterion was reworded to match.

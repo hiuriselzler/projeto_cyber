@@ -116,7 +116,15 @@ jobs:
       - name: Every boundary rule reports its known-bad fixture
         run: pnpm lint:fixtures
       - run: pnpm check:platform-files
+      - name: Both catalogs hold the same messages with the same arguments (INV-27)
+        run: pnpm check:catalogs
       - run: pnpm test --ci
+      # Task 011: every slot the mark fills holds exactly what the render step makes of its SVG source.
+      - name: The committed brand assets match their render
+        run: |
+          pnpm render:brand
+          git diff --exit-code -- assets/images src/ui/brand
+          test -z "$(git status --porcelain -- assets/images src/ui/brand)"
       - run: pnpm audit --audit-level high
 
   android-config:

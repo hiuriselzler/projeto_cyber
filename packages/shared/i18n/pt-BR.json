@@ -374,5 +374,85 @@
       "name": "Um ano de treino",
       "description": "Registrou um ano de treino."
     }
+  },
+  "brand": {
+    "name": "CyberAthlete"
+  },
+  "unit": {
+    "kg": "kg",
+    "lb": "lb",
+    "km": "km",
+    "mi": "mi",
+    "m": "m",
+    "ft": "ft",
+    "celsius": "°C",
+    "fahrenheit": "°F"
+  },
+  "unit_spoken": {
+    "kg": "{count, plural, one {quilograma} other {quilogramas}}",
+    "lb": "{count, plural, one {libra} other {libras}}",
+    "km": "{count, plural, one {quilômetro} other {quilômetros}}",
+    "mi": "{count, plural, one {milha} other {milhas}}",
+    "m": "{count, plural, one {metro} other {metros}}",
+    "ft": "{count, plural, one {pé} other {pés}}",
+    "celsius": "{count, plural, one {grau Celsius} other {graus Celsius}}",
+    "fahrenheit": "{count, plural, one {grau Fahrenheit} other {graus Fahrenheit}}"
+  },
+  "ui": {
+    "set_row": {
+      "rir": "RIR {rir}",
+      "rir_blank": "RIR",
+      "previous": "{rir_recorded, select, yes {Última vez: {weight} × {reps} @{rir}} other {Última vez: {weight} × {reps}}}"
+    },
+    "keypad": {
+      "done": "OK"
+    },
+    "sheet": {
+      "close": "Fechar"
+    },
+    "cycle_cell": {
+      "day": "Dia {day}",
+      "deload": "Deload"
+    },
+    "cycle_status": {
+      "projected": "Projetado",
+      "locked": "Fixado",
+      "in_progress": "Em andamento",
+      "completed": "Concluído",
+      "skipped": "Pulado"
+    },
+    "track_row": {
+      "level": "Nível {level}",
+      "xp": "{xp} / {next} XP",
+      "xp_top": "{xp} XP"
+    },
+    "level_up": {
+      "title": "Nível {level}"
+    }
+  },
+  "a11y": {
+    "quantity": "{value} {unit}",
+    "set_row": "Série {number}, {weight}, {reps}, {rir}, {status}",
+    "weight_none": "sem carga",
+    "reps": "{count, plural, one {# repetição} other {# repetições}}",
+    "reps_none": "sem repetições",
+    "rir": "RIR {rir}",
+    "rir_none": "RIR não registrado",
+    "set_complete": "concluída",
+    "set_incomplete": "não concluída",
+    "edit_weight": "Editar carga",
+    "edit_reps": "Editar repetições",
+    "edit_rir": "Editar RIR",
+    "mark_complete": "Marcar como concluída",
+    "mark_incomplete": "Marcar como não concluída",
+    "keypad_separator": "Separador decimal",
+    "keypad_delete": "Apagar",
+    "rir_chips": "Repetições em reserva",
+    "rir_open_ended": "RIR {rir} ou mais",
+    "cycle_cell": "{deload, select, yes {Dia {day}, {status}, deload} other {Dia {day}, {status}}}",
+    "track_row": "{has_reason, select, yes {{name}, nível {level}, {progress}. {reason}} other {{name}, nível {level}, {progress}}}",
+    "track_progress": "{xp} de {next} XP",
+    "track_progress_top": "{xp} XP, nível máximo",
+    "level_up": "{track} chegou ao nível {level}. {reason}"
   }
 }

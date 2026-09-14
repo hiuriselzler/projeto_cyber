@@ -374,5 +374,85 @@
       "name": "One year of training",
       "description": "Logged a year of training."
     }
+  },
+  "brand": {
+    "name": "CyberAthlete"
+  },
+  "unit": {
+    "kg": "kg",
+    "lb": "lb",
+    "km": "km",
+    "mi": "mi",
+    "m": "m",
+    "ft": "ft",
+    "celsius": "°C",
+    "fahrenheit": "°F"
+  },
+  "unit_spoken": {
+    "kg": "{count, plural, one {kilogram} other {kilograms}}",
+    "lb": "{count, plural, one {pound} other {pounds}}",
+    "km": "{count, plural, one {kilometer} other {kilometers}}",
+    "mi": "{count, plural, one {mile} other {miles}}",
+    "m": "{count, plural, one {meter} other {meters}}",
+    "ft": "{count, plural, one {foot} other {feet}}",
+    "celsius": "{count, plural, one {degree Celsius} other {degrees Celsius}}",
+    "fahrenheit": "{count, plural, one {degree Fahrenheit} other {degrees Fahrenheit}}"
+  },
+  "ui": {
+    "set_row": {
+      "rir": "RIR {rir}",
+      "rir_blank": "RIR",
+      "previous": "{rir_recorded, select, yes {{weight} × {reps} @{rir} last time} other {{weight} × {reps} last time}}"
+    },
+    "keypad": {
+      "done": "Done"
+    },
+    "sheet": {
+      "close": "Close"
+    },
+    "cycle_cell": {
+      "day": "Day {day}",
+      "deload": "Deload"
+    },
+    "cycle_status": {
+      "projected": "Projected",
+      "locked": "Locked",
+      "in_progress": "In progress",
+      "completed": "Completed",
+      "skipped": "Skipped"
+    },
+    "track_row": {
+      "level": "Level {level}",
+      "xp": "{xp} / {next} XP",
+      "xp_top": "{xp} XP"
+    },
+    "level_up": {
+      "title": "Level {level}"
+    }
+  },
+  "a11y": {
+    "quantity": "{value} {unit}",
+    "set_row": "Set {number}, {weight}, {reps}, {rir}, {status}",
+    "weight_none": "no weight",
+    "reps": "{count, plural, one {# rep} other {# reps}}",
+    "reps_none": "no reps",
+    "rir": "RIR {rir}",
+    "rir_none": "RIR not recorded",
+    "set_complete": "complete",
+    "set_incomplete": "incomplete",
+    "edit_weight": "Edit weight",
+    "edit_reps": "Edit reps",
+    "edit_rir": "Edit RIR",
+    "mark_complete": "Mark complete",
+    "mark_incomplete": "Mark incomplete",
+    "keypad_separator": "Decimal separator",
+    "keypad_delete": "Delete",
+    "rir_chips": "Reps in reserve",
+    "rir_open_ended": "RIR {rir} or more",
+    "cycle_cell": "{deload, select, yes {Day {day}, {status}, deload} other {Day {day}, {status}}}",
+    "track_row": "{has_reason, select, yes {{name}, level {level}, {progress}. {reason}} other {{name}, level {level}, {progress}}}",
+    "track_progress": "{xp} of {next} XP",
+    "track_progress_top": "{xp} XP, top level",
+    "level_up": "{track} reached level {level}. {reason}"
   }
 }

@@ -199,7 +199,7 @@ consequential decision in the project.
 | [09-business-model.md](09-business-model.md) | Tiers, pricing, and what the paywall never touches |
 | [invariants.md](invariants.md) | Rules no code may break |
 | [responsibility-map.md](responsibility-map.md) | What belongs in which folder |
-| [decisions/](decisions/) | ADRs for the thirteen contested decisions |
+| [decisions/](decisions/) | ADRs for the fourteen contested decisions |
 | [tasks/README.md](tasks/README.md) | Build order and dependencies |
 | [tasks/](tasks/) | Ordered implementation slices |
 | [PROJECT-STATUS.md](PROJECT-STATUS.md) | **The live to-do list** — what is done, what is next, what blocks launch |
