@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from app.api.errors import install_error_handlers
 from app.api.health import router as health_router
 from app.api.v1 import api_router
+from app.api.web import web_router
 from app.core.config import get_settings
 from app.core.db import dispose_database, init_database, verify_database_role
 from app.core.logging import configure_logging
@@ -34,6 +35,7 @@ def create_app() -> FastAPI:
     install_error_handlers(app)
     app.include_router(health_router)
     app.include_router(api_router)
+    app.include_router(web_router)
     return app
 
 

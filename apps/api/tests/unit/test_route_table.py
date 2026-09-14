@@ -47,10 +47,16 @@ def test_the_only_routes_open_before_sign_in_are_the_public_auth_routes():
     assert unguarded(create_app()) == PUBLIC_PATHS
 
 
-def test_every_route_is_versioned_or_a_health_check():
+def test_every_route_is_versioned_a_health_check_or_the_deletion_page():
+    """The web deletion page (task 019) is the one API page outside /api/v1, and names no user."""
     paths = {path for path, _ in api_routes(create_app())}
 
-    assert {path for path in paths if not path.startswith(PREFIX)} == {"/health", "/health/ready"}
+    assert {path for path in paths if not path.startswith(PREFIX)} == {
+        "/health",
+        "/health/ready",
+        "/account-deletion",
+        "/account-deletion/confirm",
+    }
 
 
 def test_the_check_notices_a_route_that_forgot_its_user():

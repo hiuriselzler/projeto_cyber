@@ -1,4 +1,4 @@
-"""/api/v1/auth — sign-in and the account lifecycle (04 §2-§5, task 003).
+"""/api/v1/auth — sign-in and the account lifecycle (04 §2-§5, task 003; deletion, task 019).
 
 Six routes are public, because nobody is signed in when they are called: register, login, refresh,
 both halves of a password reset, and email verification (the link may open on a device that is
@@ -11,11 +11,13 @@ import uuid
 
 from fastapi import APIRouter, Depends, Response, status
 
-from app.api.deps import Auth, Client, CurrentUser, default_rate_limit
+from app.api.deps import AccountDeletion, Auth, Client, CurrentUser, default_rate_limit
 from app.schemas.auth import (
     AcceptedResponse,
     AccountResponse,
     AccountUpdate,
+    DeletionRequest,
+    DeletionResponse,
     EmailChangeRequest,
     EmailVerifyRequest,
     LoginRequest,
@@ -222,6 +224,29 @@ async def revoke_session(session_id: uuid.UUID, principal: CurrentUser, service:
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
+@router.post("/deletion", responses=_errors(401, 403, 429))
+async def request_deletion(
+    body: DeletionRequest, principal: CurrentUser, client: Client, service: AccountDeletion
+) -> DeletionResponse:
+    """Schedules the account's deletion for seven days on, and says when (task 019)."""
+    scheduled = await service.request(principal, body.password, client)
+    return DeletionResponse(
+        deletion_requested_at=scheduled.requested_at, deleted_from=scheduled.deleted_from
+    )
+
+
+@router.delete(
+    "/deletion",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_class=Response,
+    dependencies=[Depends(default_rate_limit)],
+    responses=_errors(401),
+)
+async def cancel_deletion(principal: CurrentUser, service: AccountDeletion) -> Response:
+    await service.cancel(principal)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
 def _wrapped(body: PrivacyKeyIn) -> WrappedPrivacyKey:
     return WrappedPrivacyKey(body.wrapped_key, body.salt, body.kdf)
 
@@ -257,6 +282,7 @@ def _account(account: Account) -> AccountResponse:
             salt=base64.b64encode(key.salt).decode("ascii"),
             kdf=key.kdf,
         ),
+        deletion_requested_at=account.deletion_requested_at,
     )
 
 

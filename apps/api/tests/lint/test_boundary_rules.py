@@ -49,19 +49,22 @@ def run(*command: str, cwd: Path = API_ROOT) -> str:
 PLANTED_IMPORTS = {
     "layers": [
         "fixture_app.services.imports_router -> fixture_app.api.things",
+        "fixture_app.services.imports_job -> fixture_app.jobs.things",
+        "fixture_app.api.imports_job -> fixture_app.jobs.things",
         "fixture_app.repositories.imports_service -> fixture_app.services.things",
         "fixture_app.models.imports_repository -> fixture_app.repositories.things",
     ],
     "routers-skip-nothing": [
-        "fixture_app.api.skips_layers -> fixture_app.repositories.things",
-        "fixture_app.api.skips_layers -> fixture_app.models.things",
-        "fixture_app.api.skips_layers -> sqlalchemy",
+        f"fixture_app.{package}.skips_layers -> {module}"
+        for package in ["api", "jobs"]
+        for module in ["fixture_app.repositories.things", "fixture_app.models.things", "sqlalchemy"]
     ],
     "domain-is-pure": [
         f"fixture_app.domain.impure -> {module}"
         for module in [
             "fixture_app.api",
             "fixture_app.core",
+            "fixture_app.jobs",
             "fixture_app.main",
             "fixture_app.models",
             "fixture_app.repositories",
@@ -111,7 +114,8 @@ def fixture_contracts(directory: Path) -> Path:
     for line in REAL_CONTRACTS.read_text(encoding="utf-8").splitlines():
         module = line.strip()
         if module == "app" or module.startswith("app."):
-            line = line.replace("app", "fixture_app", 1)
+            # One layer line may name independent siblings: `app.api | app.jobs`.
+            line = re.sub(r"\bapp\b", "fixture_app", line)
         lines.append(line)
     path = directory / "fixture.importlinter"
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")

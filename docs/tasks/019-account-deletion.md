@@ -106,3 +106,27 @@ one real delete in a product where nothing else with history is ever deleted (IN
   exist yet. Whichever task creates them adds them to the sweep, and the deletion test.
 - **Email** goes through Resend ([05 §5](../05-integrations.md)). On its free test sender, messages reach only the Resend
   account owner's own address; a verified domain is needed before real users.
+
+## Settled while building (2026-09-14)
+- **Decided with the project owner before building:** other devices stay signed in; when a session ends on a device —
+  a sign-out, a reset, or a refresh the server refuses, as it does once the account is gone — the device erases the
+  privacy key and the account's local row, and what it keeps of training data is [task 006](006-sync-layer.md)'s to
+  settle; a pending deletion shows on the home route, with a "Delete account" link there until a settings screen exists;
+  and dates are written in numbers, in each language's order.
+- **A second request keeps the first date** and sends no second email. Cancelling with nothing pending answers `204`
+  and sends nothing.
+- **Timestamps are answered in UTC.** Postgres returns a timestamp in the connection's time zone — the local server
+  answers in `-03:00` — so the same instant came back written two ways. The deletion answers and the account's
+  `deletion_requested_at` are normalised. The session list's `last_active_at` still carries the connection's offset:
+  correct ISO 8601, left for task 006, which reads timestamps from the database throughout.
+- **A deleted account's access token signs the device out.** For its last minutes, `GET /auth/me` answers `401`, not
+  `404`, and `POST /workouts` answers `401`, not the misleading `409 id_unavailable` a missing account's foreign key
+  produced.
+- **The email sender is chosen in `app/core/email.py`**, not in the routers' wiring, so the daily command — which may not
+  import a router — sends through the same transport.
+- **`app.jobs` sits beside `app.api`** as an independent top layer in `.importlinter`, and every contract that names the
+  app's packages names it, each with a planted violation.
+- **The web page's forms are parsed with the standard library** and validated through strict models; no
+  `python-multipart`. The page's date is in the account's time zone, as the email's is; the app shows the day of the
+  request in the device's, and the catalog says the account goes 7 days after — the app keeps no copy of the grace
+  period.

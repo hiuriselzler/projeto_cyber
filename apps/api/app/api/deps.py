@@ -13,15 +13,11 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from app.core.clock import Clock, system_clock
 from app.core.config import get_settings
 from app.core.db import get_session_factory
-from app.core.email import (
-    EmailSender,
-    FolderEmailSender,
-    MemoryEmailSender,
-    ResendEmailSender,
-)
+from app.core.email import EmailSender, email_sender
 from app.core.rate_limit import DEFAULT
 from app.core.scope import Principal, UserId
 from app.core.security import InvalidAccessTokenError, PasswordHasher, read_access_token
+from app.services.auth.deletion import AccountDeletionService, WebLinks
 from app.services.auth.service import AppLinks, AuthService, ClientContext
 from app.services.errors import UnauthenticatedError
 from app.services.rate_limit import RateLimiter
@@ -43,24 +39,9 @@ def get_password_hasher() -> PasswordHasher:
     return _password_hasher()
 
 
-@lru_cache
-def _memory_email_sender() -> MemoryEmailSender:
-    return MemoryEmailSender()
-
-
-@lru_cache
-def _resend_email_sender(api_key: str, sender: str) -> ResendEmailSender:
-    return ResendEmailSender(api_key, sender)
-
-
 def get_email_sender() -> EmailSender:
-    """The transport the settings name (05 §5). Settings refuse `resend` without its key at boot."""
-    settings = get_settings()
-    if settings.email_transport == "memory":
-        return _memory_email_sender()
-    if settings.email_transport == "resend" and settings.resend_api_key is not None:
-        return _resend_email_sender(settings.resend_api_key.get_secret_value(), settings.email_from)
-    return FolderEmailSender(settings.email_folder)
+    """The transport the settings name (05 §5)."""
+    return email_sender(get_settings())
 
 
 ClockDependency = Annotated[Clock, Depends(get_clock)]
@@ -86,6 +67,22 @@ def get_auth_service(
         clock=clock,
         jwt_secret=settings.jwt_secret.get_secret_value(),
         links=AppLinks(settings.app_link_base),
+    )
+
+
+def get_account_deletion_service(
+    hasher: Annotated[PasswordHasher, Depends(get_password_hasher)],
+    sender: Annotated[EmailSender, Depends(get_email_sender)],
+    limiter: Annotated[RateLimiter, Depends(get_rate_limiter)],
+    clock: ClockDependency,
+) -> AccountDeletionService:
+    return AccountDeletionService(
+        get_session_factory(),
+        hasher=hasher,
+        sender=sender,
+        limiter=limiter,
+        clock=clock,
+        links=WebLinks(get_settings().public_base_url),
     )
 
 
@@ -116,6 +113,7 @@ async def get_current_user(
 CurrentUser = Annotated[Principal, Depends(get_current_user)]
 Client = Annotated[ClientContext, Depends(client_context)]
 Auth = Annotated[AuthService, Depends(get_auth_service)]
+AccountDeletion = Annotated[AccountDeletionService, Depends(get_account_deletion_service)]
 Workouts = Annotated[WorkoutService, Depends(get_workout_service)]
 
 

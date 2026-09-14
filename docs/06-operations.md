@@ -163,6 +163,22 @@ Versioning: API is SemVer-tagged; the mobile app uses a monotonic build number a
 display version. The API version and the app version are independent and must stay compatible
 across at least two app releases.
 
+**Scheduled jobs** — one command, run once a day by the host's scheduler
+([task 019](tasks/019-account-deletion.md)):
+
+```
+uv run python -m app.jobs.daily        # in apps/api
+```
+
+It deletes every account whose deletion was requested seven days ago or more, then purges revoked
+refresh tokens older than 90 days and rate-limit windows older than one
+([04 §7](04-security-and-auth.md)). It runs with the API's own environment — `DATABASE_URL` as
+`cyberathlete_app`, `JWT_SECRET` and the email settings — refuses to start on a role that could
+skip row-level security ([ADR-011](decisions/ADR-011.md)), and logs counts, never an address. Every
+step is safe to repeat: a missed day is caught up by the next run, and two runs at once delete
+nothing twice. **Which scheduler runs it is chosen with the host** (Fly.io or Railway,
+[05 §5](05-integrations.md)); until then it runs by hand.
+
 ## 6. Backups and recovery
 
 - Managed Postgres with **PITR**, 7-day window minimum.
