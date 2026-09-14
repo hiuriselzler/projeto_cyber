@@ -356,6 +356,10 @@ Colour, type scale, spacing and easing live in one token file consumed by `src/u
 accessibility contract (INV-24) are unmaintainable if values are scattered. A hardcoded colour is
 also how dark mode silently breaks.
 
+*Enforced:* the token file is `apps/mobile/src/ui/tokens.ts`, the only place such a value may be written. An ESLint
+fence rejects hex and colour strings, literal font sizes, line heights and letter spacing, and literal animation
+durations everywhere else in the app, proven by known-bad fixtures ([ADR-014](decisions/ADR-014.md)).
+
 ---
 
 ### INV-24 — Colour is never the only signal, and workout numerals are legible.
@@ -366,6 +370,10 @@ figures.
 *Why:* the app is read mid-effort, in a dark gym or bright sun, by tired people, roughly 8 % of
 whom (among men) have a colour vision deficiency. Proportional digits in a live pace readout shift
 on every update and are measurably harder to read while moving.
+
+*Enforced:* a test computes every token's contrast against every background of its theme, with the floors in
+[07 §3](07-brand-and-ui.md); a component that shows a state takes the state, not a colour, and draws its icon, shape
+or label itself; and every numeric style in the token file carries tabular figures ([ADR-014](decisions/ADR-014.md)).
 
 ---
 

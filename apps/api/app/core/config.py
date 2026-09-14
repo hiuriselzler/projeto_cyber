@@ -36,6 +36,11 @@ KNOWN_DEVELOPMENT_SECRETS = frozenset(
 Environment = Literal["local", "test", "staging", "production"]
 DEVELOPMENT_ENVIRONMENTS = frozenset({"local", "test"})
 
+# 05 §5. `resend` is the provider, chosen on 2026-09-14 for the prototype's free tier. `folder`
+# writes messages into a git-ignored folder and `memory` keeps them for tests; neither boots a
+# deployed API.
+EmailTransport = Literal["folder", "memory", "resend"]
+
 
 class InsecureConfigurationError(RuntimeError):
     """Configuration that would run the API unsafely. Messages name settings, never their values."""
@@ -49,6 +54,14 @@ class Settings(BaseSettings):
     jwt_secret: SecretStr
     database_connect_attempts: int = Field(default=10, ge=1)
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
+    email_transport: EmailTransport = "folder"
+    email_folder: Path = REPO_ROOT / "apps" / "api" / ".mail"
+    resend_api_key: SecretStr | None = None
+    # Resend's shared test sender reaches only the Resend account owner's own address; real users
+    # need a verified domain here.
+    email_from: str = "CyberAthlete <onboarding@resend.dev>"
+    # Where links in emails point: the app's deep-link scheme, from apps/mobile/app.json.
+    app_link_base: str = "cyberathlete://"
 
 
 class MigrationSettings(BaseSettings):
@@ -72,6 +85,20 @@ def assert_settings_are_safe(settings: Settings, environ: Mapping[str, str] = os
     if settings.environment not in DEVELOPMENT_ENVIRONMENTS and "MIGRATION_DATABASE_URL" in environ:
         raise InsecureConfigurationError(
             "MIGRATION_DATABASE_URL must not be in a deployed API's environment (ADR-011)"
+        )
+    if settings.email_transport == "resend" and settings.resend_api_key is None:
+        raise InsecureConfigurationError(
+            "EMAIL_TRANSPORT is resend, but RESEND_API_KEY is not set (05 §5)"
+        )
+    if (
+        settings.environment not in DEVELOPMENT_ENVIRONMENTS
+        and settings.email_transport != "resend"
+    ):
+        # A deployed API that cannot send a reset link has locked out anyone who forgets a
+        # password. Refusing to start says so on day one instead.
+        raise InsecureConfigurationError(
+            "a deployed API needs an email provider: set EMAIL_TRANSPORT=resend and RESEND_API_KEY "
+            "(05 §5)"
         )
 
 

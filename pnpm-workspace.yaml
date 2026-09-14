@@ -5,10 +5,13 @@ packages:
 # Refuse to install on a Node or pnpm outside the pins in package.json.
 engineStrict: true
 
-# pnpm runs no dependency's install script unless it is listed here. Both fetch a native binary:
-# esbuild for drizzle-kit, unrs-resolver for the import resolver in eslint-config-expo.
+# pnpm runs no dependency's install script unless it is listed here. esbuild (drizzle-kit) and
+# unrs-resolver (the import resolver in eslint-config-expo) each fetch a native binary.
+# react-native-libsodium's only script unpacks the prebuilt libsodium shipped inside its own package
+# (`tar -xzf libsodium/build.tgz`), which the Android build links; it downloads nothing (task 003).
 allowBuilds:
   esbuild: true
+  react-native-libsodium: true
   unrs-resolver: true
 
 # CI fails on any high or critical audit finding (04 §10), except these, each accepted with its reason.
@@ -42,3 +45,10 @@ minimumReleaseAgeExclude:
   - expo@57.0.22
   - expo-secure-store@57.0.4
   - expo-sqlite@57.0.3
+  - '@formatjs/icu-messageformat-parser@3.5.18'
+  - '@formatjs/intl-getcanonicallocales@3.2.12'
+  - '@formatjs/intl-locale@5.3.11'
+  - '@formatjs/intl-localematcher@0.9.0'
+  - '@formatjs/intl-pluralrules@6.3.15'
+  - '@formatjs/intl-supportedvaluesof@2.3.10'
+  - intl-messageformat@11.2.15

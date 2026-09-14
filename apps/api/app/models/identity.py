@@ -77,6 +77,17 @@ class RefreshToken(OwnedByUser, Base):
     replaced_by: Mapped[uuid.UUID | None]
 
 
+class RateLimitBucket(Base):
+    """One rate-limit window (ADR-015). Nobody's data: an HMAC of the subject, the window, the
+    count."""
+
+    __tablename__ = "rate_limit_buckets"
+
+    bucket_key: Mapped[str] = mapped_column(primary_key=True)
+    window_start: Mapped[datetime] = mapped_column(primary_key=True)
+    hits: Mapped[int]
+
+
 class Subscription(SyncColumns, Base):
     __tablename__ = "subscriptions"
 

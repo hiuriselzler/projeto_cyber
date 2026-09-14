@@ -15,13 +15,13 @@ when its own criteria are ticked. Tick the box here only then.
 
 | | |
 |---|---|
-| **Phase** | **Task 001 complete; task 002 built** — every criterion proven by tests that pass locally; it closes when CI is green on its pull request. Everything that needs administrator rights — Docker, the device, the ADR-004 spike — is [task 017](tasks/017-local-toolchain-device-spike.md), which must finish before task 004 |
+| **Phase** | **Tasks 001, 002 and 011 complete; task 003 next.** The schema exists in Postgres and SQLite, seeded and enforcing itself, and the design system exists in `src/ui/`, token-driven and tested in both languages, both unit systems and both themes. Everything that needs administrator rights — Docker, the device, the ADR-004 spike — is [task 017](tasks/017-local-toolchain-device-spike.md), which must finish before task 004 |
 | **Repository** | Private GitHub repository `hiuriselzler/projeto_cyber`. `main` holds the documentation and task 001's merged work (pull request #1); each further piece arrives by pull request, with CI green before merge |
-| **Docs** | 44 files, internally consistent, all cross-links resolving |
-| **Decisions** | 13 ADRs. Twelve accepted outright; [ADR-004](decisions/ADR-004.md) accepted *conditionally* |
-| **Tasks** | 15 for v1 (Android), 2 after launch — iOS platform, Coach tier. **1 complete** (001) |
+| **Docs** | 49 files, internally consistent, all cross-links resolving |
+| **Decisions** | 15 ADRs. Fourteen accepted outright; [ADR-004](decisions/ADR-004.md) accepted *conditionally* |
+| **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **3 complete** (001, 002, 011) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | Open task 002's pull request and let CI prove it; have a native speaker who trains review the Portuguese exercise names. Then 011 and 003; then [task 017](tasks/017-local-toolchain-device-spike.md) once administrator rights are available, before task 004 |
+| **Next action** | [Task 003](tasks/003-authentication.md) — built; closed once CI passes on its pull request. Then [task 019](tasks/019-account-deletion.md), account deletion, and [task 017](tasks/017-local-toolchain-device-spike.md) once administrator rights are available, before task 004. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
 
 ### The one decision still genuinely open
 
@@ -83,10 +83,10 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
 - [x] Prove the gates: write a `sqlalchemy` import into `domain/` and watch CI fail; **every rule has a
       known-bad fixture that CI proves is caught**
 
-#### ☐ 002 — Database and schema · **L** · depends: 001 · blocks: 003–009
+#### ☑ 002 — Database and schema · **L** · depends: 001 · blocks: 003–009
 > **The last chance to change the schema freely.** Schema churn is far cheaper before there is data.
-> **Built (2026-09-12):** every criterion in the task file is proven by a test that passes locally. The
-> box is ticked once CI is green on its pull request.
+> **Complete (2026-09-12).** Every criterion in the task file is proven by a test, and CI was green on
+> all four jobs of pull request #5. The two device checks remain in task 017.
 - [x] Postgres: all of [03](03-database-schema.md) in one pass, cardio and planning tables included
 - [x] Enums → users/auth → catalog → routines → workouts/sets → planner → **`gamification_tracks`**
       → **`sport_profiles`** → cardio → cardio plans → remaining gamification tables
@@ -109,26 +109,32 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
 - [x] **Schema-comparison script**: Alembic vs Drizzle names, *plus* [§11](03-database-schema.md)
       enforcement. Prove it fails when `‹sync›` is misplaced
 
-#### ☐ 011 — Brand assets and design system · **M** · depends: 001
+#### ☑ 011 — Brand assets and design system · **L** · depends: 001
 > Numbered late, built third. Task 004 builds the set row, and it should come out of a system
-> rather than be retrofitted into one.
-- [ ] The octopus mark on a strict radial grid, four reduction levels, **black on white first**
-- [ ] **Tone gate before anything else** — analytical, not cute. If it would work on a cereal box, restart
-- [ ] Token source (INV-23), both themes end to end, **lint rule banning literal hex / size / duration**
-- [ ] The set row · the custom numeric keypad · RIR chips · metric tile · cycle cell · sheet · chip
-- [ ] **Track row** — the whole Progress screen is a list of these; works at 6 rows and at 15
-- [ ] **i18n wired, literal-string lint rule, catalog key-parity check in CI**; every component
-      tested in pt-BR and in pounds (INV-27)
-- [ ] Damped house easing, **no spring bounce**; reduce-motion honoured
-- [ ] Contrast: body 4.5:1, UI 3:1, **workout numerals 7:1**; tabular figures everywhere
-- [ ] **One symmetric mark, never personalised.** No per-user octopus is built at all ([07 §2](07-brand-and-ui.md))
+> rather than be retrofitted into one. The mark itself moved to [task 018](tasks/018-brand-mark.md).
+> **Complete (2026-09-14).** Every criterion in the task file is proven by a test, a lint fixture or a script, each
+> run in CI on the task's pull request. The device checks — 200 % font scale, the keypad beside the row, plurals under
+> Hermes, TalkBack — are task 017's.
+- [x] **Every slot the mark fills holds a plainly marked placeholder** — icon, splash, notification icon, favicon —
+      rendered by a step CI runs again; never a stand-in octopus
+- [x] Token file `src/ui/tokens.ts` (INV-23), both themes end to end with a device-only override, **lint banning
+      literal colour, size and duration, and every spring** ([ADR-014](decisions/ADR-014.md))
+- [x] The set row · the custom numeric keypad · RIR chips · metric tile · cycle cell · sheet · chip
+- [x] **Track row** — the whole Progress screen is a list of these; works at 6 rows and at 15
+- [x] **i18n wired, literal-string lint rule, catalog key- and argument-parity check in CI**; every component
+      tested in both languages and both unit systems, in both themes (INV-27)
+- [x] Damped house easing `cubic-bezier(0.18, 0, 0.06, 1)`, **no spring**; reduce-motion gives 120 ms cross-fades
+- [x] Contrast **proven by a test over the corrected palette**: body 4.5:1, UI 3:1, **workout numerals 7:1**;
+      tabular figures in every numeric style
 
 #### ☐ 003 — Authentication and authorization · **L** · depends: 002 · blocks: 006, 012, 014
 > The authorization half matters more than the authentication half.
-- [ ] Auth endpoints + **v1 account lifecycle**: password reset, enforced email verification,
-      email change, session list, security notification emails
-- [ ] argon2id ~250 ms; breach-list check; **constant-time login** whether or not the email exists
-- [ ] Access JWT 15 min with no PII; opaque refresh token 60 days, rotated, **with reuse detection**
+- [ ] Auth endpoints + **v1 account lifecycle**: password reset and change, enforced email verification,
+      email change, session list, security notification emails — every one in both languages
+- [ ] argon2id ~250 ms; the bundled breach list; **constant-time login** whether or not the email exists
+- [ ] Access JWT 15 min with no PII; opaque refresh token 60 days, rotated, **with reuse detection** and a
+      60-second grace window for a lost response ([ADR-015](decisions/ADR-015.md))
+- [ ] Rate limits per IP and per account, **counted in Postgres** so they hold across instances (ADR-015)
 - [ ] **Base repository whose every method requires `user_id`, as a type error not a runtime one**
 - [ ] `SET LOCAL app.user_id` per transaction so RLS engages; **404 never 403** for someone else's row
 - [ ] **⚠ Privacy key lifecycle ([ADR-007](decisions/ADR-007.md))** — generate at registration, wrap
@@ -142,6 +148,13 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
 - [ ] **Account flows in `src/account/`** — no screen imports `src/sync/` or `src/crypto/`
       ([ADR-012](decisions/ADR-012.md))
 - [ ] **Prove RLS**: break the repository scope deliberately and assert 0 rows come back (NFR-9)
+
+#### ☐ 019 — Account deletion · **M** · depends: 003 · blocks: the store listing
+> Added 2026-09-14, closing open question 11. Needs no administrator rights, so it goes ahead while task 017 waits.
+- [ ] Deletion requested with the password, cancellable for 7 days, announced by email in the user's language
+- [ ] **The sweep deletes every row of the account, inside its own scope** — a test over 03 §11 covers tables added later
+- [ ] The web deletion page Google Play links to, answering identically for any address
+- [ ] One scheduled command for the deletion sweep and the retention purges, documented in 06
 
 #### ☐ 017 — Local toolchain, device and core spike · **L** · depends: 001, administrator rights · blocks: 004 onward
 > Everything that needs administrator rights on the development machine, and every check only a phone
@@ -320,6 +333,22 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
 
 ### Milestone 6 — Ready for strangers
 
+#### ☐ 020 — Data export · **M** · depends: 006, 007, 013, 014 · blocks: the store listing
+> Added 2026-09-14, closing open question 11. Built late so it holds every kind of data the app keeps.
+- [ ] Needs a verified email, never an entitlement — **an expired account can export** (INV-26)
+- [ ] **Every user-owned table in the archive**, SI units in field names, a GPX file per GPS activity
+- [ ] A signed, expiring link to object storage, and an "export ready" email in the user's language
+- [ ] Object storage chosen at the start of the task, free tier first
+
+#### ☐ 018 — The mark · **M** · made by the project owner, by hand · blocks: the store listing
+> Split from 011 on 2026-09-12. Outside the build sequence: task 011 leaves a placeholder in every slot, so nothing
+> waits on the drawing but the launch.
+- [ ] **The octopus drawn as a 19th-century engraved plate** — a drawn creature, never a logo shape ([07 §1](07-brand-and-ui.md))
+- [ ] **Tone gate before anything else** — analytical, not cute. If it would work on a cereal box, restart
+- [ ] 07's ladder by rendered size, **black on white first**; the glyph recognisable at 16 px
+- [ ] Every placeholder replaced; the wordmark; the store icon and feature graphic
+- [ ] **One canonical drawing, never personalised.** No per-user octopus is built at all ([07 §2](07-brand-and-ui.md))
+
 #### ☐ 012 — Onboarding and first run · **M** · depends: 003, 004, 011
 > **Last, deliberately** — you cannot onboard someone into features that do not exist.
 - [ ] Ask only units, what they train, and optionally experience. **Not a seven-screen wizard**
@@ -366,15 +395,21 @@ These are real blockers scattered across the docs. Nothing will surface them at 
 - [ ] **Everything user-facing exists in both languages** ([ADR-008](decisions/ADR-008.md)) — ~200
       exercise names, every explainer, every email template, both store listings, the paywall and
       the subscription disclosure. Content work on the critical path, not a polish pass
-- [ ] **Portuguese terminology reviewed by a native speaker who trains** ([07 §9](07-brand-and-ui.md))
+- [ ] **Portuguese terminology reviewed by a native speaker who trains** ([07 §9](07-brand-and-ui.md)) — an AI
+      pre-check was run on 2026-09-14; this review is still the bar before strangers
 - [ ] **Google Play's reduced-fee tier — enrol *before* launch.** 15 % vs 30 %, and **not
       retroactive**. (The Apple Small Business Program has the same rule and moves to task 016.)
 - [ ] Google Play Console registration ($25 once). (Apple Developer Program: task 016.)
 - [ ] Storage region chosen and stated in the privacy policy
-- [ ] Transactional email provider live — **on the critical path for task 003**, not later
+- [ ] Transactional email live — **Resend**, chosen for the prototype (2026-09-14). Before real users: a verified
+      sending domain, the key in every deployed environment, and the free tier's limits checked against volume
+- [ ] **Account deletion and data export (FR-1.4)** — [task 019](tasks/019-account-deletion.md) and
+      [task 020](tasks/020-data-export.md), the web deletion page Google Play requires included
 - [ ] Google Maps API key restricted by package name + signing certificate
 - [ ] **ADR-004's four conditions in place before the first user who is not the developer** — under
       option B; tasks 005 and 006 ([ADR-004](decisions/ADR-004.md))
+- [ ] **The mark drawn, with no placeholder left in a store build** ([task 018](tasks/018-brand-mark.md)) — the render
+      step reports every level still holding one
 
 ### Operations, from first deploy
 - [ ] Staging environment, for rehearsing migrations against realistic data
@@ -413,6 +448,7 @@ None are blocking; each has a stated assumption that will be built unless correc
 | 6 | How many users at once ([NFR-12](01-business-requirements.md)), and the load test that proves it | Design goal only: stateless API and pooling-safe database access from the first commit | Before launch |
 | 7 | The Android application id. **Permanent after the first Play Store upload** | `com.cyberathlete.app`, a placeholder in `apps/mobile/app.json` | Before the first Play upload |
 | 8 | Android backups: the generated manifest has `allowBackup="true"`, so local data — raw GPS points included — would reach device backups | Unchanged for now | Before [task 007](tasks/007-cardio-recording.md) |
+| 9 | What the RIR `5+` chip stores: 5, or a choice from 5 to 10 (the schema allows 0–10, INV-03) | Nothing yet — task 011's chips take their values as a prop and store nothing | [Task 004](tasks/004-exercise-catalog-and-logging.md) |
 
 **Closed 2026-09-09** — target RIR granularity (now `rir_mode` on the progression rule);
 cardio intensity (both zones and pace ranges); bodyweight volume (summed); and the octopus
@@ -422,6 +458,8 @@ dashboard (dropped — the mark is brand-only). See the decision log.
 
 **Closed 2026-09-11** — the founding-price window opens once, at the Android launch, and **does not
 reopen for iOS** ([09 §2](09-business-model.md)).
+
+**Closed 2026-09-14** — the email provider (Resend, for the prototype), and who builds FR-1.4 (tasks 019 and 020). See the decision log.
 
 ---
 
@@ -442,6 +480,8 @@ reopen for iOS** ([09 §2](09-business-model.md)).
 | 2026-09-11 | [ADR-011](decisions/ADR-011.md) Database roles — the API connects as a role that cannot skip RLS; unscoped reads are allowlisted functions |
 | 2026-09-11 | [ADR-012](decisions/ADR-012.md) Mobile boundaries before bootstrap — an account layer, one importer of the core, INV-10's gates |
 | 2026-09-12 | [ADR-013](decisions/ADR-013.md) The schema enforces itself — `user_id` on every child row, `NO ACTION` for exercises, the INV-06 marker carried by the row, INV-21's key with no NULL hole |
+| 2026-09-12 | [ADR-014](decisions/ADR-014.md) The design system enforces itself — tokens, contrast, motion and strings by gate |
+| 2026-09-14 | [ADR-015](decisions/ADR-015.md) Account security in practice — rate limits in Postgres, a 60-second rotation grace window, a bundled breach list, registration's `409` |
 
 ### 2026-09-08 — documentation reconciliation pass
 
@@ -851,3 +891,149 @@ Rather than hold every later task behind that, the work was split.
   test-only oracle checked against the shared fixture — not domain code.
 - **Also:** the models are checked against the migrated schema by a drift test; task 001's throwaway
   `launches` table is gone, and the diagnostics screen shows the migration count and the table count (36).
+
+### 2026-09-12 — task 011 planning: the mark as 07 draws it, and a palette that passes its own rule
+
+- **The mark is a drawn creature, as [07 §1](07-brand-and-ui.md) says:** a 19th-century engraved plate, not
+  a geometric abstraction. Task 011 and this file had drifted to "a strict radial grid", "one slot-pupil
+  eye" and "one symmetric mark" — the logo shape 07 bans. Both are corrected.
+- **The project owner draws it, by hand, later.** Task 011 fills every slot the mark occupies with a
+  plainly marked placeholder, never a stand-in octopus, which would become the mark by default. Its
+  acceptance criteria are split in two: the system's, and the mark's, ticked once the drawing exists.
+- **The reduction ladder is 07's, stated by rendered size** — dp on a device, px on the web. Task 011's
+  version had no full drawing, and split 16–32 px from the favicon with no different form between them.
+  One use moved: **the launcher icon is silhouette + eyes**, not the reduced drawing, because it is shown
+  about 48 dp across, where engraved hatching is noise. The Play Store icon matches it, the splash takes
+  the reduced drawing, and the notification icon and favicon take the glyph.
+- **The palette failed INV-24 as written**, and 07 §3 is corrected — by computation, not by eye. Dark
+  `text-muted` was 3.50:1 on `bg-elevated`, where the set row's previous-performance line sits; `danger`,
+  `ride` and `row` could not be text on an active row; `border-strong` could not mark a control; and light
+  mode lacked five tokens. Each failing colour moved in lightness only, hue and chroma kept (OKLCH), to
+  clear its floor by 0.1; nothing that passed changed, and no seeded hue token was renamed. Two tokens
+  are new, `text-on-accent` and `shadow-elevated`. The rule is now exact: every token against every
+  background of its theme, `text-primary` the only colour for a live numeral, and a selected state always
+  a fill, an edge and a label.
+- **Still to settle before task 011's code:** where the theme override is stored; spacing, radii and the
+  easing curve, which 07 does not yet give; the debug diagnostics screen under the literal-string rule;
+  and ADR-014, because INV-23 and INV-24 have no *Enforced* line. All settled the next day — next entry.
+
+### 2026-09-13 — task 011: the open questions settled, and the design system built
+
+- **[ADR-014](decisions/ADR-014.md)** — the design system enforces itself. INV-23 and INV-24 gain *Enforced* lines. The
+  token file is `apps/mobile/src/ui/tokens.ts`; lint fences `design-tokens` (literal colours, type sizes, durations)
+  and `no-bounce` (every spring API, with no exception); INV-27's literal-string rule exempts
+  `src/features/diagnostics/` by name, and nothing else. Exemptions are lint sub-scopes, and the fixture check proves
+  each lifts only its own rule.
+- **The mark is [task 018](tasks/018-brand-mark.md)**, drawn by the project owner, outside the build sequence and
+  blocking only the store listing. Task 011 built its slots: SVG sources holding a crossed-box placeholder, a render
+  step (`pnpm render:brand`) that CI re-runs and diffs, and a `Mark` component drawing the same sources.
+- **07 gained the values it lacked:** spacing on a 4 dp base; radii 4, 8 and 12; sizes (48 and 56 dp targets, 24 dp
+  icons, 1 and 2 dp edges); a face for each type style; and the house easing, `cubic-bezier(0.18, 0, 0.06, 1)` — a
+  fit to a critically damped step response, within 2.6 % and without overshoot. Under reduce motion, 120 ms
+  cross-fades and a static emphasis.
+- **The theme override lives on the device**, in expo-sqlite's key-value store, never synced. Language and units come
+  from the device (ADR-008's rule) until task 003 gives the account `users.locale` and `users.unit_system`.
+- **Fonts:** Inter 4.1's static cuts — Regular, Medium, SemiBold and Display SemiBold — bundled by the `expo-font`
+  plugin. The release publishes no checksum: the zip came from `rsms/inter`'s v4.1 GitHub release over HTTPS, with
+  SHA-256 `9883fdd4a49d4fb66bd8177ba6625ef9a64aa45899767dde3d36aa425756b11e`. Committed files: Inter-Regular
+  `40d692fc…0c82`, Inter-Medium `97ad806f…a872`, Inter-SemiBold `78a843fa…cde3`, InterDisplay-SemiBold
+  `0310d7a3…4e02`, LICENSE `262481e8…935a`.
+- **Numbers are formatted by hand for the two locales, not through `Intl.NumberFormat`**, so a test under Node and
+  the app under Hermes print the same characters. ICU plurals load the `@formatjs` polyfills Hermes needs, only where
+  the engine lacks them — proven in Jest by deleting `Intl.PluralRules`; on a phone, in task 017.
+- **The catalog check is a script, `pnpm check:catalogs`** — keys, each message's ICU arguments, and every key the app
+  names literally. It is not a Jest test because the app's TypeScript config deliberately has no Node types.
+- **The Portuguese interface strings are a draft**, like the exercise names, for the native-speaker review. The
+  spoken unit names in English use US spelling; they are read aloud, never shown.
+- **Found while building:** the React Compiler's lint rules reject reading a ref during render and setting state
+  synchronously in an effect, so animated values live in state; and a literal-string rule that searched a whole prop
+  expression flagged the catalog keys inside `t('…')` — it now looks only at strings shown as they stand.
+- **pnpm added release-age exclusions on its own**, in `pnpm-workspace.yaml`: `intl-messageformat` 11.2.15 and six
+  `@formatjs` packages it and the polyfills pull in were newer than pnpm's minimum release age when installed.
+  Recorded, not yet decided — the alternative is pinning versions old enough to pass the check.
+- **Components are tested in all eight combinations** of language, unit system and theme. The first matrix paired
+  English with kilograms and Portuguese with pounds, which crossed both axes but never rendered the pairs users
+  actually see — Portuguese with kilograms, English with pounds. Task 011's criterion was reworded to match.
+
+### 2026-09-14 — task 003 planning: four mechanisms 04 left open, and two features nobody owned
+
+- **[ADR-015](decisions/ADR-015.md)**, from planning the task against [04](04-security-and-auth.md). `invariants.md` is
+  unchanged.
+  - **Rate limits are counted in Postgres**, in `rate_limit_buckets`: fixed windows, one atomic upsert per hit, the IP
+    and the email held only as an HMAC. No Redis — a second stateful service for a few counters. The table holds
+    nobody's data, so it has no owner and no row-level security, and [ADR-011](decisions/ADR-011.md) gains a note
+    saying so rather than an allowlist entry.
+  - **Refresh rotation gets a 60-second grace window.** Strict reuse detection signed out anyone whose refresh response
+    was lost — ordinary in a gym — and told them their token was stolen. A replaced token is accepted once more only
+    while its successor is unused and under 60 s old; theft is still caught at the legitimate device's next refresh.
+  - **The breach list is the NCSC's top 100 000**, cut to the 9 248 distinct entries of 10 or more characters and stored as
+    SHA-1 digests. 04 §2's "k-anonymity offline set" named two different things. The NCSC's own URL now serves a
+    "site currently unavailable" page, so the source is SecLists' mirror (MIT),
+    `Passwords/Common-Credentials/100k-most-used-passwords-NCSC.txt`: 99 840 lines, SHA-256
+    `c2e5696882c603b76bb67a47ee970897e5a76fc4c3f5547abe3d0ca340c576e0`.
+  - **Registration discloses an existing account with `409`**, behind its rate limit: an enumeration-safe registration
+    could not hand a new user a session at once, which the offline first set needs.
+- **Task 003 corrected before building.** It had no password-change endpoint, though the privacy key's re-wrap needs
+  one; now `POST /auth/password/change`, plus `POST /auth/email/verification` to send a link again. Routes sit under
+  `/api/v1` as [02 §5](02-architecture.md) says. Verification links last 24 hours. The reuse notification, required by
+  04 §3, joins the task's email list. **A password change leaves other devices signed in** — signing them out would
+  strand an offline device's queued workouts.
+- **The first owned routes arrive here:** a minimal `POST` and `GET /workouts/{id}`, so "404 for someone else's workout"
+  and "an unverified user can log a workout" test a real route. Task 004 extends them.
+- **Found: the data export and account deletion (FR-1.4) belong to no task.** Both are legal and store requirements.
+  Added to the launch blockers as open question 11; task 003 builds only the verified-email gate, proven on a route its
+  test mounts, and its criterion is reworded to say so.
+- **The email provider is still open** (question 10). Task 003 sends through one interface — in memory in tests, a
+  git-ignored folder locally — and a deployed API refuses to boot without a provider. Email messages take plain
+  arguments only, because the API carries no ICU plural engine.
+- **The login hash's cost is recorded once**, in `packages/shared/security/password-kdf.json`, so a test on each side
+  holds the client's wrapping KDF at or above it (ADR-007).
+- Fixed in passing: ADR-014 was missing from the decision-log table above.
+- **Branching:** task 011's pull request is not merged yet, and task 003 builds on its design system and i18n, so
+  `feat/task-003-authentication` starts from task 011's branch.
+
+### 2026-09-14 — task 003 built: accounts, sessions and the privacy key, on both sides
+
+- **API:** seventeen routes under `/api/v1` — the auth lifecycle, and a minimal workouts read and write. Every lookup
+  before a user is known goes through ADR-011's existing functions; no new one was needed. argon2id runs off the event
+  loop; migration `0003` adds `rate_limit_buckets`; a retention service purges revoked tokens and old windows, not yet
+  scheduled. A deployed API refuses to boot until an email provider exists (open question 10).
+- **Mobile:** `src/crypto` wraps, unwraps and re-wraps the privacy key on libsodium; `src/sync` keeps the refresh token
+  in secure storage and the access token in memory, with single-flight refresh; `src/account` holds the flows and
+  restores a session from the device with no network; `src/ui` gains a text field and a button; the account screens
+  and their routes — the email links included — are in `src/features/account`. Language and units follow the account
+  once someone signs in.
+- **Proven locally:** 279 API tests, integration included, against the local Postgres — the constant-time login with
+  the production hasher among them; the schema check (39 tables); mypy, ruff and the five import contracts; 427 Jest
+  tests; ESLint and all 47 lint fixtures; both catalogs at 445 messages. **Task 003's criteria are ticked once CI
+  passes on its pull request**, as for 002 and 011.
+- **Found while building:**
+  - FastAPI 0.141 keeps included routers lazily, so `app.routes` no longer lists their routes; the route-table test
+    reads `iter_route_contexts`.
+  - `react-native-libsodium` has one install script, which unpacks the prebuilt libsodium shipped in its own package
+    and downloads nothing. Allowed in `pnpm-workspace.yaml`, with the reason beside it.
+  - Jest maps the native binding onto `libsodium-wrappers-sumo`, so the privacy-key tests run the real algorithms — a
+    64 MiB argon2id takes a second or two there.
+  - The email-sending routes get their own limit, and task 017's re-wrap criterion says "password change"; both, with
+    the reset-request timing and the 15-minute access token, are in task 003's *Settled while building*.
+- **The Portuguese account screens and emails are a draft**, for the native-speaker review with the rest.
+
+### 2026-09-14 — three decisions: Resend, two tasks for FR-1.4, an AI pre-check of the Portuguese
+
+- **Email: Resend**, for its free tier. The prototype is to cost nothing at first. Resend is one adapter behind the
+  sender interface, so Postmark or SES can replace it without touching a flow. A deployed API now boots only with
+  `EMAIL_TRANSPORT=resend` and `RESEND_API_KEY`. Resend's shared test sender reaches only the account owner's own
+  address, so a verified domain comes before real users ([05 §5](05-integrations.md)).
+- **FR-1.4 is two tasks.** [Task 019](tasks/019-account-deletion.md), account deletion, needs only task 003 and goes next,
+  with the web deletion page Google Play requires and the project's first scheduled job.
+  [Task 020](tasks/020-data-export.md), data export, comes after 013 and 014, so it holds every kind of data. Each carries
+  its open questions. v1 now has 18 tasks.
+- **Portuguese: an AI pre-check**, run over both catalogs against 07 §9's glossary and Brazilian gym usage
+  ([07 §9](07-brand-and-ui.md)). Fixed: *Rosca direta com halteres* (it is not alternated), *Rosca inclinada com
+  halteres*, *Voador inverso* to match *Voador*, *Paralelas na máquina*, *Ponte glútea*, *Slam com medicine ball* (no
+  longer confusable with *Arremesso*, the clean and jerk), nouns for the sled and bear-crawl names, *Válida* for a
+  working set as the glossary says, "mês do calendário" in the two monthly achievements, and four account messages —
+  one of them gendered, now neutral. Found and left open: the gamification track and the sport *hike* are both
+  *Trilha*. **The native-speaker review stays a launch blocker**; the pre-check does not replace it.
+- 07 §9's glossary gains *aparelho* (a device, never a gym machine), *entrar* and *sair*, *zona de privacidade* and
+  *carga*.

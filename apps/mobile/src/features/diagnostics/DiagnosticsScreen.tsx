@@ -10,12 +10,20 @@ import {
 } from '@/account/diagnostics';
 import { EXPECTED_TABLES, readLocalDatabaseState } from '@/db/diagnostics';
 import { describePlatform } from '@/platform';
+import { SegmentedControl, useTheme, type SegmentedOption, type ThemePreference } from '@/ui';
 
 import { useDiagnosticsStore } from './store';
 
+/** Developer-facing, so written out rather than translated (ADR-014). */
+const THEME_OPTIONS: readonly SegmentedOption<ThemePreference>[] = [
+  { value: 'system', label: 'system' },
+  { value: 'light', label: 'light' },
+  { value: 'dark', label: 'dark' },
+];
+
 /**
- * Task 001's on-device checks. Debug builds only: developer-facing, never shown to a user, so its text
- * is not translated (INV-27 governs user-facing strings).
+ * Task 001's on-device checks, and task 011's theme override. Debug builds only: developer-facing, never shown to a
+ * user, so its text is not translated (INV-27 governs user-facing strings; ADR-014 exempts this folder by name).
  */
 export function DiagnosticsScreen() {
   const readiness = useQuery({ queryKey: ['diagnostics', 'readiness'], queryFn: checkServerReadiness });
@@ -31,6 +39,7 @@ export function DiagnosticsScreen() {
   const taps = useDiagnosticsStore((state) => state.taps);
   const tap = useDiagnosticsStore((state) => state.tap);
   const platform = describePlatform();
+  const theme = useTheme();
 
   return (
     <ScrollView contentContainerStyle={styles.screen}>
@@ -76,6 +85,16 @@ export function DiagnosticsScreen() {
 
       <Check title="Zustand">{`taps: ${taps}`}</Check>
       <Button title="Tap" onPress={tap} />
+
+      <Check title="Theme override, stored on the device (task 011; relaunch: the choice must survive)">
+        {`preference: ${theme.preference} · showing: ${theme.scheme}`}
+      </Check>
+      <SegmentedControl
+        accessibilityLabel="Theme"
+        options={THEME_OPTIONS}
+        value={theme.preference}
+        onChange={theme.setPreference}
+      />
     </ScrollView>
   );
 }

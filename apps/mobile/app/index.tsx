@@ -1,5 +1,7 @@
 import type { ComponentType } from 'react';
 
+import { SessionGate } from '@/features/account';
+
 // The diagnostics screen belongs to debug builds only. A release bundle has __DEV__ replaced by false,
 // which makes this branch dead code, so the require behind it is not bundled.
 function chooseHomeScreen(): ComponentType {
@@ -16,5 +18,9 @@ function chooseHomeScreen(): ComponentType {
 const HomeScreen = chooseHomeScreen();
 
 export default function Index() {
-  return <HomeScreen />;
+  return (
+    <SessionGate>
+      <HomeScreen />
+    </SessionGate>
+  );
 }

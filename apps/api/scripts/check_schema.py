@@ -109,6 +109,8 @@ CLASSIFICATION: Mapping[str, Classified] = {
     "refresh_tokens": Classified(LOCAL_ONLY, SERVER, owner="user_id"),
     "password_reset_tokens": Classified(LOCAL_ONLY, SERVER, owner="user_id"),
     "email_verification_tokens": Classified(LOCAL_ONLY, SERVER, owner="user_id"),
+    # Holds nobody's data, so no owner and no row-level security (ADR-015).
+    "rate_limit_buckets": Classified(LOCAL_ONLY, SERVER),
     "raw_gps_points": Classified(LOCAL_ONLY, DEVICE),
     "outbox": Classified(LOCAL_ONLY, DEVICE),
     "sync_state": Classified(LOCAL_ONLY, DEVICE),

@@ -107,6 +107,17 @@ refresh_tokens (
 )
 INDEX (user_id, device_id) WHERE revoked_at IS NULL
 UNIQUE (token_hash)
+-- Rotation sets revoked_at as well as replaced_by, so the retention purge (04 §7) sweeps replaced
+-- tokens too. A 60-second grace window separates a lost response from theft (ADR-015).
+
+rate_limit_buckets (             -- 04 §5, ADR-015. Holds nobody's data: no owner, no RLS, no ‹sync›
+  bucket_key   text NOT NULL,    -- '<rule>:<ip|account>:<HMAC-SHA256 of the subject>' — never an
+                                 -- address or an email in the clear
+  window_start timestamptz NOT NULL,
+  hits         integer NOT NULL CHECK (hits > 0),
+  PRIMARY KEY (bucket_key, window_start)
+)
+INDEX (window_start)             -- windows older than a day are purged
 
 subscriptions (                -- 09-business-model.md, ADR-006
   user_id uuid PK → users,
@@ -831,7 +842,8 @@ one.
 Same tables, with these differences:
 
 1. **Omitted:** the three server-only auth tables — `refresh_tokens` (tokens live in the OS keychain,
-   04 §3), `password_reset_tokens` and `email_verification_tokens` — and **both derived
+   04 §3), `password_reset_tokens` and `email_verification_tokens` — the server's
+   `rate_limit_buckets` ([ADR-015](decisions/ADR-015.md)), and **both derived
    caches** — `personal_records` (recomputed from local `set_logs`) and `user_track_progress`
    (folded from local `xp_awards`). Both ledgers sync, so the device can always rebuild the
    numbers itself; shipping the folded answer as well would only give it something to disagree
@@ -951,7 +963,8 @@ decides whether a table has `‹sync›`, never whether it has an owner.
 
 **Local-only** — `raw_gps_points`, `outbox`, `sync_state` (§8), plus the server-only
 `refresh_tokens`, `password_reset_tokens` and `email_verification_tokens`, which are auth state
-rather than user data and never sync anywhere.
+rather than user data and never sync anywhere, and `rate_limit_buckets`, which holds nobody's data at
+all and so has no owner and no row-level security ([ADR-015](decisions/ADR-015.md)).
 
 ### The carve-out that makes plan data different
 

@@ -85,18 +85,26 @@ stroke.
 
 A detailed drawing does not survive to 16 px. Pretending one asset does everything is how brands
 end up with an illegible app icon, so the ladder is explicit about where the drawing stops and a
-derived mark begins:
+derived mark begins.
 
-| Size / use | Form |
-|---|---|
-| Splash, marketing, about screen, print | **The full drawing.** Engraved detail, full anatomy |
-| ≥ 128 px — app icon, headers | **Reduced drawing.** Same creature, same pose, fewer marks: contour and essential hatching only |
-| 32–128 px | **Silhouette + eye.** Mantle and arm mass as one form, with the slot-pupil eye retained — it is the most recognisable single element |
-| ≤ 32 px — favicon, notification | **Glyph.** Mantle silhouette with eight arm strokes. Derived from the drawing, not a different idea |
+**Sizes are rendered sizes** — dp on a device, px on the web — because legibility depends on how large
+the mark appears, not on the pixel count of the file. A launcher icon is exported at 432 px and still
+shown about 48 dp across, roughly 9 mm: at that size engraved hatching is noise.
+
+| Rendered size | Uses | Form |
+|---|---|---|
+| Full width, or print | About screen, marketing, print, the store feature graphic | **The full drawing.** Engraved detail, full anatomy |
+| ≥ 128 dp | Splash (Android 12 and later mask it to a circle under 200 dp), headers, social avatars | **Reduced drawing.** Same creature, same pose, fewer marks: contour and essential hatching only |
+| 32–128 dp | Launcher icon (48 dp), and the Play Store icon, kept identical to it | **Silhouette + eyes.** Mantle and arm mass as one form, with the slot-pupil eyes retained — they are the most recognisable single element |
+| ≤ 32 dp | Notification icon (24 dp), favicon (16 px) | **Glyph.** Mantle silhouette with eight arm strokes, in one flat colour. Derived from the drawing, not a different idea. Android draws a notification icon from its alpha channel alone, so the glyph must read as a pure silhouette |
 
 Each step is drawn *from* the one above, never redesigned. Do the full drawing first in black ink
 on white; every reduction is a subtraction from it. Colour is added last and never carries meaning
 alone (INV-24).
+
+**Who draws it: the project owner, by hand** (decided 2026-09-12). Until the drawing exists, every
+slot the mark fills — app icon, splash, notification icon, favicon — holds a plainly marked
+placeholder. Never a quick stand-in octopus: a stand-in that ships becomes the mark by default.
 
 ### Wordmark — **CyberAthlete**
 
@@ -180,6 +188,10 @@ under one training life. It says that about the *product*. It does not need to s
 between sets is hostile. Light mode is a genuine, fully-designed alternative for daylight
 outdoors — not an afterthought.
 
+**The app follows the system's light or dark setting**, and a manual override — system, light or dark — wins over
+it. The override is kept **on the device only** and never synced: a phone used in a dark gym and a tablet on a desk
+can reasonably disagree.
+
 ### Origin
 The accent is **hemocyanin blue** — octopus blood — with **copper** as its counterpart, the metal
 that makes hemocyanin blue in the first place. Cold blue for data and calm; warm copper for
@@ -192,32 +204,64 @@ effort and intensity. The whole palette descends from one true fact about the an
 | `bg-abyss` | `#0A0D12` | App background |
 | `bg-surface` | `#131820` | Cards, sheets |
 | `bg-elevated` | `#1C232E` | Modals, active rows |
-| `border-subtle` | `#232C38` | Hairlines |
-| `border-strong` | `#334252` | Emphasised edges |
-| `text-primary` | `#E8EDF2` | Headings, numbers |
-| `text-secondary` | `#9AA7B5` | Labels |
-| `text-muted` | `#6B7885` | Hints, disabled |
-| `accent` | `#4A9FD4` | Primary action, focus, links |
-| `accent-deep` | `#1F5C82` | Pressed, fills |
+| `border-subtle` | `#232C38` | Decorative hairlines — never the only edge of a control |
+| `border-strong` | `#5F7081` | The edge of a control: a field, an unselected chip |
+| `text-primary` | `#E8EDF2` | Headings, numbers — **the only colour for live-workout numerals** |
+| `text-secondary` | `#9AA7B5` | Labels, units |
+| `text-muted` | `#7F8C9A` | Hints, previous performance, disabled |
+| `text-on-accent` | `#0A0D12` | Text and icons on an `accent` fill |
+| `accent` | `#4A9FD4` | Primary action, focus, links, the edge of a selected control |
+| `accent-deep` | `#135278` | Selected and pressed fills; carries `text-primary` |
 | `copper` | `#C67B45` | Effort, intensity, strength track |
 | `success` | `#4FA88B` | PRs, targets met |
 | `warning` | `#D9A441` | Approaching a limit |
-| `danger` | `#C85A54` | Destructive, missed |
+| `danger` | `#D96962` | Destructive, missed |
+| `shadow-elevated` | none | Elevation is shown by `bg-elevated` alone |
 
 ### Light
+
+Every token exists in both themes, with the same use.
 
 | Token | Hex |
 |---|---|
 | `bg-abyss` | `#F4F6F8` |
 | `bg-surface` | `#FFFFFF` |
-| `bg-elevated` | `#FFFFFF` + shadow |
+| `bg-elevated` | `#FFFFFF`, raised by `shadow-elevated` |
 | `border-subtle` | `#DFE5EB` |
+| `border-strong` | `#7D8EA0` |
 | `text-primary` | `#0F1519` |
 | `text-secondary` | `#4A5764` |
+| `text-muted` | `#64717E` |
+| `text-on-accent` | `#FFFFFF` |
 | `accent` | `#1F6F9E` |
+| `accent-deep` | `#D0E8FA` — a tint here, because in both themes it carries `text-primary` |
 | `copper` | `#9A5B2C` |
 | `success` | `#2F7A62` |
+| `warning` | `#926702` |
 | `danger` | `#A63F3A` |
+| `shadow-elevated` | `#0F1519` at 12 % opacity, 2 dp down, 8 dp blur |
+
+### How the palette was corrected (2026-09-12)
+
+The first version of these tables failed its own contrast rule. Dark `text-muted` was 3.50:1 on
+`bg-elevated` — exactly where §6 puts the set row's previous-performance line. `danger`, `ride` and
+`row` could not be text on an active row. `border-strong`, at 1.5–1.9:1, could not mark a control, and
+light mode had no `text-muted`, `border-strong`, `accent-deep`, `warning` or shadow at all.
+
+Each failing colour was moved **in lightness only**, keeping hue and chroma (OKLCH), until it cleared
+its floor by 0.1 on the theme's hardest background. The missing light tokens were derived from their
+dark counterparts in the same way. Light `accent-deep` became a tint of `accent`, and `text-on-accent`
+was added because a primary button's label had no colour. **Nothing that already passed was changed.**
+
+| Token | Was | Now | Worst ratio, was → now |
+|---|---|---|---|
+| dark `text-muted` | `#6B7885` | `#7F8C9A` | 3.50 → 4.60 |
+| dark `danger` | `#C85A54` | `#D96962` | 3.80 → 4.62 |
+| dark `border-strong` | `#334252` | `#5F7081` | 1.54 → 3.10 |
+| dark `accent-deep` | `#1F5C82` | `#135278` | 6.12 → 7.11, under `text-primary` |
+| dark `ride` hue | `#8B7BD8` | `#8E7EDB` | 4.46 → 4.63 |
+| dark `row` hue | `#C25E7A` | `#D06B86` | 3.89 → 4.61 |
+| light `swim` hue | `#1E7F7F` | `#187B7B` | 4.41 → 4.66 |
 
 ### Discipline hues
 
@@ -232,10 +276,10 @@ recorded differently. The four **quality** tracks share the neutral accent at va
 |---|---|---|---|
 | Strength | `strength` | `#C67B45` | `#9A5B2C` |
 | Run | `run`, `treadmill`, `trail_run` | `#4A9FD4` | `#1F6F9E` |
-| Ride | `ride`, `indoor_bike` | `#8B7BD8` | `#5B4CA8` |
-| Swim | `swim_pool`, `open_water_swim` | `#3FB5B5` | `#1E7F7F` |
+| Ride | `ride`, `indoor_bike` | `#8E7EDB` | `#5B4CA8` |
+| Swim | `swim_pool`, `open_water_swim` | `#3FB5B5` | `#187B7B` |
 | Walk | `walk`, `hike` | `#7FA86B` | `#4C6B3E` |
-| Row | `row_indoor` | `#C25E7A` | `#8E3A52` |
+| Row | `row_indoor` | `#D06B86` | `#8E3A52` |
 | Quality | all four quality tracks, and the catch-all `other` sport | `#8494A4` → `#B8C4D0` by level | `#5A6874` → `#2C3742` |
 
 `gamification_tracks.hue_token` stores which of these a track uses, so the sharing is data rather
@@ -245,7 +289,17 @@ than a lookup in a component — and colour is never the only signal anyway (§N
 - **Colour is never the only signal.** Every state also carries an icon, a label, or a shape.
   Roughly 8 % of men have a colour vision deficiency, and this app is read mid-effort, in bad
   light, by tired people.
-- Body text ≥ 4.5:1, large text and UI ≥ 3:1. Live-workout numerals target ≥ 7:1.
+- **Contrast is checked for every token against every background of its theme** — `bg-abyss`,
+  `bg-surface` and `bg-elevated` — so a token that passes can be used anywhere without a second check:
+  - every text, icon, status and hue token ≥ 4.5:1, so any of them may set text;
+  - `border-strong` ≥ 3:1. `border-subtle` is decorative and exempt, which is why it is never the only
+    thing marking a control;
+  - `text-primary` ≥ 7:1, and it is **the only colour a live-workout numeral may use**;
+  - `text-primary` on `accent-deep` ≥ 7:1, because a selected RIR chip is a workout numeral, and
+    `text-on-accent` on `accent` ≥ 4.5:1.
+- **A selected state is three signals:** an `accent-deep` fill, an `accent` edge, and its label or
+  check mark. Never the fill alone — in light mode the fill is a tint that barely separates from the
+  surface, on purpose.
 - Charts follow the `dataviz` conventions, drawing categorical colours from the four discipline
   hues rather than inventing a second palette.
 
@@ -269,19 +323,54 @@ to read while moving.
 
 ### Scale (dp)
 
-| Token | Size / line | Use |
-|---|---|---|
-| `display` | 48 / 52 | The one number on a live screen |
-| `metric-lg` | 34 / 38 | Set weight, activity distance |
-| `metric` | 24 / 28 | Secondary metrics |
-| `title` | 20 / 26 | Screen titles |
-| `body` | 16 / 22 | Default |
-| `label` | 14 / 18 | Field labels |
-| `caption` | 12 / 16 | Hints, units, timestamps |
+| Token | Size / line | Face | Use |
+|---|---|---|---|
+| `display` | 48 / 52 | Inter Display SemiBold, tabular | The one number on a live screen |
+| `metric-lg` | 34 / 38 | Inter Display SemiBold, tabular | Set weight, activity distance |
+| `metric` | 24 / 28 | Inter SemiBold, tabular | Secondary metrics |
+| `title` | 20 / 26 | Inter SemiBold | Screen titles |
+| `body` | 16 / 22 | Inter Regular | Default |
+| `label` | 14 / 18 | Inter Medium | Field labels |
+| `caption` | 12 / 16 | Inter Regular | Hints, units, timestamps |
 
 Units are always set one step smaller than their number and in `text-secondary` — `**62.5** kg`,
 never `62.5 KG` at equal weight. System font scaling is respected up to 200 %; layouts reflow rather
 than truncate.
+
+**Font files.** Static cuts of Inter 4.1, bundled with the app under the SIL Open Font License: Inter Regular, Medium
+and SemiBold, and Inter Display SemiBold. Not the variable font: React Native on Android cannot set a variable font's
+axes, so its optical sizes would be unreachable. Inter Display already carries its own tighter spacing, so letter
+spacing stays 0 in every style.
+
+### Spacing, radii and sizes (dp)
+
+A 4 dp base — Android's 8 dp grid, with half-steps for the tight places.
+
+| Token | dp | Use |
+|---|---|---|
+| `space-1` | 4 | An icon to its label |
+| `space-2` | 8 | Inside a control |
+| `space-3` | 12 | Between related controls |
+| `space-4` | 16 | Screen edges, card padding |
+| `space-6` | 24 | Between groups |
+| `space-8` | 32 | Between sections |
+| `space-12` | 48 | Around an empty state |
+
+| Token | dp | Use |
+|---|---|---|
+| `radius-sm` | 4 | Tags, progress bars |
+| `radius-md` | 8 | Controls — chips, keys, fields |
+| `radius-lg` | 12 | Cards, and a sheet's top corners |
+
+Nothing is fully round except a status dot. A pill-shaped control reads as friendly, and the brand is watchful.
+
+| Token | dp | Use |
+|---|---|---|
+| `target-min` | 48 | Every tap target (§5) |
+| `target-workout` | 56 | Tap targets during a workout or an activity, and the set row's height (§5, §6) |
+| `icon` | 24 | Every icon, including the state icons that carry meaning beside a colour |
+| `edge-hairline` | 1 | `border-subtle` and `border-strong` |
+| `edge-selected` | 2 | A selected control's `accent` edge — a shape signal as well as a colour (INV-24) |
 
 ---
 
@@ -367,15 +456,22 @@ legibly, and then get out of the way.
 through water, settling without overshoot. Spring physics with visible bounce is banned; it reads
 as playful, and this brand is not.
 
-| Motion | Duration |
-|---|---|
-| State change (tap, toggle) | 120 ms |
-| Transition (screen, sheet) | 240 ms |
-| Emphasis (PR, level-up) | 600 ms, once |
+**The curve, exactly: `cubic-bezier(0.18, 0, 0.06, 1)`.** It is a fit to a critically-damped step response,
+`x(t) = 1 − (1 + ωt)·e^(−ωt)`, with the motion ending once it is within 0.5 % of rest: it starts from rest, never
+overshoots, and stays within 2.6 % of the physical curve. It is written once, as a curve, and every animation is a
+timing with it — a spring API is banned by lint even when configured as critically damped
+([ADR-014](decisions/ADR-014.md)).
 
-Reduce-motion settings are honoured: transitions become cross-fades and the emphasis animation is
-replaced with a static state. No decorative or looping animation anywhere — an idle animation is
-battery the user did not agree to spend.
+| Motion | Duration | Easing |
+|---|---|---|
+| State change (tap, toggle) | 120 ms | house |
+| Transition (screen, sheet) | 240 ms | house |
+| Emphasis (PR, level-up) | 600 ms, once | house |
+| Cross-fade (any of the above, under reduce motion) | 120 ms | linear |
+
+Reduce-motion settings are honoured: every transition becomes a 120 ms cross-fade and the emphasis animation is
+replaced with a static state — so with reduce motion on, nothing travels and nothing lasts longer than a cross-fade.
+No decorative or looping animation anywhere — an idle animation is battery the user did not agree to spend.
 
 ---
 
@@ -414,12 +510,21 @@ Not a checklist item; the operating conditions demand it.
   | Microcycle · Mesocycle | Microciclo · Mesociclo | Standard periodisation vocabulary |
   | Deload | Deload | Used untranslated in Brazilian gyms; *semana leve* only in explanations |
   | Set · Rep | Série · Repetição | |
-  | Working set · Warm-up | Série válida · Aquecimento | |
-  | Track (gamification) | Trilha | |
+  | Working set · Warm-up | Série válida · Aquecimento | The set-type chip reads *Válida* |
+  | Track (gamification) | Trilha | **Conflict:** the sport *hike* is also *Trilha*. Open — see below |
   | Pace | Ritmo | |
+  | Device (signed in) | Aparelho | Only for phones and tablets; a gym machine is always *máquina* |
+  | Sign in · Sign out | Entrar · Sair | |
+  | Privacy zone | Zona de privacidade | |
+  | Weight (on a set) | Carga | Never *peso*, which is body weight |
 
   The Portuguese column is a starting position, **to be reviewed by a native speaker who trains**.
   Terminology that reads as translated rather than native is its own kind of bug.
+
+  **An AI pre-check was run on 2026-09-14** over both catalogs — every exercise name, every screen and
+  email — against this table and ordinary Brazilian gym usage. It fixed what it could and left two
+  questions: the *Trilha* conflict above, and whether *Afundo* and *Avanço* should stay two words for
+  lunges. It does not replace the native-speaker review, which stays a launch blocker.
 
 **Open**
 1. **Trademark clearance on "CyberAthlete"** (§1, Naming due diligence) — needed before any store

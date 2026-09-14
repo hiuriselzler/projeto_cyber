@@ -75,6 +75,10 @@ cycle's weight inline has stolen work from `domain/`.
 the authentication and maintenance services — enforced by import-linter. Nothing else in the API reads
 a row without a user.
 
+**Not an exception:** tables that hold nobody's data — the schema version, the rate-limit windows
+([ADR-015](decisions/ADR-015.md)) — are outside INV-15, so their repositories take no user scope, and say
+why in their docstring.
+
 ---
 
 ## apps/api/app/models/ — ORM
@@ -90,7 +94,8 @@ methods. A model is a shape, not a service.
 
 **Responsible for:** settings, logging config, password hashing, JWT encode/decode, the DB session
 factory — which sets `app.user_id` with `SET LOCAL` in every transaction and checks the connecting role
-at boot ([ADR-011](decisions/ADR-011.md)) — rate limiting, dependency-injection wiring.
+at boot ([ADR-011](decisions/ADR-011.md)) — rate-limit rules and keys ([ADR-015](decisions/ADR-015.md)), the
+breach-list check, the email transport behind one interface, dependency-injection wiring.
 
 **Must NOT contain:** anything domain-specific. Nothing in `core/` should know what a mesocycle is.
 
@@ -152,7 +157,8 @@ divergence the ADR exists to prevent.
 ## apps/mobile/src/db/ — local database
 
 **Responsible for:** the Drizzle schema, local migrations, typed queries, the pre-migration
-backup step ([06 §4](06-operations.md)).
+backup step ([06 §4](06-operations.md)), and device-only preferences — the theme override — in
+`expo-sqlite`'s key-value store, outside the schema and never synced ([07 §3](07-brand-and-ui.md)).
 
 **Must NOT contain:** network calls, or React components.
 
@@ -236,15 +242,20 @@ decrypts, so a shared implementation would buy nothing.
 
 ## apps/mobile/src/ui/ — design system
 
-**Responsible for:** the token source (INV-23) and primitives — button, chip, sheet, numeric
-keypad, set row, metric tile, cycle cell, the octopus mark. Theming, typography, motion. **The one
-formatting module** that turns SI values into the user's unit system and locale — kg to lb, a
-decimal comma in pt-BR — and is the only place a unit is ever converted (INV-01, ADR-008).
+**Responsible for:** the token file, `tokens.ts` (INV-23, [ADR-014](decisions/ADR-014.md)), and
+primitives — button, chip, sheet, numeric keypad, set row, metric tile, cycle cell, track row, and the
+slots of the octopus mark. Theming — the system setting, and an override handed in by its caller —
+typography, motion. **The i18n runtime**: i18next over the shared catalogs, and the language and unit-system
+defaults read from the device. **The one formatting module** that turns SI values into the user's unit
+system and locale — kg to lb, a decimal comma in pt-BR — parses keypad input back to SI, and is the only
+place a unit is ever converted (INV-01, ADR-008).
 
 **Must NOT contain:**
 - feature knowledge. A `SetRow` takes props; it does not know what a mesocycle is
 - **any literal hex value, font size, or animation duration** — those live in the token file
   (INV-23), and a hardcoded colour is how dark mode silently breaks
+- **a spring animation**, even a critically damped one — motion is a timing on the house curve
+  ([ADR-014](decisions/ADR-014.md))
 - **any literal user-facing string** — every label is a catalog key (INV-27). A hardcoded English
   string is how the Portuguese build silently ships half-translated
 
@@ -269,7 +280,9 @@ and `cyberathlete_app` — run by the compose init step locally, and once by han
 fixtures consumed by both test suites, the reference-data export the app seeds from before it has ever
 synced (`seeds/reference.json`, generated from `apps/api/seeds/`), and **the message catalogs** — `i18n/en.json` and
 `i18n/pt-BR.json` — read by the app for its UI and by the API for emails and exports, so the two
-cannot drift into separate wording (INV-27, [ADR-008](decisions/ADR-008.md)).
+cannot drift into separate wording (INV-27, [ADR-008](decisions/ADR-008.md)). And **the login hash's cost**,
+`security/password-kdf.json`: the API's test holds its hasher to it and the app's test holds the wrapping KDF at
+or above it, so neither side can change alone ([ADR-007](decisions/ADR-007.md)).
 
 **Must NOT contain:** hand-written types that duplicate generated ones, or any runtime code.
 Catalogs and fixtures are data.

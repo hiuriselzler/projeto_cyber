@@ -17,6 +17,8 @@ __pycache__/
 .import_linter_cache/
 .coverage
 htmlcov/
+# Emails the API writes locally while no provider is chosen (05 §5) — real addresses, never committed
+apps/api/.mail/
 
 # Rust
 target/

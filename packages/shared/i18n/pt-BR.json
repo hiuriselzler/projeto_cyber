@@ -78,7 +78,7 @@
     "upright_row": "Remada alta",
     "incline_y_raise": "Elevação em Y no banco inclinado",
     "face_pull": "Face pull",
-    "reverse_pec_deck": "Crucifixo inverso na máquina",
+    "reverse_pec_deck": "Voador inverso",
     "rear_delt_dumbbell_fly": "Crucifixo inverso com halteres",
     "band_pull_apart": "Abertura com elástico",
     "handstand_push_up": "Flexão em parada de mão",
@@ -88,9 +88,9 @@
     "drag_curl": "Rosca arrastada",
     "preacher_curl": "Rosca Scott",
     "machine_preacher_curl": "Rosca Scott máquina",
-    "dumbbell_curl": "Rosca alternada com halteres",
+    "dumbbell_curl": "Rosca direta com halteres",
     "hammer_curl": "Rosca martelo",
-    "incline_dumbbell_curl": "Rosca no banco inclinado",
+    "incline_dumbbell_curl": "Rosca inclinada com halteres",
     "concentration_curl": "Rosca concentrada",
     "spider_curl": "Rosca spider",
     "zottman_curl": "Rosca Zottman",
@@ -105,7 +105,7 @@
     "dumbbell_overhead_triceps_extension": "Tríceps francês com halter",
     "triceps_kickback": "Tríceps coice",
     "machine_triceps_extension": "Tríceps máquina",
-    "seated_dip_machine": "Paralela sentado na máquina",
+    "seated_dip_machine": "Paralelas na máquina",
     "triceps_dip": "Paralelas para tríceps",
     "bench_dip": "Mergulho no banco",
     "diamond_push_up": "Flexão diamante",
@@ -147,8 +147,8 @@
     "barbell_hip_thrust": "Elevação pélvica com barra",
     "machine_hip_thrust": "Elevação pélvica máquina",
     "single_leg_hip_thrust": "Elevação pélvica unilateral",
-    "barbell_glute_bridge": "Ponte de glúteos com barra",
-    "glute_bridge": "Ponte de glúteos",
+    "barbell_glute_bridge": "Ponte glútea com barra",
+    "glute_bridge": "Ponte glútea",
     "cable_pull_through": "Pull-through na polia",
     "cable_glute_kickback": "Coice na polia",
     "reverse_hyperextension": "Hiperextensão reversa",
@@ -192,13 +192,13 @@
     "barbell_thruster": "Thruster com barra",
     "box_jump": "Salto no caixote",
     "broad_jump": "Salto horizontal",
-    "medicine_ball_slam": "Arremesso de medicine ball no chão",
+    "medicine_ball_slam": "Slam com medicine ball",
     "burpee": "Burpee",
     "turkish_get_up": "Levantamento turco",
     "kettlebell_clean_and_press": "Clean e desenvolvimento com kettlebell",
-    "sled_push": "Empurrar trenó",
-    "backward_sled_drag": "Arrastar trenó de costas",
-    "bear_crawl": "Engatinhar do urso",
+    "sled_push": "Empurrada de trenó",
+    "backward_sled_drag": "Arrasto de trenó de costas",
+    "bear_crawl": "Caminhada do urso",
     "battle_ropes": "Corda naval",
     "jump_rope": "Pular corda"
   },
@@ -278,7 +278,7 @@
   },
   "set_type": {
     "warmup": "Aquecimento",
-    "working": "Trabalho",
+    "working": "Válida",
     "drop": "Drop set",
     "backoff": "Back-off",
     "amrap": "AMRAP"
@@ -344,11 +344,11 @@
     },
     "first_100km_month": {
       "name": "Primeiro mês com 100 km",
-      "description": "Correu 100 quilômetros em um mês."
+      "description": "Correu 100 quilômetros em um mês do calendário."
     },
     "first_100mi_month": {
       "name": "Primeiro mês com 100 milhas",
-      "description": "Correu 100 milhas em um mês."
+      "description": "Correu 100 milhas em um mês do calendário."
     },
     "bodyweight_bench": {
       "name": "Supino com o peso corporal",
@@ -374,5 +374,184 @@
       "name": "Um ano de treino",
       "description": "Registrou um ano de treino."
     }
+  },
+  "brand": {
+    "name": "CyberAthlete"
+  },
+  "unit": {
+    "kg": "kg",
+    "lb": "lb",
+    "km": "km",
+    "mi": "mi",
+    "m": "m",
+    "ft": "ft",
+    "celsius": "°C",
+    "fahrenheit": "°F"
+  },
+  "unit_spoken": {
+    "kg": "{count, plural, one {quilograma} other {quilogramas}}",
+    "lb": "{count, plural, one {libra} other {libras}}",
+    "km": "{count, plural, one {quilômetro} other {quilômetros}}",
+    "mi": "{count, plural, one {milha} other {milhas}}",
+    "m": "{count, plural, one {metro} other {metros}}",
+    "ft": "{count, plural, one {pé} other {pés}}",
+    "celsius": "{count, plural, one {grau Celsius} other {graus Celsius}}",
+    "fahrenheit": "{count, plural, one {grau Fahrenheit} other {graus Fahrenheit}}"
+  },
+  "ui": {
+    "set_row": {
+      "rir": "RIR {rir}",
+      "rir_blank": "RIR",
+      "previous": "{rir_recorded, select, yes {Última vez: {weight} × {reps} @{rir}} other {Última vez: {weight} × {reps}}}"
+    },
+    "keypad": {
+      "done": "OK"
+    },
+    "sheet": {
+      "close": "Fechar"
+    },
+    "cycle_cell": {
+      "day": "Dia {day}",
+      "deload": "Deload"
+    },
+    "cycle_status": {
+      "projected": "Projetado",
+      "locked": "Fixado",
+      "in_progress": "Em andamento",
+      "completed": "Concluído",
+      "skipped": "Pulado"
+    },
+    "track_row": {
+      "level": "Nível {level}",
+      "xp": "{xp} / {next} XP",
+      "xp_top": "{xp} XP"
+    },
+    "level_up": {
+      "title": "Nível {level}"
+    }
+  },
+  "account": {
+    "working": "Protegendo sua conta…",
+    "fields": {
+      "email": "E-mail",
+      "password": "Senha",
+      "display_name": "Seu nome",
+      "current_password": "Senha atual",
+      "new_password": "Nova senha",
+      "new_email": "Novo e-mail"
+    },
+    "sign_in": {
+      "title": "Entrar",
+      "submit": "Entrar",
+      "to_register": "Criar uma conta",
+      "to_reset": "Esqueceu sua senha?"
+    },
+    "register": {
+      "title": "Crie sua conta",
+      "password_hint": "Pelo menos 10 caracteres. Algumas palavras que você vai lembrar funcionam bem.",
+      "submit": "Criar conta",
+      "to_sign_in": "Já tenho uma conta"
+    },
+    "reset": {
+      "title": "Redefinir sua senha",
+      "request_submit": "Enviar link de redefinição",
+      "request_sent": "Se houver uma conta com {email}, um link para redefinir a senha está a caminho. Ele vale por 30 minutos.",
+      "zones_warning": "Redefinir a senha apaga suas zonas de privacidade. Elas são criptografadas com a sua senha, então ninguém consegue recuperá-las, nem nós. Você pode desenhá-las de novo depois.",
+      "confirm_submit": "Redefinir senha e apagar zonas de privacidade",
+      "done": "Sua senha foi redefinida e todos os aparelhos foram desconectados. Entre com a nova senha.",
+      "to_sign_in": "Entrar"
+    },
+    "verify": {
+      "title": "Confirme seu e-mail",
+      "working": "Confirmando seu e-mail…",
+      "done": "Seu e-mail está confirmado.",
+      "continue": "Continuar"
+    },
+    "password": {
+      "title": "Alterar sua senha",
+      "submit": "Alterar senha",
+      "done": "Sua senha foi alterada. Seus outros aparelhos continuam conectados."
+    },
+    "email": {
+      "title": "Alterar seu e-mail",
+      "submit": "Enviar link de confirmação",
+      "sent": "Enviamos um link para {email}. Seu endereço muda quando você abrir o link."
+    },
+    "sessions": {
+      "title": "Aparelhos conectados",
+      "this_device": "Este aparelho",
+      "unnamed_device": "Aparelho sem nome",
+      "sign_out_device": "Desconectar este aparelho",
+      "sign_out": "Sair",
+      "sign_out_everywhere": "Sair de todos os aparelhos"
+    },
+    "errors": {
+      "invalid_credentials": "Esse e-mail e essa senha não correspondem a uma conta.",
+      "email_unavailable": "Já existe uma conta com este e-mail. Entre ou redefina a senha dessa conta.",
+      "email_unchanged": "Esse já é o seu e-mail.",
+      "password_too_short": "Use pelo menos 10 caracteres.",
+      "password_too_long": "Use no máximo 1024 caracteres.",
+      "password_breached": "Esta senha aparece em vazamentos de dados conhecidos. Escolha outra.",
+      "password_incorrect": "Sua senha atual está incorreta.",
+      "invalid_token": "Este link expirou ou já foi usado. Peça um novo.",
+      "email_unverified": "Confirme seu endereço de e-mail primeiro.",
+      "rate_limited": "Muitas tentativas. Espere alguns minutos e tente de novo.",
+      "offline": "Sem conexão. Tente de novo quando estiver on-line.",
+      "signed_out": "Sua sessão foi encerrada. Entre de novo.",
+      "privacy_key_missing": "Este aparelho não tem sua chave de privacidade, então a senha não pode ser alterada aqui. Faça a alteração em um aparelho em que você entrou com a sua senha.",
+      "unknown": "Algo deu errado. Tente de novo."
+    }
+  },
+  "email": {
+    "verify_email": {
+      "subject": "Confirme seu e-mail no CyberAthlete",
+      "body": "Olá, {name}.\n\nConfirme que este endereço pertence à sua conta do CyberAthlete abrindo este link no seu celular:\n\n{link}\n\nO link vale por 24 horas. Se você não criou uma conta, ignore este e-mail."
+    },
+    "password_reset": {
+      "subject": "Redefina sua senha do CyberAthlete",
+      "body": "Olá, {name}.\n\nAlguém pediu para redefinir a senha desta conta. Se foi você, abra este link no seu celular em até 30 minutos:\n\n{link}\n\nRedefinir a senha apaga suas zonas de privacidade. Elas são criptografadas com a sua senha, e ninguém, nem nós, consegue recuperá-las. Você pode desenhá-las de novo depois.\n\nSe você não pediu isso, ignore este e-mail. Sua senha continua a mesma."
+    },
+    "password_changed": {
+      "subject": "Sua senha do CyberAthlete foi alterada",
+      "body": "Olá, {name}.\n\nA senha da sua conta acabou de ser alterada. Se foi você, não é preciso fazer nada.\n\nSe não foi, redefina sua senha na tela de entrada imediatamente."
+    },
+    "email_changed": {
+      "subject": "O e-mail da sua conta do CyberAthlete foi alterado",
+      "body": "Olá, {name}.\n\nO endereço de e-mail da sua conta foi alterado deste endereço para {new_email}. Se foi você, não é preciso fazer nada.\n\nSe não foi, sua conta pode estar nas mãos de outra pessoa: entre, altere sua senha e desconecte todos os outros aparelhos."
+    },
+    "new_device": {
+      "subject": "Novo acesso à sua conta do CyberAthlete",
+      "body": "Olá, {name}.\n\nSua conta acabou de ser acessada em um novo aparelho: {device}.\n\nSe foi você, não é preciso fazer nada. Se não foi, altere sua senha e desconecte esse aparelho na lista de aparelhos conectados.",
+      "unnamed_device": "um aparelho sem nome"
+    },
+    "refresh_reuse": {
+      "subject": "Um aparelho foi desconectado da sua conta do CyberAthlete",
+      "body": "Olá, {name}.\n\nA sessão de um dos seus aparelhos foi usada de um jeito que indica que ela foi copiada, então esse aparelho foi desconectado. Você vai precisar entrar nele de novo.\n\nSe você não esperava isso, altere sua senha."
+    }
+  },
+  "a11y": {
+    "quantity": "{value} {unit}",
+    "set_row": "Série {number}, {weight}, {reps}, {rir}, {status}",
+    "weight_none": "sem carga",
+    "reps": "{count, plural, one {# repetição} other {# repetições}}",
+    "reps_none": "sem repetições",
+    "rir": "RIR {rir}",
+    "rir_none": "RIR não registrado",
+    "set_complete": "concluída",
+    "set_incomplete": "não concluída",
+    "edit_weight": "Editar carga",
+    "edit_reps": "Editar repetições",
+    "edit_rir": "Editar RIR",
+    "mark_complete": "Marcar como concluída",
+    "mark_incomplete": "Marcar como não concluída",
+    "keypad_separator": "Separador decimal",
+    "keypad_delete": "Apagar",
+    "rir_chips": "Repetições em reserva",
+    "rir_open_ended": "RIR {rir} ou mais",
+    "cycle_cell": "{deload, select, yes {Dia {day}, {status}, deload} other {Dia {day}, {status}}}",
+    "track_row": "{has_reason, select, yes {{name}, nível {level}, {progress}. {reason}} other {{name}, nível {level}, {progress}}}",
+    "track_progress": "{xp} de {next} XP",
+    "track_progress_top": "{xp} XP, nível máximo",
+    "level_up": "{track} chegou ao nível {level}. {reason}"
   }
 }

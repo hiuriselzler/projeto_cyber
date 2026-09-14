@@ -8,6 +8,7 @@ planted for it — under that rule, and no other.
 import configparser
 import json
 import os
+import re
 import subprocess
 import sysconfig
 from pathlib import Path
@@ -179,6 +180,31 @@ def test_the_banned_api_list_reports_every_planted_call():
 
     for call in BANNED_CALLS:
         assert any(f"`{call}` is banned" in message for message in messages), (call, messages)
+
+
+def test_a_repository_call_without_its_user_scope_fails_mypy():
+    """INV-15 as a type error: a call that leaves out `user_id`, or passes any other UUID for it."""
+    fixture = FIXTURES / "mypy" / "unscoped_repository_calls.py"
+    expected = {
+        (number, code)
+        for number, line in enumerate(fixture.read_text(encoding="utf-8").splitlines(), start=1)
+        for code in re.findall(r"# expect: ([a-z-]+)", line)
+    }
+    output = run(
+        tool("mypy"),
+        "--no-incremental",
+        "--show-error-codes",
+        str(fixture.relative_to(API_ROOT)),
+    )
+    reported = {
+        (int(match.group(1)), match.group(2))
+        for match in re.finditer(
+            r"unscoped_repository_calls\.py:(\d+): error: .*\[([a-z-]+)\]", output
+        )
+    }
+
+    assert len(expected) == 2
+    assert expected <= reported, output
 
 
 def test_files_in_app_domain_are_linted_with_the_banned_api_list():
