@@ -116,6 +116,9 @@ cold start, a track session with tight laps.
 - [ ] Switching unit system shows existing runs split per mile without recomputing them
 - [ ] Adding `walk` is a `sport_profiles` row and nothing else — no shared code touched
 - [ ] Weekly totals sum time across sports and never add a swim distance to a run distance (INV-20)
+- [ ] All changing numbers use tabular figures — verified by watching a **live pace readout** not jitter (INV-24)
+      *(moved from [task 017](017-local-toolchain-device-spike.md) on 2026-09-16: the live readout is this task's,
+      so the check could not be run before it existed)*
 
 ## Notes and risks
 - **Budget generously.** Background location is where estimates go wrong. Test on real hardware,

@@ -1,7 +1,8 @@
 """The shared fixture is well-formed, checked the same way Jest checks it.
 
-This validates the fixture's own consistency, not an implementation: round_to_increment arrives with
-the ADR-004 spike, and runs these same cases then.
+This validates the fixture's own consistency — that each case's expected steps really do satisfy the
+mode they claim — and not an implementation. The implementation runs the same cases in
+`tests/unit/test_domain_rounding.py`, through the Rust core the ADR-004 spike adopted.
 """
 
 import math

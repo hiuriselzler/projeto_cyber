@@ -12,4 +12,9 @@ module.exports = {
   moduleNameMapper: {
     '^react-native-libsodium$': '<rootDir>/src/crypto/testing/libsodium-node.ts',
   },
+  // The first test of each `MATRIX` suite pays the one-time cost of the providers, i18next, the `@formatjs`
+  // polyfills and a cold transform, which passes Jest's 5 s default on a slower machine — on Windows in task 017,
+  // 1 to 3 suites failed depending on load, always on `MATRIX[0]` and never on an assertion. The behaviour under
+  // test is unchanged; only the harness needed the room.
+  testTimeout: 15000,
 };

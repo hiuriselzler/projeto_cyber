@@ -64,6 +64,23 @@ forbidden_modules =
     app.repositories
     app.services
 
+[importlinter:contract:core-binding-fenced]
+name = Only the domain reaches the core: ADR-004's PyO3 module is imported by app.domain alone
+type = forbidden
+source_modules =
+    app.api
+    app.core
+    app.main
+    app.models
+    app.repositories
+    app.schemas
+    app.services
+forbidden_modules =
+    cyberathlete_core
+# Direct imports only: a service calling app.domain, which wraps the core, is the intended route and
+# would otherwise be reported as an indirect violation of this very rule.
+allow_indirect_imports = True
+
 [importlinter:contract:unscoped-reads-fenced]
 name = Unscoped reads are fenced: only auth and maintenance import app.repositories.unscoped (ADR-011)
 type = protected

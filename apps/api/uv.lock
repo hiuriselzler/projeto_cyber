@@ -258,6 +258,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "alembic" },
     { name = "argon2-cffi" },
+    { name = "cyberathlete-core" },
     { name = "fastapi" },
     { name = "httpx" },
     { name = "psycopg", extra = ["binary"] },
@@ -286,6 +287,7 @@ dev = [
 requires-dist = [
     { name = "alembic", specifier = ">=1.20.0" },
     { name = "argon2-cffi", specifier = ">=25.1.0" },
+    { name = "cyberathlete-core", directory = "../../core-rs/bindings/pyo3" },
     { name = "fastapi", specifier = ">=0.141.1" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.3.5" },
@@ -309,6 +311,10 @@ dev = [
     { name = "ruff", specifier = ">=0.16.7" },
     { name = "types-jsonschema", specifier = ">=4.26.0.20260518" },
 ]
+
+[[package]]
+name = "cyberathlete-core"
+source = { directory = "../../core-rs/bindings/pyo3" }
 
 [[package]]
 name = "cyclonedx-python-lib"

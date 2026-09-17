@@ -1,7 +1,6 @@
 """The seeded reference data: idempotent, translated in both languages, liftable in both units."""
 
 import json
-import math
 from decimal import Decimal
 from typing import Any
 
@@ -9,6 +8,7 @@ import pytest
 from jsonschema import Draft202012Validator
 from sqlalchemy import Engine, text
 
+from app.domain.rounding import RoundingMode, round_to_increment
 from seeds.reference import seed
 from tests.fixtures.loader import FIXTURES_DIR, load_fixture
 from tests.integration.builders import create_user_graph
@@ -152,18 +152,13 @@ def test_metric_and_imperial_users_resolve_different_barbell_increments(seeded, 
     }
 
 
-def round_to_increment(weight_kg: float, increment_kg: float, mode: str = "nearest") -> float:
-    """A test oracle for ADR-010's rounding, not domain code: the real one arrives in task 017."""
-    quotient = weight_kg / increment_kg
-    steps = math.floor(quotient)
-    if (mode == "up" and quotient > steps) or (mode == "nearest" and quotient - steps > 0.5):
-        steps += 1
-    return steps * increment_kg
-
-
-def test_the_rounding_oracle_matches_the_shared_fixture():
+def test_the_real_rounding_matches_the_shared_fixture():
+    """Task 002 rounded with a test oracle because no domain code existed yet; task 017's spike
+    replaced it with the Rust core, so INV-02's precision property below is now proven against the
+    function that actually ships."""
     for case in load_fixture("round_to_increment")["cases"]:
-        load = round_to_increment(case["weight_kg"], case["increment_kg"], case["mode"])
+        mode = RoundingMode.from_name(case["mode"])
+        load = round_to_increment(case["weight_kg"], case["increment_kg"], mode)
         assert round(load / case["increment_kg"]) == case["expected_steps"], case["name"]
 
 
@@ -189,7 +184,7 @@ def test_a_52_cycle_linear_block_stays_on_the_plate_grid_after_storage_rounding(
         ).scalar_one()
 
     to_display = KG_PER_LB if unit_system == "imperial" else Decimal(1)
-    weight = round_to_increment(float(start * to_display), float(increment))
+    weight = round_to_increment(float(start * to_display), float(increment), RoundingMode.Nearest)
     off_grid = []
     with scoped(app_engine, user.user_id) as connection:
         for cycle in range(1, 53):
@@ -203,7 +198,9 @@ def test_a_52_cycle_linear_block_stays_on_the_plate_grid_after_storage_rounding(
             shown = (stored / to_display).quantize(Decimal("0.1"))
             if shown % grid != 0:
                 off_grid.append((cycle, shown))
-            weight = round_to_increment(float(stored) + float(increment), float(increment))
+            weight = round_to_increment(
+                float(stored) + float(increment), float(increment), RoundingMode.Nearest
+            )
 
     assert off_grid == []
     assert shown == start + 51 * step

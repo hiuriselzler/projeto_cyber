@@ -19,8 +19,8 @@ This is the real order.
 | 2 | [002 Database](002-database.md) | L | Last chance to change the schema freely. **Complete** |
 | 3 | [011 Design system](011-design-system.md) | L | **Before any feature UI.** Task 004 builds the set row — the most important component in the app — and it should be built from a system, not retrofitted into one. **Complete** |
 | 4 | [003 Authentication](003-authentication.md) | L | Includes password reset and email verification, now v1 blockers. **Complete** |
-| 5 | [019 Account deletion](019-account-deletion.md) | M | A legal and a store requirement. Needs only 003 and no administrator rights, so it goes ahead while 017 waits for them |
-| 6 | [017 Local toolchain, device and core spike](017-local-toolchain-device-spike.md) | L | Everything that needs administrator rights, and every check only a phone can settle. **Must come before 004** — it holds the [ADR-004](../decisions/ADR-004.md) Rust spike, a 2-day go/no-go |
+| 5 | [019 Account deletion](019-account-deletion.md) | M | A legal and a store requirement. Needed only 003 and no administrator rights, so it went ahead while 017 waited for them. **Built, awaiting its pull request** |
+| 6 | [017 Local toolchain, device and core spike](017-local-toolchain-device-spike.md) | L | Everything that needs administrator rights, and every check only a phone can settle. **Must come before 004** — it holds the [ADR-004](../decisions/ADR-004.md) Rust spike, a 2-day go/no-go. **In progress since 2026-09-16**, when those rights arrived |
 | 7 | [004 Catalog and logging](004-exercise-catalog-and-logging.md) | XL | The core loop. Usable, offline, local-only |
 | 8 | [005 Progression planner](005-strength-progression-planner.md) | XL | The reason the product exists |
 | 9 | [006 Sync layer](006-sync-layer.md) | L | Turns on multi-device. The hardest task |
@@ -46,9 +46,10 @@ up broken.
 
 **The administrator-rights task before task 004 (position 6), not at the end.**
 [Task 017](017-local-toolchain-device-spike.md) was split out of task 001 because the development
-machine had no administrator rights. It can wait while 002, 011, 003 and 019 are built — none of them holds
+machine had no administrator rights. It could wait while 002, 011, 003 and 019 were built — none of them holds
 shared domain logic — but not past them: its spike decides whether task 004 writes e1RM and the set
-logic once, in Rust, or twice, in Python and TypeScript.
+logic once, in Rust, or twice, in Python and TypeScript. **The rights arrived on 2026-09-16 and it is now in
+progress**, which is where the sequence stands.
 
 **Gamification late, and never before the planner (position 13).** The scorer's input is *the
 prescription* ([ADR-005](../decisions/ADR-005.md)). Any scoring built before a planner exists
