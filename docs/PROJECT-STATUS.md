@@ -15,13 +15,13 @@ when its own criteria are ticked. Tick the box here only then.
 
 | | |
 |---|---|
-| **Phase** | **Tasks 001, 002, 011 and 003 complete; task 019 next.** The schema exists in Postgres and SQLite, seeded and enforcing itself; the design system exists in `src/ui/`, token-driven and tested in both languages, both unit systems and both themes; and accounts, sessions and the privacy key exist on both sides, with row-level security proven under the API's own role. **Administrator rights arrived 2026-09-16**, so [task 017](tasks/017-local-toolchain-device-spike.md) — Docker, the device, the ADR-004 spike — is under way and must finish before task 004. **Its local stack runs, the app runs on a physical phone, and `core-rs` now exists with both halves of the spike's own call proven** — `round_to_increment()` returns the right values through PyO3 from FastAPI and through UniFFI from the app on the device. **ADR-004's outcome still is not recorded**: its bar also asks for the Android artefacts built by CI on Linux and by EAS, and neither has run yet |
-| **Repository** | Private GitHub repository `hiuriselzler/projeto_cyber`. `main` holds the documentation and tasks 001, 002, 011 and 003, each merged by pull request (#1; #5; #7 and #8; #9); each further piece arrives the same way, with CI green before merge |
+| **Phase** | **Tasks 001, 002, 011, 003 and 019 complete.** The schema exists in Postgres and SQLite, seeded and enforcing itself; the design system exists in `src/ui/`, token-driven and tested in both languages, both unit systems and both themes; accounts, sessions and the privacy key exist on both sides, with row-level security proven under the API's own role; and a user can delete their account, from the app or the web, with a 7-day grace period and one daily sweep. **Administrator rights arrived 2026-09-16**, so [task 017](tasks/017-local-toolchain-device-spike.md) — Docker, the device, the ADR-004 spike — is under way and must finish before task 004. **Its local stack runs, the app runs on a physical phone, and `core-rs` now exists with both halves of the spike's own call proven** — `round_to_increment()` returns the right values through PyO3 from FastAPI and through UniFFI from the app on the device. **ADR-004's outcome still is not recorded**: its bar also asks for the Android artefacts built by CI on Linux and by EAS, and neither has run yet |
+| **Repository** | Private GitHub repository `hiuriselzler/projeto_cyber`. `main` holds the documentation and tasks 001, 002, 011, 003 and 019, each merged by pull request (#1; #5; #7 and #8; #9; #11); each further piece arrives the same way, with CI green before merge |
 | **Docs** | 49 files, internally consistent, all cross-links resolving |
 | **Decisions** | 15 ADRs. Fourteen accepted outright; [ADR-004](decisions/ADR-004.md) accepted *conditionally* |
-| **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **4 complete** (001, 002, 011, 003) |
+| **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **5 complete** (001, 002, 011, 003, 019) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | [Task 019](tasks/019-account-deletion.md), account deletion — built on `feat/task-019-account-deletion`; its criteria are ticked once CI passes on its pull request. Then [task 017](tasks/017-local-toolchain-device-spike.md), in progress since administrator rights arrived 2026-09-16: the local stack runs, the app runs on the phone, and **the ADR-004 spike's own call is proven both ways** — PyO3 from FastAPI, and UniFFI from the app on the physical device, the same two values (42.5, 40.0) either way. `deny.toml` and the Rust CI job are written; the `rand` gate is proven locally but not yet through an actual CI run — nothing has been pushed since the job was added. **Next:** push and confirm the Rust CI job runs green; an Expo account, so the EAS build criterion can close; then ADR-004's outcome, which its own bar keeps open until both of those happen, whatever the toolchain has already shown. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
+| **Next action** | [Task 017](tasks/017-local-toolchain-device-spike.md), in progress since administrator rights arrived 2026-09-16: the local stack runs, the app runs on the phone, and **the ADR-004 spike's own call is proven both ways** — PyO3 from FastAPI, and UniFFI from the app on the physical device, the same two values (42.5, 40.0) either way. `deny.toml` and the Rust CI job are written; the `rand` gate is proven locally but not yet through an actual CI run — nothing has been pushed since the job was added. **Next:** push and confirm the Rust CI job runs green; an Expo account, so the EAS build criterion can close; then ADR-004's outcome, which its own bar keeps open until both of those happen, whatever the toolchain has already shown. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
 
 ### The one decision still genuinely open
 
@@ -152,17 +152,19 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
       ([ADR-012](decisions/ADR-012.md))
 - [x] **Prove RLS**: break the repository scope deliberately and assert 0 rows come back (NFR-9)
 
-#### ☐ 019 — Account deletion · **M** · depends: 003 · blocks: the store listing
+#### ☑ 019 — Account deletion · **M** · depends: 003 · blocks: the store listing
 > Added 2026-09-14, closing open question 11. Needs no administrator rights, so it goes ahead while task 017 waits.
 > **Planned 2026-09-14:** other devices stay signed in; the web page's link opens a page, and only its button schedules
-> the deletion. **Built 2026-09-14** — ticked once CI passes on its pull request. Still open: which scheduler runs the
-> daily command, chosen with the host; what a device keeps of training data moved to task 006.
-- [ ] Deletion requested with the password, cancellable for 7 days from any signed-in device, announced by email in the
+> the deletion. **Complete (2026-09-18).** Built on `feat/task-019-account-deletion`, rebased onto `main` after task
+> 017's core-rs merge, and merged as [PR #11](https://github.com/hiuriselzler/projeto_cyber/pull/11) with all five CI
+> jobs green. Still open, neither blocking: which scheduler runs the daily command, chosen with the host; what a
+> device keeps of training data, moved to task 006.
+- [x] Deletion requested with the password, cancellable for 7 days from any signed-in device, announced by email in the
       user's language
-- [ ] **The sweep deletes every row of the account, inside its own scope** — a test over 03 §11 covers tables added later
-- [ ] The web deletion page Google Play links to, answering identically for any address; **opening its link schedules
+- [x] **The sweep deletes every row of the account, inside its own scope** — a test over 03 §11 covers tables added later
+- [x] The web deletion page Google Play links to, answering identically for any address; **opening its link schedules
       nothing**
-- [ ] One scheduled command, in `app/jobs/`, for the deletion sweep and the retention purges, documented in 06
+- [x] One scheduled command, in `app/jobs/`, for the deletion sweep and the retention purges, documented in 06
 
 #### ☐ 017 — Local toolchain, device and core spike · **L** · depends: 001, administrator rights · blocks: 004 onward
 > Everything that needs administrator rights on the development machine, and every check only a phone
@@ -1359,3 +1361,24 @@ Continued on `feat/task-017-core-spike`, not yet committed. Full account in
   answered.** What is left — a real CI run, an EAS build, an Expo account that does not exist yet — is process,
   not risk.
 - No invariant changed and no ADR was added: 49 documents, 15 ADRs. Not yet committed.
+
+### 2026-09-18 — task 019 closed: PR #11 merged, CI green
+
+`feat/task-019-account-deletion` had been built and reviewed before task 017's core-rs work landed on `main`
+([PR #12](https://github.com/hiuriselzler/projeto_cyber/pull/12)), so it needed a rebase rather than a plain merge.
+
+- **Rebased onto `main`** at `e5148f2`. The only conflict was in this file's own prose — both branches had narrated
+  the project's status at the same lines — resolved by keeping both threads rather than picking one: task 019's real
+  outcome, and task 017's real progress as `main` already had it.
+- **Verified before pushing**, matching what CI runs: API — `ruff`, `mypy --strict`, `ruff format --check`, all five
+  import contracts, 337 tests (146 unit, the rest integration) against a real local Postgres, the schema check at 40
+  tables; mobile — `tsc`, `eslint`, all 47 lint fixtures, the platform-file check, both catalogs at 474 messages,
+  `db:generate` against the committed migrations (36 tables, no drift), `render:brand` byte-identical to the
+  committed assets, and 437 of 437 Jest tests (one `surfaces.test.tsx` timeout reproduced under load and confirmed a
+  flake — passes clean alone — exactly as the branch's own build notes had already found); shared — the OpenAPI
+  schema and generated TypeScript types regenerate identical to what is committed.
+- **Pushed with `--force-with-lease`** (the rebase rewrote history) as [PR #11](https://github.com/hiuriselzler/projeto_cyber/pull/11), merged the same day with all five CI jobs green: Shared types are current, `core-rs`, Release build permits no
+  cleartext, API, Mobile.
+- **Task 019's criteria are now ticked**, per its own task file's rule. Its two open notes stay open, neither
+  blocking: what a device keeps of training data once its account is gone, moved to [task 006](tasks/006-sync-layer.md); which scheduler runs the daily command, chosen with the host.
+- No invariant changed and no ADR was added: 49 documents, 15 ADRs.
