@@ -1,6 +1,7 @@
 packages:
   - apps/mobile
   - packages/shared
+  - packages/core-native
 
 # Refuse to install on a Node or pnpm outside the pins in package.json.
 engineStrict: true

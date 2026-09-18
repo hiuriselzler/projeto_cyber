@@ -9,6 +9,7 @@ import {
   type LanAddressCheck,
 } from '@/account/diagnostics';
 import { EXPECTED_TABLES, readLocalDatabaseState } from '@/db/diagnostics';
+import { roundLoadToIncrement } from '@/domain';
 import { describePlatform } from '@/platform';
 import { SegmentedControl, useTheme, type SegmentedOption, type ThemePreference } from '@/ui';
 
@@ -45,6 +46,11 @@ export function DiagnosticsScreen() {
     <ScrollView contentContainerStyle={styles.screen}>
       <Check title="Platform interface (src/platform)">
         {`${platform.os} ${platform.osVersion}`}
+      </Check>
+
+      <Check title="core-rs via UniFFI (task 017's ADR-004 spike, called through @cyberathlete/core-native)">
+        {`round_to_increment(41.6, 2.5, nearest) = ${roundLoadToIncrement(41.6, 2.5, 'nearest')}\n` +
+          `round_to_increment(41.25, 2.5, nearest) = ${roundLoadToIncrement(41.25, 2.5, 'nearest')}`}
       </Check>
 
       <Check title="API readiness over adb reverse (TanStack Query)">

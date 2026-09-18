@@ -17,9 +17,15 @@
 > **Correction (2026-09-16, later the same day):** this note previously said the spike's clock had not started
 > because nothing had run on a device yet. That stopped being true earlier the same day, at § The device run below —
 > the dev build reached the phone before this sentence was corrected. **The clock started then, by
-> [ADR-004](../decisions/ADR-004.md)'s own definition.** `core-rs` now exists and its PyO3 half is proven end to end
-> (§ The ADR-004 spike begins); the UniFFI half is still open. Nothing here extends the two-day timebox — the clock's
-> start time is unchanged, only this file's claim about it is fixed.
+> [ADR-004](../decisions/ADR-004.md)'s own definition.** Nothing here extends the two-day timebox — the clock's start
+> time is unchanged, only this file's claim about it is fixed.
+>
+> **Both halves of the spike's own call are now proven (2026-09-16, still the same day).** `core-rs` exists;
+> `round_to_increment()` is called successfully through PyO3 from FastAPI and through UniFFI from the app on the
+> physical Android device — 42.5 and 40.0, the tie to the lighter load, on the device screen (§ The UniFFI half is
+> proven). **ADR-004's outcome is still not recorded**: its own bar additionally asks for the Android artefacts built
+> by CI on Linux and by EAS, and neither has run — the Rust CI job is written but unpushed, and no Expo account
+> exists yet for EAS. Task 004 still does not start while that is open.
 
 ## Goal
 The whole stack runs on the development machine, the app runs on a physical Android phone, and
@@ -157,12 +163,14 @@ an FFI chain that takes a week to stand up has already answered the question.
 
 **The decision** *(from task 001)*
 - [ ] CI fails if `core-rs` depends on `rand`, or calls `SystemTime::now` — **add each, watch CI fail**,
-      then remove them (INV-10). *`clippy.toml` already bans the calls locally (§ The ADR-004 spike
-      begins); the CI job and `deny.toml`'s crate ban are what remain*
-- [ ] `round_to_increment(41.6, 2.5, nearest)` returns **42.5** and `round_to_increment(41.25, 2.5, nearest)`
-      returns **40.0** — the tie goes to the lighter load — called from Python and from the app on a
-      **physical Android device**. *Proven from Python (§ The ADR-004 spike begins); the device half is
-      still open, so this stays unticked — the criterion asks for both*
+      then remove them (INV-10). *Proven locally: `rand` added to `cyberathlete-core`, `cargo deny
+      check bans` failed on both `rand` and the transitive `rand_core`, then passed clean again after
+      removing it (§ The ADR-004 spike begins). The Rust CI job now runs the identical check
+      (`.github/workflows/ci.yml`) but has not executed once — nothing has been pushed since it was
+      written — so this stays unticked until it has actually watched CI, not a local stand-in, fail*
+- [x] `round_to_increment(41.6, 2.5, nearest)` returns **42.5** and `round_to_increment(41.25, 2.5, nearest)`
+      returns **40.0** — the tie goes to the lighter load — called from Python **and from the app on a
+      physical Android device** (§ The UniFFI half is proven: a device call, on hardware)
 - [ ] **ADR-004 has a recorded outcome** — option A or option B, with the reason. **Task 004 does not
       start while this is open**
 
@@ -337,21 +345,68 @@ retired in favour of the real core, so INV-02's 52-cycle precision property now 
 `ruff`, `ruff format`, `mypy --strict` (103 files) and `lint-imports` (**6 contracts, 0 broken**) are all clean;
 the affected suites are **11 passed**.
 
-**The UniFFI half is not proven.** Both binding crates compile clean on native Windows — the Rust side is not
-the problem. `uniffi-bindgen-react-native@0.31.0-5` (pinned to match the `uniffi` crate's `0.31`) fails to
-build *itself* there: `pnpm dlx` compiles it from source, and MSVC's `link.exe` returns `LNK1104` linking its
-own build-script binaries. A different symptom from the `react-native-libsodium` CMake backslash bug found
-earlier today, but the same class of failure, and the same standing allowance covers it: *a native-Windows
-build that fights back while WSL2, CI and EAS work is not a failure.* The build-only WSL2 checkout already
-set up for the Android build has Node, pnpm, Java and the NDK — but **no Rust toolchain** (`which cargo rustc`
-found neither), so `rustup`, the Android targets and `cargo-ndk` need installing there before `ubrn` or the
-cross-compilation can run. Unlike the plain Android build, which only needed the JDK and the NDK in WSL2, this
-half needs the whole Rust side too.
+**The UniFFI half was not proven at first.** Both binding crates compiled clean on native Windows — the Rust
+side was never the problem. `uniffi-bindgen-react-native@0.31.0-5` (pinned to match the `uniffi` crate's
+`0.31`) failed to build *itself* there: `pnpm dlx` compiles it from source, and MSVC's `link.exe` returned
+`LNK1104` linking its own build-script binaries. A different symptom from the `react-native-libsodium` CMake
+backslash bug found earlier the same day, but the same class of failure, and the same standing allowance
+covered it: *a native-Windows build that fights back while WSL2, CI and EAS work is not a failure.* Resolved
+in WSL2 — see § The UniFFI half is proven, below.
 
-**What remains, precisely:** `deny.toml`'s ban list · the Rust CI job (`cargo deny`, clippy, fmt, Android
-cross-compilation) · a Rust toolchain in WSL2 · `ubrn` actually generating the TypeScript bindings ·
-`cargo-ndk` cross-compilation for the three Android targets · the call from the Expo app on the physical
-device · and the ADR-004 outcome itself, which waits on all of it.
+### The UniFFI half is proven: a device call, on hardware (2026-09-16, continued)
+
+Same day, same branch. Rust in WSL2: `rustup` (toolchain 1.98.0, matching Windows exactly), the three Android
+targets, and `cargo-ndk` 4.1.2 — none of it present when the day started. `ubrn` then built and ran cleanly in
+WSL2, confirming the native-Windows failure was exactly what it looked like and nothing more.
+
+- **`cargo ndk build` cross-compiled the UniFFI binding for all three Android targets** — `arm64-v8a`,
+  `armeabi-v7a`, `x86_64` — in about 12 seconds, proving the Android cross-compilation half of ADR-004's
+  "chain works" bar (*"with the Android artefacts built … locally with `cargo-ndk` — natively on Windows or
+  in WSL2"*).
+- **A real turbo-module package now exists**, `packages/core-native/` (a new pnpm workspace member), built
+  from `core-rs/bindings/uniffi/` exactly as ADR-012 §2 describes: `ubrn build android --and-generate`
+  produced the Kotlin/C++/TypeScript glue, and `apps/mobile/src/domain/index.ts` is now the thin wrapper
+  ADR-004 always intended it to be, exporting `roundLoadToIncrement()`. The ESLint `core-binding` fence
+  (`apps/mobile/eslint/fences.js`) already existed from ADR-012's own planning, pointed at a placeholder
+  package name (`@cyberathlete/core`) that nothing had ever built — corrected to `@cyberathlete/core-native`,
+  the package that now exists.
+- **Found and fixed: `includesGeneratedCode: true` in `package.json`'s `codegenConfig`**, copied without
+  reading it from the `create-react-native-library` reference scaffold used to learn the file shapes. That
+  flag tells React Native's Gradle plugin *"this package already ships its generated code, don't regenerate
+  it"* — exactly backwards for a package with no pre-committed spec classes, and it silently skipped
+  `generateCodegenArtifactsFromSchema` entirely. The first `./gradlew assembleDebug` failed on
+  `Unresolved reference 'NativeCoreNativeSpec'` for exactly this reason; found by reading
+  `@react-native/gradle-plugin`'s own Kotlin source rather than guessing further, since two prior guesses
+  (an `outputDir` override, a missing `"react-native"` field) were both wrong — `outputDir` in
+  `codegenConfig` is never even read by this plugin version, which hardcodes its output to
+  `<module>/build/generated/source/codegen`. Removing the flag was the whole fix.
+- **`./gradlew assembleDebug` succeeded** — 19m 48s, 571 tasks (a from-scratch native build across three
+  ABIs for every module in the app, ours included) — with `NativeCoreNativeSpec.java` generated for real this
+  time, and `libcyberathlete_core_ffi.so` for all three ABIs packaged inside the built APK.
+- **Installed on the Galaxy S21 FE with `adb install -r`, launched, and it ran.** No crash on
+  `System.loadLibrary("cyberathlete-core-native")`, no crash on `installRustCrate()` — both fire at JS module
+  load, so either would have taken the app down immediately. Metro (on Windows, over `adb reverse`, the same
+  established pattern) bundled 1867 modules and served them in 47.9 s.
+- **The diagnostics screen — already home in a dev build — shows, on the device screen, live:**
+  ```
+  core-rs via UniFFI (task 017's ADR-004 spike, called through @cyberathlete/core-native)
+  round_to_increment(41.6, 2.5, nearest) = 42.5
+  round_to_increment(41.25, 2.5, nearest) = 40
+  ```
+  The spike's own two named values, computed by the Rust core, crossing UniFFI, JSI and the C++ turbo-module
+  bridge, on physical hardware. Screenshotted and confirmed.
+- **Found and fixed in passing: `pnpm start`'s IPv6 bug** (recorded 2026-09-16, "not yet applied") — added
+  `cross-env NODE_OPTIONS=--dns-result-order=ipv4first` to the `start` script. Confirmed on the device
+  session above: Metro bound `127.0.0.1:8081`, not `::1`, and the app reached it over `adb reverse` first try.
+
+**What remains, precisely:** `packages/core-native/`'s `.so` binaries stay gitignored, rebuilt by
+`pnpm --filter @cyberathlete/core-native ubrn:android` (WSL2, as above) — nothing to fix there, it is the
+`android/` pattern already established for the app itself · the Rust CI job exists
+(`.github/workflows/ci.yml`) but has not run once, nothing pushed since it was written · the development
+build through EAS, which needs an Expo account that still does not exist · and the ADR-004 outcome itself,
+which — by the decision procedure's own wording, "Android artefacts built **by CI on Linux and by EAS**" —
+stays open until both of those, specifically, have happened. The toolchain risk the spike exists to retire is,
+as far as this machine and a physical phone can show it, retired.
 
 ## Notes and risks
 - **Nothing has run on a real phone until this task.** A problem in the native build — the Expo SDK, the

@@ -15,13 +15,13 @@ when its own criteria are ticked. Tick the box here only then.
 
 | | |
 |---|---|
-| **Phase** | **Tasks 001, 002, 011 and 003 complete; task 019 next.** The schema exists in Postgres and SQLite, seeded and enforcing itself; the design system exists in `src/ui/`, token-driven and tested in both languages, both unit systems and both themes; and accounts, sessions and the privacy key exist on both sides, with row-level security proven under the API's own role. **Administrator rights arrived 2026-09-16**, so [task 017](tasks/017-local-toolchain-device-spike.md) — Docker, the device, the ADR-004 spike — is under way and must finish before task 004. **Its local stack runs and the app runs on a physical phone; `core-rs` now exists and the spike's PyO3 half is proven end to end.** The UniFFI half — the app on the device — is still open, blocked on a Rust toolchain inside WSL2 |
+| **Phase** | **Tasks 001, 002, 011 and 003 complete; task 019 next.** The schema exists in Postgres and SQLite, seeded and enforcing itself; the design system exists in `src/ui/`, token-driven and tested in both languages, both unit systems and both themes; and accounts, sessions and the privacy key exist on both sides, with row-level security proven under the API's own role. **Administrator rights arrived 2026-09-16**, so [task 017](tasks/017-local-toolchain-device-spike.md) — Docker, the device, the ADR-004 spike — is under way and must finish before task 004. **Its local stack runs, the app runs on a physical phone, and `core-rs` now exists with both halves of the spike's own call proven** — `round_to_increment()` returns the right values through PyO3 from FastAPI and through UniFFI from the app on the device. **ADR-004's outcome still is not recorded**: its bar also asks for the Android artefacts built by CI on Linux and by EAS, and neither has run yet |
 | **Repository** | Private GitHub repository `hiuriselzler/projeto_cyber`. `main` holds the documentation and tasks 001, 002, 011 and 003, each merged by pull request (#1; #5; #7 and #8; #9); each further piece arrives the same way, with CI green before merge |
 | **Docs** | 49 files, internally consistent, all cross-links resolving |
 | **Decisions** | 15 ADRs. Fourteen accepted outright; [ADR-004](decisions/ADR-004.md) accepted *conditionally* |
 | **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **4 complete** (001, 002, 011, 003) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | [Task 017](tasks/017-local-toolchain-device-spike.md), in progress since administrator rights arrived 2026-09-16: the local stack runs, the app runs on the phone, and the ADR-004 spike has begun — `core-rs` exists, and `round_to_increment()` is proven from FastAPI through PyO3, with the shared fixture, INV-10's gates and a new import-linter fence all passing. **Next is the UniFFI half**: a Rust toolchain in the WSL2 checkout, then `uniffi-bindgen-react-native`, `cargo-ndk` cross-compilation, and the call from the app on the physical device — the step "chain works" actually turns on. `cargo-deny`'s ban list and the Rust CI job are still unwritten. [Task 019](tasks/019-account-deletion.md) is **built on `feat/task-019-account-deletion` and not yet merged** — its criteria are ticked once CI passes on its pull request. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
+| **Next action** | [Task 017](tasks/017-local-toolchain-device-spike.md), in progress since administrator rights arrived 2026-09-16: the local stack runs, the app runs on the phone, and **the ADR-004 spike's own call is proven both ways** — PyO3 from FastAPI, and UniFFI from the app on the physical device, the same two values (42.5, 40.0) either way. `deny.toml` and the Rust CI job are written; the `rand` gate is proven locally but not yet through an actual CI run — nothing has been pushed since the job was added. **Next:** push and confirm the Rust CI job runs green; an Expo account, so the EAS build criterion can close; then ADR-004's outcome, which its own bar keeps open until both of those happen, whatever the toolchain has already shown. [Task 019](tasks/019-account-deletion.md) is **built on `feat/task-019-account-deletion` and not yet merged** — its criteria are ticked once CI passes on its pull request. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
 
 ### The one decision still genuinely open
 
@@ -167,12 +167,13 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
 > Everything that needs administrator rights on the development machine, and every check only a phone
 > can settle. **Must finish before task 004**: its spike decides how domain logic is written.
 > **In progress since 2026-09-16**, when administrator rights arrived. The local stack runs and **the app runs on a
-> physical Android phone** — ten criteria are ticked in the task file. The machine held none of the local
+> physical Android phone** — eleven criteria are ticked in the task file. The machine held none of the local
 > environment tasks 001–003 built, and it has been rebuilt on Docker. **The native build does not work on Windows**
 > and is done in WSL2, which ADR-004 allows; five task-011 criteria moved to tasks 004 and 007, which build the
-> screens they name. **The ADR-004 spike has begun**: `core-rs` exists, and its PyO3 half — `round_to_increment()`
-> called from FastAPI — is proven. The UniFFI half needs a Rust toolchain in WSL2, not yet installed. See the task
-> file and the decision log.
+> screens they name. **The ADR-004 spike's own call is proven both ways**: `core-rs` exists, and `round_to_increment()`
+> returns the right values through PyO3 from FastAPI *and* through UniFFI from the app on the physical device. What
+> is still open is the rest of ADR-004's bar — a real CI run, an EAS build — not the toolchain risk itself. See the
+> task file and the decision log.
 - [x] Administrator installs: Windows long paths, WSL2, Docker Desktop, Android Studio (SDK, NDK,
       platform tools), Visual Studio Build Tools and Rust with the Android targets and `cargo-ndk`
 - [ ] Local stack: `docker compose up`, roles created by the init hook, integration tests run locally,
@@ -1269,3 +1270,60 @@ task file's note claiming otherwise was wrong and is corrected there. Nothing he
   the device, and only Python is proven.
 - No invariant changed and no ADR was added: 49 documents, 15 ADRs. `core-rs/` is untracked; nothing from today is
   committed.
+
+  **Superseded within the same day** — see the two entries below: this work was committed and pushed as `0a2071d`
+  on `feat/task-017-core-spike`, and the UniFFI half went on to be proven for real, on the device.
+
+### 2026-09-16 — committed and pushed: `core-rs`, the PyO3 half, and the corrected doc claims
+
+`0a2071d` on `feat/task-017-core-spike`, pushed to `origin`. Nothing beyond what the two entries above describe —
+`core-rs/`, the PyO3 binding wired into the API, the new `core-binding-fenced` import-linter contract and its
+fixtures, and the header/count corrections to this file and the task file. No pull request opened: the spike was
+still incomplete (UniFFI unproven, no ADR-004 outcome), so this was recorded as work in progress, not a
+finished slice. `apps/api/apps/` (the `EMAIL_FOLDER` bug's stray output) and `apps/mobile/.gitignore` (still the
+open decision from 2026-09-16's device-run entry) were deliberately left out of the commit.
+
+### 2026-09-16 — the UniFFI half is proven: a device call, on hardware, later the same day
+
+Continued on `feat/task-017-core-spike`, not yet committed. Full account in
+[task 017](tasks/017-local-toolchain-device-spike.md) under the same heading; this is the short version.
+
+- **A Rust toolchain now exists in the WSL2 checkout** — `rustup` 1.98.0 matching Windows exactly, the three
+  Android targets, `cargo-ndk` 4.1.2 — and `cargo ndk build` cross-compiled the UniFFI binding for all three
+  targets in about 12 seconds. `uniffi-bindgen-react-native` built and ran cleanly there too, confirming the
+  earlier native-Windows `LNK1104` was exactly what it looked like: a Windows-only linker problem, not a Rust
+  or a UniFFI problem.
+- **`packages/core-native/` now exists** — a new pnpm workspace package built from `core-rs/bindings/uniffi/`,
+  exactly as [ADR-012 §2](decisions/ADR-012.md) describes. `apps/mobile/src/domain/index.ts` is the thin
+  wrapper ADR-004 always intended, exporting `roundLoadToIncrement()`; the `core-binding` ESLint fence that
+  ADR-012's planning had already written — pointed at a placeholder package name nothing had ever built — is
+  corrected to the package that now exists.
+- **Found and fixed: a copied config flag exactly inverted the intent.** `codegenConfig.includesGeneratedCode:
+  true`, copied from a reference scaffold without reading what it does, told React Native's Gradle plugin this
+  package already ships its generated code — skip regenerating it. For a package with no committed spec
+  classes, that is backwards, and it silently skipped Codegen outright. The first build failed on
+  `Unresolved reference 'NativeCoreNativeSpec'`; found by reading `@react-native/gradle-plugin`'s own Kotlin
+  source after two wrong guesses (an unread `outputDir` config key; a missing `"react-native"` field) cost more
+  time than just reading the plugin would have. Removing the flag was the whole fix.
+- **`./gradlew assembleDebug` succeeded** — 19m 48s, 571 tasks, a from-scratch native build across three ABIs
+  for every module in the app. `libcyberathlete_core_ffi.so` is in the built APK for `arm64-v8a`,
+  `armeabi-v7a` and `x86_64`.
+- **Installed on the Galaxy S21 FE, launched, and it ran** — no crash on either of the two points where a
+  broken binding would have taken the app down immediately (`System.loadLibrary`, `installRustCrate()`).
+  Metro, on Windows over `adb reverse`, bundled 1867 modules in 47.9 s.
+- **The diagnostics screen — home in a dev build — shows, live, on the device:**
+  `round_to_increment(41.6, 2.5, nearest) = 42.5` and `round_to_increment(41.25, 2.5, nearest) = 40`. The
+  spike's own two named values, computed by the Rust core, crossing UniFFI, JSI and the C++ turbo-module
+  bridge, on physical hardware. Screenshotted.
+- **Found and fixed in passing:** the `pnpm start` IPv6 bug recorded earlier today as "not yet applied" —
+  `cross-env NODE_OPTIONS=--dns-result-order=ipv4first` on the `start` script, confirmed on this same device
+  session: Metro bound `127.0.0.1:8081`, and the app reached it over `adb reverse` on the first try.
+- **Both acceptance-criterion values are now proven from Python *and* the device — that criterion is ticked.**
+  The `rand`-dependency gate is proven too, but only locally: `rand` was added to `cyberathlete-core`,
+  `cargo deny check bans` failed on it and the transitive `rand_core`, then passed clean again once removed —
+  the exact mechanism the Rust CI job now runs, but that job has not executed even once, since nothing has
+  been pushed since it was written. That criterion, and the ADR-004 outcome itself, stay unticked for that
+  reason alone: **the toolchain risk the spike exists to answer is, as far as a physical phone can show it,
+  answered.** What is left — a real CI run, an EAS build, an Expo account that does not exist yet — is process,
+  not risk.
+- No invariant changed and no ADR was added: 49 documents, 15 ADRs. Not yet committed.
