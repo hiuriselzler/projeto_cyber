@@ -20,6 +20,9 @@ rust-version.workspace = true
 publish.workspace = true
 
 [dependencies]
+# proof/rand-ban-in-ci — deliberately breaking INV-10's gate to watch CI catch it for real, matching
+# task 001's own proof method. This branch is thrown away once the `core-rs` job fails on it.
+rand = "0.9"
 
 [dev-dependencies]
 # Test-only: the shared fixtures are JSON on disk. The library itself reads nothing.
