@@ -20,18 +20,38 @@ JNI_LIBS="$REPO_ROOT/packages/core-native/android/src/main/jniLibs"
 UNIFFI_MANIFEST="$REPO_ROOT/core-rs/bindings/uniffi/Cargo.toml"
 
 echo "--- core-rs Android cross-compilation (task 017) ---"
+echo "repo root:  $REPO_ROOT"
+echo "manifest:   $UNIFFI_MANIFEST"
+echo "jniLibs:    $JNI_LIBS"
 
-# 1. Rust, pinned to the same toolchain CI and the development machine use.
-if ! command -v cargo > /dev/null 2>&1; then
-  echo "Installing Rust $RUST_VERSION"
+# The hook resolves the repository root by walking up from its own location. If EAS ever archives
+# only apps/mobile rather than the workspace, core-rs is absent and every later step fails obscurely
+# — so say it plainly here instead.
+if [ ! -f "$UNIFFI_MANIFEST" ]; then
+  echo "core-rs is not in the build context: no $UNIFFI_MANIFEST" >&2
+  echo "Contents of $REPO_ROOT:" >&2
+  ls -la "$REPO_ROOT" >&2
+  exit 1
+fi
+
+# 1. Rust, pinned to the same toolchain CI and the development machine use. The image may already
+#    ship a toolchain, and not necessarily through rustup or under $HOME — so probe rather than
+#    assume, and only source the rustup env file if it actually exists.
+if [ -f "$HOME/.cargo/env" ]; then
+  # shellcheck disable=SC1091
+  source "$HOME/.cargo/env"
+fi
+if ! command -v rustup > /dev/null 2>&1; then
+  echo "Installing rustup with Rust $RUST_VERSION"
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
     | sh -s -- -y --default-toolchain "$RUST_VERSION" --profile minimal
+  # shellcheck disable=SC1091
+  source "$HOME/.cargo/env"
 fi
-# shellcheck disable=SC1091
-source "$HOME/.cargo/env"
 rustup toolchain install "$RUST_VERSION" --profile minimal
 rustup default "$RUST_VERSION"
 rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android
+echo "cargo: $(cargo --version)"
 
 # 2. cargo-ndk, which drives the NDK toolchain for each ABI.
 if ! command -v cargo-ndk > /dev/null 2>&1; then
@@ -44,11 +64,13 @@ fi
 if [ -z "${ANDROID_NDK_HOME:-}" ]; then
   NDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}/ndk"
   if [ -d "$NDK_ROOT" ]; then
+    echo "NDKs available under $NDK_ROOT:"
+    ls -1 "$NDK_ROOT" || true
     ANDROID_NDK_HOME="$(ls -d "$NDK_ROOT"/27.* 2> /dev/null | sort -V | tail -1 || true)"
     if [ -z "$ANDROID_NDK_HOME" ]; then
-      ANDROID_NDK_HOME="$(ls -d "$NDK_ROOT"/* | sort -V | tail -1)"
+      ANDROID_NDK_HOME="$(ls -d "$NDK_ROOT"/* 2> /dev/null | sort -V | tail -1 || true)"
     fi
-    export ANDROID_NDK_HOME
+    [ -n "$ANDROID_NDK_HOME" ] && export ANDROID_NDK_HOME
   fi
 fi
 if [ -z "${ANDROID_NDK_HOME:-}" ] || [ ! -d "$ANDROID_NDK_HOME" ]; then
