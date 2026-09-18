@@ -15,7 +15,8 @@
     "check:catalogs": "node scripts/check-catalogs.mjs",
     "render:brand": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/render-brand-assets.mjs",
     "check:platform-files": "node scripts/check-platform-files.mjs .",
-    "check:release-cleartext": "node scripts/check-release-cleartext.mjs"
+    "check:release-cleartext": "node scripts/check-release-cleartext.mjs",
+    "check:release-bundle-diagnostics": "node scripts/check-release-bundle-diagnostics.mjs"
   },
   "dependencies": {
     "@cyberathlete/core-native": "workspace:*",

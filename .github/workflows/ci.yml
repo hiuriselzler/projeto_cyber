@@ -201,3 +201,7 @@ jobs:
         working-directory: apps/mobile/android
         run: ./gradlew :app:processReleaseMainManifest --no-daemon
       - run: pnpm check:release-cleartext
+      - name: The release JS bundle carries no debug-only diagnostics code
+        run: |
+          npx expo export --platform android
+          pnpm check:release-bundle-diagnostics

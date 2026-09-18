@@ -8,7 +8,7 @@ import {
   checkServerReadiness,
   type LanAddressCheck,
 } from '@/account/diagnostics';
-import { EXPECTED_TABLES, readLocalDatabaseState } from '@/db/diagnostics';
+import { checkSqliteRoundTrip, EXPECTED_TABLES, readLocalDatabaseState } from '@/db/diagnostics';
 import { roundLoadToIncrement } from '@/domain';
 import { describePlatform } from '@/platform';
 import { SegmentedControl, useTheme, type SegmentedOption, type ThemePreference } from '@/ui';
@@ -35,6 +35,7 @@ export function DiagnosticsScreen() {
     staleTime: Infinity,
   });
   const [database] = useState(readLocalDatabaseState);
+  const [roundTrip] = useState(checkSqliteRoundTrip);
   const [lanBaseUrl, setLanBaseUrl] = useState('http://192.168.0.10:8000');
   const [lanCheck, setLanCheck] = useState<LanAddressCheck | null>(null);
   const taps = useDiagnosticsStore((state) => state.taps);
@@ -64,6 +65,10 @@ export function DiagnosticsScreen() {
 
       <Check title="Local SQLite schema (relaunch: migrations applied must not change)">
         {`migrations applied: ${database.migrationsApplied} · tables: ${database.tables} of ${EXPECTED_TABLES}`}
+      </Check>
+
+      <Check title="SQLite round trip: a workout, an exercise and 3 sets (03 §8 types)">
+        {`${roundTrip.ok ? 'ok' : 'FAILED'}: ${roundTrip.detail}`}
       </Check>
 
       <Check title="Secure storage (restart the app: the previous value must survive)">

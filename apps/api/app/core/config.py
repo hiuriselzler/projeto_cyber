@@ -6,7 +6,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, SecretStr, ValidationError
+from pydantic import Field, SecretStr, ValidationError, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
@@ -65,6 +65,14 @@ class Settings(BaseSettings):
     # The API's own public address, for links in emails that open its web pages — the account-
     # deletion page (task 019). A deployed API must give an https:// address (04 §5).
     public_base_url: str = "http://localhost:8000"
+
+    @field_validator("email_folder")
+    @classmethod
+    def _anchor_relative_email_folder_to_repo_root(cls, value: Path) -> Path:
+        # A relative EMAIL_FOLDER (from .env) must not resolve against the process's cwd — the
+        # README has uvicorn run from apps/api, which turned "apps/api/.mail" into
+        # apps/api/apps/api/.mail (found on-device, task 017).
+        return value if value.is_absolute() else REPO_ROOT / value
 
 
 class MigrationSettings(BaseSettings):
