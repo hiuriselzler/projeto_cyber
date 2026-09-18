@@ -81,10 +81,17 @@ echo "NDK: $ANDROID_NDK_HOME"
 
 # 4. Build, straight into the directory CMakeLists.txt reads. Same three ABIs as ubrn.config.yaml
 #    and the Rust CI job; no x86, which nobody on this project runs.
+#
+#    Run from core-rs, not from apps/mobile. `cargo ndk` resolves the workspace by running
+#    `cargo metadata` in the *current directory* before it ever reads --manifest-path, so from a
+#    directory with no Cargo.toml it fails with "could not find Cargo.toml in ... or any parent".
+#    The Rust CI job runs the same command under `working-directory: core-rs`, which is why it
+#    never saw this; the hook has to do the same thing explicitly.
+cd "$REPO_ROOT/core-rs"
 cargo ndk \
   -t arm64-v8a -t armeabi-v7a -t x86_64 \
   -o "$JNI_LIBS" \
-  --manifest-path "$UNIFFI_MANIFEST" \
+  --manifest-path bindings/uniffi/Cargo.toml \
   build --release
 
 echo "--- jniLibs ---"
