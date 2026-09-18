@@ -56,10 +56,14 @@ row-level security. The development build talks `http://` to `localhost` only; a
 
 ### A local PostgreSQL without Docker (Windows, no administrator rights)
 
-Until Docker is available ([task 017](docs/tasks/017-local-toolchain-device-spike.md)), a portable
-PostgreSQL 16 stands in for it. The binaries are in `%LOCALAPPDATA%\Programs\pgsql-16.15` — EDB build
+**Docker is the supported setup and the one above is what to use.** This section is the fallback for a
+machine where Docker Desktop cannot be installed — it needs administrator rights, and for the first part
+of this project there were none ([task 017](docs/tasks/017-local-toolchain-device-spike.md)). Nothing here
+is installed by default; set it up only if you need it.
+
+A portable PostgreSQL 16 stands in. The binaries go in `%LOCALAPPDATA%\Programs\pgsql-16.15` — EDB build
 16.15-1, whose zip matches the hash in Scoop's manifest and whose programs match zonky's copy on Maven
-Central — and the data is in `%LOCALAPPDATA%\cyberathlete\postgres-16`. It listens on `127.0.0.1:5432`
+Central — and the data in `%LOCALAPPDATA%\cyberathlete\postgres-16`. It listens on `127.0.0.1:5432`
 only, with password authentication, and holds the same two roles as the Docker setup, so `.env` and the
 commands above stay exactly the same. It does not start with Windows; in PowerShell:
 

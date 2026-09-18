@@ -1,6 +1,8 @@
 # Quality gates — docs/06-operations.md §3 and docs/tasks/001-project-bootstrap.md § CI.
 # Every boundary rule runs against known-bad fixtures here, so a rule that silently stops working fails.
-# The Rust job (cargo deny, clippy, fmt, Android cross-compilation) arrives with the ADR-004 spike.
+# The `rust` job is core-rs's own (cargo deny, clippy, fmt, Android cross-compilation, ADR-004's
+# spike); `api` and `shared` also need a Rust toolchain now, because `uv sync` builds the PyO3
+# extension `cyberathlete-core` from source (task 017).
 
 name: CI
 
@@ -43,6 +45,10 @@ jobs:
         working-directory: apps/api
     steps:
       - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@1.98.0
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: core-rs
       - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
@@ -68,11 +74,53 @@ jobs:
       - run: uv run pytest
       - run: uv run pip-audit
 
+  rust:
+    name: core-rs
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: core-rs
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@1.98.0
+        with:
+          components: rustfmt, clippy
+          targets: aarch64-linux-android, armv7-linux-androideabi, x86_64-linux-android
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: core-rs
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      # INV-10: the crate-level half of the gate. clippy's disallowed-methods (clippy.toml) is the
+      # call-level half; an import rule alone would see the first and miss the second.
+      - uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          manifest-path: core-rs/Cargo.toml
+      # Runs every case in packages/shared/fixtures/round_to_increment.json — the same file the
+      # Python and TypeScript suites read (task 017).
+      - run: cargo test --workspace
+      - uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with:
+          # Matches task 017's device NDK, named by Gradle on the first Android build, never guessed.
+          ndk-version: r27c
+      - name: Android cross-compilation, all three targets (task 017's ADR-004 spike)
+        run: |
+          cargo install cargo-ndk --version 4.1.2 --locked
+          cargo ndk -t arm64-v8a -t armeabi-v7a -t x86_64 -o /tmp/android \
+            --manifest-path bindings/uniffi/Cargo.toml build --release
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+
   shared:
     name: Shared types are current
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@1.98.0
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: core-rs
       - uses: astral-sh/setup-uv@v6
       # pnpm before Node: setup-node caches the pnpm store, so pnpm must already exist. The version comes
       # from the packageManager pin in package.json.

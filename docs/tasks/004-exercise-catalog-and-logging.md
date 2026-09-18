@@ -74,8 +74,17 @@ to sync against. Built server-side in this task, wired to the client in 006.
 - [ ] A custom exercise named in Portuguese appears exactly as typed in an English UI
 - [ ] An imperial user logs and reads pounds end to end, and the stored `weight_kg` round-trips to
       exactly the lb value they entered
-- [ ] The set row renders without truncation in pt-BR at 200 % system font scale
 - [ ] Logging a 5-exercise, 20-set workout takes fewer than 30 taps beyond the weights themselves
+
+**On a physical device** *(moved from [task 017](017-local-toolchain-device-spike.md) on 2026-09-16 — each needs the
+set-logging UI this task builds; `SetRow` and `NumericKeypad` existed from task 011 but no route rendered either)*
+- [ ] The set row in Portuguese, **in pounds**, at 200 % system font size keeps every value readable and every
+      control usable — reflowed, never truncated *(absorbs this task's earlier 200 %-font criterion)*
+- [ ] The numeric keypad never covers the set row it is editing, on a short screen as well as a tall one
+- [ ] TalkBack can complete a full set-logging flow (VoiceOver: [task 016](016-ios-platform.md))
+- [ ] Portuguese plurals and the decimal comma render correctly under Hermes — the `Intl` polyfills are loaded.
+      The catalogs' nine plural messages are the `unit_spoken.*` names, so this is first testable once a screen
+      shows a quantity
 
 ## Notes and risks
 - **The set row is the product.** Prototype it in isolation, on a real phone, with sweaty hands,

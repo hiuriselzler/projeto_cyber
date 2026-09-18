@@ -10,6 +10,22 @@
 > **Built after 003 and before 004, not at the end.** The ADR-004 spike decides whether task 004 writes
 > its domain logic once, in Rust, or twice, in Python and TypeScript. Tasks 002, 011 and 003 contain no
 > shared domain logic, which is why they can go first.
+>
+> **In progress since 2026-09-16**, when administrator rights arrived. The prerequisites are installed, **the local
+> stack runs**, and **the app runs on a physical Android phone**. See § Progress below.
+>
+> **Correction (2026-09-16, later the same day):** this note previously said the spike's clock had not started
+> because nothing had run on a device yet. That stopped being true earlier the same day, at § The device run below —
+> the dev build reached the phone before this sentence was corrected. **The clock started then, by
+> [ADR-004](../decisions/ADR-004.md)'s own definition.** Nothing here extends the two-day timebox — the clock's start
+> time is unchanged, only this file's claim about it is fixed.
+>
+> **Both halves of the spike's own call are now proven (2026-09-16, still the same day).** `core-rs` exists;
+> `round_to_increment()` is called successfully through PyO3 from FastAPI and through UniFFI from the app on the
+> physical Android device — 42.5 and 40.0, the tie to the lighter load, on the device screen (§ The UniFFI half is
+> proven). **ADR-004's outcome is still not recorded**: its own bar additionally asks for the Android artefacts built
+> by CI on Linux and by EAS, and neither has run — the Rust CI job is written but unpushed, and no Expo account
+> exists yet for EAS. Task 004 still does not start while that is open.
 
 ## Goal
 The whole stack runs on the development machine, the app runs on a physical Android phone, and
@@ -99,17 +115,17 @@ an FFI chain that takes a week to stand up has already answered the question.
 ## Acceptance criteria
 
 **The local stack**
-- [ ] `docker compose up -d` from the repository root, then `uv run uvicorn app.main:app` in
+- [x] `docker compose up -d` from the repository root, then `uv run uvicorn app.main:app` in
       `apps/api`, serves `/health/ready` → 200 *(from task 001)*
-- [ ] `uv run pytest` in `apps/api` runs the integration tests against the local database, none skipped
+- [x] `uv run pytest` in `apps/api` runs the integration tests against the local database, none skipped
 - [ ] Every command in `README.md` works on Windows as written
 
 **The app on a phone** *(from task 001)*
-- [ ] The dev build on a physical device reaches `http://localhost:8000/health/ready` through
+- [x] The dev build on a physical device reaches `http://localhost:8000/health/ready` through
       `adb reverse`, and an `http://` request to the machine's LAN IP is refused by the app
-- [ ] The dev build opens on a physical Android device and hot-reloads a JS change
-- [ ] A local SQLite migration runs on first launch and is idempotent on the second
-- [ ] TanStack Query, Zustand and `expo-secure-store` each have a smoke test that passes on-device,
+- [x] The dev build opens on a physical Android device and hot-reloads a JS change
+- [x] A local SQLite migration runs on first launch and is idempotent on the second
+- [x] TanStack Query, Zustand and `expo-secure-store` each have a smoke test that passes on-device,
       and a value written to secure storage survives an app restart
 - [ ] A non-debug build given an `http://` API base URL refuses to start
 - [ ] The release bundle carries no diagnostics code — a search of it for `DiagnosticsScreen` finds
@@ -117,25 +133,24 @@ an FFI chain that takes a week to stand up has already answered the question.
 - [ ] The development build also builds through EAS
 
 **From task 002**
-- [ ] The Drizzle schema creates successfully on-device and every table in
+- [x] The Drizzle schema creates successfully on-device and every table in
       [03 §8](../03-database-schema.md) exists
 - [ ] A round-trip test writes a workout + exercise + 3 sets to SQLite and reads them back with
       correct types (booleans as 0/1, timestamps as epoch ms)
 
 **From task 011**
+> **Five criteria moved out on 2026-09-16** — four to [task 004](004-exercise-catalog-and-logging.md), one to
+> [task 007](007-cardio-recording.md). Each named a screen that does not exist yet: `SetRow` and `NumericKeypad` are
+> built and unit-tested in `src/ui/components/`, but **no route renders either**, and the live pace readout is task
+> 007's. They could never have been ticked here, and this task must finish **before** task 004. See § The criteria
+> that moved.
 - [ ] Changing one token value visibly updates every screen using it
-- [ ] All changing numbers use tabular figures — verified by watching a live pace readout not jitter
-- [ ] TalkBack can complete a full set-logging flow (VoiceOver: [task 016](016-ios-platform.md))
-- [ ] The set row in Portuguese, in pounds, at 200 % system font size keeps every value readable and every control
-      usable — reflowed, never truncated
-- [ ] The numeric keypad never covers the set row it is editing, on a short screen as well as a tall one
-- [ ] Portuguese plurals and the decimal comma render correctly under Hermes — the `Intl` polyfills are loaded
-- [ ] A manual theme override survives an app restart
+- [x] A manual theme override survives an app restart
 
 **From task 003**
-- [ ] `react-native-libsodium` — argon2id, XChaCha20-Poly1305 and `randombytes` — works in the
+- [x] `react-native-libsodium` — argon2id, XChaCha20-Poly1305 and `randombytes` — works in the
       development build
-- [ ] Airplane mode, app killed and reopened: the user is still signed in and lands on the home
+- [x] Airplane mode, app killed and reopened: the user is still signed in and lands on the home
       screen with no spinner and no error
 - [ ] A privacy key created on device A is unwrapped correctly by device B after sign-in, and the
       server never receives it in the clear — verified by inspecting the request bodies
@@ -148,12 +163,250 @@ an FFI chain that takes a week to stand up has already answered the question.
 
 **The decision** *(from task 001)*
 - [ ] CI fails if `core-rs` depends on `rand`, or calls `SystemTime::now` — **add each, watch CI fail**,
-      then remove them (INV-10)
-- [ ] `round_to_increment(41.6, 2.5, nearest)` returns **42.5** and `round_to_increment(41.25, 2.5, nearest)`
-      returns **40.0** — the tie goes to the lighter load — called from Python and from the app on a
-      **physical Android device**
+      then remove them (INV-10). *Proven locally: `rand` added to `cyberathlete-core`, `cargo deny
+      check bans` failed on both `rand` and the transitive `rand_core`, then passed clean again after
+      removing it (§ The ADR-004 spike begins). The Rust CI job now runs the identical check
+      (`.github/workflows/ci.yml`) but has not executed once — nothing has been pushed since it was
+      written — so this stays unticked until it has actually watched CI, not a local stand-in, fail*
+- [x] `round_to_increment(41.6, 2.5, nearest)` returns **42.5** and `round_to_increment(41.25, 2.5, nearest)`
+      returns **40.0** — the tie goes to the lighter load — called from Python **and from the app on a
+      physical Android device** (§ The UniFFI half is proven: a device call, on hardware)
 - [ ] **ADR-004 has a recorded outcome** — option A or option B, with the reason. **Task 004 does not
       start while this is open**
+
+## Progress (2026-09-16)
+
+### Prerequisites
+
+| # | Prerequisite | State |
+|---|---|---|
+| 1 | Windows long paths | **Already enabled** — `LongPathsEnabled=1`; nothing to do |
+| 2 | WSL2 | **Working.** `VirtualMachinePlatform` and `Microsoft-Windows-Subsystem-Linux` enabled, then the restart: Ubuntu runs as a v2 distribution on kernel `6.6.87.2-microsoft-standard-WSL2`. `HyperVisorPresent` was already true, so **no BIOS change was needed** |
+| 3 | Docker Desktop | **Installed** — engine 29.1.3 on the WSL2 backend. The `-5` was never about the restart; see § The `-5` was a leftover, not WSL2 |
+| 4 | Android Studio | 2026.1.4.7 |
+| 4 | Android SDK | command-line tools 16111833, platform-tools 37.0.1, `platforms;android-36`, `build-tools;36.0.0`, licences accepted. **NDK deliberately not yet installed** — see below |
+| 5 | VS Build Tools + C++ | **Already installed** — BuildTools 2026 with `VC.Tools.x86.x64` |
+| 5 | Rust + Android targets | 1.98.0 with `aarch64-linux-android`, `armv7-linux-androideabi`, `x86_64-linux-android`, and `cargo-ndk` 4.1.2 |
+| 6 | EAS CLI | 24.6.0. **An Expo account is still needed** before the EAS build criterion |
+| 7 | Physical Android phone | Available; USB debugging not yet set up |
+
+Not on the task's list but blocking everything Node-side, and now done: **Node 24.21.0** (the machine had 18.4.0, off
+the `.nvmrc` pin), **pnpm 12.4.1** through corepack, the workspace's 1081 packages installed clean — the three
+allowed install scripts and no others — and **Python 3.12** through uv.
+
+### The machine had none of tasks 001–003's local environment
+
+`.env`, `apps/api/.venv`, and the portable PostgreSQL 16.15 of 2026-09-12 with its data directory were all absent.
+The repository and its history are intact, so nothing was lost, but **§ 1 was a first setup rather than a
+verification**, and `.env` was regenerated from `.env.example` with fresh secrets. `.venv` has since been rebuilt
+with `uv sync`, and the portable PostgreSQL is not reinstalled: Docker replaces it, and the README now says so.
+
+### The `-5` was a leftover, not WSL2
+
+The entry of 2026-09-16 recorded Docker Desktop's installer failing `-5` "until the restart". **That was the wrong
+cause, and it is corrected here**: after the restart, with WSL2 demonstrably working, the installer still returned
+`-5`. Its elevated log gives the real reason:
+
+```
+System.Exception: For security reasons C:\ProgramData\DockerDesktop must be owned by an elevated account
+```
+
+An earlier Docker Desktop — version 4.76.0, from logs dated April and June 2026 — had been removed incompletely,
+leaving `C:\ProgramData\DockerDesktop` owned by the ordinary account, an orphaned `com.docker.service` pointing at a
+`C:\Program Files\Docker` that no longer existed, and no uninstall entry in the registry. **Deleting that directory
+was the whole fix**; the installer then recreated it elevated and completed. The installer in `Downloads` is 4.57.0
+but fetches a current package, so its age was never the problem either.
+
+### § 1 — the local stack, first run
+
+All of it on Windows, against the Docker stack:
+
+| Step | Result |
+|---|---|
+| `docker compose up -d` | `postgres` healthy on `127.0.0.1:5432`, `adminer` on `8080` |
+| The init hook's roles | `cyberathlete_app` with **no** `BYPASSRLS`, `cyberathlete_migrator` with it ([ADR-011](../decisions/ADR-011.md)) |
+| `uv sync` | 81 packages, Python 3.12.13 |
+| `alembic upgrade head` | `0001 → 0002 → 0003`, as `cyberathlete_migrator` |
+| `python -m seeds` · `scripts.check_schema` | 622 rows · passed, 39 tables, 42 classified |
+| `/health/ready` | **200**, after the boot-time role assertion passed as `cyberathlete_app` |
+| `uv run pytest` | **285 passed, none skipped**, 73 s |
+| API checks | `ruff`, `ruff format` (104 files), `mypy` (101 files), `lint-imports` — **5 contracts kept, 0 broken** |
+| Mobile checks | `typecheck`, `lint`, `lint:fixtures` (47), `check:platform-files`, `check:catalogs` (445 messages) |
+| `db:generate` · `render:brand` | Both leave their outputs unchanged, as the README requires |
+
+The API test count is **285**, not the 279 recorded when task 003 was built.
+
+### Found: the Jest matrix suites were flaky, and only CI's speed hid it
+
+`pnpm test` failed **1 to 3 tests of 427 depending on machine load**, always on `MATRIX[0]` — `en, metric, dark`, the
+first entry of the first `describe.each` — and **never on an assertion**. Every failure was
+`Exceeded timeout of 5000 ms`, Jest's default, which `jest.config.js` had not overridden. That first test pays the
+one-time cost of the providers, i18next, the `@formatjs` polyfills and a cold transform; a warm cache ran the same
+427 tests in 8 seconds and passed.
+
+CI stayed green because its Linux runners are faster, **not because the suite was sound** — the same flake can reach
+CI under load, which makes it a gate that cannot be trusted rather than a Windows quirk. Fixed by
+`testTimeout: 15000` in [jest.config.js](../../apps/mobile/jest.config.js); no test logic changed. Proven by two
+cold-cache runs after the change, 427 of 427 both times.
+
+### The criteria that moved (2026-09-16)
+
+Task 017 carried six device criteria from task 011. **Five of them named UI that does not exist**, and since this
+task must finish *before* [task 004](004-exercise-catalog-and-logging.md), none could ever have been ticked — the
+task as written could not close. `SetRow.tsx` and `NumericKeypad.tsx` exist in `src/ui/components/` and are
+unit-tested across the full matrix, but no screen or route imports either; the live pace readout belongs to
+[task 007](007-cardio-recording.md); and all nine ICU plural messages in the catalogs are `unit_spoken.*`, with
+none under `account.*`, so no reachable screen renders a quantity or a decimal comma.
+
+| Criterion | Now in | Why |
+|---|---|---|
+| TalkBack completes a full set-logging flow | [004](004-exercise-catalog-and-logging.md) | There is no set-logging flow until 004 builds it |
+| The set row in pt-BR, in pounds, at 200 % font | [004](004-exercise-catalog-and-logging.md) | **Merged** into 004's existing 200 %-font criterion, which gains "in pounds" and "every control usable" |
+| The keypad never covers the row it edits | [004](004-exercise-catalog-and-logging.md) | The keypad is reachable only once a set is being edited |
+| Portuguese plurals and the decimal comma under Hermes | [004](004-exercise-catalog-and-logging.md) | Needs a screen showing a quantity; the plurals are the spoken unit names |
+| Tabular figures, watching a live pace readout not jitter | [007](007-cardio-recording.md) | The live pace readout is 007's |
+
+**What stays here**, because both are testable against the account screens that do exist: the token change visibly
+updating every screen, and the theme override surviving a restart.
+
+### The device run (2026-09-16)
+
+The first time any of this ran on hardware — a Galaxy S21 FE (`SM-G990E`), Android 16, API 36, `arm64-v8a`.
+
+| Check | Result |
+|---|---|
+| Platform interface (`src/platform`) | `android 36` |
+| API readiness over `adb reverse` | **HTTP 200** `{"status":"ready","reason":null}` |
+| An `http://` LAN address | **Refused twice over** — the app's own guard (04 §5) *and* `java.net.UnknownServiceException: CLEARTEXT communication … not permitted`, from task 001's `withDebugOnlyLocalhostCleartext` plugin |
+| Drizzle schema on device | **36 of 36 tables**, 2 migrations |
+| Migration idempotence | Still 2 migrations after a restart — nothing re-ran |
+| Secure storage | Round trip ok, and the previous launch's timestamp survived a restart |
+| TanStack Query · Zustand | The readiness query · `taps` counting, resetting on relaunch as in-memory state should |
+| Hot reload | A JS edit appeared without a restart — Metro `Bundled 55ms (1 module)` |
+| Theme override | `system` → `light`, surviving a restart, the control drawing fill, edge and label (INV-24) |
+| libsodium | `Libsodium.install` ran; registration produced a wrapped privacy key |
+| **Offline sign-in** | Airplane mode **and** the API port forward removed: still signed in, straight to home, no spinner. The unreachable API surfaced as a typed `ApiUnreachableError`, never a crash |
+| Registration, end to end | **2.6 s** including the 64 MiB argon2id wrap, with no frozen screen |
+
+The verification email was written in **Portuguese**, from the device's locale — ADR-008 and INV-27 holding on real
+hardware, not only in Jest.
+
+### Found on the device, not yet fixed
+
+- **Screen titles are drawn behind the status bar.** `Entrar` and `Crie sua conta` overlap the clock: the header does
+  not respect the safe-area inset. Jest does not model insets, so only a phone shows it. Whether it belongs to task
+  003's screens or task 011's layout is not yet established.
+- **`EMAIL_FOLDER` resolves against the wrong directory.** `.env` holds the relative `apps/api/.mail`, but the README
+  runs uvicorn *from* `apps/api`, so the device registration's email landed in `apps/api/apps/api/.mail/`. Either the
+  value is absolute, or it is relative to where the API actually runs.
+- **`apps/mobile/.gitignore` is generated by `expo prebuild`** and is neither committed nor ignored. It needs a
+  decision either way.
+
+### Found while installing
+
+- **`sdkmanager` is deprecated** in command-line tools 16111833: it warns and delegates to a new `android` CLI.
+  Packages install with `android sdk install <package>`. The exact setup goes into `README.md` once a build has run.
+- **The NDK is deliberately deferred.** Nothing in the repository pins one — there is no `expo-build-properties` —
+  so the version is Expo SDK 57 / React Native 0.86.3's default and Gradle names it on the first Android build.
+  Installing a guess is several gigabytes of the wrong thing. `ANDROID_NDK_HOME` is set once that version is known.
+- `android sdk install platform-tools` **exits `0xC0000409` after unpacking correctly** — adb runs and the package is
+  sound. Recorded so it is not re-diagnosed.
+- Windows PowerShell 5.1's `Invoke-WebRequest` downloaded the 148 MB command-line tools at about 5 MB/min;
+  `curl.exe`, which ships with Windows, took under a minute.
+- **Node was installed but not selected.** nvm held 24.21.0 while 24.20.0 stayed active, below the `>=24.21.0` gate in
+  the root `package.json`, so `pnpm install` would have refused. `nvm use 24.21.0` fixes it, and its effect is only
+  visible to processes started afterwards — the shell that runs it still reports the old version.
+- **`.env.example` has drifted behind `.env`**: `EMAIL_TRANSPORT`, `EMAIL_FOLDER` and `APP_LINK_BASE` arrived with
+  task 003 and were never added to the example, so a setup that follows the README gets no email settings. Not yet
+  fixed — it is a task 003 omission, and it is corrected with the README's remaining § 2 commands.
+- **`adb` is not on `PATH`** and `ANDROID_HOME` is unset, though platform-tools are installed. Both are settled with
+  the Android environment, when the first build runs.
+
+### The ADR-004 spike begins (2026-09-16, later the same day)
+
+On `feat/task-017-core-spike`, not yet committed. Full account in
+[PROJECT-STATUS's decision log](../PROJECT-STATUS.md) under the same date; this is the short version.
+
+**`core-rs/` exists**, laid out exactly as [02 §2](../02-architecture.md): the workspace crate
+`cyberathlete-core` holds `progression::rounding`; `bindings/pyo3` and `bindings/uniffi` are its members.
+`round_to_increment()` is built — `Nearest | Down | Up`, a tie to the lighter load (ADR-010 § Amendment), total
+rather than panicking on an unusable increment. Five unit tests pass, the spike's own two named values among
+them, plus an idempotence check. `tests/shared_fixtures.rs` runs all nine cases from
+`packages/shared/fixtures/round_to_increment.json` straight from Rust. `clippy.toml` bans the clock calls and,
+beyond INV-10's own wording, `HashMap`/`HashSet` — their iteration order is process-seeded, which is exactly
+the kind of disagreement INV-10 rules out. `cargo deny` is installed; its ban list is not yet written.
+
+**The PyO3 half is proven — the FastAPI side of "chain works."** `apps/api/pyproject.toml` depends on the
+binding through a `uv` path source, `uv sync` builds and installs it, and `app/domain/rounding.py` re-exports
+it behind a new import-linter contract (`core-binding-fenced`) that only it may cross — the server mirror of
+[ADR-012 §2](../decisions/ADR-012.md)'s client-side rule. Task 002's placeholder oracle in
+`tests/integration/test_reference_data.py` — explicitly commented "the real one arrives in task 017" — is
+retired in favour of the real core, so INV-02's 52-cycle precision property now proves the shipping function.
+`ruff`, `ruff format`, `mypy --strict` (103 files) and `lint-imports` (**6 contracts, 0 broken**) are all clean;
+the affected suites are **11 passed**.
+
+**The UniFFI half was not proven at first.** Both binding crates compiled clean on native Windows — the Rust
+side was never the problem. `uniffi-bindgen-react-native@0.31.0-5` (pinned to match the `uniffi` crate's
+`0.31`) failed to build *itself* there: `pnpm dlx` compiles it from source, and MSVC's `link.exe` returned
+`LNK1104` linking its own build-script binaries. A different symptom from the `react-native-libsodium` CMake
+backslash bug found earlier the same day, but the same class of failure, and the same standing allowance
+covered it: *a native-Windows build that fights back while WSL2, CI and EAS work is not a failure.* Resolved
+in WSL2 — see § The UniFFI half is proven, below.
+
+### The UniFFI half is proven: a device call, on hardware (2026-09-16, continued)
+
+Same day, same branch. Rust in WSL2: `rustup` (toolchain 1.98.0, matching Windows exactly), the three Android
+targets, and `cargo-ndk` 4.1.2 — none of it present when the day started. `ubrn` then built and ran cleanly in
+WSL2, confirming the native-Windows failure was exactly what it looked like and nothing more.
+
+- **`cargo ndk build` cross-compiled the UniFFI binding for all three Android targets** — `arm64-v8a`,
+  `armeabi-v7a`, `x86_64` — in about 12 seconds, proving the Android cross-compilation half of ADR-004's
+  "chain works" bar (*"with the Android artefacts built … locally with `cargo-ndk` — natively on Windows or
+  in WSL2"*).
+- **A real turbo-module package now exists**, `packages/core-native/` (a new pnpm workspace member), built
+  from `core-rs/bindings/uniffi/` exactly as ADR-012 §2 describes: `ubrn build android --and-generate`
+  produced the Kotlin/C++/TypeScript glue, and `apps/mobile/src/domain/index.ts` is now the thin wrapper
+  ADR-004 always intended it to be, exporting `roundLoadToIncrement()`. The ESLint `core-binding` fence
+  (`apps/mobile/eslint/fences.js`) already existed from ADR-012's own planning, pointed at a placeholder
+  package name (`@cyberathlete/core`) that nothing had ever built — corrected to `@cyberathlete/core-native`,
+  the package that now exists.
+- **Found and fixed: `includesGeneratedCode: true` in `package.json`'s `codegenConfig`**, copied without
+  reading it from the `create-react-native-library` reference scaffold used to learn the file shapes. That
+  flag tells React Native's Gradle plugin *"this package already ships its generated code, don't regenerate
+  it"* — exactly backwards for a package with no pre-committed spec classes, and it silently skipped
+  `generateCodegenArtifactsFromSchema` entirely. The first `./gradlew assembleDebug` failed on
+  `Unresolved reference 'NativeCoreNativeSpec'` for exactly this reason; found by reading
+  `@react-native/gradle-plugin`'s own Kotlin source rather than guessing further, since two prior guesses
+  (an `outputDir` override, a missing `"react-native"` field) were both wrong — `outputDir` in
+  `codegenConfig` is never even read by this plugin version, which hardcodes its output to
+  `<module>/build/generated/source/codegen`. Removing the flag was the whole fix.
+- **`./gradlew assembleDebug` succeeded** — 19m 48s, 571 tasks (a from-scratch native build across three
+  ABIs for every module in the app, ours included) — with `NativeCoreNativeSpec.java` generated for real this
+  time, and `libcyberathlete_core_ffi.so` for all three ABIs packaged inside the built APK.
+- **Installed on the Galaxy S21 FE with `adb install -r`, launched, and it ran.** No crash on
+  `System.loadLibrary("cyberathlete-core-native")`, no crash on `installRustCrate()` — both fire at JS module
+  load, so either would have taken the app down immediately. Metro (on Windows, over `adb reverse`, the same
+  established pattern) bundled 1867 modules and served them in 47.9 s.
+- **The diagnostics screen — already home in a dev build — shows, on the device screen, live:**
+  ```
+  core-rs via UniFFI (task 017's ADR-004 spike, called through @cyberathlete/core-native)
+  round_to_increment(41.6, 2.5, nearest) = 42.5
+  round_to_increment(41.25, 2.5, nearest) = 40
+  ```
+  The spike's own two named values, computed by the Rust core, crossing UniFFI, JSI and the C++ turbo-module
+  bridge, on physical hardware. Screenshotted and confirmed.
+- **Found and fixed in passing: `pnpm start`'s IPv6 bug** (recorded 2026-09-16, "not yet applied") — added
+  `cross-env NODE_OPTIONS=--dns-result-order=ipv4first` to the `start` script. Confirmed on the device
+  session above: Metro bound `127.0.0.1:8081`, not `::1`, and the app reached it over `adb reverse` first try.
+
+**What remains, precisely:** `packages/core-native/`'s `.so` binaries stay gitignored, rebuilt by
+`pnpm --filter @cyberathlete/core-native ubrn:android` (WSL2, as above) — nothing to fix there, it is the
+`android/` pattern already established for the app itself · the Rust CI job exists
+(`.github/workflows/ci.yml`) but has not run once, nothing pushed since it was written · the development
+build through EAS, which needs an Expo account that still does not exist · and the ADR-004 outcome itself,
+which — by the decision procedure's own wording, "Android artefacts built **by CI on Linux and by EAS**" —
+stays open until both of those, specifically, have happened. The toolchain risk the spike exists to retire is,
+as far as this machine and a physical phone can show it, retired.
 
 ## Notes and risks
 - **Nothing has run on a real phone until this task.** A problem in the native build — the Expo SDK, the

@@ -1,0 +1,25 @@
+# The PyO3 binding as an installable Python package, built by maturin. `apps/api` depends on it
+# through a path source in its own pyproject, so `uv sync` compiles the core as part of an ordinary
+# API setup — which is also why the API's CI job now installs a Rust toolchain (ADR-004, option B's
+# cost, recorded in task 017).
+[build-system]
+requires = ["maturin>=1.9,<2"]
+build-backend = "maturin"
+
+[project]
+name = "cyberathlete-core"
+description = "The CyberAthlete domain core (ADR-004), as a Python extension module"
+requires-python = ">=3.12"
+dynamic = ["version"]
+classifiers = ["Private :: Do Not Upload"]
+
+[tool.maturin]
+# The compiled library lands inside the pure-Python package beside it, so `cyberathlete_core`
+# exports a typed surface (`__init__.py`, `_core.pyi`, `py.typed`) rather than a bare .so/.pyd.
+module-name = "cyberathlete_core._core"
+python-source = "python"
+manifest-path = "Cargo.toml"
+features = ["pyo3/extension-module"]
+# The wheel works on 3.12 and every later 3.x because the crate builds against Python's stable ABI
+# (`abi3-py312` in Cargo.toml). No manylinux tag is set: this wheel is built and installed in place
+# by `uv sync`, here and in CI, and is never published.

@@ -1,0 +1,16 @@
+# INV-10 — the core reads no clock and generates no randomness.
+#
+# `cargo deny` inspects dependencies, so it catches a crate like `rand` and is blind to a call into
+# the standard library. These are the calls. Both gates are required; neither replaces the other,
+# and INV-10's enforcement line says so in as many words.
+disallowed-methods = [
+  { path = "std::time::SystemTime::now", reason = "INV-10: the core reads no clock; `now` is a parameter" },
+  { path = "std::time::Instant::now", reason = "INV-10: the core reads no clock; durations are passed in" },
+  { path = "std::time::SystemTime::elapsed", reason = "INV-10: the core reads no clock" },
+  { path = "std::time::Instant::elapsed", reason = "INV-10: the core reads no clock" },
+]
+
+disallowed-types = [
+  { path = "std::collections::HashMap", reason = "INV-10: iteration order is seeded per process; use BTreeMap so two runs agree" },
+  { path = "std::collections::HashSet", reason = "INV-10: iteration order is seeded per process; use BTreeSet so two runs agree" },
+]

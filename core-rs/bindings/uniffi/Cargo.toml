@@ -1,0 +1,25 @@
+# The app's half of ADR-004: the core, as a native module the Expo app loads. The generated
+# TypeScript is a pnpm workspace package, and ADR-012 lets only `apps/mobile/src/domain/` import it.
+[package]
+name = "cyberathlete-core-ffi"
+description = "UniFFI bindings for the CyberAthlete domain core (ADR-004)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lib]
+name = "cyberathlete_core_ffi"
+crate-type = ["cdylib", "staticlib", "lib"]
+
+[dependencies]
+cyberathlete-core = { path = "../.." }
+uniffi = "0.31"
+
+# No `unsafe_code = "forbid"` here, unlike the core: UniFFI's scaffolding is generated unsafe
+# extern "C" glue. ADR-004 puts the ban on the core, which is where the logic lives.
+
+[lints.rust]
+# See the PyO3 crate: the MSVC linker's success message becomes a warning, and `-D warnings` a
+# failure, on Windows only.
+linker_messages = "allow"

@@ -1,0 +1,21 @@
+# uniffi-bindgen-react-native — generates this package's Android/C++/TypeScript glue from
+# core-rs/bindings/uniffi. ADR-004's UniFFI half; only run inside WSL2 on this machine (native
+# Windows fails to build the tool itself — task 017's findings).
+rust:
+  directory: ../../core-rs/bindings/uniffi
+  manifestPath: Cargo.toml
+
+android:
+  # Matches the three targets core-rs/Cargo.toml's workspace already builds (task 017); no x86,
+  # which nobody on this project runs.
+  targets:
+    - arm64-v8a
+    - armeabi-v7a
+    - x86_64
+  useSharedLibrary: true
+
+turboModule:
+  entrypoint: src/index.ts
+
+# iOS is out of scope for this spike (ADR-004's platform note: Android only, iOS is task 016's
+# first gate) — no `ios:` section, and none of its files are generated here.

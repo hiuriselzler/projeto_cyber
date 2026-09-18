@@ -1,0 +1,28 @@
+# The server's half of ADR-004: the core, as a native Python extension module imported by
+# `apps/api/app/domain/`. Built by maturin; see this crate's pyproject.toml.
+[package]
+name = "cyberathlete-core-py"
+description = "PyO3 bindings for the CyberAthlete domain core (ADR-004)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lib]
+# `_core` so the Python package `cyberathlete_core` can re-export it under a plain name.
+name = "_core"
+crate-type = ["cdylib"]
+
+[dependencies]
+cyberathlete-core = { path = "../.." }
+pyo3 = { version = "0.29.2", features = ["extension-module", "abi3-py312"] }
+
+# No `unsafe_code = "forbid"` here, unlike the core: PyO3's `#[pymodule]` and `#[pyfunction]` expand
+# to unsafe extern "C" glue, which is the entire job of a binding crate. ADR-004 puts the ban on the
+# core — the code with the logic in it — and this crate holds no logic to get wrong.
+
+[lints.rust]
+# Building a cdylib with the MSVC linker prints "Creating library …" to stdout, which rustc surfaces
+# as a warning and `-D warnings` then turns into a failed build — on Windows only, and for saying
+# that the link succeeded. CI links with GNU ld and never emits it.
+linker_messages = "allow"

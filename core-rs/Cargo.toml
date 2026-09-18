@@ -1,0 +1,30 @@
+[workspace]
+members = ["bindings/pyo3", "bindings/uniffi"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.98"
+publish = false
+
+# The domain core — ADR-004. The root package of its own workspace, with the two bindings as members.
+# Nothing here does I/O, reads a clock, or generates randomness (INV-10); the gates that hold that are
+# `deny.toml` (crates) and `clippy.toml` (standard-library calls), because cargo-deny sees dependencies
+# and not calls.
+[package]
+name = "cyberathlete-core"
+description = "Pure domain logic shared by the API and the app (ADR-004)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+
+[dev-dependencies]
+# Test-only: the shared fixtures are JSON on disk. The library itself reads nothing.
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[lints.rust]
+unsafe_code = "forbid"

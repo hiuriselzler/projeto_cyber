@@ -104,8 +104,8 @@ const fences = [
     id: 'core-binding',
     allowedIn: ['domain'],
     reason: 'only src/domain imports the core-rs binding (ADR-012)',
-    imports: [{ name: '@cyberathlete/core' }],
-    patterns: ['@cyberathlete/core/*'],
+    imports: [{ name: '@cyberathlete/core-native' }],
+    patterns: ['@cyberathlete/core-native/*'],
   },
   {
     id: 'design-tokens',

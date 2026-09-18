@@ -85,11 +85,20 @@ PLANTED_IMPORTS = {
     "unscoped-reads-fenced": [
         "fixture_app.services.reads_unscoped -> fixture_app.repositories.unscoped",
     ],
+    "core-binding-fenced": [
+        "fixture_app.main -> cyberathlete_core",
+        *(
+            f"fixture_app.{package}.reaches_the_core -> cyberathlete_core"
+            for package in ["api", "core", "models", "repositories", "schemas", "services"]
+        ),
+    ],
 }
 
 ALLOWED_IMPORTS = [
     "fixture_app.services.auth -> fixture_app.repositories.unscoped",
     "fixture_app.services.maintenance -> fixture_app.repositories.unscoped",
+    # ADR-004's one legal caller of the core binding (ADR-012's rule, server side).
+    "fixture_app.domain.reaches_the_core -> cyberathlete_core",
 ]
 
 

@@ -1,0 +1,37 @@
+{
+  "name": "@cyberathlete/core-native",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The CyberAthlete domain core (ADR-004), as a React Native turbo-module over core-rs/bindings/uniffi. Only apps/mobile/src/domain may import this (ADR-012 §2).",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hiuriselzler/projeto_cyber.git",
+    "directory": "packages/core-native"
+  },
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "ubrn:android": "ubrn build android --and-generate",
+    "ubrn:clean": "rm -rf cpp android/generated ios src/generated src/Native* src/index.generated.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "codegenConfig": {
+    "name": "CoreNativeSpec",
+    "type": "modules",
+    "jsSrcsDir": "src",
+    "android": {
+      "javaPackageName": "com.cyberathlete.corenative"
+    }
+  },
+  "dependencies": {
+    "@ubjs/core": "0.31.0-5",
+    "uniffi-bindgen-react-native": "0.31.0-5"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.3"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*"
+  }
+}
