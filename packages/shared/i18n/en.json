@@ -485,6 +485,16 @@
       "sign_out": "Sign out",
       "sign_out_everywhere": "Sign out everywhere"
     },
+    "delete": {
+      "title": "Delete your account",
+      "what": "Deleting your account removes it from our servers with everything in it: workouts, activities, plans, progress and settings.",
+      "grace": "It is deleted 7 days after you ask. Until then you can cancel from any device where you are signed in.",
+      "final": "After those 7 days it cannot be undone.",
+      "submit": "Delete my account",
+      "pending": "You asked to delete this account on {date}. It is deleted 7 days after that, unless you cancel.",
+      "cancel": "Keep my account",
+      "link": "Delete account"
+    },
     "errors": {
       "invalid_credentials": "That email and password do not match an account.",
       "email_unavailable": "An account already uses this email. Sign in, or reset its password.",
@@ -527,6 +537,39 @@
     "refresh_reuse": {
       "subject": "A device was signed out of your CyberAthlete account",
       "body": "Hi {name},\n\nThe sign-in on one of your devices was used in a way that suggests it was copied, so that device has been signed out. You will need to sign in on it again.\n\nIf you did not expect this, change your password."
+    },
+    "deletion_link": {
+      "subject": "Confirm the deletion of your CyberAthlete account",
+      "body": "Hi {name},\n\nSomeone asked to delete the CyberAthlete account that uses this address. If it was you, open this link within 30 minutes and confirm:\n\n{link}\n\nNothing is deleted until you confirm, and the account is deleted 7 days after that, so there is still time to change your mind.\n\nIf you did not ask for this, ignore this email. Your account stays as it is."
+    },
+    "deletion_requested": {
+      "subject": "Your CyberAthlete account will be deleted",
+      "body": "Hi {name},\n\nWe received a request to delete your CyberAthlete account. It will be deleted on or after {date}, with everything in it: workouts, activities, plans and progress.\n\nTo keep your account, sign in to the app before then and cancel the deletion. Your other devices stay signed in, so you can cancel from any of them.\n\nIf you did not ask for this, sign in, cancel the deletion and change your password."
+    },
+    "deletion_cancelled": {
+      "subject": "Your CyberAthlete account will not be deleted",
+      "body": "Hi {name},\n\nThe deletion of your account was cancelled. Everything stays as it was.\n\nIf you did not cancel it, someone else may be signed in to your account: change your password and sign out every other device."
+    },
+    "account_deleted": {
+      "subject": "Your CyberAthlete account was deleted",
+      "body": "Hi {name},\n\nYour CyberAthlete account and everything in it have been deleted, as you asked. This is the last email we send to this address.\n\nYou can create a new account with this address at any time."
+    }
+  },
+  "web": {
+    "account_deletion": {
+      "title": "Delete your CyberAthlete account",
+      "intro": "Enter the email address of the account you want to delete. We will send a confirmation link to that address. Nothing is deleted until you open it and confirm.",
+      "email_label": "Email",
+      "request_submit": "Send a confirmation link",
+      "request_sent": "If an account uses that address, a confirmation link is on its way. It works for 30 minutes.",
+      "invalid_email": "Enter a valid email address.",
+      "rate_limited": "Too many attempts. Wait a few minutes and try again.",
+      "confirm_intro": "Your account and everything in it, including workouts, activities, plans and progress, will be deleted 7 days after you confirm. Until then you can cancel by signing in to the app. After that it cannot be undone.",
+      "confirm_submit": "Delete my account",
+      "scheduled": "Your account will be deleted on or after {date}. To keep it, sign in to the app before then and cancel the deletion.",
+      "invalid_link": "This link has expired or has already been used. Ask for a new one.",
+      "request_again": "Ask for a new link",
+      "other_language": "Português"
     }
   },
   "a11y": {

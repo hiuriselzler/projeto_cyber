@@ -28,6 +28,18 @@
             ],
             "title": "Birth Date"
           },
+          "deletion_requested_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deletion Requested At"
+          },
           "display_name": {
             "title": "Display Name",
             "type": "string"
@@ -131,7 +143,8 @@
           "max_hr",
           "resting_hr",
           "gamification_enabled",
-          "privacy_key"
+          "privacy_key",
+          "deletion_requested_at"
         ],
         "title": "AccountResponse",
         "type": "object"
@@ -263,6 +276,43 @@
           }
         },
         "title": "AccountUpdate",
+        "type": "object"
+      },
+      "DeletionRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "password": {
+            "maxLength": 4096,
+            "minLength": 1,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "password"
+        ],
+        "title": "DeletionRequest",
+        "type": "object"
+      },
+      "DeletionResponse": {
+        "description": "When the deletion was asked for, and the moment from which the account is deleted.",
+        "properties": {
+          "deleted_from": {
+            "format": "date-time",
+            "title": "Deleted From",
+            "type": "string"
+          },
+          "deletion_requested_at": {
+            "format": "date-time",
+            "title": "Deletion Requested At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "deletion_requested_at",
+          "deleted_from"
+        ],
+        "title": "DeletionResponse",
         "type": "object"
       },
       "EmailChangeRequest": {
@@ -941,6 +991,110 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/auth/deletion": {
+      "delete": {
+        "operationId": "cancel_deletion_api_v1_auth_deletion_delete",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Cancel Deletion",
+        "tags": [
+          "auth"
+        ]
+      },
+      "post": {
+        "description": "Schedules the account's deletion for seven days on, and says when (task 019).",
+        "operationId": "request_deletion_api_v1_auth_deletion_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeletionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Request Deletion",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/api/v1/auth/email/change": {
       "post": {
         "operationId": "change_email_api_v1_auth_email_change_post",

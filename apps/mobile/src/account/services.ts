@@ -12,7 +12,7 @@ import {
   type PreparedPrivacyKey,
   type WrappedPrivacyKey,
 } from '@/crypto';
-import { readLocalAccount, saveLocalAccount, type LocalAccount } from '@/db/account';
+import { forgetLocalAccount, readLocalAccount, saveLocalAccount, type LocalAccount } from '@/db/account';
 import { SessionClient, secureSessionStore, type ApiClient, type SessionStore } from '@/sync';
 
 export interface AccountServices {
@@ -22,6 +22,7 @@ export interface AccountServices {
   readonly accounts: {
     save(account: LocalAccount, nowMs: number): void;
     read(id: string): LocalAccount | null;
+    forget(id: string): void;
   };
   readonly keys: {
     prepareNew(password: string): Promise<PreparedPrivacyKey>;
@@ -39,7 +40,7 @@ export function createAccountServices(api: ApiClient): AccountServices {
     api,
     session: new SessionClient(api, secureSessionStore),
     store: secureSessionStore,
-    accounts: { save: saveLocalAccount, read: readLocalAccount },
+    accounts: { save: saveLocalAccount, read: readLocalAccount, forget: forgetLocalAccount },
     keys: {
       prepareNew: prepareNewPrivacyKey,
       unwrap: unwrapPrivacyKey,

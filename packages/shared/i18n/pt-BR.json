@@ -485,6 +485,16 @@
       "sign_out": "Sair",
       "sign_out_everywhere": "Sair de todos os aparelhos"
     },
+    "delete": {
+      "title": "Excluir sua conta",
+      "what": "Excluir sua conta a remove dos nossos servidores com tudo o que ela contém: treinos, atividades, planos, progresso e configurações.",
+      "grace": "A exclusão acontece 7 dias depois do pedido. Até lá, você pode cancelar em qualquer aparelho em que estiver conectado.",
+      "final": "Depois desses 7 dias, não é possível desfazer.",
+      "submit": "Excluir minha conta",
+      "pending": "Você pediu a exclusão desta conta em {date}. Ela será excluída 7 dias depois disso, a menos que você cancele.",
+      "cancel": "Manter minha conta",
+      "link": "Excluir conta"
+    },
     "errors": {
       "invalid_credentials": "Esse e-mail e essa senha não correspondem a uma conta.",
       "email_unavailable": "Já existe uma conta com este e-mail. Entre ou redefina a senha dessa conta.",
@@ -527,6 +537,39 @@
     "refresh_reuse": {
       "subject": "Um aparelho foi desconectado da sua conta do CyberAthlete",
       "body": "Olá, {name}.\n\nA sessão de um dos seus aparelhos foi usada de um jeito que indica que ela foi copiada, então esse aparelho foi desconectado. Você vai precisar entrar nele de novo.\n\nSe você não esperava isso, altere sua senha."
+    },
+    "deletion_link": {
+      "subject": "Confirme a exclusão da sua conta do CyberAthlete",
+      "body": "Olá, {name}.\n\nAlguém pediu para excluir a conta do CyberAthlete que usa este endereço. Se foi você, abra este link em até 30 minutos e confirme:\n\n{link}\n\nNada é excluído até você confirmar, e a conta só é excluída 7 dias depois disso, então ainda dá tempo de mudar de ideia.\n\nSe você não pediu isso, ignore este e-mail. Sua conta continua como está."
+    },
+    "deletion_requested": {
+      "subject": "Sua conta do CyberAthlete será excluída",
+      "body": "Olá, {name}.\n\nRecebemos um pedido para excluir sua conta do CyberAthlete. Ela será excluída a partir de {date}, com tudo o que contém: treinos, atividades, planos e progresso.\n\nPara manter sua conta, entre no app antes dessa data e cancele a exclusão. Seus outros aparelhos continuam conectados, então você pode cancelar em qualquer um deles.\n\nSe você não pediu isso, entre no app, cancele a exclusão e altere sua senha."
+    },
+    "deletion_cancelled": {
+      "subject": "Sua conta do CyberAthlete não será excluída",
+      "body": "Olá, {name}.\n\nA exclusão da sua conta foi cancelada. Tudo continua como estava.\n\nSe não foi você quem cancelou, outra pessoa pode estar conectada à sua conta: altere sua senha e desconecte todos os outros aparelhos."
+    },
+    "account_deleted": {
+      "subject": "Sua conta do CyberAthlete foi excluída",
+      "body": "Olá, {name}.\n\nSua conta do CyberAthlete e tudo o que ela continha foram excluídos, como você pediu. Este é o último e-mail que enviamos para este endereço.\n\nVocê pode criar uma nova conta com este endereço quando quiser."
+    }
+  },
+  "web": {
+    "account_deletion": {
+      "title": "Excluir sua conta do CyberAthlete",
+      "intro": "Informe o endereço de e-mail da conta que você quer excluir. Vamos enviar um link de confirmação para esse endereço. Nada é excluído até você abrir o link e confirmar.",
+      "email_label": "E-mail",
+      "request_submit": "Enviar link de confirmação",
+      "request_sent": "Se houver uma conta com esse endereço, um link de confirmação está a caminho. Ele vale por 30 minutos.",
+      "invalid_email": "Informe um endereço de e-mail válido.",
+      "rate_limited": "Muitas tentativas. Espere alguns minutos e tente de novo.",
+      "confirm_intro": "Sua conta e tudo o que ela contém, incluindo treinos, atividades, planos e progresso, serão excluídos 7 dias depois da confirmação. Até lá, você pode cancelar entrando no app. Depois disso, não é possível desfazer.",
+      "confirm_submit": "Excluir minha conta",
+      "scheduled": "Sua conta será excluída a partir de {date}. Para mantê-la, entre no app antes dessa data e cancele a exclusão.",
+      "invalid_link": "Este link expirou ou já foi usado. Peça um novo.",
+      "request_again": "Pedir um novo link",
+      "other_language": "English"
     }
   },
   "a11y": {

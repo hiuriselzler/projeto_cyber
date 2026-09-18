@@ -1,5 +1,8 @@
+export { AccountFrame } from './AccountFrame';
 export { ChangeEmailScreen } from './ChangeEmailScreen';
 export { ChangePasswordScreen } from './ChangePasswordScreen';
+export { DeleteAccountScreen } from './DeleteAccountScreen';
+export { PendingDeletionNotice } from './PendingDeletionNotice';
 export { RegisterScreen } from './RegisterScreen';
 export { ResetPasswordScreen } from './ResetPasswordScreen';
 export { SessionGate } from './SessionGate';

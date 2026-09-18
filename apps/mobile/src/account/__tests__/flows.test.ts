@@ -1,7 +1,7 @@
 /**
- * The account flows against fakes (task 003): offline sign-in, the privacy key at registration, sign-in, password
- * change and reset, and sign-out. The session client and the key are the real behaviour's seams, each tested on its
- * own in src/sync and src/crypto.
+ * The account flows against fakes (tasks 003 and 019): offline sign-in, the privacy key at registration, sign-in,
+ * password change and reset, sign-out, and deleting the account. The session client and the key are the real
+ * behaviour's seams, each tested on its own in src/sync and src/crypto.
  */
 import type { PreparedPrivacyKey, WrappedPrivacyKey } from '@/crypto';
 import type { LocalAccount } from '@/db/account';
@@ -9,9 +9,12 @@ import type { ApiClient, ApiRequest, ApiResponse, SessionClient, SessionStore, S
 
 import { AccountError } from '../errors';
 import {
+  cancelAccountDeletion,
   changePassword,
   confirmPasswordReset,
+  forgetEndedSession,
   register,
+  requestAccountDeletion,
   restoreSession,
   signIn,
   signOut,
@@ -31,6 +34,7 @@ const ACCOUNT: LocalAccount = {
   unitSystem: 'metric',
   locale: 'pt-BR',
   timezone: 'America/Sao_Paulo',
+  deletionRequestedAt: null,
 };
 
 const WRAP: WrappedPrivacyKey = { wrappedKey: 'd3JhcA==', salt: 'c2FsdA==', kdf: 'argon2id$m=65536,t=3,p=1' };
@@ -50,6 +54,7 @@ function accountBody() {
     resting_hr: null,
     gamification_enabled: true,
     privacy_key: { wrapped_key: WRAP.wrappedKey, salt: WRAP.salt, kdf: WRAP.kdf },
+    deletion_requested_at: null,
   };
 }
 
@@ -125,6 +130,10 @@ function fakes(respond: (request: ApiRequest) => ApiResponse, options: { offline
         saved.push(account);
       },
       read: (id) => saved.find((account) => account.id === id) ?? null,
+      forget: (id) => {
+        events.push('account forgotten');
+        saved.splice(0, saved.length, ...saved.filter((account) => account.id !== id));
+      },
     },
     keys: {
       prepareNew: async (password): Promise<PreparedPrivacyKey> => {
@@ -252,13 +261,64 @@ describe('the account flows', () => {
       expect(getSessionState().status).toBe('signed-in');
     });
 
-    it('signs this device out after a reset, keeping no old key', async () => {
+    it('signs this device out after a reset, keeping no old key and no account row', async () => {
       const { services, events } = fakes(() => ({ status: 204, body: '' }));
       setSessionState({ status: 'signed-in', account: ACCOUNT });
 
       await confirmPasswordReset(services, { token: 'reset-token-0123456789', newPassword: PASSWORD });
 
-      expect(events).toEqual(['key prepared under the password', 'session ended', 'key forgotten']);
+      expect(events).toEqual(['key prepared under the password', 'session ended', 'key forgotten', 'account forgotten']);
+      expect(getSessionState()).toEqual({ status: 'signed-out' });
+    });
+  });
+
+  describe('deleting the account', () => {
+    it('asks with the password, stays signed in, and keeps the pending deletion on the device', async () => {
+      const { services, sent, saved } = fakes(() => ({
+        status: 200,
+        body: JSON.stringify({ deletion_requested_at: '2026-09-14T12:00:00Z', deleted_from: '2026-09-21T12:00:00Z' }),
+      }));
+      setSessionState({ status: 'signed-in', account: ACCOUNT });
+
+      const account = await requestAccountDeletion(services, PASSWORD);
+
+      expect(sent[0]).toMatchObject({ method: 'POST', path: '/api/v1/auth/deletion', body: { password: PASSWORD } });
+      expect(account).toEqual({ ...ACCOUNT, deletionRequestedAt: NOW });
+      expect(saved).toEqual([account]);
+      expect(getSessionState()).toEqual({ status: 'signed-in', account });
+    });
+
+    it('says when the password is wrong, and changes nothing', async () => {
+      const { services, saved } = fakes(() => ({ status: 403, body: '{"error":"password_incorrect"}' }));
+      setSessionState({ status: 'signed-in', account: ACCOUNT });
+
+      await expect(requestAccountDeletion(services, 'not the password')).rejects.toEqual(
+        new AccountError('password_incorrect'),
+      );
+      expect(saved).toEqual([]);
+      expect(getSessionState()).toEqual({ status: 'signed-in', account: ACCOUNT });
+    });
+
+    it('keeps the account when the deletion is cancelled', async () => {
+      const { services, sent } = fakes(() => ({ status: 204, body: '' }));
+      setSessionState({ status: 'signed-in', account: { ...ACCOUNT, deletionRequestedAt: NOW } });
+
+      const account = await cancelAccountDeletion(services);
+
+      expect(sent[0]).toMatchObject({ method: 'DELETE', path: '/api/v1/auth/deletion' });
+      expect(account).toEqual(ACCOUNT);
+      expect(getSessionState()).toEqual({ status: 'signed-in', account: ACCOUNT });
+    });
+
+    it('forgets the key and the account’s row when the server ends the session, as it does for a deleted account', async () => {
+      const { services, events, saved } = fakes(() => ({ status: 204, body: '' }));
+      saved.push(ACCOUNT);
+      setSessionState({ status: 'signed-in', account: ACCOUNT });
+
+      await forgetEndedSession(services);
+
+      expect(events).toEqual(['key forgotten', 'account forgotten']);
+      expect(saved).toEqual([]);
       expect(getSessionState()).toEqual({ status: 'signed-out' });
     });
   });
@@ -269,7 +329,7 @@ describe('the account flows', () => {
 
     await signOut(services);
 
-    expect(events).toEqual(['session ended', 'key forgotten']);
+    expect(events).toEqual(['session ended', 'key forgotten', 'account forgotten']);
     expect(getSessionState()).toEqual({ status: 'signed-out' });
   });
 });

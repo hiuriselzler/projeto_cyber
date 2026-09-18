@@ -90,5 +90,6 @@ themselves (`apps/api/tests/conftest.py`). Linux, and so CI and production, is u
 | Mobile | `pnpm typecheck` · `pnpm lint` · `pnpm lint:fixtures` · `pnpm check:platform-files` · `pnpm test` · `pnpm db:generate` must leave `src/db/migrations` unchanged · `pnpm check:catalogs` · `pnpm render:brand` must leave `assets/images` and `src/ui/brand` unchanged |
 | Shared | `uv run python -m scripts.export_openapi` and `uv run python -m seeds.export` (in `apps/api`), then `pnpm --filter @cyberathlete/shared generate:api` |
 | Release config | `pnpm prebuild` then `pnpm check:release-cleartext` (in `apps/mobile`) |
+| Daily job | `uv run python -m app.jobs.daily` (in `apps/api`) — the account-deletion sweep and the retention purges, run once a day in a deployed environment ([06 §5](docs/06-operations.md)) |
 
 API integration tests need the local Postgres and skip without it; CI runs them against a real one.

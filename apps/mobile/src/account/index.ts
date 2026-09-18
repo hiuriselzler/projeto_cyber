@@ -26,3 +26,5 @@ export const changeEmail = (change: { readonly currentPassword: string; readonly
 export const updateAccount = (changes: flows.AccountChanges) => flows.updateAccount(accountServices(), changes);
 export const listSessions = () => flows.listSessions(accountServices());
 export const revokeSession = (sessionId: string) => flows.revokeSession(accountServices(), sessionId);
+export const requestAccountDeletion = (password: string) => flows.requestAccountDeletion(accountServices(), password);
+export const cancelAccountDeletion = () => flows.cancelAccountDeletion(accountServices());

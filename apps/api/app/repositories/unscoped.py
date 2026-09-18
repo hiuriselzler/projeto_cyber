@@ -81,8 +81,27 @@ async def find_verification_token(session: AsyncSession, token_hash: str) -> Fou
     return FoundEmailToken(UserId(row.user_id), row.expires_at, row.used, str(row.email))
 
 
+async def find_deletion_token(session: AsyncSession, token_hash: str) -> FoundEmailToken | None:
+    """The web deletion page's link, which is how its user is identified (task 019)."""
+    row = (
+        await session.execute(
+            text("SELECT user_id, expires_at, used FROM auth_redeem_deletion_token(:token_hash)"),
+            {"token_hash": token_hash},
+        )
+    ).one_or_none()
+    return None if row is None else FoundEmailToken(UserId(row.user_id), row.expires_at, row.used)
+
+
 async def purge_revoked_refresh_tokens(session: AsyncSession, before: datetime) -> int:
     result = await session.execute(
         text("SELECT maintenance_purge_revoked_tokens(:before)"), {"before": before}
     )
     return int(result.scalar_one())
+
+
+async def accounts_due_for_deletion(session: AsyncSession, now: datetime) -> list[UserId]:
+    """Accounts whose deletion was requested seven days or more before `now` — ids only (04 §7)."""
+    result = await session.execute(
+        text("SELECT user_id FROM maintenance_accounts_due_for_deletion(:now)"), {"now": now}
+    )
+    return [UserId(row.user_id) for row in result]
