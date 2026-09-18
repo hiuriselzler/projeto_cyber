@@ -49,6 +49,8 @@ coverage/
 .DS_Store
 Thumbs.db
 *.log
+.vscode/
+.idea/
 
 # Local Claude Code settings
 .claude/settings.local.json

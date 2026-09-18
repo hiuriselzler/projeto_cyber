@@ -1,0 +1,38 @@
+{
+  "cli": {
+    "version": ">= 24.6.0",
+    "appVersionSource": "local"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://api.cyberathlete.invalid"
+      }
+    },
+    "release-cleartext-proof": {
+      "extends": "preview",
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "http://api.cyberathlete.invalid"
+      }
+    },
+    "production": {
+      "android": {
+        "buildType": "app-bundle"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}
