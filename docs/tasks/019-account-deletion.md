@@ -2,6 +2,10 @@
 
 **Depends on:** 003 · **Blocks:** the store listing · **Size:** M
 
+> **Complete (2026-09-18).** Built on `feat/task-019-account-deletion`, rebased onto `main` after task 017's core-rs
+> merge, and merged as [PR #11](https://github.com/hiuriselzler/projeto_cyber/pull/11) with all five CI jobs green.
+> Every criterion below is ticked; what was settled while building is at the end of this file.
+
 > **Added 2026-09-14**, closing open question 11. FR-1.4 required deletion and export and no task owned either. They
 > were split: deletion needs only task 003 and can be built now; export needs synced data and is
 > [task 020](020-data-export.md).
@@ -70,23 +74,23 @@ one real delete in a product where nothing else with history is ever deleted (IN
 - A signed-in device with a pending deletion shows it, with its date and a way to cancel.
 
 ## Acceptance criteria
-- [ ] Requesting deletion needs the current password, works for an unverified account, and a wrong password counts
+- [x] Requesting deletion needs the current password, works for an unverified account, and a wrong password counts
       against the login limit
-- [ ] The request emails the user, in their language, the date deletion runs and how to cancel
-- [ ] Other devices stay signed in during the grace period, and any of them can cancel
-- [ ] Cancelling within 7 days leaves the account exactly as it was, and sends the cancellation email
-- [ ] The sweep deletes an account 7 days after its request and not a moment before — tested with the clock moved
-- [ ] **After the sweep, no user-owned table holds a row of that account** — a test over
+- [x] The request emails the user, in their language, the date deletion runs and how to cancel
+- [x] Other devices stay signed in during the grace period, and any of them can cancel
+- [x] Cancelling within 7 days leaves the account exactly as it was, and sends the cancellation email
+- [x] The sweep deletes an account 7 days after its request and not a moment before — tested with the clock moved
+- [x] **After the sweep, no user-owned table holds a row of that account** — a test over
       [03 §11](../03-database-schema.md)'s classification, so a table added later is covered without editing the test;
       another account's rows are untouched
-- [ ] Each account is deleted inside its own scope, found only through ADR-011's function
-- [ ] The "account deleted" email is sent only once the deletion has committed
-- [ ] A deleted account's refresh tokens are refused, and its email address can register a new account
-- [ ] Deletion can be requested without the app, from the web page, and the page answers identically for a registered
+- [x] Each account is deleted inside its own scope, found only through ADR-011's function
+- [x] The "account deleted" email is sent only once the deletion has committed
+- [x] A deleted account's refresh tokens are refused, and its email address can register a new account
+- [x] Deletion can be requested without the app, from the web page, and the page answers identically for a registered
       and an unregistered address
-- [ ] Opening the confirmation link schedules nothing; only the page's button does. A used or an expired link is refused
-- [ ] The web page renders in `en` and `pt-BR` from the shared catalogs, and refuses to be framed
-- [ ] The sweep and the retention purges run from one scheduled command, documented in 06
+- [x] Opening the confirmation link schedules nothing; only the page's button does. A used or an expired link is refused
+- [x] The web page renders in `en` and `pt-BR` from the shared catalogs, and refuses to be framed
+- [x] The sweep and the retention purges run from one scheduled command, documented in 06
 
 ## Notes and risks
 - **Open, to settle before the mobile half:** what a device does with its local copy of the account's data once the

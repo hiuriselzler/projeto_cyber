@@ -19,7 +19,7 @@ This is the real order.
 | 2 | [002 Database](002-database.md) | L | Last chance to change the schema freely. **Complete** |
 | 3 | [011 Design system](011-design-system.md) | L | **Before any feature UI.** Task 004 builds the set row — the most important component in the app — and it should be built from a system, not retrofitted into one. **Complete** |
 | 4 | [003 Authentication](003-authentication.md) | L | Includes password reset and email verification, now v1 blockers. **Complete** |
-| 5 | [019 Account deletion](019-account-deletion.md) | M | A legal and a store requirement. Needed only 003 and no administrator rights, so it went ahead while 017 waited for them. **Built, awaiting its pull request** |
+| 5 | [019 Account deletion](019-account-deletion.md) | M | A legal and a store requirement. Needed only 003 and no administrator rights, so it went ahead while 017 waited for them. **Complete** |
 | 6 | [017 Local toolchain, device and core spike](017-local-toolchain-device-spike.md) | L | Everything that needs administrator rights, and every check only a phone can settle. **Must come before 004** — it holds the [ADR-004](../decisions/ADR-004.md) Rust spike, a 2-day go/no-go. **In progress since 2026-09-16**, when those rights arrived |
 | 7 | [004 Catalog and logging](004-exercise-catalog-and-logging.md) | XL | The core loop. Usable, offline, local-only |
 | 8 | [005 Progression planner](005-strength-progression-planner.md) | XL | The reason the product exists |
