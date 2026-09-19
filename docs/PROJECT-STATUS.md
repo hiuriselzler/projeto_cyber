@@ -15,30 +15,34 @@ when its own criteria are ticked. Tick the box here only then.
 
 | | |
 |---|---|
-| **Phase** | **Tasks 001, 002, 011, 003 and 019 complete.** The schema exists in Postgres and SQLite, seeded and enforcing itself; the design system exists in `src/ui/`, token-driven and tested in both languages, both unit systems and both themes; accounts, sessions and the privacy key exist on both sides, with row-level security proven under the API's own role; and a user can delete their account, from the app or the web, with a 7-day grace period and one daily sweep. **Administrator rights arrived 2026-09-16**, so [task 017](tasks/017-local-toolchain-device-spike.md) — Docker, the device, the ADR-004 spike — is under way and must finish before task 004. **Its local stack runs, the app runs on a physical phone, and `core-rs` exists with three of ADR-004's four bar conditions proven**: PyO3 from FastAPI, UniFFI from the device, and the Android artefacts built by CI on Linux — the last of those proven twice, once clean and once catching a deliberate violation on a throwaway branch. **Only the EAS build is outstanding** |
+| **Phase** | **Tasks 001, 002, 011, 003 and 019 complete.** The schema exists in Postgres and SQLite, seeded and enforcing itself; the design system exists in `src/ui/`, token-driven and tested in both languages, both unit systems and both themes; accounts, sessions and the privacy key exist on both sides, with row-level security proven under the API's own role; and a user can delete their account, from the app or the web, with a 7-day grace period and one daily sweep. **Administrator rights arrived 2026-09-16**, so [task 017](tasks/017-local-toolchain-device-spike.md) — Docker, the device, the ADR-004 spike — is under way and must finish before task 004. **The spike is finished and [ADR-004](decisions/ADR-004.md) has its answer: option B, the single Rust core.** All four bar conditions are met — PyO3 from FastAPI, UniFFI from the physical device, and the Android artefacts built by CI on Linux *and* by EAS, the last verified by reading `libcyberathlete_core_ffi.so` for all three ABIs out of the built APK. **Task 004 is unblocked.** What is left in task 017 is not the spike: the README's Windows pass, and the device A-to-B privacy-key flow against a running API |
 | **Repository** | Private GitHub repository `hiuriselzler/projeto_cyber`. `main` holds the documentation and tasks 001, 002, 011, 003 and 019, each merged by pull request (#1; #5; #7 and #8; #9; #11); each further piece arrives the same way, with CI green before merge |
 | **Docs** | 49 files, internally consistent, all cross-links resolving |
-| **Decisions** | 15 ADRs. Fourteen accepted outright; [ADR-004](decisions/ADR-004.md) accepted *conditionally* |
+| **Decisions** | 15 ADRs, **all now accepted**. [ADR-004](decisions/ADR-004.md)'s spike passed on 2026-09-18 and its outcome is recorded: **option B, the single Rust core**. Its four pre-launch conditions remain outstanding, in tasks 005 and 006 |
 | **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **5 complete** (001, 002, 011, 003, 019) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | [Task 017](tasks/017-local-toolchain-device-spike.md), in progress since administrator rights arrived 2026-09-16: the local stack runs, the app runs on the phone, and **three of ADR-004's four bar conditions are proven** — PyO3 from FastAPI, UniFFI from the physical device (42.5 and 40.0, either way), and the Android artefacts built by CI on Linux, itself proven twice: [PR #12](https://github.com/hiuriselzler/projeto_cyber/pull/12) merged with all five jobs green, then a throwaway branch ([PR #13](https://github.com/hiuriselzler/projeto_cyber/pull/13), deleted) proved the `rand` gate actually fails CI before it was closed clean again. **Next: the EAS build — the last bar condition — and then ADR-004's outcome.** Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
+| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) — the core loop.** Task 017 is complete and ADR-004 is settled, so nothing blocks it. It is the largest task in the project and the one its own file says *deserves more care than any other UI*; the Rust core is adopted from here on, with e1RM (INV-07) and `is_counted_set()` (INV-04) its first real residents. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
 
-### The one decision still genuinely open
+### The decision that was open is closed — option B
 
-**[ADR-004](decisions/ADR-004.md) — the Rust domain core.** Accepted subject to a **two-day
-timeboxed spike** in task 017 — moved from task 001, still before task 004: prove UniFFI + PyO3 + EAS cross-compilation works by calling one
-trivial function from FastAPI and from the Expo app on a *physical* Android device. Its iOS half is
-moved, not dropped — it is gate 1 of task 016 ([ADR-009](decisions/ADR-009.md)).
+**[ADR-004](decisions/ADR-004.md) — the Rust domain core. Settled 2026-09-18: the chain works, and the
+core is Rust.** All four conditions of the bar fixed before the clock started are met — PyO3 from
+FastAPI, UniFFI from a physical Android device, and the Android artefacts built by CI on Linux *and*
+by EAS, the last read out of the built APK rather than inferred from a green build. The core is
+adopted from [task 004](tasks/004-exercise-catalog-and-logging.md) onward, which is now unblocked.
 
-- Chain works → **option B**, one Rust crate, adopted from task 004 onward.
-- Timebox blown → **option A**, the domain written twice in Python and TypeScript, policed by
-  shared fixtures as a hard CI gate on both suites.
-- **"Chain works" is defined in advance:** PyO3 from FastAPI and UniFFI from a physical Android device,
-  with the Android artefacts built by CI on Linux and by EAS. WSL2 is fine locally; a native-Windows build
-  that fights back is not a failure.
+**The timebox is recorded honestly rather than glossed.** The clock started 2026-09-16 and the bar
+closed on the evening of 2026-09-18 — at or just past two days by the calendar, against an ADR that
+says *do not extend the timebox*. It is still option B because the clause exists to catch a *hostile
+toolchain*, and the toolchain was never hostile: both bindings were proven on day one, hours apart.
+What consumed the rest was a missing Expo account and two bugs in a build hook written on the last
+day — neither of them the FFI chain. The full argument is in the ADR, not in a commit message.
 
-Everything before task 004 is unaffected either way, which is why the spike sits where it does.
-**Do not extend the timebox.** An FFI chain that takes a week to stand up has already answered.
+**Still open, and not decided by this.** The four conditions ADR-004 requires before the first
+external user — the kill switch, the engine version on every projection, server reconciliation as
+authoritative, the minimum engine version — are untouched by the spike and remain a launch blocker,
+built in tasks 005 and 006. *A working toolchain was always necessary and never sufficient.* The iOS
+half stays gate 1 of [task 016](tasks/016-ios-platform.md).
 
 ---
 
@@ -166,18 +170,20 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
       nothing**
 - [x] One scheduled command, in `app/jobs/`, for the deletion sweep and the retention purges, documented in 06
 
-#### ☐ 017 — Local toolchain, device and core spike · **L** · depends: 001, administrator rights · blocks: 004 onward
+#### ☑ 017 — Local toolchain, device and core spike · **L** · depends: 001, administrator rights · blocks: 004 onward
 > Everything that needs administrator rights on the development machine, and every check only a phone
 > can settle. **Must finish before task 004**: its spike decides how domain logic is written.
-> **In progress since 2026-09-16**, when administrator rights arrived. The local stack runs and **the app runs on a
-> physical Android phone** — twelve criteria are ticked in the task file. The machine held none of the local
-> environment tasks 001–003 built, and it has been rebuilt on Docker. **The native build does not work on Windows**
-> and is done in WSL2, which ADR-004 allows; five task-011 criteria moved to tasks 004 and 007, which build the
-> screens they name. **Three of ADR-004's four bar conditions are proven**: PyO3 from FastAPI, UniFFI from the
-> physical device, and the Android artefacts built by CI on Linux — [PR #12](https://github.com/hiuriselzler/projeto_cyber/pull/12)
-> merged all five jobs green, and a throwaway branch then proved the `rand` gate really fails CI before it was
-> deleted. **Only the EAS build is left, blocked on an Expo account that does not exist yet.** See the task file and
-> the decision log.
+> **Complete (2026-09-19).** All 23 criteria in the task file are ticked, each proven on the machine, on a Galaxy
+> S21 FE, or in CI. **[ADR-004](decisions/ADR-004.md) has its answer — option B, the single Rust core** — with all
+> four bar conditions met: PyO3 from FastAPI, UniFFI from the physical device, and the Android artefacts built by CI
+> on Linux *and* by EAS, the last read out of the built APK. The machine held none of the local environment tasks
+> 001–003 built and was rebuilt on Docker; **the native build does not work on Windows** and is done in WSL2, which
+> ADR-004 allows; five task-011 criteria moved to tasks 004 and 007, which build the screens they name.
+> **Found and fixed along the way**, none of it predicted: the README's first command failed on a stock Windows
+> install, the API's export scripts wrote CRLF here and not in CI, a comment claiming the key derivation took "about
+> a second" was never measured and is 177 ms, and every screen drew under the status bar because no safe-area inset
+> was ever applied. Built on `feat/task-017-device-checks` ([PR #16](https://github.com/hiuriselzler/projeto_cyber/pull/16)).
+> **Task 004 is unblocked.**
 - [x] Administrator installs: Windows long paths, WSL2, Docker Desktop, Android Studio (SDK, NDK,
       platform tools), Visual Studio Build Tools and Rust with the Android targets and `cargo-ndk`
 - [ ] Local stack: `docker compose up`, roles created by the init hook, integration tests run locally,
@@ -502,6 +508,7 @@ reopen for iOS** ([09 §2](09-business-model.md)).
 | 2026-09-12 | [ADR-013](decisions/ADR-013.md) The schema enforces itself — `user_id` on every child row, `NO ACTION` for exercises, the INV-06 marker carried by the row, INV-21's key with no NULL hole |
 | 2026-09-12 | [ADR-014](decisions/ADR-014.md) The design system enforces itself — tokens, contrast, motion and strings by gate |
 | 2026-09-14 | [ADR-015](decisions/ADR-015.md) Account security in practice — rate limits in Postgres, a 60-second rotation grace window, a bundled breach list, registration's `409` |
+| 2026-09-18 | **[ADR-004](decisions/ADR-004.md) settled — option B, the single Rust core.** The spike's bar is met in full; task 004 is unblocked. The four pre-launch conditions are untouched and still required |
 
 ### 2026-09-08 — documentation reconciliation pass
 

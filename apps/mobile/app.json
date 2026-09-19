@@ -2,6 +2,7 @@
   "expo": {
     "name": "CyberAthlete",
     "slug": "cyberathlete",
+    "owner": "cyberathletes-team",
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -49,6 +50,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "bb8c5713-8ab3-4889-a020-739c4ed8956e"
+      }
     }
   }
 }

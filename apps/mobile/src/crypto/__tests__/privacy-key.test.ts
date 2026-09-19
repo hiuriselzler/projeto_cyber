@@ -10,6 +10,7 @@ import {
   hasPrivacyKey,
   prepareNewPrivacyKey,
   PrivacyKeyError,
+  probePrivacyKeyLifecycle,
   rewrapPrivacyKey,
   unwrapPrivacyKey,
   WRAPPED_KEY_BYTES,
@@ -111,5 +112,38 @@ describe('the privacy key (ADR-007)', () => {
     await expect(unwrapPrivacyKey(PASSWORD, { ...prepared.wrapped, kdf: 'argon2id$m=65536,t=3,p=4' })).rejects.toEqual(
       new PrivacyKeyError('unreadable'),
     );
+  });
+});
+
+/**
+ * The probe behind the diagnostics screen (task 017). It is run for real on a phone — that is the
+ * point of it — but its assertions are the same here, so a change that quietly breaks one is caught
+ * in CI rather than on the next device session.
+ */
+describe('the privacy-key lifecycle probe', () => {
+  it('passes every step it makes', async () => {
+    const probe = await probePrivacyKeyLifecycle();
+
+    expect(probe.steps.map((step) => `${step.ok ? 'ok' : 'FAILED'} — ${step.name}`)).toEqual([
+      'ok — A key wrapped on device A opens on device B',
+      'ok — The wrong password is refused',
+      'ok — The wrap carries no key material',
+      'ok — A password change keeps the key, so existing rows stay decryptable',
+      'ok — A password reset makes a new key, so existing rows do not survive',
+      'ok — privacy_key_kdf travels with every wrap; older parameters still open',
+    ]);
+    expect(probe.payload.kdf).toBe('argon2id$m=65536,t=3,p=1');
+    expect(from_base64(probe.payload.wrappedKey, ORIGINAL)).toHaveLength(WRAPPED_KEY_BYTES);
+  });
+
+  it('touches neither secure storage nor the signed-in key', async () => {
+    const prepared = await prepareNewPrivacyKey(PASSWORD);
+    await prepared.commit();
+    const stored = mockSecureStore.get(STORAGE);
+
+    await probePrivacyKeyLifecycle();
+
+    expect(mockSecureStore.get(STORAGE)).toBe(stored);
+    expect(await hasPrivacyKey()).toBe(true);
   });
 });

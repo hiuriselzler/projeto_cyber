@@ -68,6 +68,11 @@ export async function prepareNewPrivacyKey(password: string): Promise<PreparedPr
  */
 export async function unwrapPrivacyKey(password: string, wrapped: WrappedPrivacyKey): Promise<void> {
   await ready;
+  await storeKey(await openWrap(password, wrapped));
+}
+
+/** Opens a wrap and returns the key. Private: callers outside this file get wraps, never the key. */
+async function openWrap(password: string, wrapped: WrappedPrivacyKey): Promise<Uint8Array> {
   const kdf = parseKdf(wrapped.kdf);
   const blob = decode(wrapped.wrappedKey);
   const salt = decode(wrapped.salt);
@@ -75,9 +80,8 @@ export async function unwrapPrivacyKey(password: string, wrapped: WrappedPrivacy
     throw new PrivacyKeyError('unreadable');
   }
   const wrappingKey = await derive(password, salt, kdf);
-  let key: Uint8Array;
   try {
-    key = crypto_aead_xchacha20poly1305_ietf_decrypt(
+    return crypto_aead_xchacha20poly1305_ietf_decrypt(
       null,
       blob.subarray(NONCE_BYTES),
       WRAP_CONTEXT,
@@ -87,7 +91,6 @@ export async function unwrapPrivacyKey(password: string, wrapped: WrappedPrivacy
   } catch {
     throw new PrivacyKeyError('wrong_password');
   }
-  await storeKey(key);
 }
 
 /** A password change: the same key, wrapped under the new password. Zones are not re-encrypted (ADR-007). */
@@ -109,6 +112,127 @@ export async function forgetPrivacyKey(): Promise<void> {
   await SecureStore.deleteItemAsync(PRIVACY_KEY_STORAGE);
 }
 
+/** One assertion made by the lifecycle probe below. */
+export interface PrivacyKeyProbeStep {
+  readonly name: string;
+  readonly ok: boolean;
+  readonly detail: string;
+}
+
+export interface PrivacyKeyProbe {
+  readonly steps: readonly PrivacyKeyProbeStep[];
+  /** One wrap at the current parameters — a derivation plus negligible AEAD (task 003's note). */
+  readonly deriveMs: number;
+  readonly totalMs: number;
+  /** Exactly what `src/account` sends the server, so it can be read on screen and inspected. */
+  readonly payload: WrappedPrivacyKey;
+}
+
+/** Parameters no build uses any more, to prove a wrap made under older ones still opens. */
+const SUPERSEDED_KDF: WrappingKdf = { memoryKib: 32_768, iterations: 2, parallelism: 1 };
+
+/**
+ * Task 017's on-device privacy-key checks, for the debug-only diagnostics screen: the criteria from
+ * task 003 that only a phone and real libsodium can settle.
+ *
+ * It runs entirely on a throwaway key of its own and **never touches secure storage or the signed-in
+ * user's key** — the alternative, driving the public API, would store whatever it unwrapped and
+ * destroy a real key. It lives here rather than in `crypto/diagnostics.ts` because only this module
+ * can open a wrap without handing the key bytes to a caller, which is the property the whole file
+ * exists to hold.
+ */
+export async function probePrivacyKeyLifecycle(): Promise<PrivacyKeyProbe> {
+  await ready;
+  const startedAt = Date.now();
+  const steps: PrivacyKeyProbeStep[] = [];
+  const record = (name: string, ok: boolean, detail: string) => steps.push({ name, ok, detail });
+
+  const password = 'diagnostic password one';
+  const newPassword = 'diagnostic password two';
+  const key = randombytes_buf(KEY_BYTES);
+
+  const wrapStartedAt = Date.now();
+  const wrapped = await wrap(key, password, WRAPPING_KDF);
+  const deriveMs = Date.now() - wrapStartedAt;
+
+  // A new device holds nothing but the wrap the server kept and the password just typed.
+  try {
+    record(
+      'A key wrapped on device A opens on device B',
+      sameBytes(await openWrap(password, wrapped), key),
+      'the wrap is self-contained: its salt and parameters travel with it',
+    );
+  } catch (error) {
+    record('A key wrapped on device A opens on device B', false, String(error));
+  }
+
+  try {
+    await openWrap('not the password', wrapped);
+    record('The wrong password is refused', false, 'it opened — this is a failure');
+  } catch (error) {
+    const refused = error instanceof PrivacyKeyError && error.reason === 'wrong_password';
+    record('The wrong password is refused', refused, refused ? 'wrong_password' : String(error));
+  }
+
+  // "The server never receives it in the clear" — what goes over the wire, checked and then shown.
+  const fields = Object.keys(wrapped).sort().join(', ');
+  const keyBase64 = encode(key);
+  const second = await wrap(key, password, WRAPPING_KDF);
+  record(
+    'The wrap carries no key material',
+    fields === 'kdf, salt, wrappedKey' &&
+      !Object.values(wrapped).some((value) => value.includes(keyBase64)) &&
+      second.wrappedKey !== wrapped.wrappedKey,
+    `fields: ${fields}; the key does not appear in any of them; two wraps of one key differ`,
+  );
+
+  // A password change re-wraps the same key; a reset generates a new one (ADR-007).
+  try {
+    const rewrapped = await wrap(key, newPassword, WRAPPING_KDF);
+    const sameKey = sameBytes(await openWrap(newPassword, rewrapped), key);
+    let oldRefused = false;
+    try {
+      await openWrap(password, rewrapped);
+    } catch {
+      oldRefused = true;
+    }
+    record(
+      'A password change keeps the key, so existing rows stay decryptable',
+      sameKey && oldRefused,
+      'the same key under the new password; the old password no longer opens it',
+    );
+  } catch (error) {
+    record('A password change keeps the key, so existing rows stay decryptable', false, String(error));
+  }
+
+  record(
+    'A password reset makes a new key, so existing rows do not survive',
+    !sameBytes(randombytes_buf(KEY_BYTES), key),
+    'reset generates a fresh key: rows under the old one cannot be recovered, and the reset screen says so first',
+  );
+
+  // A wrap made under parameters this build no longer uses must still open, and the next change
+  // must re-wrap under the current ones.
+  try {
+    const superseded = await wrap(key, password, SUPERSEDED_KDF);
+    const opened = sameBytes(await openWrap(password, superseded), key);
+    const current = await wrap(key, newPassword, WRAPPING_KDF);
+    record(
+      'privacy_key_kdf travels with every wrap; older parameters still open',
+      opened && superseded.kdf === formatKdf(SUPERSEDED_KDF) && current.kdf === formatKdf(WRAPPING_KDF),
+      `opened ${superseded.kdf}; re-wrapped under ${current.kdf}`,
+    );
+  } catch (error) {
+    record('privacy_key_kdf travels with every wrap; older parameters still open', false, String(error));
+  }
+
+  return { steps, deriveMs, totalMs: Date.now() - startedAt, payload: wrapped };
+}
+
+function sameBytes(a: Uint8Array, b: Uint8Array): boolean {
+  return a.length === b.length && a.every((byte, index) => byte === b[index]);
+}
+
 async function wrap(key: Uint8Array, password: string, kdf: WrappingKdf): Promise<WrappedPrivacyKey> {
   const salt = randombytes_buf(SALT_BYTES);
   const wrappingKey = await derive(password, salt, kdf);
@@ -121,8 +245,10 @@ async function wrap(key: Uint8Array, password: string, kdf: WrappingKdf): Promis
 }
 
 async function derive(password: string, salt: Uint8Array, kdf: WrappingKdf): Promise<Uint8Array> {
-  // A derivation holds the JavaScript thread for about a second on a mid-range phone (ADR-007). Yielding first lets
-  // the screen show that the app is working before it does; the spinner itself animates on the native thread.
+  // A derivation holds the JavaScript thread while it runs: measured at **177 ms** on a Galaxy S21 FE (task 017's
+  // device probe), not the "about a second" this comment previously asserted without ever having been timed. A
+  // slower phone will take longer, and the yield stays for that reason — it lets the screen show that the app is
+  // working before the thread is taken; the spinner itself animates on the native thread.
   await new Promise((resolve) => setTimeout(resolve, 0));
   return crypto_pwhash(KEY_BYTES, password, salt, kdf.iterations, kdf.memoryKib * 1024, ARGON2ID13);
 }

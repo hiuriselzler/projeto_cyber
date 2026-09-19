@@ -213,3 +213,19 @@ migration with no way to derive the missing keys.
   each device's newest token, and a refresh retires it. Left as it is for now.
 - **The retention purges are unscheduled**, so `rate_limit_buckets` gains a row per limited request until
   [task 019](019-account-deletion.md) adds the daily command.
+
+## Measured on hardware (2026-09-18, [task 017](017-local-toolchain-device-spike.md))
+
+The privacy-key criteria this task deferred to task 017 were run on a **Galaxy S21 FE** with real
+`react-native-libsodium`.
+
+- **The wrapping derivation — argon2id `m=64 MiB, t=3, p=1` — takes 177 ms**, and the screen stays
+  live through it. This is the number [task 017](017-local-toolchain-device-spike.md)'s criterion
+  asked to be written here.
+- **It corrects an estimate that had become documentation.** `src/crypto/privacy-key.ts` asserted the
+  derivation "holds the JavaScript thread for about a second on a mid-range phone". Nothing had ever
+  timed it. The `setTimeout(0)` yield before each derivation stays regardless — 177 ms on this phone
+  is a floor, not a typical value, and a genuinely mid-range device will be slower.
+- Unchanged by this: the **API's** login hash is still to be tuned to ~250 ms against a real deploy
+  target ([§ Scope](#scope)). That is a server measurement and a different machine; this number says
+  nothing about it.

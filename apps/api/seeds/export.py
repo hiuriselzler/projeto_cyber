@@ -24,7 +24,11 @@ def main() -> None:
         "exercises": data.exercise_rows(),
     }
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    OUTPUT.write_text(json.dumps(export, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    # newline="\n" for the same reason as scripts/export_openapi.py: text mode writes CRLF on
+    # Windows, and this file must be byte-identical wherever it is generated (task 017).
+    OUTPUT.write_text(
+        json.dumps(export, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n"
+    )
     print(f"wrote {OUTPUT}")
 
 

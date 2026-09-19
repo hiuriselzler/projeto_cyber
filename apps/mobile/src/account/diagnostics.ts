@@ -47,3 +47,23 @@ export async function checkSecureStorage(): Promise<SecureStorageCheck> {
   await writeDiagnosticsProbe(value);
   return { previous, roundTripped: (await readDiagnosticsProbe()) === value };
 }
+
+/**
+ * Task 017, from task 003: the privacy-key criteria only a phone and real libsodium settle — a wrap
+ * opening on a second device, a password change against a reset, superseded KDF parameters, and the
+ * derivation's measured cost. `src/crypto` does all of it; screens reach it through this folder
+ * (ADR-012 §2), and it runs on a throwaway key, never the signed-in user's.
+ */
+export {
+  probePrivacyKeyLifecycle as checkPrivacyKeyLifecycle,
+  type PrivacyKeyProbe,
+  type PrivacyKeyProbeStep,
+} from '@/crypto';
+
+/**
+ * Whether this device holds the privacy key at all — the observable half of task 017's device A to
+ * device B check. After clearing the app's data the answer must be `false`, and after signing in
+ * again it must be `true`, which is only possible if the server's wrap opened under the password.
+ * The key itself is never exposed, here or anywhere (ADR-007).
+ */
+export { hasPrivacyKey as checkPrivacyKeyHeld } from '@/crypto';

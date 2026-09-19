@@ -124,7 +124,8 @@ an FFI chain that takes a week to stand up has already answered the question.
 - [x] `docker compose up -d` from the repository root, then `uv run uvicorn app.main:app` in
       `apps/api`, serves `/health/ready` → 200 *(from task 001)*
 - [x] `uv run pytest` in `apps/api` runs the integration tests against the local database, none skipped
-- [ ] Every command in `README.md` works on Windows as written
+- [x] Every command in `README.md` works on Windows as written *(§ The README, walked on Windows —
+      two defects found and fixed)*
 
 **The app on a phone** *(from task 001)*
 - [x] The dev build on a physical device reaches `http://localhost:8000/health/ready` through
@@ -133,14 +134,14 @@ an FFI chain that takes a week to stand up has already answered the question.
 - [x] A local SQLite migration runs on first launch and is idempotent on the second
 - [x] TanStack Query, Zustand and `expo-secure-store` each have a smoke test that passes on-device,
       and a value written to secure storage survives an app restart
-- [ ] A non-debug build given an `http://` API base URL refuses to start. *The logic is already
-      exhaustively unit-tested — `assertApiBaseUrlAllowed(url, 'release')` throws for every `http://`
-      case, [api-client.test.ts](../../apps/mobile/src/sync/__tests__/api-client.test.ts) — but the
-      criterion as written wants a real release-build launch proof, which needs a signed, installable
-      release APK. Deferred alongside the EAS build below: same class of work, same blocker*
+- [x] A non-debug build given an `http://` API base URL refuses to start *(§ The release build
+      refuses, on hardware — a signed EAS release APK, installed and launched on the phone)*
 - [x] The release bundle carries no diagnostics code — a search of it for `DiagnosticsScreen` finds
       nothing *(§ The release bundle is proven diagnostics-free)*
-- [ ] The development build also builds through EAS
+- [x] The development build also builds through EAS *(build `9933bd7f`, 19m49s, an installable APK.
+      The `.so` files CMake imports are gitignored build output and EAS archives through git, so a
+      pre-install hook cross-compiles `core-rs` on the worker before Gradle runs —
+      `apps/mobile/scripts/eas-build-pre-install.sh`. § The EAS build)*
 
 **From task 002**
 - [x] The Drizzle schema creates successfully on-device and every table in
@@ -154,7 +155,7 @@ an FFI chain that takes a week to stand up has already answered the question.
 > built and unit-tested in `src/ui/components/`, but **no route renders either**, and the live pace readout is task
 > 007's. They could never have been ticked here, and this task must finish **before** task 004. See § The criteria
 > that moved.
-- [ ] Changing one token value visibly updates every screen using it
+- [x] Changing one token value visibly updates every screen using it *(§ The token change, on hardware)*
 - [x] A manual theme override survives an app restart
 
 **From task 003**
@@ -162,14 +163,24 @@ an FFI chain that takes a week to stand up has already answered the question.
       development build
 - [x] Airplane mode, app killed and reopened: the user is still signed in and lands on the home
       screen with no spinner and no error
-- [ ] A privacy key created on device A is unwrapped correctly by device B after sign-in, and the
+- [x] A privacy key created on device A is unwrapped correctly by device B after sign-in, and the
       server never receives it in the clear — verified by inspecting the request bodies
-- [ ] Changing the password leaves existing encrypted rows decryptable; resetting it does not, and
-      the reset screen warned about that before the user confirmed
-- [ ] `privacy_key_kdf` is stored with every wrap; a key wrapped under older parameters still
-      unwraps, and is re-wrapped under the current ones at the next password change
-- [ ] The key derivation on a mid-range Android phone does not freeze the screen, and its measured
-      duration is written into task 003's notes
+      *(§ Device A to device B, for real — the full flow against a running API, with both request
+      bodies read off the wire)*
+- [x] Changing the password leaves existing encrypted rows decryptable; resetting it does not, and
+      the reset screen warned about that before the user confirmed *(§ The privacy-key probe. Proven
+      at the key, which is the mechanism: a change re-wraps the same key and the old password stops
+      opening it; a reset mints a new one. No encrypted rows exist to test directly until
+      [task 007](007-cardio-recording.md) builds privacy zones. The warning was already built —
+      `ResetPasswordScreen` renders `account.reset.zones_warning` above a button reading "Reset
+      password and remove privacy zones")*
+- [x] `privacy_key_kdf` is stored with every wrap; a key wrapped under older parameters still
+      unwraps, and is re-wrapped under the current ones at the next password change *(on the device:
+      opened `argon2id$m=32768,t=2,p=1`, re-wrapped under `argon2id$m=65536,t=3,p=1`)*
+- [x] The key derivation on a mid-range Android phone does not freeze the screen, and its measured
+      duration is written into task 003's notes *(**177 ms**, and the screen stayed live through all
+      six steps. Caveat recorded rather than glossed: a Galaxy S21 FE is upper-mid at best, so 177 ms
+      is a floor for the range this criterion means, not a typical value)*
 
 **The decision** *(from task 001)*
 - [x] CI fails if `core-rs` depends on `rand`, or calls `SystemTime::now` — **add each, watch CI fail**,
@@ -183,12 +194,12 @@ an FFI chain that takes a week to stand up has already answered the question.
 - [x] `round_to_increment(41.6, 2.5, nearest)` returns **42.5** and `round_to_increment(41.25, 2.5, nearest)`
       returns **40.0** — the tie goes to the lighter load — called from Python **and from the app on a
       physical Android device** (§ The UniFFI half is proven: a device call, on hardware)
-- [ ] **ADR-004 has a recorded outcome** — option A or option B, with the reason. **Task 004 does not
-      start while this is open.** *Three of the bar's four conditions are now met: PyO3 from FastAPI,
-      UniFFI from a physical device, and the Android artefacts built by CI on Linux (PR #12's `core-rs`
-      job, and now the proof branch above). Only the fourth — built by EAS — is unmet, and only because
-      no Expo account exists yet ([task 017 prerequisites](#prerequisites--administrator-rights), item
-      6)*
+- [x] **ADR-004 has a recorded outcome** — option A or option B, with the reason. **Task 004 does not
+      start while this is open.** *Recorded 2026-09-18: **option B**, all four bar conditions met
+      ([ADR-004 § Outcome](../decisions/ADR-004.md)). The timebox is addressed in the ADR rather than
+      glossed — the bar closed at the edge of two days by the calendar, and the reasoning for option B
+      anyway (the toolchain was never the thing that resisted) is written out there. **Task 004 is
+      unblocked.** The ADR's four pre-launch conditions are untouched by this and still required*
 
 ## Progress (2026-09-16)
 
@@ -307,11 +318,220 @@ The first time any of this ran on hardware — a Galaxy S21 FE (`SM-G990E`), And
 The verification email was written in **Portuguese**, from the device's locale — ADR-008 and INV-27 holding on real
 hardware, not only in Jest.
 
+### The privacy-key probe, on hardware (2026-09-18)
+
+Task 003's four device criteria had nowhere to run: `src/crypto/diagnostics.ts` held two
+secure-storage probes and nothing else. `probePrivacyKeyLifecycle()` now makes six assertions, and
+**all six passed on the Galaxy S21 FE** with real `react-native-libsodium`, served over Metro to the
+dev build already installed — no native rebuild needed, since the probe is TypeScript over a binding
+that was already there.
+
+| Assertion | Result |
+|---|---|
+| A key wrapped on device A opens on device B | ok — the wrap is self-contained |
+| The wrong password is refused | ok — `wrong_password` |
+| The wrap carries no key material | ok — fields `kdf, salt, wrappedKey`; two wraps of one key differ |
+| A password change keeps the key | ok — old password no longer opens it |
+| A password reset makes a new key | ok |
+| `privacy_key_kdf` travels with every wrap | ok — opened `m=32768,t=2`, re-wrapped `m=65536,t=3` |
+
+**One derivation: 177 ms. The whole probe: 1393 ms.**
+
+Two things this turned up that are worth keeping:
+
+- **A comment in `privacy-key.ts` was wrong, and had never been measured.** It asserted a derivation
+  "holds the JavaScript thread for about a second on a mid-range phone". It is 177 ms here — the
+  claim appears to have been an estimate that hardened into documentation. Corrected in place, with
+  the device and the number, and the yield kept for genuinely slower phones.
+- **The probe had to be built where it is.** `unwrapPrivacyKey()` stores whatever it opens, so a probe
+  driving the public API would have overwritten the signed-in user's key on a real device. It
+  therefore runs on a throwaway key inside `privacy-key.ts` — the only module that can open a wrap
+  without handing the bytes to a caller — and a test asserts it leaves secure storage untouched.
+
+### The README, walked on Windows (2026-09-18)
+
+Every command in `README.md` run in PowerShell, in order, against the Docker stack. **Two defects,
+both real, both fixed.**
+
+**1. The very first command did not work.** `python -c "import secrets; ..."`, which the README gives
+for generating each `.env` secret, fails outright: on a stock Windows install `python` resolves to
+`%LOCALAPPDATA%\Microsoft\WindowsApps\python.exe`, the Microsoft Store stub, which exits with *"O
+processo não tem identificador de pacote"* rather than running. Someone following the README from a
+clean machine is stopped at step one. Now `uv run --no-project python -c …`, which needs nothing the
+README does not already require.
+
+**2. The export scripts wrote CRLF on Windows.** After
+`uv run python -m scripts.export_openapi` and `uv run python -m seeds.export`, `git status` showed
+`packages/shared/api/openapi.json` and `packages/shared/seeds/reference.json` modified — which reads
+exactly like the drift the "Shared types are current" gate exists to catch. It was not drift: the
+content was identical and `git diff --exit-code`, the command CI actually runs, passed. `Path.write_text`
+in text mode translates `\n` to `\r\n` on Windows, so the same command produced a different file here
+than in CI. `.gitattributes` (`* text=auto eol=lf`) meant nothing wrong could ever reach the repository,
+which is why CI never saw it and why this surfaced only by running the command on Windows. Both writers
+now pass `newline="\n"`, and regenerating leaves the tree clean.
+
+Everything else ran as written: `docker compose up -d`, `uv sync`, `alembic upgrade head`, the seeds,
+`uvicorn app.main:app --reload` serving `/health/ready` → `{"status":"ready","reason":null}`,
+`uv run pytest` at **339 passed**, `scripts.check_schema` at 40 tables / 43 classified, the daily job,
+`corepack enable`, and every row of § Checks — `db:generate`, `check:catalogs` (474 messages),
+`render:brand`, and `expo export` + `check:release-bundle-diagnostics` — each leaving its committed
+output unchanged.
+
+> One thing worth knowing for anyone repeating this: **do not pipe a native command through `2>&1` in
+> PowerShell 5.1.** It wraps ordinary stderr output in an `ErrorRecord` and sets `$?` to false even on
+> exit code 0, so `uv sync` and `alembic` both look like failures when they succeeded.
+
+### The EAS build, and ADR-004's last bar condition (2026-09-18)
+
+An Expo account now exists, on the **organization** `cyberathletes-team` rather than the personal
+account — ownership can be transferred and people added later without sharing credentials, which is
+the cheap hedge against the business-continuity risk [ADR-004](../decisions/ADR-004.md) itself names.
+
+**Build `9933bd7f` finished in 19m49s**, and the APK carries the cross-compiled Rust for all three
+ABIs — `libcyberathlete_core_ffi.so` at 415 904 / 286 472 / 442 040 bytes for `arm64-v8a`,
+`armeabi-v7a` and `x86_64`, each beside its C++ turbo-module. Read out of the artefact with `unzip`,
+because "the build went green" is not the same claim as "the Rust is in the app".
+
+**The part that was not boilerplate.** `packages/core-native/android/CMakeLists.txt` imports those
+`.so` files as a *prebuilt* IMPORTED library and links the turbo-module against them. They are build
+output, gitignored like `apps/mobile/android/`, and EAS archives the repository through git — so a
+clean worker checks out every source file and none of the Rust. Locally they come from `ubrn` in
+WSL2; on EAS nothing would have built them. `scripts/eas-build-pre-install.sh` installs Rust 1.98.0
+and cargo-ndk 4.1.2, resolves the NDK, and cross-compiles the three ABIs into the directory CMake
+reads.
+
+**Two builds failed first, both on the hook, neither on the toolchain** — worth recording so the
+distinction survives:
+
+1. `caefb5a4`, 68 s: the hook sourced `$HOME/.cargo/env` unconditionally under `set -euo pipefail`.
+2. `ed631d19`: `cargo ndk` runs `cargo metadata` in the *current directory* before it reads
+   `--manifest-path`, and the hook ran from `apps/mobile`, which has no `Cargo.toml`. The Rust CI job
+   issues the identical command and never saw this, because it sets `working-directory: core-rs`.
+   That build also proved, through the hook's own assertion, that **EAS does archive the pnpm
+   workspace root** — the one structural unknown — and that the image carries NDK 27.1.12297006.
+
+Also settled here: `expo-dev-client` is now a dependency. The local dev build never needed it —
+`expo run:android` produces a debug build Metro serves — but EAS refuses a development-profile build
+without it.
+
+**Reading the logs.** `eas-cli` has no `build:logs` command. The signed URL in
+`eas build:view <id> --json` under `logFiles` needs `curl --compressed`, or it returns binary.
+
+### The token change, on hardware (2026-09-18)
+
+`colors.dark.accent` was changed from `#4A9FD4` to a magenta `#E0409F`, the app rebundled, and the
+change appeared on every token-driven surface at once — the `SegmentedControl`'s selected border and
+the account link both went magenta. The token was then reverted, and `src/ui`'s 359 tests, INV-24's
+contrast test among them, pass against the restored palette.
+
+Two things the check established that a green test could not:
+
+- **The change is precisely scoped.** React Native's own `Button` — which the diagnostics screen uses
+  for its actions — stayed blue throughout, because it is not a design-system component and reads no
+  token. Only `src/ui/` surfaces moved. That is the boundary INV-23 describes, visible.
+- **Fast Refresh does not carry a token edit.** Saving `tokens.ts` with the app running changed
+  nothing on screen and produced no Metro bundle; the values are module constants read at import, so
+  already-mounted components keep the old ones. The app had to be restarted, and Metro then rebundled
+  exactly 1 module. Worth knowing before task 004 builds screens against these tokens: a designer
+  changing a value and seeing nothing happen is a restart, not a broken token.
+
+### The release build refuses, on hardware (2026-09-19)
+
+The last criterion, and the one that needed a signed release artefact rather than a test. `eas.json`'s
+`release-cleartext-proof` profile exists for it: `preview` plus an `http://` `EXPO_PUBLIC_API_BASE_URL`
+— a build deliberately misconfigured so the guard has something to refuse.
+
+Build `13031987`, 23m33s, 115.5 MB. Installed with `adb install` and launched:
+
+```
+FATAL EXCEPTION: mqt_v_native
+com.facebook.react.common.JavascriptException: InsecureApiBaseUrlError:
+  refusing the API base URL: a release build talks to the API over https only (04 §5)
+    assertApiBaseUrlAllowed
+    createConfiguredApiClient
+    bootstrapAccount
+```
+
+It dies inside `bootstrapAccount`, at module load, before any screen renders — which is where task
+001 put it deliberately, so a build given an API base URL it may not use cannot get as far as
+drawing. On the phone Android shows its own *"o app CyberAthlete apresenta falhas contínuas"*.
+
+Two things confirmed from the same artefact, at no extra cost:
+
+- **`libcyberathlete_core_ffi.so` for all three ABIs in a *release* build**, not only the development
+  one — so the EAS hook holds for the release path too.
+- **`DiagnosticsScreen` absent from `assets/index.android.bundle`**, re-proving that criterion against
+  a real EAS release APK rather than a local `expo export`.
+
+**One observation, recorded rather than fixed.** The refusal is an uncaught exception, so what a
+person sees is Android's generic "keeps stopping" dialog — not an explanatory screen. For a
+misconfigured *release* build that is arguably correct: the guard's job is to make such a build
+impossible to run, and it does. But it is a deliberate crash, and if a friendlier failure is ever
+wanted it belongs to whoever owns release configuration, not to this task.
+
+### Device A to device B, for real (2026-09-19)
+
+The one criterion deliberately left open when the probe was written. Run end to end against the local
+API, with a small forwarding proxy between the phone and uvicorn (`adb reverse tcp:8000 tcp:9000`) so
+the **actual request bodies** could be read, which is what the criterion asks for.
+
+| Step | What happened |
+|---|---|
+| `pm clear`, register `ab-probe@…` | Device A holds a key: *privacy key held on this device — **yes*** |
+| `pm clear` again | Device B: a fresh install, secure storage back to *"nothing yet"* |
+| Sign in, email and password only | *privacy key held on this device — **yes*** |
+
+**The request bodies, off the wire.** Registration sends the key **wrapped and nothing else**:
+
+```json
+"privacy_key": {
+  "wrapped_key": "K7mR/ewU6gi6V3ybP4GQDuOm0P8D6EXbJ5XLEPnt0POnmvVGkAsCjLhvRuFpJ2ytcvAa5xNdpfmJEdI1KIF/OmfOPRZoon2V",
+  "salt": "80rOzwa3a6c9Xc7lQC4WiA==",
+  "kdf": "argon2id$m=65536,t=3,p=1"
+}
+```
+
+72 bytes decoded — exactly `WRAPPED_KEY_BYTES`, 24 nonce + 32 ciphertext + 16 tag — and a 16-byte
+salt. Sign-in's body is 114 bytes: email, password, `device_id`, no key material at all. Postgres
+agrees: `octet_length(wrapped_privacy_key) = 72`, `privacy_key_salt = 16`,
+`privacy_key_kdf = argon2id$m=65536,t=3,p=1` for both accounts, and there is no column that could hold
+a plaintext key.
+
+**Why "unwrapped correctly" is settled by this and not merely suggested.** The wrap is
+XChaCha20-Poly1305, so its tag authenticates: a wrong key cannot produce a successful open. Device B
+going from no key to a key, given only the password and the server's wrap, is the AEAD verifying —
+there is no path to "yes" that returns different bytes than device A generated.
+
+> Two throwaway accounts — `ab-probe@example.invalid` and `ab-probe2@example.invalid` — are left in
+> the local development database. They exist nowhere else.
+
+### The status-bar defect, owned and fixed (2026-09-19)
+
+Found on the device on 2026-09-16 and left unassigned between task 003's screens and task 011's
+layout. **It is task 011's**, and the reason decides the fix: `AccountLayout` renders into `Screen`
+from `src/ui/`, so the container was already the shared one — it simply applied no inset. Nothing in
+`src/` or `app/` referenced safe areas at all, and the root `Stack` runs `headerShown: false`, so
+every screen drew from pixel zero.
+
+`Screen` now applies `useSafeAreaInsets()` top and bottom, and the root layout mounts
+`SafeAreaProvider`. One container, every screen that uses it, and every screen written later — the
+same argument INV-23 makes for tokens. Confirmed on the phone: `Excluir sua conta` sits below the
+clock where `Entrar` sat behind it.
+
+**Jest could not have caught this, and now can.** The harness rendered with no safe-area context at
+all, so insets were absent rather than wrong. `test/render.tsx` now provides `TEST_METRICS` — a phone
+with a 24 px status bar and a 16 px gesture handle — and a new test asserts `Screen` pads by them.
+Found while writing it: the INV-27 fence rejected a literal string in the test itself, which is the
+lint gate doing its job.
+
+*Not covered:* the diagnostics screen renders a bare `ScrollView` rather than `Screen`, so its first
+line still sits under the clock. It is debug-only and exempt from the design rules by ADR-014, and is
+left alone deliberately.
+
 ### Found on the device, not yet fixed
 
-- **Screen titles are drawn behind the status bar.** `Entrar` and `Crie sua conta` overlap the clock: the header does
-  not respect the safe-area inset. Jest does not model insets, so only a phone shows it. Whether it belongs to task
-  003's screens or task 011's layout is not yet established.
+*(Empty. The status-bar defect above was the last one; the `EMAIL_FOLDER` and `.gitignore` findings
+were fixed on 2026-09-17.)*
 
 ### Found on the device, fixed (2026-09-17)
 
