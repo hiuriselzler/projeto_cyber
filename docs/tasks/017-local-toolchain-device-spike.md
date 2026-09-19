@@ -140,7 +140,10 @@ an FFI chain that takes a week to stand up has already answered the question.
       release APK. Deferred alongside the EAS build below: same class of work, same blocker*
 - [x] The release bundle carries no diagnostics code — a search of it for `DiagnosticsScreen` finds
       nothing *(§ The release bundle is proven diagnostics-free)*
-- [ ] The development build also builds through EAS
+- [x] The development build also builds through EAS *(build `9933bd7f`, 19m49s, an installable APK.
+      The `.so` files CMake imports are gitignored build output and EAS archives through git, so a
+      pre-install hook cross-compiles `core-rs` on the worker before Gradle runs —
+      `apps/mobile/scripts/eas-build-pre-install.sh`. § The EAS build)*
 
 **From task 002**
 - [x] The Drizzle schema creates successfully on-device and every table in
@@ -196,12 +199,12 @@ an FFI chain that takes a week to stand up has already answered the question.
 - [x] `round_to_increment(41.6, 2.5, nearest)` returns **42.5** and `round_to_increment(41.25, 2.5, nearest)`
       returns **40.0** — the tie goes to the lighter load — called from Python **and from the app on a
       physical Android device** (§ The UniFFI half is proven: a device call, on hardware)
-- [ ] **ADR-004 has a recorded outcome** — option A or option B, with the reason. **Task 004 does not
-      start while this is open.** *Three of the bar's four conditions are now met: PyO3 from FastAPI,
-      UniFFI from a physical device, and the Android artefacts built by CI on Linux (PR #12's `core-rs`
-      job, and now the proof branch above). Only the fourth — built by EAS — is unmet, and only because
-      no Expo account exists yet ([task 017 prerequisites](#prerequisites--administrator-rights), item
-      6)*
+- [x] **ADR-004 has a recorded outcome** — option A or option B, with the reason. **Task 004 does not
+      start while this is open.** *Recorded 2026-09-18: **option B**, all four bar conditions met
+      ([ADR-004 § Outcome](../decisions/ADR-004.md)). The timebox is addressed in the ADR rather than
+      glossed — the bar closed at the edge of two days by the calendar, and the reasoning for option B
+      anyway (the toolchain was never the thing that resisted) is written out there. **Task 004 is
+      unblocked.** The ADR's four pre-launch conditions are untouched by this and still required*
 
 ## Progress (2026-09-16)
 
@@ -349,6 +352,42 @@ Two things this turned up that are worth keeping:
   driving the public API would have overwritten the signed-in user's key on a real device. It
   therefore runs on a throwaway key inside `privacy-key.ts` — the only module that can open a wrap
   without handing the bytes to a caller — and a test asserts it leaves secure storage untouched.
+
+### The EAS build, and ADR-004's last bar condition (2026-09-18)
+
+An Expo account now exists, on the **organization** `cyberathletes-team` rather than the personal
+account — ownership can be transferred and people added later without sharing credentials, which is
+the cheap hedge against the business-continuity risk [ADR-004](../decisions/ADR-004.md) itself names.
+
+**Build `9933bd7f` finished in 19m49s**, and the APK carries the cross-compiled Rust for all three
+ABIs — `libcyberathlete_core_ffi.so` at 415 904 / 286 472 / 442 040 bytes for `arm64-v8a`,
+`armeabi-v7a` and `x86_64`, each beside its C++ turbo-module. Read out of the artefact with `unzip`,
+because "the build went green" is not the same claim as "the Rust is in the app".
+
+**The part that was not boilerplate.** `packages/core-native/android/CMakeLists.txt` imports those
+`.so` files as a *prebuilt* IMPORTED library and links the turbo-module against them. They are build
+output, gitignored like `apps/mobile/android/`, and EAS archives the repository through git — so a
+clean worker checks out every source file and none of the Rust. Locally they come from `ubrn` in
+WSL2; on EAS nothing would have built them. `scripts/eas-build-pre-install.sh` installs Rust 1.98.0
+and cargo-ndk 4.1.2, resolves the NDK, and cross-compiles the three ABIs into the directory CMake
+reads.
+
+**Two builds failed first, both on the hook, neither on the toolchain** — worth recording so the
+distinction survives:
+
+1. `caefb5a4`, 68 s: the hook sourced `$HOME/.cargo/env` unconditionally under `set -euo pipefail`.
+2. `ed631d19`: `cargo ndk` runs `cargo metadata` in the *current directory* before it reads
+   `--manifest-path`, and the hook ran from `apps/mobile`, which has no `Cargo.toml`. The Rust CI job
+   issues the identical command and never saw this, because it sets `working-directory: core-rs`.
+   That build also proved, through the hook's own assertion, that **EAS does archive the pnpm
+   workspace root** — the one structural unknown — and that the image carries NDK 27.1.12297006.
+
+Also settled here: `expo-dev-client` is now a dependency. The local dev build never needed it —
+`expo run:android` produces a debug build Metro serves — but EAS refuses a development-profile build
+without it.
+
+**Reading the logs.** `eas-cli` has no `build:logs` command. The signed URL in
+`eas build:view <id> --json` under `logFiles` needs `curl --compressed`, or it returns binary.
 
 ### The token change, on hardware (2026-09-18)
 
