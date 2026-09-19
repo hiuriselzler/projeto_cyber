@@ -21,7 +21,7 @@ when its own criteria are ticked. Tick the box here only then.
 | **Decisions** | 15 ADRs, **all now accepted**. [ADR-004](decisions/ADR-004.md)'s spike passed on 2026-09-18 and its outcome is recorded: **option B, the single Rust core**. Its four pre-launch conditions remain outstanding, in tasks 005 and 006 |
 | **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **5 complete** (001, 002, 011, 003, 019) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | **Finish [task 017](tasks/017-local-toolchain-device-spike.md), then start [task 004](tasks/004-exercise-catalog-and-logging.md)** — the spike is done and no longer blocks it. Task 017's remainder is ordinary: every README command walked on Windows, and the one privacy-key criterion left open on purpose — device A to device B through a real register / `pm clear` / sign-in against a running API, with a request body read off the wire rather than the payload shown on screen. The status-bar safe-area defect found on the device is still unassigned between task 003's screens and task 011's layout. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
+| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) — the core loop.** Task 017 is complete and ADR-004 is settled, so nothing blocks it. It is the largest task in the project and the one its own file says *deserves more care than any other UI*; the Rust core is adopted from here on, with e1RM (INV-07) and `is_counted_set()` (INV-04) its first real residents. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
 
 ### The decision that was open is closed — option B
 
@@ -170,18 +170,20 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
       nothing**
 - [x] One scheduled command, in `app/jobs/`, for the deletion sweep and the retention purges, documented in 06
 
-#### ☐ 017 — Local toolchain, device and core spike · **L** · depends: 001, administrator rights · blocks: 004 onward
+#### ☑ 017 — Local toolchain, device and core spike · **L** · depends: 001, administrator rights · blocks: 004 onward
 > Everything that needs administrator rights on the development machine, and every check only a phone
 > can settle. **Must finish before task 004**: its spike decides how domain logic is written.
-> **In progress since 2026-09-16**, when administrator rights arrived. The local stack runs and **the app runs on a
-> physical Android phone** — twelve criteria are ticked in the task file. The machine held none of the local
-> environment tasks 001–003 built, and it has been rebuilt on Docker. **The native build does not work on Windows**
-> and is done in WSL2, which ADR-004 allows; five task-011 criteria moved to tasks 004 and 007, which build the
-> screens they name. **Three of ADR-004's four bar conditions are proven**: PyO3 from FastAPI, UniFFI from the
-> physical device, and the Android artefacts built by CI on Linux — [PR #12](https://github.com/hiuriselzler/projeto_cyber/pull/12)
-> merged all five jobs green, and a throwaway branch then proved the `rand` gate really fails CI before it was
-> deleted. **Only the EAS build is left, blocked on an Expo account that does not exist yet.** See the task file and
-> the decision log.
+> **Complete (2026-09-19).** All 23 criteria in the task file are ticked, each proven on the machine, on a Galaxy
+> S21 FE, or in CI. **[ADR-004](decisions/ADR-004.md) has its answer — option B, the single Rust core** — with all
+> four bar conditions met: PyO3 from FastAPI, UniFFI from the physical device, and the Android artefacts built by CI
+> on Linux *and* by EAS, the last read out of the built APK. The machine held none of the local environment tasks
+> 001–003 built and was rebuilt on Docker; **the native build does not work on Windows** and is done in WSL2, which
+> ADR-004 allows; five task-011 criteria moved to tasks 004 and 007, which build the screens they name.
+> **Found and fixed along the way**, none of it predicted: the README's first command failed on a stock Windows
+> install, the API's export scripts wrote CRLF here and not in CI, a comment claiming the key derivation took "about
+> a second" was never measured and is 177 ms, and every screen drew under the status bar because no safe-area inset
+> was ever applied. Built on `feat/task-017-device-checks` ([PR #16](https://github.com/hiuriselzler/projeto_cyber/pull/16)).
+> **Task 004 is unblocked.**
 - [x] Administrator installs: Windows long paths, WSL2, Docker Desktop, Android Studio (SDK, NDK,
       platform tools), Visual Studio Build Tools and Rust with the Android targets and `cargo-ndk`
 - [ ] Local stack: `docker compose up`, roles created by the init hook, integration tests run locally,

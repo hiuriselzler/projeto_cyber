@@ -134,11 +134,8 @@ an FFI chain that takes a week to stand up has already answered the question.
 - [x] A local SQLite migration runs on first launch and is idempotent on the second
 - [x] TanStack Query, Zustand and `expo-secure-store` each have a smoke test that passes on-device,
       and a value written to secure storage survives an app restart
-- [ ] A non-debug build given an `http://` API base URL refuses to start. *The logic is already
-      exhaustively unit-tested — `assertApiBaseUrlAllowed(url, 'release')` throws for every `http://`
-      case, [api-client.test.ts](../../apps/mobile/src/sync/__tests__/api-client.test.ts) — but the
-      criterion as written wants a real release-build launch proof, which needs a signed, installable
-      release APK. Deferred alongside the EAS build below: same class of work, same blocker*
+- [x] A non-debug build given an `http://` API base URL refuses to start *(§ The release build
+      refuses, on hardware — a signed EAS release APK, installed and launched on the phone)*
 - [x] The release bundle carries no diagnostics code — a search of it for `DiagnosticsScreen` finds
       nothing *(§ The release bundle is proven diagnostics-free)*
 - [x] The development build also builds through EAS *(build `9933bd7f`, 19m49s, an installable APK.
@@ -437,6 +434,40 @@ Two things the check established that a green test could not:
   already-mounted components keep the old ones. The app had to be restarted, and Metro then rebundled
   exactly 1 module. Worth knowing before task 004 builds screens against these tokens: a designer
   changing a value and seeing nothing happen is a restart, not a broken token.
+
+### The release build refuses, on hardware (2026-09-19)
+
+The last criterion, and the one that needed a signed release artefact rather than a test. `eas.json`'s
+`release-cleartext-proof` profile exists for it: `preview` plus an `http://` `EXPO_PUBLIC_API_BASE_URL`
+— a build deliberately misconfigured so the guard has something to refuse.
+
+Build `13031987`, 23m33s, 115.5 MB. Installed with `adb install` and launched:
+
+```
+FATAL EXCEPTION: mqt_v_native
+com.facebook.react.common.JavascriptException: InsecureApiBaseUrlError:
+  refusing the API base URL: a release build talks to the API over https only (04 §5)
+    assertApiBaseUrlAllowed
+    createConfiguredApiClient
+    bootstrapAccount
+```
+
+It dies inside `bootstrapAccount`, at module load, before any screen renders — which is where task
+001 put it deliberately, so a build given an API base URL it may not use cannot get as far as
+drawing. On the phone Android shows its own *"o app CyberAthlete apresenta falhas contínuas"*.
+
+Two things confirmed from the same artefact, at no extra cost:
+
+- **`libcyberathlete_core_ffi.so` for all three ABIs in a *release* build**, not only the development
+  one — so the EAS hook holds for the release path too.
+- **`DiagnosticsScreen` absent from `assets/index.android.bundle`**, re-proving that criterion against
+  a real EAS release APK rather than a local `expo export`.
+
+**One observation, recorded rather than fixed.** The refusal is an uncaught exception, so what a
+person sees is Android's generic "keeps stopping" dialog — not an explanatory screen. For a
+misconfigured *release* build that is arguably correct: the guard's job is to make such a build
+impossible to run, and it does. But it is a deliberate crash, and if a friendlier failure is ever
+wanted it belongs to whoever owns release configuration, not to this task.
 
 ### Device A to device B, for real (2026-09-19)
 
