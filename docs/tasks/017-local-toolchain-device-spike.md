@@ -163,13 +163,26 @@ an FFI chain that takes a week to stand up has already answered the question.
 - [x] Airplane mode, app killed and reopened: the user is still signed in and lands on the home
       screen with no spinner and no error
 - [ ] A privacy key created on device A is unwrapped correctly by device B after sign-in, and the
-      server never receives it in the clear — verified by inspecting the request bodies
-- [ ] Changing the password leaves existing encrypted rows decryptable; resetting it does not, and
-      the reset screen warned about that before the user confirmed
-- [ ] `privacy_key_kdf` is stored with every wrap; a key wrapped under older parameters still
-      unwraps, and is re-wrapped under the current ones at the next password change
-- [ ] The key derivation on a mid-range Android phone does not freeze the screen, and its measured
-      duration is written into task 003's notes
+      server never receives it in the clear — verified by inspecting the request bodies. *Half proven
+      on hardware (§ The privacy-key probe): the wrap is self-contained — salt and parameters travel
+      with it — so a device holding only the wrap and the password opens it, which is the whole
+      mechanism of "device B"; and the payload carries three fields, none containing key material.
+      **Still owed:** the real two-install flow (register, `pm clear`, sign in again) against a running
+      API, and an actual request body read off the wire rather than the payload shown on screen*
+- [x] Changing the password leaves existing encrypted rows decryptable; resetting it does not, and
+      the reset screen warned about that before the user confirmed *(§ The privacy-key probe. Proven
+      at the key, which is the mechanism: a change re-wraps the same key and the old password stops
+      opening it; a reset mints a new one. No encrypted rows exist to test directly until
+      [task 007](007-cardio-recording.md) builds privacy zones. The warning was already built —
+      `ResetPasswordScreen` renders `account.reset.zones_warning` above a button reading "Reset
+      password and remove privacy zones")*
+- [x] `privacy_key_kdf` is stored with every wrap; a key wrapped under older parameters still
+      unwraps, and is re-wrapped under the current ones at the next password change *(on the device:
+      opened `argon2id$m=32768,t=2,p=1`, re-wrapped under `argon2id$m=65536,t=3,p=1`)*
+- [x] The key derivation on a mid-range Android phone does not freeze the screen, and its measured
+      duration is written into task 003's notes *(**177 ms**, and the screen stayed live through all
+      six steps. Caveat recorded rather than glossed: a Galaxy S21 FE is upper-mid at best, so 177 ms
+      is a floor for the range this criterion means, not a typical value)*
 
 **The decision** *(from task 001)*
 - [x] CI fails if `core-rs` depends on `rand`, or calls `SystemTime::now` — **add each, watch CI fail**,
@@ -306,6 +319,36 @@ The first time any of this ran on hardware — a Galaxy S21 FE (`SM-G990E`), And
 
 The verification email was written in **Portuguese**, from the device's locale — ADR-008 and INV-27 holding on real
 hardware, not only in Jest.
+
+### The privacy-key probe, on hardware (2026-09-18)
+
+Task 003's four device criteria had nowhere to run: `src/crypto/diagnostics.ts` held two
+secure-storage probes and nothing else. `probePrivacyKeyLifecycle()` now makes six assertions, and
+**all six passed on the Galaxy S21 FE** with real `react-native-libsodium`, served over Metro to the
+dev build already installed — no native rebuild needed, since the probe is TypeScript over a binding
+that was already there.
+
+| Assertion | Result |
+|---|---|
+| A key wrapped on device A opens on device B | ok — the wrap is self-contained |
+| The wrong password is refused | ok — `wrong_password` |
+| The wrap carries no key material | ok — fields `kdf, salt, wrappedKey`; two wraps of one key differ |
+| A password change keeps the key | ok — old password no longer opens it |
+| A password reset makes a new key | ok |
+| `privacy_key_kdf` travels with every wrap | ok — opened `m=32768,t=2`, re-wrapped `m=65536,t=3` |
+
+**One derivation: 177 ms. The whole probe: 1393 ms.**
+
+Two things this turned up that are worth keeping:
+
+- **A comment in `privacy-key.ts` was wrong, and had never been measured.** It asserted a derivation
+  "holds the JavaScript thread for about a second on a mid-range phone". It is 177 ms here — the
+  claim appears to have been an estimate that hardened into documentation. Corrected in place, with
+  the device and the number, and the yield kept for genuinely slower phones.
+- **The probe had to be built where it is.** `unwrapPrivacyKey()` stores whatever it opens, so a probe
+  driving the public API would have overwritten the signed-in user's key on a real device. It
+  therefore runs on a throwaway key inside `privacy-key.ts` — the only module that can open a wrap
+  without handing the bytes to a caller — and a test asserts it leaves secure storage untouched.
 
 ### Found on the device, not yet fixed
 

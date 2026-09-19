@@ -245,8 +245,10 @@ async function wrap(key: Uint8Array, password: string, kdf: WrappingKdf): Promis
 }
 
 async function derive(password: string, salt: Uint8Array, kdf: WrappingKdf): Promise<Uint8Array> {
-  // A derivation holds the JavaScript thread for about a second on a mid-range phone (ADR-007). Yielding first lets
-  // the screen show that the app is working before it does; the spinner itself animates on the native thread.
+  // A derivation holds the JavaScript thread while it runs: measured at **177 ms** on a Galaxy S21 FE (task 017's
+  // device probe), not the "about a second" this comment previously asserted without ever having been timed. A
+  // slower phone will take longer, and the yield stays for that reason — it lets the screen show that the app is
+  // working before the thread is taken; the spinner itself animates on the native thread.
   await new Promise((resolve) => setTimeout(resolve, 0));
   return crypto_pwhash(KEY_BYTES, password, salt, kdf.iterations, kdf.memoryKib * 1024, ARGON2ID13);
 }
