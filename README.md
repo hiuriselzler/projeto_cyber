@@ -27,9 +27,16 @@ pnpm's store can pass the 260-character limit — and `git config core.longpaths
 
 ## Local development
 
-Every command below runs unchanged in PowerShell and in bash. Start at the repository root with `.env`
-created from [.env.example](.env.example); generate each secret with
-`python -c "import secrets; print(secrets.token_urlsafe(48))"`.
+Every command below runs unchanged in PowerShell and in bash, and each was walked in PowerShell on
+Windows in [task 017](docs/tasks/017-local-toolchain-device-spike.md). Start at the repository root
+with `.env` created from [.env.example](.env.example); generate each secret with
+
+```sh
+uv run --no-project python -c "import secrets; print(secrets.token_urlsafe(48))"
+```
+
+`uv run --no-project` rather than a bare `python`: on a stock Windows install `python` is the Microsoft
+Store stub, which exits with an error instead of running, and `uv` is a prerequisite here anyway.
 
 ```sh
 # Terminal 1 — database and API, from the repository root

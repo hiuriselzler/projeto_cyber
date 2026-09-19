@@ -124,7 +124,8 @@ an FFI chain that takes a week to stand up has already answered the question.
 - [x] `docker compose up -d` from the repository root, then `uv run uvicorn app.main:app` in
       `apps/api`, serves `/health/ready` → 200 *(from task 001)*
 - [x] `uv run pytest` in `apps/api` runs the integration tests against the local database, none skipped
-- [ ] Every command in `README.md` works on Windows as written
+- [x] Every command in `README.md` works on Windows as written *(§ The README, walked on Windows —
+      two defects found and fixed)*
 
 **The app on a phone** *(from task 001)*
 - [x] The dev build on a physical device reaches `http://localhost:8000/health/ready` through
@@ -352,6 +353,39 @@ Two things this turned up that are worth keeping:
   driving the public API would have overwritten the signed-in user's key on a real device. It
   therefore runs on a throwaway key inside `privacy-key.ts` — the only module that can open a wrap
   without handing the bytes to a caller — and a test asserts it leaves secure storage untouched.
+
+### The README, walked on Windows (2026-09-18)
+
+Every command in `README.md` run in PowerShell, in order, against the Docker stack. **Two defects,
+both real, both fixed.**
+
+**1. The very first command did not work.** `python -c "import secrets; ..."`, which the README gives
+for generating each `.env` secret, fails outright: on a stock Windows install `python` resolves to
+`%LOCALAPPDATA%\Microsoft\WindowsApps\python.exe`, the Microsoft Store stub, which exits with *"O
+processo não tem identificador de pacote"* rather than running. Someone following the README from a
+clean machine is stopped at step one. Now `uv run --no-project python -c …`, which needs nothing the
+README does not already require.
+
+**2. The export scripts wrote CRLF on Windows.** After
+`uv run python -m scripts.export_openapi` and `uv run python -m seeds.export`, `git status` showed
+`packages/shared/api/openapi.json` and `packages/shared/seeds/reference.json` modified — which reads
+exactly like the drift the "Shared types are current" gate exists to catch. It was not drift: the
+content was identical and `git diff --exit-code`, the command CI actually runs, passed. `Path.write_text`
+in text mode translates `\n` to `\r\n` on Windows, so the same command produced a different file here
+than in CI. `.gitattributes` (`* text=auto eol=lf`) meant nothing wrong could ever reach the repository,
+which is why CI never saw it and why this surfaced only by running the command on Windows. Both writers
+now pass `newline="\n"`, and regenerating leaves the tree clean.
+
+Everything else ran as written: `docker compose up -d`, `uv sync`, `alembic upgrade head`, the seeds,
+`uvicorn app.main:app --reload` serving `/health/ready` → `{"status":"ready","reason":null}`,
+`uv run pytest` at **339 passed**, `scripts.check_schema` at 40 tables / 43 classified, the daily job,
+`corepack enable`, and every row of § Checks — `db:generate`, `check:catalogs` (474 messages),
+`render:brand`, and `expo export` + `check:release-bundle-diagnostics` — each leaving its committed
+output unchanged.
+
+> One thing worth knowing for anyone repeating this: **do not pipe a native command through `2>&1` in
+> PowerShell 5.1.** It wraps ordinary stderr output in an `ErrorRecord` and sets `$?` to false even on
+> exit code 0, so `uv sync` and `alembic` both look like failures when they succeeded.
 
 ### The EAS build, and ADR-004's last bar condition (2026-09-18)
 
