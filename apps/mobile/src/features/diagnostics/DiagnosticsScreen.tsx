@@ -13,6 +13,7 @@ import {
   type PrivacyKeyProbe,
 } from '@/account/diagnostics';
 import {
+  checkForeignKeysEnforced,
   checkSqliteRoundTrip,
   EXPECTED_TABLES,
   measureTickLatency,
@@ -47,6 +48,7 @@ export function DiagnosticsScreen() {
   const held = useQuery({ queryKey: ['diagnostics', 'privacy-key-held'], queryFn: checkPrivacyKeyHeld });
   const [database] = useState(readLocalDatabaseState);
   const [roundTrip] = useState(checkSqliteRoundTrip);
+  const [foreignKeys] = useState(checkForeignKeysEnforced);
   const [lanBaseUrl, setLanBaseUrl] = useState('http://192.168.0.10:8000');
   const [lanCheck, setLanCheck] = useState<LanAddressCheck | null>(null);
   // Button-triggered: the probe pays for about eight argon2id derivations at 64 MiB, so running it
@@ -86,6 +88,10 @@ export function DiagnosticsScreen() {
 
       <Check title="SQLite round trip: a workout, an exercise and 3 sets (03 §8 types)">
         {`${roundTrip.ok ? 'ok' : 'FAILED'}: ${roundTrip.detail}`}
+      </Check>
+
+      <Check title="Foreign keys bite on this device (03 §8, ADR-013): an orphan set_logs insert must be rejected">
+        {`${foreignKeys.ok ? 'ok' : 'FAILED'}: ${foreignKeys.detail}`}
       </Check>
 
       <Check title="Tapping ✓: the SQLite write plus the re-read the screen renders from (NFR-2 gives the whole tap 100 ms)">

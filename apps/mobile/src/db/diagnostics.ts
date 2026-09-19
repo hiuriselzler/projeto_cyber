@@ -163,6 +163,56 @@ export function checkSqliteRoundTrip(): SqliteRoundTripResult {
   return { ok: false, detail: 'round-trip check did not run' };
 }
 
+export interface ForeignKeyCheck {
+  readonly ok: boolean;
+  readonly detail: string;
+}
+
+/**
+ * **Do the schema's 58 foreign keys actually bite on this device?** — task 004's device criterion.
+ *
+ * SQLite has foreign keys **off by default** and every connection must ask; `src/db/client.ts` asks, on the open
+ * connection and outside any transaction, because inside one the pragma is a no-op. Stage 2 wrote that line and
+ * refused to call it proven: nothing but a device can show it took effect.
+ *
+ * So this inserts a `set_logs` row pointing at a `workout_exercise_id` that does not exist. With the pragma on,
+ * SQLite refuses it. With the pragma off — the state the phone was silently in until stage 2 — it accepts it happily,
+ * and **being accepted is the failure**. Rolled back either way.
+ */
+export function checkForeignKeysEnforced(): ForeignKeyCheck {
+  const pragma = sqlite.getFirstSync<{ foreign_keys: number }>('PRAGMA foreign_keys');
+  const on = pragma?.foreign_keys === 1;
+  const now = Date.now();
+  const id = `${TICK_MARKER}-fk-orphan`;
+
+  let rejected = false;
+  let accepted = false;
+  try {
+    sqlite.execSync('BEGIN');
+    db.insert(setLogs)
+      .values(setLogRow({ id, userId: 'nobody', workoutExerciseId: 'no-such-workout-exercise', setIndex: 1, now }))
+      .run();
+    accepted = true;
+  } catch {
+    rejected = true;
+  } finally {
+    sqlite.execSync('ROLLBACK');
+  }
+
+  if (on && rejected) {
+    return { ok: true, detail: 'PRAGMA foreign_keys = 1, and an orphan set_logs insert was rejected' };
+  }
+  if (!on) {
+    return { ok: false, detail: `PRAGMA foreign_keys = ${String(pragma?.foreign_keys)} — the pragma did not take` };
+  }
+  return {
+    ok: false,
+    detail: accepted
+      ? 'the pragma reads 1 but an orphan insert was ACCEPTED — the keys are not being enforced'
+      : 'the orphan insert neither succeeded nor failed, which should not be reachable',
+  };
+}
+
 export interface TickLatency {
   readonly taps: number;
   readonly sets: number;
