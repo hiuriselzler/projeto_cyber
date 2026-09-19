@@ -154,7 +154,7 @@ an FFI chain that takes a week to stand up has already answered the question.
 > built and unit-tested in `src/ui/components/`, but **no route renders either**, and the live pace readout is task
 > 007's. They could never have been ticked here, and this task must finish **before** task 004. See § The criteria
 > that moved.
-- [ ] Changing one token value visibly updates every screen using it
+- [x] Changing one token value visibly updates every screen using it *(§ The token change, on hardware)*
 - [x] A manual theme override survives an app restart
 
 **From task 003**
@@ -349,6 +349,24 @@ Two things this turned up that are worth keeping:
   driving the public API would have overwritten the signed-in user's key on a real device. It
   therefore runs on a throwaway key inside `privacy-key.ts` — the only module that can open a wrap
   without handing the bytes to a caller — and a test asserts it leaves secure storage untouched.
+
+### The token change, on hardware (2026-09-18)
+
+`colors.dark.accent` was changed from `#4A9FD4` to a magenta `#E0409F`, the app rebundled, and the
+change appeared on every token-driven surface at once — the `SegmentedControl`'s selected border and
+the account link both went magenta. The token was then reverted, and `src/ui`'s 359 tests, INV-24's
+contrast test among them, pass against the restored palette.
+
+Two things the check established that a green test could not:
+
+- **The change is precisely scoped.** React Native's own `Button` — which the diagnostics screen uses
+  for its actions — stayed blue throughout, because it is not a design-system component and reads no
+  token. Only `src/ui/` surfaces moved. That is the boundary INV-23 describes, visible.
+- **Fast Refresh does not carry a token edit.** Saving `tokens.ts` with the app running changed
+  nothing on screen and produced no Metro bundle; the values are module constants read at import, so
+  already-mounted components keep the old ones. The app had to be restarted, and Metro then rebundled
+  exactly 1 module. Worth knowing before task 004 builds screens against these tokens: a designer
+  changing a value and seeing nothing happen is a restart, not a broken token.
 
 ### Found on the device, not yet fixed
 
