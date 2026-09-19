@@ -10,9 +10,12 @@ export {
   hasPrivacyKey,
   prepareNewPrivacyKey,
   PrivacyKeyError,
+  probePrivacyKeyLifecycle,
   rewrapPrivacyKey,
   unwrapPrivacyKey,
   WRAPPED_KEY_BYTES,
   type PreparedPrivacyKey,
+  type PrivacyKeyProbe,
+  type PrivacyKeyProbeStep,
   type WrappedPrivacyKey,
 } from './privacy-key';

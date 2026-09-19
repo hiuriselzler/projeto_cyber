@@ -47,3 +47,15 @@ export async function checkSecureStorage(): Promise<SecureStorageCheck> {
   await writeDiagnosticsProbe(value);
   return { previous, roundTripped: (await readDiagnosticsProbe()) === value };
 }
+
+/**
+ * Task 017, from task 003: the privacy-key criteria only a phone and real libsodium settle — a wrap
+ * opening on a second device, a password change against a reset, superseded KDF parameters, and the
+ * derivation's measured cost. `src/crypto` does all of it; screens reach it through this folder
+ * (ADR-012 §2), and it runs on a throwaway key, never the signed-in user's.
+ */
+export {
+  probePrivacyKeyLifecycle as checkPrivacyKeyLifecycle,
+  type PrivacyKeyProbe,
+  type PrivacyKeyProbeStep,
+} from '@/crypto';

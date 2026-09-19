@@ -4,9 +4,11 @@ import { Button, ScrollView, StyleSheet, Text, TextInput, View } from 'react-nat
 
 import {
   checkLanAddressRefused,
+  checkPrivacyKeyLifecycle,
   checkSecureStorage,
   checkServerReadiness,
   type LanAddressCheck,
+  type PrivacyKeyProbe,
 } from '@/account/diagnostics';
 import { checkSqliteRoundTrip, EXPECTED_TABLES, readLocalDatabaseState } from '@/db/diagnostics';
 import { roundLoadToIncrement } from '@/domain';
@@ -38,6 +40,10 @@ export function DiagnosticsScreen() {
   const [roundTrip] = useState(checkSqliteRoundTrip);
   const [lanBaseUrl, setLanBaseUrl] = useState('http://192.168.0.10:8000');
   const [lanCheck, setLanCheck] = useState<LanAddressCheck | null>(null);
+  // Button-triggered: the probe pays for about eight argon2id derivations at 64 MiB, so running it
+  // on mount would make the screen take seconds to open.
+  const [privacyKey, setPrivacyKey] = useState<PrivacyKeyProbe | null>(null);
+  const [privacyKeyRunning, setPrivacyKeyRunning] = useState(false);
   const taps = useDiagnosticsStore((state) => state.taps);
   const tap = useDiagnosticsStore((state) => state.tap);
   const platform = describePlatform();
@@ -78,6 +84,31 @@ export function DiagnosticsScreen() {
             ? `failed: ${String(storage.error)}`
             : `round trip: ${storage.data.roundTripped ? 'ok' : 'FAILED'} · previous launch wrote: ${storage.data.previous ?? 'nothing yet'}`}
       </Check>
+
+      <Check title="Privacy key on real libsodium (task 003's device criteria, ADR-007)">
+        {privacyKeyRunning
+          ? 'running… about eight argon2id derivations at 64 MiB'
+          : privacyKey === null
+            ? 'not run'
+            : `${privacyKey.steps
+                .map((step) => `${step.ok ? 'ok' : 'FAILED'} — ${step.name}\n    ${step.detail}`)
+                .join('\n')}\n\n` +
+              `one wrap, so one derivation: ${privacyKey.deriveMs} ms · whole probe: ${privacyKey.totalMs} ms\n\n` +
+              `what the server is sent — inspect it, no key material may appear:\n` +
+              `  kdf: ${privacyKey.payload.kdf}\n` +
+              `  salt: ${privacyKey.payload.salt}\n` +
+              `  wrappedKey: ${privacyKey.payload.wrappedKey}`}
+      </Check>
+      <Button
+        title="Run the privacy-key checks"
+        disabled={privacyKeyRunning}
+        onPress={() => {
+          setPrivacyKeyRunning(true);
+          void checkPrivacyKeyLifecycle()
+            .then(setPrivacyKey)
+            .finally(() => setPrivacyKeyRunning(false));
+        }}
+      />
 
       <Check title="An http:// LAN address must be refused">
         {lanCheck === null ? 'not run' : `guard: ${lanCheck.guard}\nplatform: ${lanCheck.platform}`}
