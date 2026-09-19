@@ -1,5 +1,6 @@
 import { db, sqlite } from './client';
 import { exercises, muscleGroups, setLogs, users, workoutExercises, workouts } from './schema';
+import { readOpenWorkout, setLogRow, setSetCompleted } from './strength';
 
 /** Every table in 03 §8 — 33 shared with Postgres, plus raw_gps_points, outbox and sync_state. */
 export const EXPECTED_TABLES = 36;
@@ -160,4 +161,127 @@ export function checkSqliteRoundTrip(): SqliteRoundTripResult {
   }
   // db.transaction's callback always throws above, so this is unreachable — but TypeScript needs a return.
   return { ok: false, detail: 'round-trip check did not run' };
+}
+
+export interface TickLatency {
+  readonly taps: number;
+  readonly sets: number;
+  readonly p50Ms: number;
+  readonly p95Ms: number;
+  readonly worstMs: number;
+}
+
+/** Same trick as the round trip: the measurement leaves no history behind. */
+class TickRollback {
+  constructor(readonly result: TickLatency) {}
+}
+
+const TICK_MARKER = 'diagnostic-tick-latency';
+const TICK_TAPS = 60;
+/** A realistic session to re-read: five exercises of four sets, which is what the budget has to hold at. */
+const TICK_EXERCISES = 5;
+const TICK_SETS_EACH = 4;
+
+/**
+ * **What tapping ✓ costs** — task 004's *"renders in < 100 ms on a mid-range Android device (measure, do not
+ * assume)"*, measured rather than assumed (NFR-2).
+ *
+ * It times the two things the ✓ actually does, in order and on the real schema: the synchronous `UPDATE` that INV-09
+ * requires before the UI moves, and the re-read of the whole open workout that the screen renders from. Sixty taps
+ * across a five-exercise, twenty-set session, reported as p50, p95 and worst — a median alone would hide the stall
+ * that is the one a user in a gym actually notices.
+ *
+ * **What it does not measure, stated so the number is not read as more than it is:** React's commit and the paint on
+ * top. That half is settled by using the screen on the device. This half is the one that can regress silently as the
+ * session grows, because it is the half that re-reads every row.
+ */
+export function measureTickLatency(): TickLatency {
+  const now = Date.now();
+  const userId = `${TICK_MARKER}-user`;
+  const muscleId = 2_147_483_646; // a second sentinel, distinct from the round trip's
+  const exerciseId = `${TICK_MARKER}-exercise`;
+  const workoutId = `${TICK_MARKER}-workout`;
+  const setIds: string[] = [];
+
+  try {
+    db.transaction((tx) => {
+      tx.insert(users)
+        .values({
+          id: userId,
+          email: `${TICK_MARKER}@example.invalid`,
+          displayName: 'Tick latency diagnostic',
+          createdAt: now,
+          updatedAt: now,
+        })
+        .run();
+      tx.insert(muscleGroups).values({ id: muscleId, nameKey: `${TICK_MARKER}-muscle`, region: 'other' }).run();
+      tx.insert(exercises)
+        .values({
+          id: exerciseId,
+          ownerUserId: userId,
+          name: 'Tick latency diagnostic exercise',
+          modality: 'other',
+          primaryMuscleId: muscleId,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .run();
+      tx.insert(workouts)
+        .values({
+          id: workoutId,
+          userId,
+          title: 'Tick latency diagnostic workout',
+          startedAt: now,
+          localDate: '2026-09-19',
+          tz: 'UTC',
+          source: 'manual',
+          createdAt: now,
+          updatedAt: now,
+        })
+        .run();
+      for (let block = 0; block < TICK_EXERCISES; block += 1) {
+        const workoutExerciseId = `${TICK_MARKER}-we-${block}`;
+        tx.insert(workoutExercises)
+          .values({ id: workoutExerciseId, userId, workoutId, exerciseId, orderIndex: block, createdAt: now, updatedAt: now })
+          .run();
+        for (let index = 1; index <= TICK_SETS_EACH; index += 1) {
+          const id = `${TICK_MARKER}-set-${block}-${index}`;
+          setIds.push(id);
+          tx.insert(setLogs).values(setLogRow({ id, userId, workoutExerciseId, setIndex: index, now })).run();
+        }
+      }
+
+      const samples: number[] = [];
+      for (let tap = 0; tap < TICK_TAPS; tap += 1) {
+        const id = setIds[tap % setIds.length];
+        const started = performance.now();
+        setSetCompleted(id, tap % (setIds.length * 2) < setIds.length, Date.now());
+        readOpenWorkout(userId);
+        samples.push(performance.now() - started);
+      }
+      samples.sort((a, b) => a - b);
+
+      throw new TickRollback({
+        taps: TICK_TAPS,
+        sets: setIds.length,
+        p50Ms: round(percentile(samples, 0.5)),
+        p95Ms: round(percentile(samples, 0.95)),
+        worstMs: round(samples[samples.length - 1] ?? 0),
+      });
+    });
+  } catch (error) {
+    if (error instanceof TickRollback) return error.result;
+    throw error;
+  }
+  throw new Error('tick latency measurement did not run');
+}
+
+function percentile(sorted: readonly number[], fraction: number): number {
+  if (sorted.length === 0) return 0;
+  const index = Math.min(sorted.length - 1, Math.floor(sorted.length * fraction));
+  return sorted[index] ?? 0;
+}
+
+function round(value: number): number {
+  return Math.round(value * 100) / 100;
 }

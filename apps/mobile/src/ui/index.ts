@@ -8,7 +8,7 @@ export { resolveScheme, ThemeProvider, useTheme, type Theme, type ThemeColors, t
 export { qualityHue, trackHue } from './theme/hues';
 
 export { defaultsFromDevice, type LanguageAndUnits } from './i18n/device';
-export { readDeviceDefaults } from './i18n/deviceLocales';
+export { readDeviceDefaults, readDeviceTimeZone } from './i18n/deviceLocales';
 export { LocaleProvider, useLocale, useT } from './i18n/LocaleProvider';
 export { spokenQuantity } from './i18n/spoken';
 

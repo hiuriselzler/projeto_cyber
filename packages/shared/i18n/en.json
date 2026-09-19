@@ -430,6 +430,21 @@
       "title": "Level {level}"
     }
   },
+  "workout": {
+    "default_title": "Workout",
+    "start": "Start a workout",
+    "none_title": "No workout in progress",
+    "none_body": "Start one, and every set is saved as you tap it.",
+    "empty_title": "Nothing added yet",
+    "empty_body": "Add an exercise to start logging sets.",
+    "add_exercise": "Add an exercise",
+    "add_set": "Add a set",
+    "finish": "Finish",
+    "choose_exercise": "Choose an exercise",
+    "edit_weight": "Weight",
+    "edit_reps": "Reps",
+    "edit_rir": "Reps in reserve"
+  },
   "account": {
     "working": "Securing your account…",
     "fields": {
@@ -590,6 +605,7 @@
     "keypad_separator": "Decimal separator",
     "keypad_delete": "Delete",
     "rir_chips": "Reps in reserve",
+    "rir_chips_more": "Reps in reserve, 5 to 10",
     "rir_open_ended": "RIR {rir} or more",
     "cycle_cell": "{deload, select, yes {Day {day}, {status}, deload} other {Day {day}, {status}}}",
     "track_row": "{has_reason, select, yes {{name}, level {level}, {progress}. {reason}} other {{name}, level {level}, {progress}}}",

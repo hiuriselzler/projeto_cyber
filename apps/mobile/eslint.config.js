@@ -75,11 +75,13 @@ const ELEMENTS = [
   { type: 'unclassified', pattern: 'src/*', capture: ['folder'] },
 ];
 
-// The root layout and the two entry points it may call (ADR-012 § Amendment).
+// The root layout and the two entry points it may call (ADR-012 § Amendment), and the one file of
+// src/crypto that src/db may call (ADR-012 § Amendment 2026-09-19).
 const FILE_CATEGORIES = [
   { category: 'root-layout', pattern: '**/app/_layout.tsx' },
   { category: 'migration-entry', pattern: '**/src/db/migrate.ts' },
   { category: 'bootstrap-entry', pattern: '**/src/account/bootstrap.ts' },
+  { category: 'identifier-entry', pattern: '**/src/crypto/identifiers.ts' },
 ];
 
 function mayImport(from, to) {
@@ -107,6 +109,12 @@ const POLICIES = [
   mayImport('feature', ['account', 'domain', 'db', 'recording', 'ui', 'platform']),
   mayImport('account', ['sync', 'crypto', 'db', 'domain', 'platform']),
   mayImport('db', ['domain']),
+  // Row ids are minted where rows are made, and randomness still has one home (INV-16, ADR-012
+  // § Amendment 2026-09-19). One file of crypto/, never its barrel and never the rest of the folder.
+  {
+    from: { element: { type: 'db' } },
+    allow: { to: [{ element: { type: 'crypto' }, file: { categories: 'identifier-entry' } }] },
+  },
   mayImport('sync', ['db', 'domain', 'crypto', 'platform']),
   mayImport('recording', ['db', 'domain', 'ui', 'platform']),
   mayImport('ui', ['platform']),

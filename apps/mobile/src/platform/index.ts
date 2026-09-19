@@ -12,3 +12,5 @@ export interface PlatformDescriptor {
 export function describePlatform(): PlatformDescriptor {
   return { os: Platform.OS, osVersion: String(Platform.Version) };
 }
+
+export { confirmTap } from './haptics';

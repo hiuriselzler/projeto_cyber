@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
 import { useState, type ReactNode } from 'react';
 import { Button, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -11,7 +12,13 @@ import {
   type LanAddressCheck,
   type PrivacyKeyProbe,
 } from '@/account/diagnostics';
-import { checkSqliteRoundTrip, EXPECTED_TABLES, readLocalDatabaseState } from '@/db/diagnostics';
+import {
+  checkSqliteRoundTrip,
+  EXPECTED_TABLES,
+  measureTickLatency,
+  readLocalDatabaseState,
+  type TickLatency,
+} from '@/db/diagnostics';
 import { roundLoadToIncrement } from '@/domain';
 import { describePlatform } from '@/platform';
 import { SegmentedControl, useTheme, type SegmentedOption, type ThemePreference } from '@/ui';
@@ -46,10 +53,12 @@ export function DiagnosticsScreen() {
   // on mount would make the screen take seconds to open.
   const [privacyKey, setPrivacyKey] = useState<PrivacyKeyProbe | null>(null);
   const [privacyKeyRunning, setPrivacyKeyRunning] = useState(false);
+  const [tickLatency, setTickLatency] = useState<TickLatency | null>(null);
   const taps = useDiagnosticsStore((state) => state.taps);
   const tap = useDiagnosticsStore((state) => state.tap);
   const platform = describePlatform();
   const theme = useTheme();
+  const router = useRouter();
 
   return (
     <ScrollView contentContainerStyle={styles.screen}>
@@ -78,6 +87,16 @@ export function DiagnosticsScreen() {
       <Check title="SQLite round trip: a workout, an exercise and 3 sets (03 §8 types)">
         {`${roundTrip.ok ? 'ok' : 'FAILED'}: ${roundTrip.detail}`}
       </Check>
+
+      <Check title="Tapping ✓: the SQLite write plus the re-read the screen renders from (NFR-2 gives the whole tap 100 ms)">
+        {tickLatency === null
+          ? 'not run'
+          : `${tickLatency.taps} taps over ${tickLatency.sets} sets — ` +
+            `p50 ${tickLatency.p50Ms} ms · p95 ${tickLatency.p95Ms} ms · worst ${tickLatency.worstMs} ms\n` +
+            'React’s commit and the paint are on top of this; use the workout screen below to judge those.'}
+      </Check>
+      <Button title="Measure the ✓" onPress={() => setTickLatency(measureTickLatency())} />
+      <Button title="Open the live workout screen" onPress={() => router.push('/workout')} />
 
       <Check title="Secure storage (restart the app: the previous value must survive)">
         {storage.isPending

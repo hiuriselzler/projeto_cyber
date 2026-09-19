@@ -430,6 +430,21 @@
       "title": "Nível {level}"
     }
   },
+  "workout": {
+    "default_title": "Treino",
+    "start": "Iniciar um treino",
+    "none_title": "Nenhum treino em andamento",
+    "none_body": "Comece um, e cada série é salva assim que você toca.",
+    "empty_title": "Nada adicionado ainda",
+    "empty_body": "Adicione um exercício para começar a registrar séries.",
+    "add_exercise": "Adicionar exercício",
+    "add_set": "Adicionar série",
+    "finish": "Encerrar",
+    "choose_exercise": "Escolha um exercício",
+    "edit_weight": "Carga",
+    "edit_reps": "Repetições",
+    "edit_rir": "Repetições em reserva"
+  },
   "account": {
     "working": "Protegendo sua conta…",
     "fields": {
@@ -590,6 +605,7 @@
     "keypad_separator": "Separador decimal",
     "keypad_delete": "Apagar",
     "rir_chips": "Repetições em reserva",
+    "rir_chips_more": "Repetições em reserva, 5 a 10",
     "rir_open_ended": "RIR {rir} ou mais",
     "cycle_cell": "{deload, select, yes {Dia {day}, {status}, deload} other {Dia {day}, {status}}}",
     "track_row": "{has_reason, select, yes {{name}, nível {level}, {progress}. {reason}} other {{name}, nível {level}, {progress}}}",

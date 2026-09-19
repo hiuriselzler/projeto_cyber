@@ -21,7 +21,7 @@ when its own criteria are ticked. Tick the box here only then.
 | **Decisions** | 15 ADRs, **all now accepted**. [ADR-004](decisions/ADR-004.md)'s spike passed on 2026-09-18 and its outcome is recorded: **option B, the single Rust core**. Its four pre-launch conditions remain outstanding, in tasks 005 and 006 |
 | **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **5 complete** (001, 002, 011, 003, 019) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) — the core loop. In progress since 2026-09-19.** Task 017 is complete and ADR-004 is settled, so nothing blocks it. It is the largest task in the project and the one its own file says *deserves more care than any other UI*; the Rust core is adopted from here on, with e1RM (INV-07) and `is_counted_set()` (INV-04) its first real residents. Planned in eight stages, the core and the local data before any screen, and **the set row measured on the phone before anything is built around it**. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
+| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) — the core loop. In progress since 2026-09-19; stages 0–3 written.** Task 017 is complete and ADR-004 is settled, so nothing blocks it. It is the largest task in the project and the one its own file says *deserves more care than any other UI*; the Rust core is adopted from here on, with e1RM (INV-07) and `is_counted_set()` (INV-04) its first real residents. Planned in eight stages, the core and the local data before any screen. Stage 3 has **built** the set row, the keypad, the RIR second row and the live workout on SQLite — **but the device pass it exists for has not been run**, and stage 4 does not start until it has: the ✓ latency, the force-quit restore, keypad occlusion, TalkBack, the 200 % font pass, and the foreign-key pragma. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
 
 ### The decision that was open is closed — option B
 
@@ -511,6 +511,7 @@ nothing itself ([task 004](tasks/004-exercise-catalog-and-logging.md) § Scope).
 | 2026-09-12 | [ADR-014](decisions/ADR-014.md) The design system enforces itself — tokens, contrast, motion and strings by gate |
 | 2026-09-14 | [ADR-015](decisions/ADR-015.md) Account security in practice — rate limits in Postgres, a 60-second rotation grace window, a bundled breach list, registration's `409` |
 | 2026-09-18 | **[ADR-004](decisions/ADR-004.md) settled — option B, the single Rust core.** The spike's bar is met in full; task 004 is unblocked. The four pre-launch conditions are untouched and still required |
+| 2026-09-19 | [ADR-012](decisions/ADR-012.md) **amended** — `src/db/` mints row ids through `src/crypto/`'s identifier entry point, and nothing else in that folder. INV-16 had no legal path to a UUIDv7 from the folder that creates training rows |
 
 ### 2026-09-08 — documentation reconciliation pass
 
@@ -1601,3 +1602,70 @@ exists is how it ends up shaped for nothing.
 the new seed-version gate, `db:generate` showing no schema drift, and **512** Jest tests, up from 489.
 
 - No invariant changed and no ADR was added. One CI step added.
+
+### 2026-09-19 — task 004 stage 3: the set row is built, and INV-16 had no legal way to mint an id
+
+The live workout exists. A signed-in user starts one, adds an exercise, types a weight on the app's own
+keypad, taps reps, taps a RIR chip and ticks the set — and **every one of those taps is a synchronous
+SQLite write that the screen then re-reads** (INV-09). React holds no copy of anything that matters:
+the hook writes first and renders what actually landed, which is the difference between surviving a
+force-quit and merely intending to.
+
+**The defect this stage found, and it is a rule's, not a line of code's. [INV-16](invariants.md) had no
+enforcement path for training data.** Every user-data primary key is a client-minted UUIDv7; `uuidV7`
+lives in `src/crypto/identifiers.ts` because randomness has one home; and
+[ADR-012](decisions/ADR-012.md)'s matrix let neither `features/` nor `db/` import `crypto/`. Until this
+stage the only caller was `src/account/`, which may — so an invariant with no route to its own
+enforcement cost nothing and was invisible. The first workout row is what surfaced it. **Amended in
+ADR-012, before any code**: `src/db/` may import `crypto/`'s identifier entry point and **nothing else
+in that folder**, narrowed by the same file-category mechanism that already holds the root layout to two
+entry points. Threading a `newId` parameter through every future call site was rejected as a lot of
+plumbing to avoid one import; a second RNG inside `db/` was rejected for keeping the matrix intact by
+breaking the rule the matrix exists to express. `features/` still may not import `crypto/` at all.
+**Watched failing**: `lint-fixtures/src/db/imports-crypto-barrel.ts` proves the barrel is still refused,
+and the app's own lint proves the one permitted file is not.
+
+**Open question 9 is now built, not just decided.** `5+` opens a second row, `5 6 7 8 9 10`, and the
+chip **stores nothing by itself** — six tests say so, in both languages and both themes, including that
+pressing it calls `onChange` not at all. A stored 7 shows its own row without being asked, so a set
+restored from the database reads back as the user left it. `5+` is a **button**, not a radio: it is a
+disclosure, and a screen reader must not hear a press that stores nothing as though it stored something.
+`Chip` gained an `expanded` state for exactly that.
+
+**Three decisions the code forced.**
+
+- **A set row exists from the moment it appears on screen**, empty and incomplete. That is what makes
+  the ✓ an `UPDATE` with no id to mint and no promise to await — and it is why stage 1 made
+  `is_counted_set()` ask about completion as well as type. The two halves were designed for each other
+  a stage apart, and they met correctly.
+- **Un-ticking a set clears `completed_at`** rather than keeping the moment of a tick the user took
+  back. A set that is not complete was not completed at any time, and a stale timestamp is a small lie
+  some later aggregate would eventually read as truth.
+- **The exercise picker is deliberately the minimum**: the catalog in name order, in a sheet. Browse,
+  search and filter go to stage 4 with the screen that owns them — stage 2's own reasoning, reapplied.
+  The bilingual matcher it will use already exists and is untouched here.
+
+**What is measured, and what is not — stated so the number is not read as more than it is.**
+`measureTickLatency()` times the two things the ✓ actually does, on the real schema: the synchronous
+`UPDATE` and the re-read of the whole open workout the screen renders from, 60 taps across a
+five-exercise, twenty-set session, reported p50 / p95 / worst. **It does not measure React's commit or
+the paint.** That half is settled by using the screen on the phone. This half is the one that can
+regress silently as a session grows, because it is the half that re-reads every row.
+
+**⚠ The stage is not finished.** Its entire purpose — *the set row measured on a real phone* — needs the
+Galaxy S21 FE, and none of it has been run: the ✓ latency, the force-quit restore, the keypad never
+covering the row it edits, TalkBack, the 200 % font pass in Portuguese in pounds, and whether
+`PRAGMA foreign_keys = ON` actually bites. **Nothing above may be called done until those are run**, and
+the task file's device criteria are where they are recorded.
+
+**Verified, matching what CI runs**: `tsc`, `eslint`, **48** lint fixtures, the platform-file check,
+catalogs at **488** messages, the seed-version gate, `db:generate` showing no schema drift, and **597**
+Jest tests, up from 512. API — 156 unit tests still green, since both catalogs gained the same keys.
+
+- **Also found, not fixed:** the Jest harness's known Windows flake bit once in a full run — a timeout
+  on `MATRIX[0]` of `surfaces.test.tsx`, never on an assertion, passing alone immediately after. It is
+  the behaviour `jest.config.js` already documents from task 017, and it is still a harness problem
+  rather than a test one.
+- No invariant changed. **One ADR amended** (ADR-012), so the counts are unchanged: 49 documents,
+  15 ADRs. One dependency added, `expo-haptics`, which puts the ✓'s haptic in `src/platform/` and
+  nowhere else (INV-28) and needs a fresh prebuild on the device.
