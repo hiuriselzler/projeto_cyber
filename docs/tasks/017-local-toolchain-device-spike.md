@@ -166,13 +166,10 @@ an FFI chain that takes a week to stand up has already answered the question.
       development build
 - [x] Airplane mode, app killed and reopened: the user is still signed in and lands on the home
       screen with no spinner and no error
-- [ ] A privacy key created on device A is unwrapped correctly by device B after sign-in, and the
-      server never receives it in the clear — verified by inspecting the request bodies. *Half proven
-      on hardware (§ The privacy-key probe): the wrap is self-contained — salt and parameters travel
-      with it — so a device holding only the wrap and the password opens it, which is the whole
-      mechanism of "device B"; and the payload carries three fields, none containing key material.
-      **Still owed:** the real two-install flow (register, `pm clear`, sign in again) against a running
-      API, and an actual request body read off the wire rather than the payload shown on screen*
+- [x] A privacy key created on device A is unwrapped correctly by device B after sign-in, and the
+      server never receives it in the clear — verified by inspecting the request bodies
+      *(§ Device A to device B, for real — the full flow against a running API, with both request
+      bodies read off the wire)*
 - [x] Changing the password leaves existing encrypted rows decryptable; resetting it does not, and
       the reset screen warned about that before the user confirmed *(§ The privacy-key probe. Proven
       at the key, which is the mechanism: a change re-wraps the same key and the old password stops
@@ -441,11 +438,69 @@ Two things the check established that a green test could not:
   exactly 1 module. Worth knowing before task 004 builds screens against these tokens: a designer
   changing a value and seeing nothing happen is a restart, not a broken token.
 
+### Device A to device B, for real (2026-09-19)
+
+The one criterion deliberately left open when the probe was written. Run end to end against the local
+API, with a small forwarding proxy between the phone and uvicorn (`adb reverse tcp:8000 tcp:9000`) so
+the **actual request bodies** could be read, which is what the criterion asks for.
+
+| Step | What happened |
+|---|---|
+| `pm clear`, register `ab-probe@…` | Device A holds a key: *privacy key held on this device — **yes*** |
+| `pm clear` again | Device B: a fresh install, secure storage back to *"nothing yet"* |
+| Sign in, email and password only | *privacy key held on this device — **yes*** |
+
+**The request bodies, off the wire.** Registration sends the key **wrapped and nothing else**:
+
+```json
+"privacy_key": {
+  "wrapped_key": "K7mR/ewU6gi6V3ybP4GQDuOm0P8D6EXbJ5XLEPnt0POnmvVGkAsCjLhvRuFpJ2ytcvAa5xNdpfmJEdI1KIF/OmfOPRZoon2V",
+  "salt": "80rOzwa3a6c9Xc7lQC4WiA==",
+  "kdf": "argon2id$m=65536,t=3,p=1"
+}
+```
+
+72 bytes decoded — exactly `WRAPPED_KEY_BYTES`, 24 nonce + 32 ciphertext + 16 tag — and a 16-byte
+salt. Sign-in's body is 114 bytes: email, password, `device_id`, no key material at all. Postgres
+agrees: `octet_length(wrapped_privacy_key) = 72`, `privacy_key_salt = 16`,
+`privacy_key_kdf = argon2id$m=65536,t=3,p=1` for both accounts, and there is no column that could hold
+a plaintext key.
+
+**Why "unwrapped correctly" is settled by this and not merely suggested.** The wrap is
+XChaCha20-Poly1305, so its tag authenticates: a wrong key cannot produce a successful open. Device B
+going from no key to a key, given only the password and the server's wrap, is the AEAD verifying —
+there is no path to "yes" that returns different bytes than device A generated.
+
+> Two throwaway accounts — `ab-probe@example.invalid` and `ab-probe2@example.invalid` — are left in
+> the local development database. They exist nowhere else.
+
+### The status-bar defect, owned and fixed (2026-09-19)
+
+Found on the device on 2026-09-16 and left unassigned between task 003's screens and task 011's
+layout. **It is task 011's**, and the reason decides the fix: `AccountLayout` renders into `Screen`
+from `src/ui/`, so the container was already the shared one — it simply applied no inset. Nothing in
+`src/` or `app/` referenced safe areas at all, and the root `Stack` runs `headerShown: false`, so
+every screen drew from pixel zero.
+
+`Screen` now applies `useSafeAreaInsets()` top and bottom, and the root layout mounts
+`SafeAreaProvider`. One container, every screen that uses it, and every screen written later — the
+same argument INV-23 makes for tokens. Confirmed on the phone: `Excluir sua conta` sits below the
+clock where `Entrar` sat behind it.
+
+**Jest could not have caught this, and now can.** The harness rendered with no safe-area context at
+all, so insets were absent rather than wrong. `test/render.tsx` now provides `TEST_METRICS` — a phone
+with a 24 px status bar and a 16 px gesture handle — and a new test asserts `Screen` pads by them.
+Found while writing it: the INV-27 fence rejected a literal string in the test itself, which is the
+lint gate doing its job.
+
+*Not covered:* the diagnostics screen renders a bare `ScrollView` rather than `Screen`, so its first
+line still sits under the clock. It is debug-only and exempt from the design rules by ADR-014, and is
+left alone deliberately.
+
 ### Found on the device, not yet fixed
 
-- **Screen titles are drawn behind the status bar.** `Entrar` and `Crie sua conta` overlap the clock: the header does
-  not respect the safe-area inset. Jest does not model insets, so only a phone shows it. Whether it belongs to task
-  003's screens or task 011's layout is not yet established.
+*(Empty. The status-bar defect above was the last one; the `EMAIL_FOLDER` and `.gitignore` findings
+were fixed on 2026-09-17.)*
 
 ### Found on the device, fixed (2026-09-17)
 

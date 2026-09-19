@@ -4,6 +4,7 @@ import { Button, ScrollView, StyleSheet, Text, TextInput, View } from 'react-nat
 
 import {
   checkLanAddressRefused,
+  checkPrivacyKeyHeld,
   checkPrivacyKeyLifecycle,
   checkSecureStorage,
   checkServerReadiness,
@@ -36,6 +37,7 @@ export function DiagnosticsScreen() {
     queryFn: checkSecureStorage,
     staleTime: Infinity,
   });
+  const held = useQuery({ queryKey: ['diagnostics', 'privacy-key-held'], queryFn: checkPrivacyKeyHeld });
   const [database] = useState(readLocalDatabaseState);
   const [roundTrip] = useState(checkSqliteRoundTrip);
   const [lanBaseUrl, setLanBaseUrl] = useState('http://192.168.0.10:8000');
@@ -84,6 +86,11 @@ export function DiagnosticsScreen() {
             ? `failed: ${String(storage.error)}`
             : `round trip: ${storage.data.roundTripped ? 'ok' : 'FAILED'} · previous launch wrote: ${storage.data.previous ?? 'nothing yet'}`}
       </Check>
+
+      <Check title="Privacy key held on this device (clear the app's data: must go no, then yes after signing in)">
+        {held.isPending ? 'checking…' : held.isError ? `failed: ${String(held.error)}` : held.data ? 'yes' : 'no'}
+      </Check>
+      <Button title="Check again" onPress={() => void held.refetch()} />
 
       <Check title="Privacy key on real libsodium (task 003's device criteria, ADR-007)">
         {privacyKeyRunning

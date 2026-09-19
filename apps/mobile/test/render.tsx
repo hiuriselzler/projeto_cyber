@@ -6,6 +6,7 @@
  */
 import { render } from '@testing-library/react-native';
 import type { ReactElement } from 'react';
+import { SafeAreaProvider, type Metrics } from 'react-native-safe-area-context';
 
 import type { Locale } from '../src/ui/format/number';
 import type { UnitSystem } from '../src/ui/format/quantities';
@@ -26,12 +27,24 @@ export const MATRIX: readonly Setting[] = LOCALES.flatMap((locale) =>
   UNIT_SYSTEMS.flatMap((unitSystem) => THEMES.map((preference) => ({ locale, unitSystem, preference }))),
 );
 
+/**
+ * A phone with a status bar and a gesture handle. Given explicitly rather than left to the default,
+ * so `Screen`'s insets are *exercised* by every test rather than silently zeroed — the defect task
+ * 017 found on a device was a missing inset, and a harness with no insets could not have caught it.
+ */
+export const TEST_METRICS: Metrics = {
+  frame: { x: 0, y: 0, width: 400, height: 800 },
+  insets: { top: 24, left: 0, right: 0, bottom: 16 },
+};
+
 export function renderUi(element: ReactElement, setting: Setting = MATRIX[0]) {
   return render(
-    <ThemeProvider preference={setting.preference}>
-      <LocaleProvider locale={setting.locale} unitSystem={setting.unitSystem}>
-        {element}
-      </LocaleProvider>
-    </ThemeProvider>,
+    <SafeAreaProvider initialMetrics={TEST_METRICS}>
+      <ThemeProvider preference={setting.preference}>
+        <LocaleProvider locale={setting.locale} unitSystem={setting.unitSystem}>
+          {element}
+        </LocaleProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>,
   );
 }

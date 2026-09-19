@@ -59,3 +59,11 @@ export {
   type PrivacyKeyProbe,
   type PrivacyKeyProbeStep,
 } from '@/crypto';
+
+/**
+ * Whether this device holds the privacy key at all — the observable half of task 017's device A to
+ * device B check. After clearing the app's data the answer must be `false`, and after signing in
+ * again it must be `true`, which is only possible if the server's wrap opened under the password.
+ * The key itself is never exposed, here or anywhere (ADR-007).
+ */
+export { hasPrivacyKey as checkPrivacyKeyHeld } from '@/crypto';

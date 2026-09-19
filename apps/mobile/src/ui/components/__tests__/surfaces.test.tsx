@@ -3,12 +3,14 @@
  * themes (task 011).
  */
 import { fireEvent, screen } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
 
-import { MATRIX, renderUi } from '../../../../test/render';
+import { MATRIX, renderUi, TEST_METRICS } from '../../../../test/render';
 import { PLACEHOLDER_LEVELS } from '../../brand/marks.generated';
 import { EmptyState } from '../EmptyState';
 import { LevelUpState } from '../LevelUpState';
 import { Mark } from '../Mark';
+import { Screen } from '../Screen';
 import { SegmentedControl } from '../SegmentedControl';
 import { Sheet } from '../Sheet';
 
@@ -88,5 +90,21 @@ describe.each(MATRIX)('$locale, $unitSystem, $preference', (setting) => {
 describe('the mark’s slots', () => {
   it('still hold task 011’s placeholder at every level, until task 018', () => {
     expect([...PLACEHOLDER_LEVELS].sort()).toEqual(['full', 'glyph', 'reduced', 'silhouette']);
+  });
+});
+
+/**
+ * The app draws its own headers, so nothing else keeps a screen's first line out from under the
+ * status bar. Task 017 found `Entrar` and `Crie sua conta` painted behind the clock on a phone —
+ * Jest could not have caught it, because the harness had no insets at all. It has them now
+ * (`TEST_METRICS`), and this is the guard.
+ */
+describe('a screen', () => {
+  it('keeps its content out of the system insets', async () => {
+    await renderUi(<Screen />);
+
+    const style = StyleSheet.flatten(screen.getByTestId('screen').props.style);
+    expect(style.paddingTop).toBe(TEST_METRICS.insets.top);
+    expect(style.paddingBottom).toBe(TEST_METRICS.insets.bottom);
   });
 });

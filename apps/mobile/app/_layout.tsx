@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import { useEffect } from 'react';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { bootstrapAccount, restoreAccountSession } from '@/account/bootstrap';
 import { useLocalMigrations } from '@/db/migrate';
@@ -29,11 +30,15 @@ export default function RootLayout() {
   if (!migrations.success) {
     return null;
   }
+  // SafeAreaProvider is what `Screen` reads its insets from. It wraps everything, because a screen
+  // rendered outside it has no inset value to read.
   return (
-    <PreferencesProvider>
-      <QueryClientProvider client={queryClient}>
-        <Stack screenOptions={{ headerShown: false }} />
-      </QueryClientProvider>
-    </PreferencesProvider>
+    <SafeAreaProvider>
+      <PreferencesProvider>
+        <QueryClientProvider client={queryClient}>
+          <Stack screenOptions={{ headerShown: false }} />
+        </QueryClientProvider>
+      </PreferencesProvider>
+    </SafeAreaProvider>
   );
 }
