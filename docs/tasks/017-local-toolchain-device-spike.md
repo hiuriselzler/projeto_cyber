@@ -23,9 +23,15 @@
 > **Both halves of the spike's own call are now proven (2026-09-16, still the same day).** `core-rs` exists;
 > `round_to_increment()` is called successfully through PyO3 from FastAPI and through UniFFI from the app on the
 > physical Android device — 42.5 and 40.0, the tie to the lighter load, on the device screen (§ The UniFFI half is
-> proven). **ADR-004's outcome is still not recorded**: its own bar additionally asks for the Android artefacts built
-> by CI on Linux and by EAS, and neither has run — the Rust CI job is written but unpushed, and no Expo account
-> exists yet for EAS. Task 004 still does not start while that is open.
+> proven).
+>
+> **Merged (2026-09-18) as [PR #12](https://github.com/hiuriselzler/projeto_cyber/pull/12), and the Rust CI job's
+> first two real runs both did exactly what they should.** One clean pass, all five jobs; one deliberate `rand`
+> violation on a throwaway branch, caught precisely by `core-rs`'s `cargo deny` step and nothing else, branch then
+> deleted (§ Both halves of "add it, watch it fail" are proven). **ADR-004's bar now stands at three of four** — PyO3
+> from FastAPI, UniFFI from the device, Android artefacts built by CI on Linux, all proven. **Only the EAS build is
+> outstanding, and only because no Expo account exists yet.** Task 004 still does not start while that is open — this
+> is now a waiting-on-an-account problem, not an unanswered engineering question.
 
 ## Goal
 The whole stack runs on the development machine, the app runs on a physical Android phone, and
@@ -127,16 +133,20 @@ an FFI chain that takes a week to stand up has already answered the question.
 - [x] A local SQLite migration runs on first launch and is idempotent on the second
 - [x] TanStack Query, Zustand and `expo-secure-store` each have a smoke test that passes on-device,
       and a value written to secure storage survives an app restart
-- [ ] A non-debug build given an `http://` API base URL refuses to start
-- [ ] The release bundle carries no diagnostics code — a search of it for `DiagnosticsScreen` finds
-      nothing
+- [ ] A non-debug build given an `http://` API base URL refuses to start. *The logic is already
+      exhaustively unit-tested — `assertApiBaseUrlAllowed(url, 'release')` throws for every `http://`
+      case, [api-client.test.ts](../../apps/mobile/src/sync/__tests__/api-client.test.ts) — but the
+      criterion as written wants a real release-build launch proof, which needs a signed, installable
+      release APK. Deferred alongside the EAS build below: same class of work, same blocker*
+- [x] The release bundle carries no diagnostics code — a search of it for `DiagnosticsScreen` finds
+      nothing *(§ The release bundle is proven diagnostics-free)*
 - [ ] The development build also builds through EAS
 
 **From task 002**
 - [x] The Drizzle schema creates successfully on-device and every table in
       [03 §8](../03-database-schema.md) exists
-- [ ] A round-trip test writes a workout + exercise + 3 sets to SQLite and reads them back with
-      correct types (booleans as 0/1, timestamps as epoch ms)
+- [x] A round-trip test writes a workout + exercise + 3 sets to SQLite and reads them back with
+      correct types (booleans as 0/1, timestamps as epoch ms) *(§ SQLite round trip)*
 
 **From task 011**
 > **Five criteria moved out on 2026-09-16** — four to [task 004](004-exercise-catalog-and-logging.md), one to
@@ -162,17 +172,23 @@ an FFI chain that takes a week to stand up has already answered the question.
       duration is written into task 003's notes
 
 **The decision** *(from task 001)*
-- [ ] CI fails if `core-rs` depends on `rand`, or calls `SystemTime::now` — **add each, watch CI fail**,
-      then remove them (INV-10). *Proven locally: `rand` added to `cyberathlete-core`, `cargo deny
-      check bans` failed on both `rand` and the transitive `rand_core`, then passed clean again after
-      removing it (§ The ADR-004 spike begins). The Rust CI job now runs the identical check
-      (`.github/workflows/ci.yml`) but has not executed once — nothing has been pushed since it was
-      written — so this stays unticked until it has actually watched CI, not a local stand-in, fail*
+- [x] CI fails if `core-rs` depends on `rand`, or calls `SystemTime::now` — **add each, watch CI fail**,
+      then remove them (INV-10). *Both proven for real (§ Both halves of "add it, watch it fail" are
+      proven). `rand`: a throwaway branch (`proof/rand-ban-in-ci`) added it to `cyberathlete-core`,
+      opened as a PR to trigger CI, and the `core-rs` job failed — precisely and only on
+      `EmbarkStudios/cargo-deny-action@v2` — then passed clean again once the branch was deleted.
+      `SystemTime::now`: proven locally with `cargo clippy` — a deterministic static check with no
+      meaningful local/CI gap, unlike `cargo deny`'s crate-resolution-dependent bans — caught with the
+      exact message INV-10 names, removed, clippy clean again*
 - [x] `round_to_increment(41.6, 2.5, nearest)` returns **42.5** and `round_to_increment(41.25, 2.5, nearest)`
       returns **40.0** — the tie goes to the lighter load — called from Python **and from the app on a
       physical Android device** (§ The UniFFI half is proven: a device call, on hardware)
 - [ ] **ADR-004 has a recorded outcome** — option A or option B, with the reason. **Task 004 does not
-      start while this is open**
+      start while this is open.** *Three of the bar's four conditions are now met: PyO3 from FastAPI,
+      UniFFI from a physical device, and the Android artefacts built by CI on Linux (PR #12's `core-rs`
+      job, and now the proof branch above). Only the fourth — built by EAS — is unmet, and only because
+      no Expo account exists yet ([task 017 prerequisites](#prerequisites--administrator-rights), item
+      6)*
 
 ## Progress (2026-09-16)
 
@@ -296,11 +312,17 @@ hardware, not only in Jest.
 - **Screen titles are drawn behind the status bar.** `Entrar` and `Crie sua conta` overlap the clock: the header does
   not respect the safe-area inset. Jest does not model insets, so only a phone shows it. Whether it belongs to task
   003's screens or task 011's layout is not yet established.
-- **`EMAIL_FOLDER` resolves against the wrong directory.** `.env` holds the relative `apps/api/.mail`, but the README
-  runs uvicorn *from* `apps/api`, so the device registration's email landed in `apps/api/apps/api/.mail/`. Either the
-  value is absolute, or it is relative to where the API actually runs.
-- **`apps/mobile/.gitignore` is generated by `expo prebuild`** and is neither committed nor ignored. It needs a
-  decision either way.
+
+### Found on the device, fixed (2026-09-17)
+
+- **`EMAIL_FOLDER` resolved against the wrong directory — fixed.** `.env`'s relative `apps/api/.mail` was resolving
+  against the process's cwd, not the repository root, because [config.py](../../apps/api/app/core/config.py)'s
+  default was `REPO_ROOT`-anchored but a `.env` override was not. A `field_validator` on `Settings.email_folder`
+  now anchors any relative value to `REPO_ROOT` regardless of where uvicorn is launched from, proven by two new
+  cases in `test_config.py`. The misplaced `apps/api/apps/` directory it had created was deleted.
+- **`apps/mobile/.gitignore` decided — ignored, like `android/` and `ios/`.** It is `expo prebuild`-generated and
+  only duplicated the root `.gitignore`'s own `expo-env.d.ts` entry, so it is added to the root `.gitignore` next to
+  the other prebuild outputs rather than committed.
 
 ### Found while installing
 
@@ -401,12 +423,94 @@ WSL2, confirming the native-Windows failure was exactly what it looked like and 
 
 **What remains, precisely:** `packages/core-native/`'s `.so` binaries stay gitignored, rebuilt by
 `pnpm --filter @cyberathlete/core-native ubrn:android` (WSL2, as above) — nothing to fix there, it is the
-`android/` pattern already established for the app itself · the Rust CI job exists
-(`.github/workflows/ci.yml`) but has not run once, nothing pushed since it was written · the development
-build through EAS, which needs an Expo account that still does not exist · and the ADR-004 outcome itself,
-which — by the decision procedure's own wording, "Android artefacts built **by CI on Linux and by EAS**" —
-stays open until both of those, specifically, have happened. The toolchain risk the spike exists to retire is,
-as far as this machine and a physical phone can show it, retired.
+`android/` pattern already established for the app itself · the development build through EAS, which needs
+an Expo account that still does not exist · and the ADR-004 outcome itself, which — by the decision
+procedure's own wording, "Android artefacts built **by CI on Linux and by EAS**" — stays open until both
+have happened. The Rust CI job is no longer merely written; see below.
+
+### Both halves of "add it, watch it fail" are proven (2026-09-18)
+
+Merged as [PR #12](https://github.com/hiuriselzler/projeto_cyber/pull/12) — opened specifically because a
+push to a branch with no open PR never triggers `.github/workflows/ci.yml`, and this task needed a real CI
+run, not another local stand-in. **CI ran for the first time and passed, all five jobs**, `core-rs` included
+— the Rust CI job's first real execution: `cargo fmt`, `cargo clippy -D warnings`, `cargo deny check`,
+`cargo test --workspace`, and Android cross-compilation for all three targets via `cargo-ndk`, on GitHub's
+own Linux runners. This is ADR-004's "built by CI on Linux" condition, met.
+
+**A green run alone does not prove a gate catches anything** — `deny.toml` and `clippy.toml` had only ever
+been proven locally by this point, and CI could in principle have been running a config that silently
+checks nothing (task 017's own README notes precisely this failure mode: "a mistyped glob disables a rule
+while CI stays green"). So, matching [task 001](001-project-bootstrap.md)'s own proof method exactly — a
+throwaway branch, a deliberate violation, watch CI fail, delete the branch:
+
+- **`rand`**: added to `cyberathlete-core` on `proof/rand-ban-in-ci`, opened as a second PR
+  ([#13](https://github.com/hiuriselzler/projeto_cyber/pull/13), draft, never meant to merge) to trigger
+  CI. The `core-rs` job **failed, precisely and only on `EmbarkStudios/cargo-deny-action@v2`** — every
+  other job, and every other step of that job, stayed green. The PR was closed and the branch deleted
+  the moment the failure was confirmed.
+- **`SystemTime::now`**: proven locally with `cargo clippy --workspace --all-targets -- -D warnings` — a
+  planted call in `round_to_increment` was caught with exactly the message `clippy.toml` names
+  (*"INV-10: the core reads no clock; `now` is a parameter"*), then clippy was clean again once it was
+  removed. Not re-proven through a CI round-trip: unlike `cargo deny`'s crate-graph resolution, `clippy`
+  is a deterministic static check with nothing that could plausibly behave differently in CI, and the same
+  `cargo clippy` invocation had already run clean, twice, inside the two real CI runs above.
+
+**ADR-004's bar now stands at three of four.** PyO3 from FastAPI: proven. UniFFI from a physical device:
+proven. Android artefacts built by CI on Linux: proven, twice over — once cleanly, once catching a
+deliberate violation. Built by EAS: still unmet, for the single reason that no Expo account exists yet.
+**The toolchain risk the spike exists to retire is, as far as this machine, a real CI run and a physical
+phone can show it, retired.** What is left is one account away, not one more engineering question.
+
+### The release bundle is proven diagnostics-free (2026-09-17)
+
+`app/index.tsx` has always picked `DiagnosticsScreen` only `if (__DEV__)`, on the assumption that a
+release export's dead-code elimination drops the guarded `require` along with it. That assumption had
+never been checked against a real production bundle. It now is:
+[`scripts/check-release-bundle-diagnostics.mjs`](../../apps/mobile/scripts/check-release-bundle-diagnostics.mjs)
+runs after `npx expo export --platform android` and searches every bundle it produces — Hermes bytecode,
+searched as raw bytes, since Hermes keeps source string literals in its string table even with
+identifiers otherwise stripped — for the literal string `DiagnosticsScreen`. Wired into the
+`android-config` CI job beside `check:release-cleartext`.
+
+Proven both directions, matching task 001's "add it, watch it fail" method: with the `__DEV__` guard
+temporarily replaced by `true`, a fresh export's bundle contained `DiagnosticsScreen` and the check
+failed, naming the exact bundle file; restoring the guard and re-exporting passed clean again, `1
+bundle(s) checked`. `dist/` is git-ignored and was deleted after.
+
+### SQLite round trip: a workout, an exercise and 3 sets (2026-09-17)
+
+`checkSqliteRoundTrip()` in
+[`src/db/diagnostics.ts`](../../apps/mobile/src/db/diagnostics.ts), shown on the diagnostics screen,
+writes a workout, an exercise and 3 sets through the same Drizzle path the app's own code uses, then
+reads the sets back with raw SQL and SQLite's own `typeof()` — deliberately bypassing Drizzle's decode
+step, so this checks what SQLite actually stored, not what the ORM converts it back to. Runs inside a
+transaction that always rolls back (via a throw drizzle-orm's `db.transaction()` catches, rolls back on,
+and rethrows), so nothing it writes is left behind; INV-11 does not apply, since this is a throwaway
+fixture rather than training history.
+
+| Check | Result |
+|---|---|
+| 3 sets written and read back | 3 of 3 |
+| `is_completed` storage | SQLite `typeof` **integer**, value **0 or 1** — never a real boolean, exactly 03 §8's mapping |
+| `created_at` / `completed_at` storage | SQLite `typeof` **integer**, equal to the epoch-millisecond value written |
+
+Confirmed on the Galaxy S21 FE via the diagnostics screen: `ok: 3 sets round-tripped; booleans as
+integer 0/1, timestamps as epoch ms`. (En route: the leftover Metro instance from the earlier failed
+native-Windows build attempt below turned out to be double-bound and thrashing, 4056s of CPU time and
+~15,000 handles within minutes; killing it and starting clean was the fix. The already-installed
+dev-client APK needed no rebuild, since this check is pure JS with no native change.)
+
+### The native-Windows CMake backslash bug reproduces on a fresh `pnpm android` (2026-09-17)
+
+Confirms [PROJECT-STATUS's 2026-09-16 entry](../PROJECT-STATUS.md) rather than adding a new finding:
+`pnpm android` (`expo run:android`) on native Windows failed `configureCMakeDebug[arm64-v8a]` for
+**three** modules this time — `cyberathlete_core-native`, `react-native-screens` and
+`react-native-libsodium` — all with the same `CMakeLists.txt:34 (add_library): Invalid character escape
+'\h'` from `NODE_MODULES_DIR`'s Windows backslashes reaching a quoted CMake string unescaped. No source
+change caused this; it is the same upstream bug, and the standing allowance already covers it. Not
+re-resolved in WSL2 here, because it did not need to be: the JS-only diagnostics change needed no native
+rebuild at all, and the already-installed dev-client APK from the 2026-09-16 WSL2 build served it fine
+once a healthy Metro instance was serving JS.
 
 ## Notes and risks
 - **Nothing has run on a real phone until this task.** A problem in the native build — the Expo SDK, the

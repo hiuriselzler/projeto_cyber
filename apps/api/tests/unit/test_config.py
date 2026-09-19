@@ -1,10 +1,12 @@
 import secrets
+from pathlib import Path
 from typing import Any
 
 import pytest
 
 from app.core.config import (
     KNOWN_DEVELOPMENT_SECRETS,
+    REPO_ROOT,
     InsecureConfigurationError,
     Settings,
     assert_settings_are_safe,
@@ -116,3 +118,20 @@ def test_the_migrator_url_is_allowed_in_local_development(environment):
     environ = {"MIGRATION_DATABASE_URL": "postgresql+psycopg://cyberathlete_migrator@db/x"}
 
     assert_settings_are_safe(make_settings(environment=environment), environ=environ)
+
+
+def test_a_relative_email_folder_is_anchored_to_the_repo_root_not_the_cwd():
+    """.env's EMAIL_FOLDER=apps/api/.mail must not resolve against wherever uvicorn was
+    launched from (task 017: it landed in apps/api/apps/api/.mail because the README runs
+    uvicorn from apps/api)."""
+    settings = make_settings(email_folder="apps/api/.mail")
+
+    assert settings.email_folder == REPO_ROOT / "apps" / "api" / ".mail"
+
+
+def test_an_absolute_email_folder_is_left_untouched(tmp_path: Path):
+    absolute = tmp_path / "cyberathlete-mail"
+
+    settings = make_settings(email_folder=absolute)
+
+    assert settings.email_folder == absolute

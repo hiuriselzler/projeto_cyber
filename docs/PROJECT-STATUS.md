@@ -15,13 +15,13 @@ when its own criteria are ticked. Tick the box here only then.
 
 | | |
 |---|---|
-| **Phase** | **Tasks 001, 002, 011, 003 and 019 complete.** The schema exists in Postgres and SQLite, seeded and enforcing itself; the design system exists in `src/ui/`, token-driven and tested in both languages, both unit systems and both themes; accounts, sessions and the privacy key exist on both sides, with row-level security proven under the API's own role; and a user can delete their account, from the app or the web, with a 7-day grace period and one daily sweep. **Administrator rights arrived 2026-09-16**, so [task 017](tasks/017-local-toolchain-device-spike.md) — Docker, the device, the ADR-004 spike — is under way and must finish before task 004. **Its local stack runs, the app runs on a physical phone, and `core-rs` now exists with both halves of the spike's own call proven** — `round_to_increment()` returns the right values through PyO3 from FastAPI and through UniFFI from the app on the device. **ADR-004's outcome still is not recorded**: its bar also asks for the Android artefacts built by CI on Linux and by EAS, and neither has run yet |
+| **Phase** | **Tasks 001, 002, 011, 003 and 019 complete.** The schema exists in Postgres and SQLite, seeded and enforcing itself; the design system exists in `src/ui/`, token-driven and tested in both languages, both unit systems and both themes; accounts, sessions and the privacy key exist on both sides, with row-level security proven under the API's own role; and a user can delete their account, from the app or the web, with a 7-day grace period and one daily sweep. **Administrator rights arrived 2026-09-16**, so [task 017](tasks/017-local-toolchain-device-spike.md) — Docker, the device, the ADR-004 spike — is under way and must finish before task 004. **Its local stack runs, the app runs on a physical phone, and `core-rs` exists with three of ADR-004's four bar conditions proven**: PyO3 from FastAPI, UniFFI from the device, and the Android artefacts built by CI on Linux — the last of those proven twice, once clean and once catching a deliberate violation on a throwaway branch. **Only the EAS build is outstanding** |
 | **Repository** | Private GitHub repository `hiuriselzler/projeto_cyber`. `main` holds the documentation and tasks 001, 002, 011, 003 and 019, each merged by pull request (#1; #5; #7 and #8; #9; #11); each further piece arrives the same way, with CI green before merge |
 | **Docs** | 49 files, internally consistent, all cross-links resolving |
 | **Decisions** | 15 ADRs. Fourteen accepted outright; [ADR-004](decisions/ADR-004.md) accepted *conditionally* |
 | **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **5 complete** (001, 002, 011, 003, 019) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | [Task 017](tasks/017-local-toolchain-device-spike.md), in progress since administrator rights arrived 2026-09-16: the local stack runs, the app runs on the phone, and **the ADR-004 spike's own call is proven both ways** — PyO3 from FastAPI, and UniFFI from the app on the physical device, the same two values (42.5, 40.0) either way. `deny.toml` and the Rust CI job are written; the `rand` gate is proven locally but not yet through an actual CI run — nothing has been pushed since the job was added. **Next:** push and confirm the Rust CI job runs green; an Expo account, so the EAS build criterion can close; then ADR-004's outcome, which its own bar keeps open until both of those happen, whatever the toolchain has already shown. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
+| **Next action** | [Task 017](tasks/017-local-toolchain-device-spike.md), in progress since administrator rights arrived 2026-09-16: the local stack runs, the app runs on the phone, and **three of ADR-004's four bar conditions are proven** — PyO3 from FastAPI, UniFFI from the physical device (42.5 and 40.0, either way), and the Android artefacts built by CI on Linux, itself proven twice: [PR #12](https://github.com/hiuriselzler/projeto_cyber/pull/12) merged with all five jobs green, then a throwaway branch ([PR #13](https://github.com/hiuriselzler/projeto_cyber/pull/13), deleted) proved the `rand` gate actually fails CI before it was closed clean again. **Next: the EAS build — the last bar condition — and then ADR-004's outcome.** Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
 
 ### The one decision still genuinely open
 
@@ -170,13 +170,14 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
 > Everything that needs administrator rights on the development machine, and every check only a phone
 > can settle. **Must finish before task 004**: its spike decides how domain logic is written.
 > **In progress since 2026-09-16**, when administrator rights arrived. The local stack runs and **the app runs on a
-> physical Android phone** — eleven criteria are ticked in the task file. The machine held none of the local
+> physical Android phone** — twelve criteria are ticked in the task file. The machine held none of the local
 > environment tasks 001–003 built, and it has been rebuilt on Docker. **The native build does not work on Windows**
 > and is done in WSL2, which ADR-004 allows; five task-011 criteria moved to tasks 004 and 007, which build the
-> screens they name. **The ADR-004 spike's own call is proven both ways**: `core-rs` exists, and `round_to_increment()`
-> returns the right values through PyO3 from FastAPI *and* through UniFFI from the app on the physical device. What
-> is still open is the rest of ADR-004's bar — a real CI run, an EAS build — not the toolchain risk itself. See the
-> task file and the decision log.
+> screens they name. **Three of ADR-004's four bar conditions are proven**: PyO3 from FastAPI, UniFFI from the
+> physical device, and the Android artefacts built by CI on Linux — [PR #12](https://github.com/hiuriselzler/projeto_cyber/pull/12)
+> merged all five jobs green, and a throwaway branch then proved the `rand` gate really fails CI before it was
+> deleted. **Only the EAS build is left, blocked on an Expo account that does not exist yet.** See the task file and
+> the decision log.
 - [x] Administrator installs: Windows long paths, WSL2, Docker Desktop, Android Studio (SDK, NDK,
       platform tools), Visual Studio Build Tools and Rust with the Android targets and `cargo-ndk`
 - [ ] Local stack: `docker compose up`, roles created by the init hook, integration tests run locally,
@@ -1361,6 +1362,33 @@ Continued on `feat/task-017-core-spike`, not yet committed. Full account in
   answered.** What is left — a real CI run, an EAS build, an Expo account that does not exist yet — is process,
   not risk.
 - No invariant changed and no ADR was added: 49 documents, 15 ADRs. Not yet committed.
+
+### 2026-09-18 — merged, and the Rust CI job's first two real runs both did exactly what they should
+
+Committed as `2d14194`, merged as [PR #12](https://github.com/hiuriselzler/projeto_cyber/pull/12), merge commit
+`e5148f2`. Full account in [task 017](tasks/017-local-toolchain-device-spike.md), same date.
+
+- **CI ran on the Rust job for the first time and passed clean** — all five jobs, `core-rs` included:
+  `cargo fmt`, `cargo clippy -D warnings`, `cargo deny check`, `cargo test --workspace`, and `cargo-ndk`
+  cross-compilation for all three Android targets, on GitHub's own Linux runners. Only pushing a branch
+  with an open pull request triggers `.github/workflows/ci.yml` — a bare push does not — which is the
+  entire reason the PR existed before the spike itself was finished.
+- **A green run does not prove a gate catches anything**, and task 017's own README says so in as many
+  words: *"a mistyped glob disables a rule while CI stays green."* So, matching
+  [task 001](tasks/001-project-bootstrap.md)'s own proof method — a throwaway branch, a deliberate
+  violation, watch the real CI fail, delete the branch — `rand` was added to `cyberathlete-core` on
+  `proof/rand-ban-in-ci`, opened as [PR #13](https://github.com/hiuriselzler/projeto_cyber/pull/13)
+  (draft, never meant to merge) to trigger a run. **The `core-rs` job failed, precisely and only on
+  `EmbarkStudios/cargo-deny-action@v2`** — every other job and every other step of that job stayed green.
+  The PR was closed and the branch deleted the moment the failure was confirmed. `SystemTime::now` got
+  the same treatment locally with `cargo clippy` — caught with the exact message `clippy.toml` names,
+  removed, clippy clean again — not re-run through CI, since clippy is a deterministic static check with
+  no plausible local/CI gap, unlike `cargo deny`'s crate-graph resolution.
+- **ADR-004's bar now stands at three of four.** PyO3 from FastAPI, UniFFI from the physical device, and
+  the Android artefacts built by CI on Linux are all proven — the last one twice over. **Only the EAS
+  build is outstanding.** The toolchain risk the spike exists to retire is retired; what is left is an
+  account and a build, not an engineering question.
+- No invariant changed and no ADR was added: 49 documents, 15 ADRs.
 
 ### 2026-09-18 — task 019 closed: PR #11 merged, CI green
 
