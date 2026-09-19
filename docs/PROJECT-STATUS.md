@@ -1547,3 +1547,57 @@ up from 146. Mobile — `tsc`, `eslint`, 47 lint fixtures, the platform-file che
   and no `tsconfig.json`, so it has never run. CI does not invoke it, and the generated bindings are
   type-checked through the app's own `tsc`. Noted for whoever touches that package next.
 - No invariant changed and no ADR was added.
+
+### 2026-09-19 — task 004 stage 2: the catalog seeds itself, and a defect task 002 could not have seen
+
+The device gets its catalog before it has ever synced ([ADR-001](decisions/ADR-001.md)): 201 exercises,
+21 muscle groups, the increments, tracks, sport profiles and achievements, out of the committed
+`reference.json` and into SQLite on first launch. Reference rows carry **a key and no translated
+text** (INV-27), so one seed serves both languages.
+
+**A defect found while writing it, and it is task 002's, not this task's.** SQLite has foreign keys
+**off by default** — every connection must ask — and nothing ever asked. The device schema declares
+**58 `FOREIGN KEY` clauses** that Postgres enforces and the phone was silently ignoring, against a
+schema whose own ADR is titled *the schema enforces itself* ([ADR-013](decisions/ADR-013.md)). Fixed
+in `src/db/client.ts` with `PRAGMA foreign_keys = ON`, which must run on the open connection and
+outside a transaction — inside one it is a no-op, which is the usual way this is got wrong. **Nothing
+proved it before and nothing proves it now except a device**, so it joins the stage-8 checks rather
+than being called done.
+
+**Three decisions the seed forced.**
+
+- **Seeded globals carry a fixed timestamp, not `Date.now()`.** Two devices seeding the same bundled
+  file must produce identical rows; a wall-clock reading would make them differ by install date, and
+  sync would then have to hold an opinion about data that is byte-identical on both. The server
+  stamps its own copies with `now()`, so the two sides will not agree on those columns — noted for
+  [task 006](tasks/006-sync-layer.md) rather than guessed at here.
+- **Rows are upserted, and `deleted_at` is never in the update.** An app update shipping a corrected
+  exercise must reach an install that has the old one; a global the user archived stays archived,
+  because re-seeding is not a reason to hand somebody back an exercise they put away (INV-11).
+- **Seeding is keyed on a SHA-256 of the file**, held in `sync_state` in the same transaction as the
+  rows. So it runs on first launch and after an app update that ships a new catalog, and never
+  otherwise — and a half-finished seed leaves a database that seeds again rather than one holding
+  half a catalog and claiming to hold all of it. Comparing a fingerprint rather than counting rows is
+  what lets a *corrected* exercise reach an existing install.
+  **`pnpm check:seed-version` is the gate**, in CI beside the catalog check: change the data without
+  bumping the constant and it fails, naming the value to paste. **Watched failing** before being
+  restored, like the e1RM fixture and task 017's `cargo deny`.
+
+**Bilingual search works, and the criterion has a test.** `foldForSearch` drops case and accents —
+*tríceps* and *triceps* are one search — and `matchesSearch` matches every word of a query against
+any of the names a row is known by. A global is known by its name in **both** catalogs, a user
+exercise by the one name its owner typed and never a translation (INV-27). So **a pt-BR user finds
+the bench press by typing *supino* or *bench***, and "supino incline" finds it too, because that is
+how Brazilian gym vocabulary actually runs (ADR-008). The combining-mark range is written out rather
+than matched with `\p{Diacritic}`: Unicode property escapes are not something to assume of Hermes,
+and `String.prototype.normalize` itself is guarded and listed for the device pass.
+
+**Scope moved, deliberately.** Stage 2 was planned as the seed *plus* query modules for catalog,
+routines, workouts, sets and history. The seed and the search matcher are here; the query modules
+move to the stages that build the screens using them. Designing a query API before its only consumer
+exists is how it ends up shaped for nothing.
+
+**Verified**: `tsc`, `eslint`, 47 lint fixtures, the platform-file check, catalogs at 474 messages,
+the new seed-version gate, `db:generate` showing no schema drift, and **512** Jest tests, up from 489.
+
+- No invariant changed and no ADR was added. One CI step added.

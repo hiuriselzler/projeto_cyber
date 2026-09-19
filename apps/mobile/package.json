@@ -14,6 +14,7 @@
     "db:generate": "drizzle-kit generate",
     "lint:fixtures": "node scripts/check-lint-fixtures.mjs",
     "check:catalogs": "node scripts/check-catalogs.mjs",
+    "check:seed-version": "node scripts/check-seed-version.mjs",
     "render:brand": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/render-brand-assets.mjs",
     "check:platform-files": "node scripts/check-platform-files.mjs .",
     "check:release-cleartext": "node scripts/check-release-cleartext.mjs",

@@ -97,6 +97,10 @@ set-logging UI this task builds; `SetRow` and `NumericKeypad` existed from task 
       control usable — reflowed, never truncated *(absorbs this task's earlier 200 %-font criterion)*
 - [ ] The numeric keypad never covers the set row it is editing, on a short screen as well as a tall one
 - [ ] TalkBack can complete a full set-logging flow (VoiceOver: [task 016](016-ios-platform.md))
+- [ ] **Foreign keys are actually enforced on the device** — `PRAGMA foreign_keys = ON` takes effect on the open
+      connection, and a violating insert is rejected rather than accepted. *(Added 2026-09-19: SQLite defaults the
+      pragma off, nothing had ever set it, and the device was ignoring all 58 of the schema's foreign keys. The
+      line is written; only a device can show it bites.)*
 - [ ] Portuguese plurals and the decimal comma render correctly under Hermes — the `Intl` polyfills are loaded.
       The catalogs' nine plural messages are the `unit_spoken.*` names, so this is first testable once a screen
       shows a quantity
