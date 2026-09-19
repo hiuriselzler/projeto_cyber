@@ -8,12 +8,19 @@
 //! parameter. `deny.toml` keeps the crates out and `clippy.toml` keeps the standard-library calls
 //! out; an import rule alone would see the first and miss the second.
 //!
-//! During the ADR-004 spike this crate holds exactly one function. The modules 02 §2 names —
-//! `strength`, `gps`, `codec`, `zones` — arrive with the tasks that need them, once the spike has
-//! an answer.
+//! The spike is over and ADR-004 answered option B, so the modules 02 §2 names arrive with the
+//! tasks that need them. `strength` is the first, built by
+//! [task 004](../../docs/tasks/004-exercise-catalog-and-logging.md); `gps`, `codec` and `zones`
+//! follow with tasks 005 and 007.
 
 #![forbid(unsafe_code)]
 
 pub mod progression;
+pub mod strength;
 
 pub use progression::{RoundingMode, round_to_increment};
+pub use strength::{
+    LoggedSet, MAX_EFFECTIVE_REPS, PersonalBests, PrAchievement, PrKind, RepsAtWeight, SetType,
+    counted_set_count, detect_prs, e1rm, e1rm_series, is_counted_set, is_counted_type, load_kg,
+    volume_kg,
+};

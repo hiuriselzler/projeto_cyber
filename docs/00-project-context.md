@@ -149,15 +149,19 @@ Decided with the user before writing these docs:
 
 Rationale and the layering that follows from it: [02-architecture.md](02-architecture.md).
 
-The Rust core is **accepted conditionally**. The progression engine and the GPS pipeline must
-produce identical results on the phone and on the server; written twice (Python + TypeScript)
-they will eventually disagree. One Rust crate compiled for both removes that class of bug — at
-the cost of a native module and no over-the-air updates for domain changes.
+The Rust core is **accepted — option B, settled 2026-09-18**. The progression engine and the GPS
+pipeline must produce identical results on the phone and on the server; written twice (Python +
+TypeScript) they would eventually disagree. One Rust crate compiled for both removes that class of
+bug — at the cost of a native module and no over-the-air updates for domain changes.
 
-The only real unknown is whether the UniFFI + PyO3 + EAS toolchain behaves, so
-[task 017](tasks/017-local-toolchain-device-spike.md) spends **two days** proving the chain on one trivial
-function and then records a go/no-go in [ADR-004](decisions/ADR-004.md), before task 004. Nothing
-earlier waits on it.
+The one real unknown was whether the UniFFI + PyO3 + EAS toolchain behaves, so
+[task 017](tasks/017-local-toolchain-device-spike.md) spent **two days** proving the chain on one trivial
+function, `round_to_increment()`, before task 004. It works: both bindings, CI on Linux and an EAS
+build, each verified rather than assumed ([ADR-004](decisions/ADR-004.md) § Outcome). The core is
+adopted from [task 004](tasks/004-exercise-catalog-and-logging.md) onward, where e1RM (INV-07) and
+`is_counted_set()` (INV-04) become its first real residents. ADR-004's **four pre-launch conditions**
+— a kill switch, an engine version on every projection, authoritative server reconciliation, and a
+minimum engine version gating re-projection only — remain outstanding, in tasks 005 and 006.
 
 The one tension to name up front: a **custom backend** was chosen, but a gym has no signal. The
 resolution is that the phone owns a full local database and the server is a *sync target*, not

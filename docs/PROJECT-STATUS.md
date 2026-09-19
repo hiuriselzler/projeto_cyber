@@ -21,7 +21,7 @@ when its own criteria are ticked. Tick the box here only then.
 | **Decisions** | 15 ADRs, **all now accepted**. [ADR-004](decisions/ADR-004.md)'s spike passed on 2026-09-18 and its outcome is recorded: **option B, the single Rust core**. Its four pre-launch conditions remain outstanding, in tasks 005 and 006 |
 | **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **5 complete** (001, 002, 011, 003, 019) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) — the core loop.** Task 017 is complete and ADR-004 is settled, so nothing blocks it. It is the largest task in the project and the one its own file says *deserves more care than any other UI*; the Rust core is adopted from here on, with e1RM (INV-07) and `is_counted_set()` (INV-04) its first real residents. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
+| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) — the core loop. In progress since 2026-09-19.** Task 017 is complete and ADR-004 is settled, so nothing blocks it. It is the largest task in the project and the one its own file says *deserves more care than any other UI*; the Rust core is adopted from here on, with e1RM (INV-07) and `is_counted_set()` (INV-04) its first real residents. Planned in eight stages, the core and the local data before any screen, and **the set row measured on the phone before anything is built around it**. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
 
 ### The decision that was open is closed — option B
 
@@ -473,7 +473,6 @@ None are blocking; each has a stated assumption that will be built unless correc
 | 6 | How many users at once ([NFR-12](01-business-requirements.md)), and the load test that proves it | Design goal only: stateless API and pooling-safe database access from the first commit | Before launch |
 | 7 | The Android application id. **Permanent after the first Play Store upload** | `com.cyberathlete.app`, a placeholder in `apps/mobile/app.json` | Before the first Play upload |
 | 8 | Android backups: the generated manifest has `allowBackup="true"`, so local data — raw GPS points included — would reach device backups | Unchanged for now | Before [task 007](tasks/007-cardio-recording.md) |
-| 9 | What the RIR `5+` chip stores: 5, or a choice from 5 to 10 (the schema allows 0–10, INV-03) | Nothing yet — task 011's chips take their values as a prop and store nothing | [Task 004](tasks/004-exercise-catalog-and-logging.md) |
 | 12 | Which address the per-IP rate limits count ([04 §5](04-security-and-auth.md)). The API reads the socket's peer, `request.client.host`; behind a hosting platform's proxy that is the proxy for everyone, so registration would allow 5 an hour across all users | The client address comes from the platform's forwarded header, trusted only when the request arrives from the platform's own proxy — configured once the host is chosen ([05 §5](05-integrations.md)) | Before the first deploy |
 
 **Closed 2026-09-09** — target RIR granularity (now `rir_mode` on the progression rule);
@@ -486,6 +485,9 @@ dashboard (dropped — the mark is brand-only). See the decision log.
 reopen for iOS** ([09 §2](09-business-model.md)).
 
 **Closed 2026-09-14** — the email provider (Resend, for the prototype), and who builds FR-1.4 (tasks 019 and 020). See the decision log.
+
+**Closed 2026-09-19** — question 9, the RIR `5+` chip: it opens a second row of 5–10 and stores
+nothing itself ([task 004](tasks/004-exercise-catalog-and-logging.md) § Scope). See the decision log.
 
 ---
 
@@ -1417,3 +1419,131 @@ Committed as `2d14194`, merged as [PR #12](https://github.com/hiuriselzler/proje
 - **Task 019's criteria are now ticked**, per its own task file's rule. Its two open notes stay open, neither
   blocking: what a device keeps of training data once its account is gone, moved to [task 006](tasks/006-sync-layer.md); which scheduler runs the daily command, chosen with the host.
 - No invariant changed and no ADR was added: 49 documents, 15 ADRs.
+
+### 2026-09-19 — task 004 planning: three stale docs, two decisions, and the order the work goes in
+
+Reading the mandatory context before touching code found **three documents that ADR-004's outcome had
+left behind**. All three said the spike was still pending, five days after it closed.
+
+- **[02 §3](02-architecture.md) still offered the fallback as live** — "written twice, Python and
+  TypeScript, policed by fixtures" — as though the choice were open. Rewritten to record option B as
+  settled, with the fallback kept as rejected-and-explained rather than deleted: it is still why the
+  fixtures exist. Under the Rust core they prove **the two bindings agree**; they are no longer the
+  only thing standing between two copies.
+- **[Task 004](tasks/004-exercise-catalog-and-logging.md) named the wrong file for e1RM** —
+  `src/domain/e1rm.ts`, which is exactly the TypeScript implementation ADR-004 § Outcome exists to
+  prevent, and which the responsibility map forbids (`src/domain/` is marshalling and *no domain logic
+  at all*). Corrected to `core-rs/src/strength/`, reached through both bindings. `is_counted_set()`
+  said only "in domain" and now names the same crate.
+- **[00 § Chosen stack](00-project-context.md) still called the core "accepted conditionally"** and
+  described the spike in the future tense. Rewritten to record the outcome, and to name the four
+  pre-launch conditions that genuinely *are* still outstanding — which is the part of "conditional"
+  that survived.
+- The task file was the stale one against the ADR, not the reverse: ADR-004 § Outcome names e1RM and
+  `is_counted_set()` as **the core's first real residents**, and that sentence postdates the task file.
+
+**Open question 9 is closed: `5+` opens a second row, `5 6 7 8 9 10`.** The chip stores nothing by
+itself; what is stored is whichever chip the user then taps. The alternatives were storing a flat 5,
+which silently discards a distinction the schema carries, and a keyboard, which FR-2.10 forbids
+outright. A second row keeps the common case at one tap, keeps INV-03's full `0..10` reachable in two,
+and — the reason it wins — **writes no number the user did not choose**, which is the same rule that
+makes a blank chip store NULL rather than 0. [Task 011](tasks/011-design-system.md)'s `RirChips` carried
+the question as a prop comment; it is now answerable.
+
+**Fork-on-edit naming, decided rather than discovered later.** [ADR-008](decisions/ADR-008.md) says a
+forked global's translated name is copied into the fork, which leaves two things open that a unique
+index will otherwise settle by crashing:
+
+- **Which translation:** the UI language at the moment of forking — what the user was looking at when
+  they chose to edit. After that it is user content, shown exactly as stored and never re-translated
+  (INV-27).
+- **A second fork of the same global** reuses the first rather than creating another; `forked_from_id`
+  already makes that lookup free.
+- **A collision** with one of the user's own live exercises — `exercises_owner_name_key`, unique on
+  `lower(name)` where not archived — is a validation error on the field they are already editing. Not
+  an auto-suffix: `(2)` is a name nobody typed, and INV-27's promise is that user content reads back
+  exactly as written.
+
+**Three findings about what the task actually has to build**, none of them obvious from the task file:
+
+- **The device has no `personal_records` table and must not gain one.** [03 §4](03-database-schema.md)
+  is explicit — it is a derived cache, the device does not have it, and recomputes locally. So client
+  PR detection is a core function over local `set_logs`; only the server keeps the cache and its
+  rebuild command. Adding the table locally would break the schema parity `check_schema.py` enforces.
+- **First-launch seeding does not exist yet.** `packages/shared/seeds/reference.json` is generated and
+  committed (201 exercises, matching both catalogs), but nothing on the device reads it — `src/db/`
+  has migrations and no seed. That is task 004's first criterion and it starts from zero.
+- **Neither `expo-haptics` nor `expo-notifications` is a dependency.** The rest timer needs both, and
+  Android notification channels put them in `src/platform/` and nowhere else (INV-28).
+
+**The order the work goes in**, recorded because the task is XL and the sequence is a decision:
+docs (this entry), then the Rust core and its fixtures, then local data, **then the set row on a real
+phone with its ✓ latency measured** — before the catalog, the routines, the finish flow, the charts,
+the mirror API and the device pass. The task file's own note is the reason: *if it is not faster than
+Hevy there is no reason for this app to exist*, and that is cheapest to find out fourth rather than
+last. Charts come last deliberately.
+
+**One risk named now rather than met later:** INV-09 requires a synchronous SQLite write before the UI
+updates, and NFR-2 gives the ✓ under 100 ms, with an FFI hop for e1RM on top. If the budget cannot be
+met, that tension is an ADR, not a quiet compromise — which is why the set-row stage measures it on the
+Galaxy S21 FE rather than assuming.
+
+- A fifth correction, found while checking the others: **[tasks/README](tasks/README.md) still had 017
+  "in progress since 2026-09-16"** and task 004 unstarted. Both rows and the ordering rule beneath them
+  now match what happened.
+- No invariant changed and no ADR was added: 49 documents, 15 ADRs. Five documents corrected
+  ([00](00-project-context.md), [02](02-architecture.md),
+  [task 004](tasks/004-exercise-catalog-and-logging.md), [tasks/README](tasks/README.md), this file),
+  two decisions recorded, one open question closed — **8 remain, none blocking**.
+
+### 2026-09-19 — task 004 stage 1: the core's first real residents, through both bindings
+
+`core-rs/src/strength/` exists. **e1RM (INV-07), `is_counted_set()` (INV-04), tonnage and PR
+detection (FR-2.15) are written once, in Rust**, and reached from Python and TypeScript through the
+two bindings — ADR-004 option B doing the job it was accepted for, on the first task that needed it.
+
+- **The named acceptance case passes in Rust and in Python**: body weight 80 kg + 20 kg × 5 @ RIR 2
+  is 100 kg × (1 + 7/30) = **123.3 kg** displayed; a later weigh-in leaves it untouched (body weight
+  is resolved per set, on or before its own date — INV-17); and with no body weight logged by that
+  date it is NULL, the same no-guessing rule as a missing RIR.
+- **Three new shared fixtures** — `e1rm.json`, `is_counted_set.json`, `pr_detection.json` — read by
+  all three suites. **No expectation is a computed float**: e1RM's cases state a load and an
+  effective rep count so each runtime applies Epley itself, because `100 × 37/30` has no exact
+  decimal form and writing one would test this file's rounding rather than the code's.
+- **The fixture was watched failing**, the way task 017 watched `cargo deny` bite: the Epley divisor
+  changed 30 → 29, `every_e1rm_case_agrees` failed on the first case, divisor restored.
+- **The UniFFI bindings were regenerated in WSL2**, all three ABIs plus the TypeScript from one
+  `ubrn build android --and-generate`, so the generated surface and the shipped `.so` cannot drift.
+  NDK 27.1.12297006. Native Windows remains unable to build the tool, exactly as ADR-004 allows.
+
+**Two decisions the code forced, both small and both recorded rather than left implicit.**
+
+- **A blank added load on a bodyweight exercise is zero, not missing.** An unweighted pull-up is the
+  common case and leaving the weight field alone is how it gets logged; the lifter moved their body
+  weight whatever the field says. Nothing is invented, so INV-07's no-guessing rule is not bent — it
+  still refuses to invent a *body weight*. On an ordinary exercise a blank weight stays "not
+  recorded".
+- **`is_counted_set()` asks two questions, not one.** INV-04's own rule is the set *type*; the second
+  is completion, because a `set_logs` row exists from the moment a set is pre-filled from a routine.
+  Counting an untouched row would inflate every total on the screen the user is reading mid-workout.
+  The type-only half is exported separately as `is_counted_type()` for a UI drawing a badge.
+
+**A limit worth stating before it is mistaken for a pass.** Task 004's criterion *"the e1RM fixture
+produces identical results in Python and TypeScript"* is **not** provable in Jest: the core reaches
+the app as a JSI turbo-module, which does not load under Node — the same reason task 011's rounding
+fixture test checks shape rather than calling the function. Jest holds the three files to their own
+spec (49 cases); Rust and Python run them; **the client half is settled on the device**, as task 017
+settled the spike's two values on the Galaxy S21 FE. It is listed with the device criteria, not
+ticked by a green Jest run.
+
+**Verified, matching what CI runs**: `core-rs` — fmt, clippy `-D warnings` over the workspace, 41
+unit + 5 fixture tests, `cargo deny` clean on advisories, bans, licenses and sources. API — `ruff`,
+`ruff format`, `mypy --strict` over 107 files, all **six** import contracts kept (including "only the
+domain reaches the core", which the new `app/domain/strength.py` passes through), **156** unit tests,
+up from 146. Mobile — `tsc`, `eslint`, 47 lint fixtures, the platform-file check, both catalogs at
+474 messages, and **489** Jest tests, up from 437.
+
+- **Also found, not fixed, not mine to fix here:** `packages/core-native` has a `typecheck` script
+  and no `tsconfig.json`, so it has never run. CI does not invoke it, and the generated bindings are
+  type-checked through the app's own `tsc`. Noted for whoever touches that package next.
+- No invariant changed and no ADR was added.

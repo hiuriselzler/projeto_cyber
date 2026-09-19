@@ -68,10 +68,24 @@ interface NativeModuleInterface {
     ubrn_ffi_cyberathlete_core_ffi_rust_future_complete_void(handle: bigint, uniffi_out_err: UniffiRustCallStatus): void;
     ubrn_ffi_cyberathlete_core_ffi_rust_future_free_void(handle: bigint): void;
     ubrn_uniffi_cyberathlete_core_ffi_fn_func_core_version(uniffi_out_err: UniffiRustCallStatus): Uint8Array;
+    ubrn_uniffi_cyberathlete_core_ffi_fn_func_counted_set_count(sets: Uint8Array, uniffi_out_err: UniffiRustCallStatus): number;
+    ubrn_uniffi_cyberathlete_core_ffi_fn_func_detect_prs(previous: Uint8Array, session: Uint8Array, uniffi_out_err: UniffiRustCallStatus): Uint8Array;
+    ubrn_uniffi_cyberathlete_core_ffi_fn_func_e1rm(set: Uint8Array, uniffi_out_err: UniffiRustCallStatus): Uint8Array;
+    ubrn_uniffi_cyberathlete_core_ffi_fn_func_e1rm_series(sets: Uint8Array, uniffi_out_err: UniffiRustCallStatus): Uint8Array;
+    ubrn_uniffi_cyberathlete_core_ffi_fn_func_is_counted_set(set: Uint8Array, uniffi_out_err: UniffiRustCallStatus): number;
+    ubrn_uniffi_cyberathlete_core_ffi_fn_func_load_kg(set: Uint8Array, uniffi_out_err: UniffiRustCallStatus): Uint8Array;
     ubrn_uniffi_cyberathlete_core_ffi_fn_func_round_to_increment(weightKg: number, incrementKg: number, mode: Uint8Array, uniffi_out_err: UniffiRustCallStatus): number;
+    ubrn_uniffi_cyberathlete_core_ffi_fn_func_volume_kg(sets: Uint8Array, uniffi_out_err: UniffiRustCallStatus): number;
     ubrn_ffi_cyberathlete_core_ffi_uniffi_contract_version(): number;
     ubrn_uniffi_cyberathlete_core_ffi_checksum_func_core_version(): number;
+    ubrn_uniffi_cyberathlete_core_ffi_checksum_func_counted_set_count(): number;
+    ubrn_uniffi_cyberathlete_core_ffi_checksum_func_detect_prs(): number;
+    ubrn_uniffi_cyberathlete_core_ffi_checksum_func_e1rm(): number;
+    ubrn_uniffi_cyberathlete_core_ffi_checksum_func_e1rm_series(): number;
+    ubrn_uniffi_cyberathlete_core_ffi_checksum_func_is_counted_set(): number;
+    ubrn_uniffi_cyberathlete_core_ffi_checksum_func_load_kg(): number;
     ubrn_uniffi_cyberathlete_core_ffi_checksum_func_round_to_increment(): number;
+    ubrn_uniffi_cyberathlete_core_ffi_checksum_func_volume_kg(): number;
     // Codegen call sites use these via `nativeModule().rustbuffer_alloc(...)`
     // and `nativeModule().rustbuffer_free(...)`. The JSI host object exposes
     // them as properties; see `props["rustbuffer_alloc"]` / `props["rustbuffer_free"]`

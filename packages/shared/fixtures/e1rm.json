@@ -1,0 +1,121 @@
+{
+  "function": "e1rm",
+  "spec": "INV-07 and FR-2.15a. e1RM = load_kg x (1 + (reps + rir) / 30), Epley over effective reps, and only for effective reps <= 12. load_kg is weight_kg, or body weight on or before the set's date plus added load for a bodyweight exercise. `expected` is null wherever the invariant refuses to guess: no RIR, no reps, no resolvable load, or more effective reps than Epley is honest over.",
+  "expectation_shape": "`expected` is null, or {load_kg, effective_reps}. It is never a float: each consumer computes load_kg * (1 + effective_reps / 30) in its own arithmetic and compares that to what the core returned. A float written here would assert this file's rounding rather than the code's, and 100 x 37/30 has no exact decimal form to write.",
+  "set_defaults": {
+    "set_type": "working",
+    "is_completed": true,
+    "weight_kg": null,
+    "reps": null,
+    "rir": null,
+    "uses_bodyweight": false,
+    "body_weight_kg": null,
+    "is_deload": false
+  },
+  "cases": [
+    {
+      "name": "an ordinary set: 100 kg x 5 at RIR 2 would have been 7 reps at failure",
+      "set": { "weight_kg": 100.0, "reps": 5, "rir": 2 },
+      "expected": { "load_kg": 100.0, "effective_reps": 7 }
+    },
+    {
+      "name": "RIR 0 is failure and is a real value, not a missing one",
+      "set": { "weight_kg": 100.0, "reps": 5, "rir": 0 },
+      "expected": { "load_kg": 100.0, "effective_reps": 5 }
+    },
+    {
+      "name": "RIR not recorded means no e1RM, and never the RIR-0 answer (INV-03)",
+      "set": { "weight_kg": 100.0, "reps": 5, "rir": null },
+      "expected": null
+    },
+    {
+      "name": "task 004's named case: body weight 80 kg + 20 kg x 5 at RIR 2",
+      "set": {
+        "weight_kg": 20.0,
+        "reps": 5,
+        "rir": 2,
+        "uses_bodyweight": true,
+        "body_weight_kg": 80.0
+      },
+      "expected": { "load_kg": 100.0, "effective_reps": 7 }
+    },
+    {
+      "name": "the same set after weighing in 4 kg heavier is a different set's input, not this one's",
+      "set": {
+        "weight_kg": 20.0,
+        "reps": 5,
+        "rir": 2,
+        "uses_bodyweight": true,
+        "body_weight_kg": 84.0
+      },
+      "expected": { "load_kg": 104.0, "effective_reps": 7 }
+    },
+    {
+      "name": "a bodyweight set with no body weight logged by that date has no e1RM",
+      "set": {
+        "weight_kg": 20.0,
+        "reps": 5,
+        "rir": 2,
+        "uses_bodyweight": true,
+        "body_weight_kg": null
+      },
+      "expected": null
+    },
+    {
+      "name": "a blank added load on a bodyweight exercise is zero, not missing: an unweighted pull-up",
+      "set": {
+        "weight_kg": null,
+        "reps": 8,
+        "rir": 1,
+        "uses_bodyweight": true,
+        "body_weight_kg": 80.0
+      },
+      "expected": { "load_kg": 80.0, "effective_reps": 9 }
+    },
+    {
+      "name": "a blank weight on an ordinary exercise is a load nobody recorded",
+      "set": { "weight_kg": null, "reps": 5, "rir": 2 },
+      "expected": null
+    },
+    {
+      "name": "no reps means nothing to estimate from",
+      "set": { "weight_kg": 100.0, "reps": null, "rir": 2 },
+      "expected": null
+    },
+    {
+      "name": "twelve effective reps is the last one Epley is asked for",
+      "set": { "weight_kg": 60.0, "reps": 12, "rir": 0 },
+      "expected": { "load_kg": 60.0, "effective_reps": 12 }
+    },
+    {
+      "name": "thirteen effective reps is past the bound",
+      "set": { "weight_kg": 60.0, "reps": 12, "rir": 1 },
+      "expected": null
+    },
+    {
+      "name": "the bound is on reps plus RIR, not on reps: 8 at RIR 5 is a thirteen-rep set",
+      "set": { "weight_kg": 60.0, "reps": 8, "rir": 5 },
+      "expected": null
+    },
+    {
+      "name": "a warm-up has an e1RM; whether it counts is INV-04's separate question",
+      "set": { "set_type": "warmup", "weight_kg": 100.0, "reps": 5, "rir": 2 },
+      "expected": { "load_kg": 100.0, "effective_reps": 7 }
+    },
+    {
+      "name": "a deload set has an e1RM too; INV-08 excludes it from celebration, not from arithmetic",
+      "set": { "weight_kg": 60.0, "reps": 5, "rir": 4, "is_deload": true },
+      "expected": { "load_kg": 60.0, "effective_reps": 9 }
+    },
+    {
+      "name": "an incomplete set is still arithmetic; completion is INV-04's question",
+      "set": { "is_completed": false, "weight_kg": 100.0, "reps": 5, "rir": 2 },
+      "expected": { "load_kg": 100.0, "effective_reps": 7 }
+    },
+    {
+      "name": "a fractional load carries through unrounded: rounding is INV-02's job, not this one's",
+      "set": { "weight_kg": 42.5, "reps": 6, "rir": 3 },
+      "expected": { "load_kg": 42.5, "effective_reps": 9 }
+    }
+  ]
+}

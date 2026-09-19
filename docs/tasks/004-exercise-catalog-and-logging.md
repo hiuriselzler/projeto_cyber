@@ -23,6 +23,14 @@ This is the core loop. It deserves more care than any other UI in the project.
   never translated (INV-27).
 - Create, edit, archive custom exercises. Editing a global exercise **forks** it into a user copy
   (`forked_from_id`), never mutates the global row.
+- **What a fork is named** *(decided 2026-09-19)*. ADR-008 says the translated name is copied into the
+  fork; this task settles which translation and what a collision does. The name copied is the one in
+  **the UI language at the moment of forking** — what the user was looking at when they chose to edit
+  — and from then on it is user content, shown exactly as stored and never re-translated (INV-27).
+  Forking a global the user has **already** forked reuses that fork rather than making a second one.
+  A name colliding with one of the user's own live exercises — the `exercises_owner_name_key` unique
+  index on `lower(name)` — is a **validation error on the field the user is already editing**, never
+  an auto-suffix: `(2)` is a name nobody typed.
 - Archive never deletes; historical sets keep resolving (INV-11).
 
 **Routines (FR-2.5–2.7)**
@@ -37,6 +45,10 @@ This is the core loop. It deserves more care than any other UI in the project.
   advances focus to the next set.
 - **RIR entry is a chip row `0 1 2 3 4 5+`, never a keyboard** (FR-2.10). One tap. Optional —
   skipping it stores NULL, not 0 (INV-03).
+- **`5+` opens a second row, `5 6 7 8 9 10`** *(open question 9, decided 2026-09-19)*. It stores
+  nothing by itself: the value stored is whichever chip the user then taps. The common case — RIR 0–5
+  — stays one tap; the schema's full `0..10` range (INV-03) stays reachable in two; and no number the
+  user did not choose is ever written, which is the same rule as a blank chip storing NULL.
 - Set types: warmup / working / drop / backoff / amrap, changed by long-press or swipe.
 - Rest timer auto-starts on ✓, with haptics and a local notification on completion.
 - Notes per exercise and per workout; perceived fatigue on finish.
@@ -47,13 +59,16 @@ This is the core loop. It deserves more care than any other UI in the project.
 **History and PRs (FR-2.14–2.15)**
 - Workout list, workout detail.
 - Per-exercise history and charts: top-set weight, e1RM, total volume.
-- e1RM from the one canonical formula (INV-07), implemented in `src/domain/e1rm.ts` with the
-  shared fixture ([02 §3](../02-architecture.md)) — including **bodyweight exercises**, where the load
-  is body weight on or before the set's date plus added load (FR-2.15a).
+- e1RM from the one canonical formula (INV-07), implemented **once in `core-rs/src/strength/`** and
+  reached through the bindings — `src/domain/` on the client, `app/domain/` on the server, both
+  marshalling only ([ADR-004](../decisions/ADR-004.md) § Outcome, [02 §3](../02-architecture.md)). The
+  shared fixture stays, now proving the two bindings agree rather than policing two implementations.
+  Includes **bodyweight exercises**, where the load is body weight on or before the set's date plus
+  added load (FR-2.15a).
 - PR detection on finish, with a celebration. Warm-ups excluded (INV-04); deload cycles excluded
   (INV-08) — the deload check is a no-op until task 005 but wire the predicate now.
-- `is_counted_set()` implemented **once**, in domain, and used by every total on every screen
-  (INV-04).
+- `is_counted_set()` implemented **once**, in `core-rs/src/strength/` beside e1RM, and used by every
+  total on every screen (INV-04). Never re-expressed as a `set_type` filter in a query or a chart.
 
 **API** — the mirror endpoints (`exercises/`, `routines/`, `workouts/`) so task 006 has something
 to sync against. Built server-side in this task, wired to the client in 006.
