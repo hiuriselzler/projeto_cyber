@@ -3,7 +3,8 @@
  * themes (task 011).
  */
 import { fireEvent, screen } from '@testing-library/react-native';
-import { StyleSheet } from 'react-native';
+import { useState } from 'react';
+import { Pressable, StyleSheet } from 'react-native';
 
 import { MATRIX, renderUi, TEST_METRICS } from '../../../../test/render';
 import { PLACEHOLDER_LEVELS } from '../../brand/marks.generated';
@@ -18,6 +19,21 @@ const WORDS = {
   en: { close: 'Close', levelUp: 'track reached level 12. reason', level: 'Level 12' },
   'pt-BR': { close: 'Fechar', levelUp: 'track chegou ao nível 12. reason', level: 'Nível 12' },
 } as const;
+
+const OPEN = 'open';
+
+/** A caller that toggles `visible`, the way every real one does — see the transition tests below. */
+function SheetHarness({ title }: { readonly title: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Pressable accessibilityRole="button" accessibilityLabel={OPEN} onPress={() => setOpen(true)} />
+      <Sheet visible={open} title={title} onClose={() => setOpen(false)}>
+        <EmptyState title="" />
+      </Sheet>
+    </>
+  );
+}
 
 describe.each(MATRIX)('$locale, $unitSystem, $preference', (setting) => {
   const words = WORDS[setting.locale];
@@ -46,6 +62,30 @@ describe.each(MATRIX)('$locale, $unitSystem, $preference', (setting) => {
     );
 
     expect(screen.queryByRole('button', { name: words.close })).toBeNull();
+  });
+
+  /**
+   * [ADR-014 § Amendment](../../../../../docs/decisions/ADR-014.md): a component with a state prop is tested by
+   * **moving** it. The two tests above pass `visible` as a constant, and between them they left the `false → true`
+   * path untested — which is the path that was broken. `Sheet` never opened at all for nine days, on every build,
+   * and no gate in the project could see it.
+   */
+  it('opens when its caller moves visible from false to true', async () => {
+    const title = 'title';
+    await renderUi(<SheetHarness title={title} />, setting);
+
+    expect(screen.queryByText(title)).toBeNull();
+    await fireEvent.press(screen.getByRole('button', { name: OPEN }));
+    expect(screen.getByText(title)).toBeOnTheScreen();
+  });
+
+  it('closes again when its caller moves visible back to false', async () => {
+    const title = 'title';
+    await renderUi(<SheetHarness title={title} />, setting);
+
+    await fireEvent.press(screen.getByRole('button', { name: OPEN }));
+    await fireEvent.press(screen.getByRole('button', { name: words.close }));
+    expect(screen.queryByText(title)).toBeNull();
   });
 
   it('chooses one segment, marked as checked', async () => {

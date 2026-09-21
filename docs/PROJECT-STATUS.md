@@ -21,7 +21,7 @@ when its own criteria are ticked. Tick the box here only then.
 | **Decisions** | 15 ADRs, **all now accepted**. [ADR-004](decisions/ADR-004.md)'s spike passed on 2026-09-18 and its outcome is recorded: **option B, the single Rust core**. Its four pre-launch conditions remain outstanding, in tasks 005 and 006 |
 | **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **5 complete** (001, 002, 011, 003, 019) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) — the core loop. In progress since 2026-09-19; stages 0–3 written.** Task 017 is complete and ADR-004 is settled, so nothing blocks it. It is the largest task in the project and the one its own file says *deserves more care than any other UI*; the Rust core is adopted from here on, with e1RM (INV-07) and `is_counted_set()` (INV-04) its first real residents. Planned in eight stages, the core and the local data before any screen. Stage 3 has **built** the set row, the keypad, the RIR second row and the live workout on SQLite — **but the device pass it exists for has not been run**, and stage 4 does not start until it has: the ✓ latency, the force-quit restore, keypad occlusion, TalkBack, the 200 % font pass, and the foreign-key pragma. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
+| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) — the core loop. In progress since 2026-09-19; stages 0–3 written, and stage 3 part-way through its device pass.** Task 017 is complete and ADR-004 is settled, so nothing blocks it. It is the largest task in the project and the one its own file says *deserves more care than any other UI*; the Rust core is adopted from here on, with e1RM (INV-07) and `is_counted_set()` (INV-04) its first real residents. **A full set was logged on a Galaxy S21 FE in Portuguese and the ✓ measured at p50 10.5 ms**, against NFR-2's 100 ms. What is left of the pass before stage 4: **the 200 % font size, the imperial pass, TalkBack actually switched on, a short screen, and airplane mode** — plus two things the pass opened and did not close, the set row reflowing at font scale 0.86 and `Sheet`'s lost exit animation. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
 
 ### The decision that was open is closed — option B
 
@@ -450,6 +450,18 @@ These are real blockers scattered across the docs. Nothing will surface them at 
 - [ ] Decide product analytics: **self-hosted PostHog with an allowlist, or none.** A hosted SDK is
       not the fallback ([05 §6](05-integrations.md))
 
+### Gaps the task 004 stage-3 device pass opened, owned by no single task
+- [ ] **No gate runs the React Compiler the shipped app runs with.** `Sheet` was broken for nine days with `tsc`,
+      `eslint`, 597 Jest tests and every lint fixture green, because the compiler is applied by the Metro bundle and
+      not by the test environment. Either run the suite under it, or ban render-phase `setState` by lint
+      ([ADR-014 § Amendment](decisions/ADR-014.md)). Until then a phone is the only gate
+- [ ] **A module can be written, tested, CI-gated and never called.** `seedReferenceData()` was all four for a
+      stage, and the device ran with 0 exercises. Worth a check that every exported entry point of `src/db/` has a
+      caller, or a smoke test that boots the app's startup path rather than its pieces
+- [ ] **`packages/core-native`'s `.so` files are gitignored and do not travel with a commit** — a second checkout
+      links a newer binding surface against an older binary and fails on `undefined symbol`. Commit them, or have
+      CI regenerate and compare ([06 §1](06-operations.md))
+
 ### Standing review checklist
 - [ ] Every PR touching entitlements is checked against INV-26
 - [ ] Every PR touching rewards is checked against the [08 §6](08-gamification.md) ban list — every
@@ -512,6 +524,7 @@ nothing itself ([task 004](tasks/004-exercise-catalog-and-logging.md) § Scope).
 | 2026-09-14 | [ADR-015](decisions/ADR-015.md) Account security in practice — rate limits in Postgres, a 60-second rotation grace window, a bundled breach list, registration's `409` |
 | 2026-09-18 | **[ADR-004](decisions/ADR-004.md) settled — option B, the single Rust core.** The spike's bar is met in full; task 004 is unblocked. The four pre-launch conditions are untouched and still required |
 | 2026-09-19 | [ADR-012](decisions/ADR-012.md) **amended** — `src/db/` mints row ids through `src/crypto/`'s identifier entry point, and nothing else in that folder. INV-16 had no legal path to a UUIDv7 from the folder that creates training rows |
+| 2026-09-19 | [ADR-014](decisions/ADR-014.md) **amended** — a design-system component with a state prop is tested by **moving** it, not by rendering each value. `Sheet` never opened for nine days and every gate stayed green |
 
 ### 2026-09-08 — documentation reconciliation pass
 
@@ -1669,3 +1682,74 @@ Jest tests, up from 512. API — 156 unit tests still green, since both catalogs
 - No invariant changed. **One ADR amended** (ADR-012), so the counts are unchanged: 49 documents,
   15 ADRs. One dependency added, `expo-haptics`, which puts the ✓'s haptic in `src/platform/` and
   nowhere else (INV-28) and needs a fresh prebuild on the device.
+
+### 2026-09-19 — task 004 stage 3 on the phone: the ✓ is 10 ms, and three things were quietly broken
+
+The stage-3 device pass ran on a **Galaxy S21 FE (SM-G990E), Android 16, locale pt-BR, metric, dark,
+font scale 0.86**. It is the reason the plan put the set row on a phone before building anything around
+it, and it paid for itself three times over.
+
+**The number the task asked for, measured rather than assumed.** Tapping ✓ — the synchronous SQLite
+write plus the re-read the screen renders from — is **p50 10.5 ms, p95 12.4 ms, worst 20.1 ms** over 60
+taps across a five-exercise, twenty-set session, reproduced on a second run. NFR-2 allows 100 ms for the
+whole tap, so the data path uses about a tenth of it and leaves the rest to React's commit and the paint,
+**which this number does not include** and which are judged by using the screen.
+
+**A full set was logged in Portuguese, end to end**: 40 kg × 6 @ RIR 7 on *Crossover na polia*, a global
+exercise named through its key (INV-27). The keypad's separator key renders `,` and is disabled for reps;
+the row speaks *"40 quilogramas"*, *"6 repetições"* — so the Hermes `Intl` plural and decimal-comma
+criterion is met. A blank chip reads *"RIR não registrado"*, never 0 (INV-03). **`5+` opened `5 6 7 8 9 10`
+and stored nothing by itself** — the row still read "não registrado" until 7 was tapped — and the
+accessibility tree carries the distinction the decision turns on: `RIR 7` is `checked`, `RIR 5 ou mais`
+is `selected` and **not** `checked`. Force-stopping mid-workout and cold-launching brought the row back
+exactly (INV-09), and `PRAGMA foreign_keys = 1` with an orphan insert rejected closes **stage 2's one
+honestly-open criterion**.
+
+**Three defects, none of them in stage 3's own logic, and none findable without a phone.**
+
+- **⚠ `seedReferenceData()` had no callers.** Stage 2 wrote the seed, tested its pure half, and gated it
+  in CI — and **nothing ever called it**. The phone was running with 36 tables and **0 exercises**, which
+  is why the exercise picker had nothing to show. Stage 2's entry above says the catalog reaches the
+  device "on first launch"; **on a real first launch it did not**, and every suite stayed green because
+  they exercise `referenceSeedRows()` and never the wiring. Now called from the root layout's
+  post-migration effect through `src/db/migrate.ts` — the entry point [ADR-012](decisions/ADR-012.md)
+  already allows, so no rule changed. Verified on the device afterwards: **201 exercises, 21 muscle
+  groups, 11 sport profiles, 14 increments, 16 tracks, 16 achievements**, each with a key and a null
+  name, and the fingerprint in `sync_state`.
+- **⚠ `Sheet` never opened** — task 011's, and the subject of
+  [ADR-014 § Amendment](decisions/ADR-014.md). It set `mounted` during render; with the React Compiler
+  enabled the sibling `setLastVisible` took and `setMounted` was lost. Its two tests both pass `visible`
+  as a constant, so the `false → true` path had never run anywhere. Repaired by mounting straight from
+  the prop; **the cost is the 240 ms exit fade**, recorded as a decision rather than absorbed quietly.
+  **The uncomfortable half, checked rather than assumed:** the transition test added with the fix was run
+  against the broken code and **passed in all eight matrix settings**, and `eslint` is silent on it too —
+  **Jest does not apply the React Compiler that the shipped bundle applies**. So the new test encodes a
+  good rule but would not have caught this. Until the suite runs under the compiler or the pattern is
+  banned by lint, a phone is the only gate this class of defect has.
+- **The set row reflows at font scale 0.86** — the ✓ wraps below the numbers as soon as the row holds
+  `40 kg × 6 RIR 7`. Nothing truncates and every target stays 56 dp, so the reflow is doing its job; it
+  is [07 §6](07-brand-and-ui.md)'s *one line* picture that no longer matches. Left open deliberately:
+  whether the spec or the layout gives way is a design call, and the 200 % pass should inform it.
+
+**The toolchain moved underneath the project, and that is now written down** ([06 §1](06-operations.md)).
+Android Studio ships **JDK 25**, and JDK 24+ refuses the restricted `System.load` calls AGP's CMake tasks
+make — every native task fails with one unattributed line. JDK 17 fixes it. The Windows build then still
+dies in `react-native-libsodium`'s CMake, so the APK is built in WSL2 as ADR-004 allows (~30 minutes
+cold, four ABIs for a phone that needs one). And **`packages/core-native`'s `.so` files are gitignored**,
+so stage 1's claim that the generated surface and the shipped library *"cannot drift"* holds **only on the
+machine that ran `ubrn build`**: a second checkout links stage-1 bindings against a pre-stage-1 binary and
+fails on `undefined symbol: …volume_kg`. Worth closing with a CI step rather than a paragraph.
+
+**Also fixed:** `expo-haptics` was committed as `^57.0.3` against a lockfile saying `~57.0.3`, which
+`pnpm install --frozen-lockfile` refuses — the command CI runs, so it would have failed there.
+
+**What stage 3 still owes**, and what stage 4 waits on: the 200 % font pass, the imperial pass, TalkBack
+with the screen reader actually on, a short screen for the keypad, and airplane mode. The task file's
+device list says which are ticked and which are not.
+
+**Verified after the pass, matching what CI runs**: `tsc`, `eslint`, 48 lint fixtures, the platform-file
+check, catalogs at 488 messages, the seed-version gate, and **613** Jest tests, up from 597 — the 16 new
+ones being `Sheet` opened and closed by a caller that moves the prop, across the whole matrix.
+
+- No invariant changed. **One ADR amended** (ADR-014, joining ADR-012 earlier in the day): 49 documents,
+  15 ADRs. Three cross-cutting gaps recorded above, none of them owned by a task.

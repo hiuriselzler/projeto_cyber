@@ -74,11 +74,17 @@ This is the core loop. It deserves more care than any other UI in the project.
 to sync against. Built server-side in this task, wired to the client in 006.
 
 ## Acceptance criteria
-- [ ] A full workout can be logged start to finish in airplane mode
+- [ ] A full workout can be logged start to finish in airplane mode. *(Stage 3 logged one set start to finish with
+      no network involved, but airplane mode itself was not switched on, and "full" means routines, set types and
+      the finish flow, which are stages 4–6.)*
 - [ ] Force-quitting mid-workout and reopening restores the exact state, including the set in
-      progress and the running rest timer (INV-09)
-- [ ] Tapping ✓ renders in < 100 ms on a mid-range Android device (measure, do not assume)
-- [ ] RIR left blank stores NULL; a chart or total never treats it as 0
+      progress and the running rest timer (INV-09). *(Stage 3: the **state** survives a force-stop and comes back
+      exactly — see the device list. Reopening lands on the home route rather than the workout, and the rest timer
+      does not exist yet, so this stays open.)*
+- [x] Tapping ✓ renders in < 100 ms on a mid-range Android device (measure, do not assume) —
+      **p50 10.5 ms, p95 12.4 ms, worst 20.1 ms** on a Galaxy S21 FE, 2026-09-19, for the write and the re-read
+- [ ] RIR left blank stores NULL; a chart or total never treats it as 0. *(Storage half proven on the device — a
+      blank row reads "RIR não registrado" and `5+` writes nothing. No chart or total exists to check yet.)*
 - [ ] Warm-up sets appear in the log but are excluded from volume, PRs and set counts
 - [ ] Archiving an exercise leaves every historical set intact and displayable
 - [ ] The e1RM fixture produces identical results in Python and TypeScript
@@ -93,17 +99,45 @@ to sync against. Built server-side in this task, wired to the client in 006.
 
 **On a physical device** *(moved from [task 017](017-local-toolchain-device-spike.md) on 2026-09-16 — each needs the
 set-logging UI this task builds; `SetRow` and `NumericKeypad` existed from task 011 but no route rendered either)*
+
+> **First device pass run 2026-09-19**, stage 3, on a **Galaxy S21 FE (SM-G990E), Android 16, device locale pt-BR,
+> metric, dark theme, font scale 0.86**. What is ticked below was observed on that phone; what is not was not run.
 - [ ] The set row in Portuguese, **in pounds**, at 200 % system font size keeps every value readable and every
-      control usable — reflowed, never truncated *(absorbs this task's earlier 200 %-font criterion)*
-- [ ] The numeric keypad never covers the set row it is editing, on a short screen as well as a tall one
-- [ ] TalkBack can complete a full set-logging flow (VoiceOver: [task 016](016-ios-platform.md))
-- [ ] **Foreign keys are actually enforced on the device** — `PRAGMA foreign_keys = ON` takes effect on the open
+      control usable — reflowed, never truncated *(absorbs this task's earlier 200 %-font criterion)*.
+      **Not yet run** — neither the 200 % pass nor the imperial one. See the reflow finding below, which is the
+      same layout at 0.86
+- [x] The numeric keypad never covers the set row it is editing, on a short screen as well as a tall one —
+      *row at y 479–683, keypad from y 1282 on a 2340 px screen. A short screen is still unproven*
+- [ ] TalkBack can complete a full set-logging flow (VoiceOver: [task 016](016-ios-platform.md)).
+      **Partly:** the accessibility tree is right — the row is one element reading
+      *"Série 1, 40 quilogramas, 6 repetições, RIR 7, concluída"*, `RIR 7` is `checked`, and the `5+` disclosure is
+      `selected` but **not** `checked`. Navigating it with TalkBack actually switched on is not done
+- [x] **Foreign keys are actually enforced on the device** — `PRAGMA foreign_keys = ON` takes effect on the open
       connection, and a violating insert is rejected rather than accepted. *(Added 2026-09-19: SQLite defaults the
-      pragma off, nothing had ever set it, and the device was ignoring all 58 of the schema's foreign keys. The
-      line is written; only a device can show it bites.)*
-- [ ] Portuguese plurals and the decimal comma render correctly under Hermes — the `Intl` polyfills are loaded.
+      pragma off, nothing had ever set it, and the device was ignoring all 58 of the schema's foreign keys.)*
+      **Proven:** `PRAGMA foreign_keys = 1`, and an orphan `set_logs` insert was rejected
+- [x] Portuguese plurals and the decimal comma render correctly under Hermes — the `Intl` polyfills are loaded.
       The catalogs' nine plural messages are the `unit_spoken.*` names, so this is first testable once a screen
-      shows a quantity
+      shows a quantity. **Proven:** the keypad's separator key renders `,` and is disabled for reps; the row speaks
+      *"40 quilogramas"* and *"6 repetições"*
+- [x] **Tapping ✓ is inside NFR-2's 100 ms** — measured, not assumed: 60 taps across a five-exercise, twenty-set
+      session gave **p50 10.5 ms, p95 12.4 ms, worst 20.1 ms** for the synchronous write plus the re-read the screen
+      renders from, reproduced on a second run. React's commit and the paint are on top of that and are not in the
+      number
+- [x] **A set survives a force-quit** (INV-09) — `am force-stop` mid-workout, cold relaunch, and the row came back
+      as *"Série 1, 40 quilogramas, 6 repetições, RIR 7, concluída"*. **The data half only:** the app reopens at its
+      home route, not into the workout in progress, because nothing offers to resume one yet. The rest timer is
+      stage 5's and is not covered
+- [x] **`5+` stores nothing by itself** (open question 9) — tapping it opened `RIR 5 6 7 8 9 10` while the row still
+      read *"RIR não registrado"*; the 7 tapped afterwards is what was stored
+
+**Found on the device, and not yet fixed**
+- [ ] **The set row reflows at font scale 0.86** — below default, let alone at 200 %. The ✓ wraps to a second line
+      as soon as the row holds `40 kg × 6 RIR 7`. Nothing truncates and every target stays 56 dp, so the reflow is
+      behaving as designed; it is [07 §6](../07-brand-and-ui.md)'s *one line* picture that it does not match. Decide
+      whether the spec or the layout gives way
+- [ ] **`Sheet` lost its exit animation** in the stage-3 repair ([ADR-014 § Amendment 2026-09-19](../decisions/ADR-014.md)).
+      It opens correctly and leaves instantly; restoring the 240 ms fade is a design-system change of its own
 
 ## Notes and risks
 - **The set row is the product.** Prototype it in isolation, on a real phone, with sweaty hands,

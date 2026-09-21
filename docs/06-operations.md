@@ -58,6 +58,31 @@ holds `MIGRATION_DATABASE_URL`.
 build (`npx expo run:android`, or `eas build --profile development --platform android`). Build it
 once during [task 017](tasks/017-local-toolchain-device-spike.md); after that, JS changes hot-reload normally.
 
+### Building the Android development build — what actually works
+
+Three things cost hours in [task 004](tasks/004-exercise-catalog-and-logging.md) stage 3 and none of them were
+guessable from an error message. Written down so the next rebuild is minutes instead.
+
+- **⚠ Do not build with Android Studio's bundled JDK.** It now ships **JDK 25**, and JDK 24+ refuses the restricted
+  `System.load` calls AGP's CMake tasks make: every `configureCMakeDebug[<abi>]` task fails with the bare line
+  *"WARNING: A restricted method in java.lang.System has been called"*, which names neither the JDK nor the cause.
+  Build with **JDK 17** — `JAVA_HOME=".../Eclipse Adoptium/jdk-17.x-hotspot"`. This is new: the same machine built
+  fine on 2026-09-18, and the IDE moved the JDK underneath the project.
+- **The native build is done in WSL2, not on Windows** ([ADR-004](decisions/ADR-004.md) allows it). Even under
+  JDK 17, `react-native-libsodium`'s CMake configure fails on Windows inside pnpm's content-addressed store path.
+  The WSL2 clone builds it: `pnpm install --frozen-lockfile`, `pnpm prebuild`, `./gradlew :app:assembleDebug`, then
+  copy the APK out and `adb install` it from Windows. Expect roughly **30 minutes** cold — it compiles four ABIs
+  while the phone needs one, and `-PreactNativeArchitectures=arm64-v8a` is the lever if that matters.
+- **⚠ `packages/core-native`'s three `.so` files are gitignored, so they do not travel with a commit.** A second
+  checkout gets the generated C++ and TypeScript binding surface without the matching binary and fails at link time:
+  `ld.lld: error: undefined symbol: uniffi_cyberathlete_core_ffi_checksum_func_volume_kg`. The guarantee that the
+  surface and the library cannot drift holds **only on the machine that ran `ubrn build android --and-generate`**.
+  Either regenerate them in the new checkout, or copy `packages/core-native/android/src/main/jniLibs/*/…so` from a
+  machine whose binary matches the committed bindings. Task 006 or a CI step should close this properly; until then
+  it is a trap with a one-line symptom.
+- **Reinstalling over a build from another machine fails** with `INSTALL_FAILED_UPDATE_INCOMPATIBLE` — different debug
+  keystores. `adb uninstall com.cyberathlete.app` first, and know that it takes the local database with it.
+
 **Reaching the API from the phone:** over USB with `adb reverse`, so the device's `localhost` is this
 machine's. Debug builds may use `http://` to `localhost` and nothing else; release builds allow no
 cleartext at all ([04 §5](04-security-and-auth.md)). uvicorn stays bound to `127.0.0.1` — never

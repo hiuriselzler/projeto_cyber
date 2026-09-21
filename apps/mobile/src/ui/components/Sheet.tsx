@@ -27,13 +27,6 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
   const reduceMotion = useReduceMotion();
   // Held in state, not a ref: the value is read while rendering, and created once.
   const [progress] = useState(() => new Animated.Value(visible ? 1 : 0));
-  // On screen while visible, and until the closing animation has finished.
-  const [mounted, setMounted] = useState(visible);
-  const [lastVisible, setLastVisible] = useState(visible);
-  if (visible !== lastVisible) {
-    setLastVisible(visible);
-    if (visible) setMounted(true);
-  }
 
   useEffect(() => {
     const motion = motionFor('transition', reduceMotion);
@@ -43,13 +36,25 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
       easing: easingOf(motion),
       useNativeDriver: true,
     });
-    animation.start(({ finished }) => {
-      if (finished && !visible) setMounted(false);
-    });
+    animation.start();
     return () => animation.stop();
   }, [visible, progress, reduceMotion]);
 
-  if (!mounted) {
+  /**
+   * **Mounted exactly when the caller says visible — no state of its own.**
+   *
+   * The earlier version kept a `mounted` flag so the sheet could stay on screen through a closing animation, and set
+   * it *during render* from `if (visible !== lastVisible)`. On a device that did not work: with the React Compiler
+   * enabled (`app.json` § experiments), the sibling `setLastVisible` in the same block took effect and `setMounted`
+   * was lost, so `mounted` stayed false and **the sheet never opened at all**. Task 011's two tests could not catch
+   * it — both pass `visible` as a constant and never move it, so the false → true path had never run anywhere.
+   * Found on a phone in task 004 stage 3.
+   *
+   * The rise on open is unchanged (07 §7). What this costs is the fade *out*: the sheet now leaves at once instead
+   * of over 240 ms. That is a deliberate trade rather than an oversight — a correct sheet that closes instantly
+   * beats an elegant one that never opens — and restoring the exit is a design-system change to make on its own.
+   */
+  if (!visible) {
     return null;
   }
 
