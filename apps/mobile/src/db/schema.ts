@@ -30,8 +30,11 @@ const SEXES = ['male', 'female', 'unspecified'] as const;
 const TIERS = ['trial', 'free', 'pro', 'coach'] as const;
 const STORES = ['apple', 'google'] as const;
 const MUSCLE_REGIONS = ['upper_push', 'upper_pull', 'legs', 'core', 'arms', 'other'] as const;
-const MODALITIES = ['barbell', 'dumbbell', 'machine', 'cable', 'bodyweight', 'band', 'other'] as const;
-const TRACKING = ['weight_reps', 'reps_only', 'duration', 'distance_duration'] as const;
+/** Exported: the catalog screen filters by modality and has to name every one of them (task 004 stage 4). */
+export const MODALITIES = ['barbell', 'dumbbell', 'machine', 'cable', 'bodyweight', 'band', 'other'] as const;
+export const TRACKING = ['weight_reps', 'reps_only', 'duration', 'distance_duration'] as const;
+export type Modality = (typeof MODALITIES)[number];
+export type Tracking = (typeof TRACKING)[number];
 const WORKOUT_SOURCES = ['manual', 'plan', 'routine'] as const;
 const SET_TYPES = ['warmup', 'working', 'drop', 'backoff', 'amrap'] as const;
 const PROGRESSION_STRATEGIES = [

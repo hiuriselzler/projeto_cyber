@@ -21,7 +21,7 @@ when its own criteria are ticked. Tick the box here only then.
 | **Decisions** | 15 ADRs, **all now accepted**. [ADR-004](decisions/ADR-004.md)'s spike passed on 2026-09-18 and its outcome is recorded: **option B, the single Rust core**. Its four pre-launch conditions remain outstanding, in tasks 005 and 006 |
 | **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **5 complete** (001, 002, 011, 003, 019) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) — the core loop. In progress since 2026-09-19; stages 0–3 written, and stage 3 part-way through its device pass.** Task 017 is complete and ADR-004 is settled, so nothing blocks it. It is the largest task in the project and the one its own file says *deserves more care than any other UI*; the Rust core is adopted from here on, with e1RM (INV-07) and `is_counted_set()` (INV-04) its first real residents. **A full set was logged on a Galaxy S21 FE in Portuguese and the ✓ measured at p50 10.5 ms**, against NFR-2's 100 ms. What is left of the pass before stage 4: **the 200 % font size, the imperial pass, TalkBack actually switched on, a short screen, and airplane mode** — plus two things the pass opened and did not close, the set row reflowing at font scale 0.86 and `Sheet`'s lost exit animation. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
+| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) — the core loop. In progress since 2026-09-19; stages 0–4 written, stage 4 closed 2026-09-22, stage 3's device pass still open on three items.** Task 017 is complete and ADR-004 is settled, so nothing blocks it. It is the largest task in the project and the one its own file says *deserves more care than any other UI*; the Rust core is adopted from here on, with e1RM (INV-07) and `is_counted_set()` (INV-04) its first real residents. **A full set was logged on a Galaxy S21 FE in Portuguese and the ✓ measured at p50 10.5 ms**, against NFR-2's 100 ms. **Stage 4 — the catalog screen — closed 2026-09-22**: browse, bilingual search, filter by muscle and modality, custom exercises, fork-on-edit, archive and — found while landing it — a matching *unhide* view, search wired into the live-workout exercise picker (which had been listing all 201 rows unfiltered), and a typecheck bug in the new test's catalog typing. Its own device pass (accessibility, font scale) has not run yet. What is left of **stage 3's** pass: the imperial half of the 200 % font-size check, TalkBack actually switched on, and `Sheet`'s lost exit animation (attempted and reverted 2026-09-21 — blocked on this project's own `react-hooks/set-state-in-effect` rule, needs a `reanimated`-based fix). The set row's font-scale-0.86 reflow defect is fixed; whether its numbers must hold one line at default scale is an open design question in [07 §6](07-brand-and-ui.md). Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
 
 ### The decision that was open is closed — option B
 
@@ -1753,3 +1753,38 @@ ones being `Sheet` opened and closed by a caller that moves the prop, across the
 
 - No invariant changed. **One ADR amended** (ADR-014, joining ADR-012 earlier in the day): 49 documents,
   15 ADRs. Three cross-cutting gaps recorded above, none of them owned by a task.
+
+### 2026-09-21 — task 004's stages are written down, and the catalog screen forces three decisions
+
+**The stage plan existed nowhere in `docs/`.** Four stages were built against a decomposition that
+lived only in the conversation that made it: this file cites "stage 4", "stage 5's" and "the stage-8
+checks", the task file cites "stages 4–6", and no document ever said what any of them were.
+`.agents/AGENTS.md` makes `docs/` the source of truth, and the decomposition of the project's largest
+task is exactly the kind of thing that rule is for. It is now a table in
+[task 004](tasks/004-exercise-catalog-and-logging.md) § Stages — **stages 0–3 as a record,
+reconstructed from what each stage wrote about itself, and stages 4–8 as a plan** that may be re-cut
+in that file when a stage learns something. Nothing about the built stages changed; what changed is
+that the next person can read the shape of the task without asking.
+
+**Three decisions stage 4 forces, settled before the code rather than inside it.**
+
+- **Archiving a *global* exercise is local to the device, and the UI says *hide*, not *delete*.**
+  Stage 2 recorded that "a global the user archived stays archived", which is right on one phone and
+  unexamined past it: `deleted_at` sits on a row whose `owner_user_id` is NULL — a row every user
+  shares — so replicating that write is one user putting an exercise away for everybody. It stays a
+  local act, and **how a per-user opinion about a shared row travels is an input to
+  [task 006](tasks/006-sync-layer.md)**, stated there rather than guessed at now. The wording matters
+  as much as the mechanism: *hide* is a claim about one person's list, and *delete* is a claim about
+  the catalog.
+- **Re-forking a global reuses an archived fork and un-archives it.** The task file already says a
+  second fork is never made; what it did not say is what happens when the first one was archived.
+  Refusing to reuse it means the save collides with `exercises_owner_name_key` against a row the user
+  cannot see — an error message about something invisible, which is the worst kind. Reuse is also the
+  honest reading of INV-11: the row was put away, not destroyed, and editing the global it came from
+  is the user asking for it back.
+- **The create form offers only `weight_reps` and `reps_only`.** FR-2.3's `duration` and
+  `distance_duration` stay in the schema and arrive with the set row that can log them (stage 5).
+  Offering all four now would let a user build an exercise the app cannot log — a dead end they would
+  reasonably read as a bug.
+
+- No invariant changed and no ADR was added. Counts unchanged: 49 documents, 15 ADRs.

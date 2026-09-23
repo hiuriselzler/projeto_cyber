@@ -103,6 +103,7 @@ export function DiagnosticsScreen() {
       </Check>
       <Button title="Measure the ✓" onPress={() => setTickLatency(measureTickLatency())} />
       <Button title="Open the live workout screen" onPress={() => router.push('/workout')} />
+      <Button title="Open the exercise catalog" onPress={() => router.push('/exercises')} />
 
       <Check title="Secure storage (restart the app: the previous value must survive)">
         {storage.isPending

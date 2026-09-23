@@ -1,2 +1,3 @@
-/** Strength: the live workout, and what stage 3 needs to reach one. The catalog, routines and history follow. */
+/** Strength: the live workout and the exercise catalog. Routines and history follow in later stages. */
+export { CatalogScreen } from './CatalogScreen';
 export { LiveWorkoutScreen } from './LiveWorkoutScreen';

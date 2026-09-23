@@ -73,10 +73,77 @@ This is the core loop. It deserves more care than any other UI in the project.
 **API** — the mirror endpoints (`exercises/`, `routines/`, `workouts/`) so task 006 has something
 to sync against. Built server-side in this task, wired to the client in 006.
 
+## Stages
+
+> **Written down 2026-09-21, four stages late.** Stages 0–3 were built against a plan that lived only in
+> the conversation that made it: PROJECT-STATUS cites "stage 4", "stage 5's" and "the stage-8 checks",
+> and nothing in `docs/` ever said what they were. `.agents/AGENTS.md` makes `docs/` the source of
+> truth, so the decomposition of the project's largest task belongs here. **Stages 0–3 are a record**,
+> reconstructed from what each stage wrote about itself; **stages 4–8 are a plan** and may be
+> re-cut, in this file, when a stage learns something.
+
+Each stage ends green on what CI runs, and the stages that build a screen end on the phone as well
+— a stage-3 lesson worth keeping: three of its defects were invisible to `tsc`, `eslint` and 597
+Jest tests, and none was findable without a device.
+
+| # | What it lands | State |
+|---|---|---|
+| **0** | The docs catch up with [ADR-004](../decisions/ADR-004.md) — the core is Rust, and `src/domain/` marshals | ☑ 2026-09-19 |
+| **1** | `core-rs/src/strength/` gets its first real residents — `e1rm()`, `is_counted_set()`, `volume_kg()` — through both bindings, against the shared fixture | ☑ 2026-09-19 |
+| **2** | The catalog seeds itself from the committed `reference.json`, fingerprinted; the bilingual search matcher | ☑ 2026-09-19 |
+| **3** | **The set row** and the live workout, every mutation a synchronous SQLite write (INV-09); the minimum exercise picker | ☑ 2026-09-19, device pass part-run |
+| **4** | **The catalog screen** — browse, search, filter by muscle and modality; custom exercises; fork-on-edit of a global; archive that never orphans history | ☑ 2026-09-22, device pass not yet run |
+| **5** | Routines, supersets and start-from-routine; set types; the rest timer with haptics and its notification | ☐ |
+| **6** | The finish flow — PR detection and its celebration, perceived fatigue, notes, retroactive logging | ☐ |
+| **7** | History and per-exercise charts; `personal_records` as a cache, with its rebuild command | ☐ |
+| **8** | The API mirror endpoints, and the closing device pass over the whole loop | ☐ |
+
+**Stage 4 carries three decisions the catalog screen forces**, recorded in PROJECT-STATUS's decision
+log on 2026-09-21 and repeated here because the code reads this file:
+
+- **Archiving a global is local to the device, and is worded as *hiding* it.** `deleted_at` on a row
+  whose `owner_user_id` is NULL is a column on a row every user shares, so replicating it would be one
+  user putting an exercise away for everybody. It stays a local act until
+  [task 006](006-sync-layer.md) decides how a per-user opinion about a shared row travels — an input
+  to that task, not a guess made here.
+- **Re-forking reuses an archived fork and un-archives it.** The alternative is a uniqueness
+  violation on `exercises_owner_name_key` against a row the user cannot see, which is an error message
+  about something invisible.
+- **The create form offers only the tracking modes the set row can log** — `weight_reps` and
+  `reps_only`. `duration` and `distance_duration` are FR-2.3's and stay in the schema; offering them
+  before stage 5's set row handles them would create an exercise the app cannot log.
+
+**Closed 2026-09-22, before the stage's device pass.** Landing the screen surfaced three loose ends,
+found by reading the stage against its own code rather than by a new requirement:
+
+- **`listArchivedExercises()` was written, tested at the pure-function level, and never called.**
+  The i18n catalogs already carried `catalog.unhide`, `hidden_title`, `hidden_note` and
+  `hidden_global_note` with nothing behind them — the exact "written, tested, CI-gated, and never
+  called" trap PROJECT-STATUS names from this same task's stage 3. Fixed with a "Hidden" toggle on
+  the catalog screen that lists archived rows and unhides them; a hidden global carries
+  `hidden_global_note` explaining that hiding it was device-local (FR-2.4, INV-11). A new key,
+  `catalog.hidden_empty`, covers the toggle's own empty state.
+- **`ExercisePicker`'s own comment admitted search wasn't wired in yet** — *"browse, search and
+  filter are stage 4's... plugs in there"*, written in the future tense in stage 3. A real workout
+  start scrolled a flat, unfiltered 201-row list. Fixed by reusing `filterCatalog` in the picker, the
+  same bilingual matcher the catalog screen uses, so a hidden exercise (already excluded by
+  `listExercises`) and a mistyped search both behave identically in both places. The reset-on-close
+  is done in the close and pick handlers, not an effect on `visible` — `react-hooks/set-state-in-effect`
+  is an error in this project for the reason `Sheet` already paid for, and nothing here needed one.
+- **A real typecheck bug**: `catalogFilter.test.ts`'s `CATALOGS` type
+  (`Record<string, Record<string, string>>`) does not hold against the real catalogs — the
+  `achievement` namespace holds `{name, description}` objects, not flat strings. Loosened to
+  `unknown` leaves with a runtime `typeof` check at the lookup, which is what the test actually needs.
+
+Two i18n keys stay intentionally unused for now: `catalog.open` (no nav entry exists yet — the home
+screen is a placeholder until [task 010](010-unified-calendar-and-analytics.md)) and
+`catalog.field_notes` (no acceptance criterion asks for a notes field on the create form; noted, not
+built, to avoid scope creep into stage 5).
+
 ## Acceptance criteria
 - [ ] A full workout can be logged start to finish in airplane mode. *(Stage 3 logged one set start to finish with
       no network involved, but airplane mode itself was not switched on, and "full" means routines, set types and
-      the finish flow, which are stages 4–6.)*
+      the finish flow, which are stages 5–6 in the table above.)*
 - [ ] Force-quitting mid-workout and reopening restores the exact state, including the set in
       progress and the running rest timer (INV-09). *(Stage 3: the **state** survives a force-stop and comes back
       exactly — see the device list. Reopening lands on the home route rather than the workout, and the rest timer
@@ -91,8 +158,10 @@ to sync against. Built server-side in this task, wired to the client in 006.
 - [ ] A weighted pull-up at body weight 80 kg + 20 kg × 5 @ RIR 2 has an e1RM of **123.3 kg**
       (100 kg × (1 + 7/30)); logging a new body weight a week later leaves that e1RM unchanged; and with
       no body weight logged by the set's date, its e1RM is NULL
-- [ ] A pt-BR user finds the bench press by typing either *supino* or *bench*
-- [ ] A custom exercise named in Portuguese appears exactly as typed in an English UI
+- [x] A pt-BR user finds the bench press by typing either *supino* or *bench* — proven against the **real**
+      `en.json`/`pt-BR.json` catalogs in `catalogFilter.test.ts`, 2026-09-22, not a stub catalog
+- [x] A custom exercise named in Portuguese appears exactly as typed in an English UI — same suite, same date;
+      "Supino do João" is never translated and a global still reads in whichever language is on screen
 - [ ] An imperial user logs and reads pounds end to end, and the stored `weight_kg` round-trips to
       exactly the lb value they entered
 - [ ] Logging a 5-exercise, 20-set workout takes fewer than 30 taps beyond the weights themselves
@@ -104,10 +173,22 @@ set-logging UI this task builds; `SetRow` and `NumericKeypad` existed from task 
 > metric, dark theme, font scale 0.86**. What is ticked below was observed on that phone; what is not was not run.
 - [ ] The set row in Portuguese, **in pounds**, at 200 % system font size keeps every value readable and every
       control usable — reflowed, never truncated *(absorbs this task's earlier 200 %-font criterion)*.
-      **Not yet run** — neither the 200 % pass nor the imperial one. See the reflow finding below, which is the
-      same layout at 0.86
+      **The 200 % half is run and passes** (2026-09-21): at scale 2.0 in pt-BR the row reflows to two lines,
+      `1 40 kg × 6` over `RIR 7`, with the ✓ anchored beside them at full size — nothing truncated, every target
+      still 56 dp. **The imperial half is not run**: units come from the signed-in account and the API is not
+      running locally, so an imperial pass needs either the stack up or the cached `users` row flipped
 - [x] The numeric keypad never covers the set row it is editing, on a short screen as well as a tall one —
-      *row at y 479–683, keypad from y 1282 on a 2340 px screen. A short screen is still unproven*
+      *tall screen: row at y 479–683, keypad from y 1282 on a 2340 px screen.* **Short screen run 2026-09-21 at
+      1080×1600, and it failed: the keypad covered the edited row completely**, only the row's top border showing.
+      The cause was not the reveal geometry, which was right, but a `ScrollView` clamp — with one exercise logged the
+      content is barely taller than the viewport, so `scrollTo` clamped to about zero and the row never moved.
+      **Fixed** by reserving the keypad's height as list padding while editing; the edited field is now fully visible
+      above the keypad. *A two-line row is still clipped on its second line* — see the 07 §6 open question, which
+      decides this too: a one-line 56 dp row clears with room over, a wrapped ~124 dp row cannot on a 1600 px screen
+- [x] **A full set logs end to end in airplane mode** (2026-09-21) — radio off, exercise chosen from the seeded
+      catalog in the picker sheet, 60 kg × 8 @ RIR 2 written and ticked, every value read back from SQLite. The
+      *acceptance* criterion above stays open because "a full workout" means routines, set types and the finish flow,
+      which are stages 5–6
 - [ ] TalkBack can complete a full set-logging flow (VoiceOver: [task 016](016-ios-platform.md)).
       **Partly:** the accessibility tree is right — the row is one element reading
       *"Série 1, 40 quilogramas, 6 repetições, RIR 7, concluída"*, `RIR 7` is `checked`, and the `5+` disclosure is
@@ -132,12 +213,23 @@ set-logging UI this task builds; `SetRow` and `NumericKeypad` existed from task 
       read *"RIR não registrado"*; the 7 tapped afterwards is what was stored
 
 **Found on the device, and not yet fixed**
-- [ ] **The set row reflows at font scale 0.86** — below default, let alone at 200 %. The ✓ wraps to a second line
-      as soon as the row holds `40 kg × 6 RIR 7`. Nothing truncates and every target stays 56 dp, so the reflow is
-      behaving as designed; it is [07 §6](../07-brand-and-ui.md)'s *one line* picture that it does not match. Decide
-      whether the spec or the layout gives way
+- [x] **The set row reflows at font scale 0.86** — *half answered 2026-09-21, and the half that was a defect is
+      fixed.* **The ✓ no longer takes part in the wrap**: it was inside the wrapping line with `marginLeft: 'auto'`
+      and lost by about three dp, dropping to a second line with a third of the row empty beside it. It is now a
+      fixed column that never wraps, at every scale. **What is left is a design call, not a bug**, and it is now an
+      open question in [07 §6](../07-brand-and-ui.md) with the measurements attached: the *numbers* still wrap at
+      default scale — `40 kg × 6 RIR 7` misses one line by ~2 dp, and the realistic `100 kg × 12 RIR 10` misses it at
+      every scale — so "always one line" needs something dropped from the row. Tightening the gap was tried on the
+      phone and reverted: it wins the line at 0.86 and still loses at 1.0
 - [ ] **`Sheet` lost its exit animation** in the stage-3 repair ([ADR-014 § Amendment 2026-09-19](../decisions/ADR-014.md)).
-      It opens correctly and leaves instantly; restoring the 240 ms fade is a design-system change of its own
+      **Attempted and reverted 2026-09-21, and the attempt is worth recording because it narrows the problem.**
+      Keeping the sheet mounted through its fade needs one state write at the instant `visible` goes true → false.
+      During render is the original defect. In an effect is `react-hooks/set-state-in-effect`, which is an **error**
+      in this project and is right in general. From the animation's completion callback is allowed, and closes only
+      half of it — something must still turn mounting *on*. A working version therefore needs a different mechanism:
+      driving the transition from the caller, or **`react-native-reanimated`'s `exiting` animations, which exist for
+      exactly this and whose library is already a dependency**. Deliberately not done behind an `eslint-disable`: the
+      rule that blocks it was added because this component shipped broken for nine days
 
 ## Notes and risks
 - **The set row is the product.** Prototype it in isolation, on a real phone, with sweaty hands,

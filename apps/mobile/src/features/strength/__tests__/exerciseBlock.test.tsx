@@ -12,22 +12,35 @@ import type { CatalogExercise } from '@/db/catalog';
 import type { LiveExercise, LiveSet } from '@/db/strength';
 import { ExerciseBlock } from '../ExerciseBlock';
 
-const GLOBAL_BENCH: CatalogExercise = {
-  id: 'e-bench',
-  nameKey: 'exercise.barbell_bench_press',
-  name: null,
-  usesBodyweight: false,
-  loadIncrementKg: 2.5,
-};
+/** A catalog row with everything but the part under test held still. */
+export function catalogExercise(overrides: Partial<CatalogExercise> = {}): CatalogExercise {
+  return {
+    id: 'e-bench',
+    nameKey: 'exercise.barbell_bench_press',
+    name: null,
+    ownerUserId: null,
+    forkedFromId: null,
+    modality: 'barbell',
+    primaryMuscleId: 1,
+    tracking: 'weight_reps',
+    isUnilateral: false,
+    usesBodyweight: false,
+    loadIncrementKg: null,
+    notes: null,
+    archivedAt: null,
+    ...overrides,
+  };
+}
+
+const GLOBAL_BENCH = catalogExercise({ loadIncrementKg: 2.5 });
 
 /** What the user wrote, in Portuguese, on an account whose UI may be in either language (INV-27). */
-const USER_WRITTEN: CatalogExercise = {
+const USER_WRITTEN = catalogExercise({
   id: 'e-mine',
   nameKey: null,
   name: 'Supino inclinado do João',
-  usesBodyweight: false,
-  loadIncrementKg: null,
-};
+  ownerUserId: 'u1',
+});
 
 function set(overrides: Partial<LiveSet> = {}): LiveSet {
   return {

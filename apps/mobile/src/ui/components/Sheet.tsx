@@ -50,9 +50,18 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
    * it — both pass `visible` as a constant and never move it, so the false → true path had never run anywhere.
    * Found on a phone in task 004 stage 3.
    *
-   * The rise on open is unchanged (07 §7). What this costs is the fade *out*: the sheet now leaves at once instead
-   * of over 240 ms. That is a deliberate trade rather than an oversight — a correct sheet that closes instantly
-   * beats an elegant one that never opens — and restoring the exit is a design-system change to make on its own.
+   * The rise on open is unchanged (07 §7). What this costs is the fade *out*: the sheet leaves at once instead of
+   * over 240 ms.
+   *
+   * **⚠ Restoring the exit was attempted on 2026-09-21 and reverted — the obvious implementation is blocked by this
+   * project's own lint.** Keeping the sheet mounted through its fade needs one state write at the moment `visible`
+   * goes true → false. Doing it during render is the defect above. Doing it in an effect is
+   * `react-hooks/set-state-in-effect`, an **error** here, and the rule is right in general. Unmounting from the
+   * animation's completion callback is allowed and solves only half of it: something still has to turn mounting
+   * *on*. So the exit needs a different mechanism — driving the transition from the caller, or reanimated's
+   * `exiting` animations, which are built for exactly this and whose library is already a dependency. That is a
+   * design-system decision with an owner, not a workaround to slip in behind an `eslint-disable`, and it is recorded
+   * as open in [task 004](../../../../../docs/tasks/004-exercise-catalog-and-logging.md).
    */
   if (!visible) {
     return null;

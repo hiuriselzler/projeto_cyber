@@ -11,6 +11,7 @@ export { defaultsFromDevice, type LanguageAndUnits } from './i18n/device';
 export { readDeviceDefaults, readDeviceTimeZone } from './i18n/deviceLocales';
 export { LocaleProvider, useLocale, useT } from './i18n/LocaleProvider';
 export { spokenQuantity } from './i18n/spoken';
+export { foldForSearch, matchesSearch } from './i18n/search';
 
 export * from './format/number';
 export * from './format/quantities';

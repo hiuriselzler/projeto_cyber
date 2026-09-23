@@ -45,11 +45,25 @@ export function LiveWorkoutScreen() {
   const [editing, setEditing] = useState<Editing | null>(null);
   const [draft, setDraft] = useState('');
   const [picking, setPicking] = useState(false);
+  /**
+   * The keypad's height, in state as well as in a ref — **the ref aims the scroll, the state makes the scroll
+   * possible**, and stage 3 had only the ref.
+   *
+   * `offsetToReveal` can ask for any offset it likes; a `ScrollView` still clamps to `content − viewport`. With one
+   * exercise on screen the content is barely taller than the viewport, so the clamp is about zero and the row stayed
+   * exactly where it was, underneath the keypad. On the Galaxy S21 FE that was invisible — the phone is 2340 px tall
+   * and the list had room to spare — and on a 1600 px screen the keypad covered the row it was editing outright,
+   * which is the one thing [07 §6](../../../../docs/07-brand-and-ui.md) says the keypad must never do.
+   *
+   * Reserving the keypad's height as bottom padding while editing gives the list something to scroll into, so the
+   * offset the geometry asks for is an offset the list can actually reach.
+   */
+  const [editorHeight, setEditorHeight] = useState(0);
 
   const scroll = useRef<ScrollView>(null);
   const scrollOffset = useRef(0);
   const viewportHeight = useRef(0);
-  const editorHeight = useRef(0);
+  const editorHeightRef = useRef(0);
   // Where each set row sits in the list's content coordinates: its block's top plus its own offset within the block.
   const blockTops = useRef(new Map<string, number>());
   const rowBoxes = useRef(new Map<string, { blockId: string; top: number; height: number }>());
@@ -65,7 +79,7 @@ export function LiveWorkoutScreen() {
         rowBottom: rowTop + box.height,
         scrollOffset: scrollOffset.current,
         viewportHeight: viewportHeight.current,
-        keypadHeight: editorHeight.current,
+        keypadHeight: editorHeightRef.current,
         margin: space[2],
       }),
       animated: true,
@@ -123,7 +137,7 @@ export function LiveWorkoutScreen() {
         onLayout={(event) => {
           viewportHeight.current = event.nativeEvent.layout.height;
         }}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, editing === null ? null : { paddingBottom: editorHeight + space[6] }]}
       >
         {live.exercises.length === 0 ? (
           <EmptyState title={t('workout.empty_title')} body={t('workout.empty_body')} />
@@ -163,7 +177,9 @@ export function LiveWorkoutScreen() {
             onRirChange={(value) => workout.writeField(editing.setLogId, 'rir', value)}
             onDone={() => setEditing(null)}
             onHeightChange={(height) => {
-              editorHeight.current = height;
+              editorHeightRef.current = height;
+              // Guarded so a layout pass that reports the same height cannot bounce the padding and re-enter layout.
+              setEditorHeight((current) => (current === height ? current : height));
               reveal(editing.setLogId);
             }}
           />

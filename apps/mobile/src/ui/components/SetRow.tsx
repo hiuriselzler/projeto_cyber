@@ -93,59 +93,61 @@ export function SetRow({
         },
       ]}
     >
-      <View style={styles.line}>
-        <AppText variant="metric" tone="textSecondary" style={styles.setNumber}>
-          {setNumber}
-        </AppText>
-
-        <Field testID="set-row-weight" active={editing === 'weight'} onPress={() => onEdit('weight')}>
-          <AppText variant="metricLg">{weight === null ? NONE : weight.text}</AppText>
-          {weight === null ? null : (
-            <AppText variant="metric" tone="textSecondary">
-              {t(`unit.${weight.unit}`)}
-            </AppText>
-          )}
-        </Field>
-
-        <AppText variant="metric" tone="textSecondary">
-          ×
-        </AppText>
-
-        <Field testID="set-row-reps" active={editing === 'reps'} onPress={() => onEdit('reps')}>
-          <AppText variant="metricLg">{reps === null ? NONE : String(reps)}</AppText>
-        </Field>
-
-        <Field testID="set-row-rir" active={editing === 'rir'} onPress={() => onEdit('rir')}>
-          <AppText variant="metric" tone={rir === null ? 'textMuted' : 'textPrimary'}>
-            {rir === null ? t('ui.set_row.rir_blank') : t('ui.set_row.rir', { rir })}
+      <View style={styles.numbers}>
+        <View style={styles.line}>
+          <AppText variant="metric" tone="textSecondary" style={styles.setNumber}>
+            {setNumber}
           </AppText>
-        </Field>
 
-        <Pressable
-          testID="set-row-complete"
-          onPress={onToggleComplete}
-          style={[
-            styles.complete,
-            {
-              backgroundColor: completed ? colors.success : 'transparent',
-              borderColor: completed ? colors.success : colors.borderStrong,
-            },
-          ]}
-        >
-          {completed ? <Icon name="check" color={colors.textOnAccent} /> : null}
-        </Pressable>
+          <Field testID="set-row-weight" active={editing === 'weight'} onPress={() => onEdit('weight')}>
+            <AppText variant="metricLg">{weight === null ? NONE : weight.text}</AppText>
+            {weight === null ? null : (
+              <AppText variant="metric" tone="textSecondary">
+                {t(`unit.${weight.unit}`)}
+              </AppText>
+            )}
+          </Field>
+
+          <AppText variant="metric" tone="textSecondary">
+            ×
+          </AppText>
+
+          <Field testID="set-row-reps" active={editing === 'reps'} onPress={() => onEdit('reps')}>
+            <AppText variant="metricLg">{reps === null ? NONE : String(reps)}</AppText>
+          </Field>
+
+          <Field testID="set-row-rir" active={editing === 'rir'} onPress={() => onEdit('rir')}>
+            <AppText variant="metric" tone={rir === null ? 'textMuted' : 'textPrimary'}>
+              {rir === null ? t('ui.set_row.rir_blank') : t('ui.set_row.rir', { rir })}
+            </AppText>
+          </Field>
+        </View>
+
+        {previous === null ? null : (
+          <AppText variant="caption" tone="textMuted" style={styles.previous}>
+            {t('ui.set_row.previous', {
+              weight: previous.weightKg === null ? NONE : formatWeight(previous.weightKg, unitSystem, locale).text,
+              reps: previous.reps === null ? NONE : String(previous.reps),
+              rir: previous.rir === null ? '' : String(previous.rir),
+              rir_recorded: previous.rir === null ? 'no' : 'yes',
+            })}
+          </AppText>
+        )}
       </View>
 
-      {previous === null ? null : (
-        <AppText variant="caption" tone="textMuted" style={styles.previous}>
-          {t('ui.set_row.previous', {
-            weight: previous.weightKg === null ? NONE : formatWeight(previous.weightKg, unitSystem, locale).text,
-            reps: previous.reps === null ? NONE : String(previous.reps),
-            rir: previous.rir === null ? '' : String(previous.rir),
-            rir_recorded: previous.rir === null ? 'no' : 'yes',
-          })}
-        </AppText>
-      )}
+      <Pressable
+        testID="set-row-complete"
+        onPress={onToggleComplete}
+        style={[
+          styles.complete,
+          {
+            backgroundColor: completed ? colors.success : 'transparent',
+            borderColor: completed ? colors.success : colors.borderStrong,
+          },
+        ]}
+      >
+        {completed ? <Icon name="check" color={colors.textOnAccent} /> : null}
+      </Pressable>
     </View>
   );
 }
@@ -167,8 +169,48 @@ function Field({ testID, active, onPress, children }: { testID: string; active: 
 }
 
 const styles = StyleSheet.create({
-  // No fixed height and no truncation: at 200 % font scale in Portuguese the row reflows (07 §4, ADR-008).
-  row: { minHeight: sizes.targetWorkout, borderRadius: radii.md, paddingHorizontal: space[2], paddingVertical: space[1] },
+  /**
+   * **The ✓ is a column, not a word in the sentence.**
+   *
+   * It used to sit inside `line` with `marginLeft: 'auto'`, so it took part in the wrap — and on a Galaxy S21 FE at
+   * font scale **0.86**, below the default, it lost: the numbers ran to ~259 dp, the ✓ needs 56 plus an 8 dp gap, and
+   * the row's 336 dp of inner width left 61. **It broke to a second line over three dp**, with a third of the row
+   * empty beside it (task 004 stage 3 device pass, 2026-09-19).
+   *
+   * Nothing truncated and every target stayed 56 dp, so the old layout was behaving as written — but
+   * [07 §6](../../../../../docs/07-brand-and-ui.md) pictures *one line*, and a row that breaks while a third of it is
+   * unused is not the picture failing, it is the layout. So the layout gave way: the ✓ is now a fixed sibling that
+   * never wraps, and the numbers reflow inside the space that is left.
+   *
+   * What this buys at the other end of the range, measured on the same phone: at **200 %** the numbers wrap to two
+   * lines and the ✓ stays anchored beside them, vertically centred and still a full target — reflowed, never
+   * truncated, which is what the task's device criterion asks for.
+   */
+  row: {
+    minHeight: sizes.targetWorkout,
+    borderRadius: radii.md,
+    paddingHorizontal: space[2],
+    paddingVertical: space[1],
+    flexDirection: 'row',
+    alignItems: 'center',
+    columnGap: space[2],
+  },
+  // Takes the width the ✓ does not, and wraps inside it. `flex: 1` rather than a width: the numbers grow with the
+  // font scale and must never push the ✓ off the row.
+  numbers: { flex: 1 },
+  /**
+   * **The numbers still wrap at default font scale, and that is an open design question, not a bug left lying.**
+   *
+   * Measured on the S21 FE at scale 1.0: the row has 312 dp of inner width, the ✓ and its gap take 64, and the
+   * numbers need about 250 against the 248 left — so `RIR 7` drops to a second line by roughly two dp. Tightening
+   * this gap to `space[1]` does win the line at 0.86 and still loses it at 1.0, so it was tried and reverted rather
+   * than kept: cramping the most important component in the app to chase two dp it does not win is the wrong trade.
+   *
+   * And the arithmetic above is for *short* values. The realistic heavy set — `100 kg × 12 RIR 10` — is wider still
+   * and wraps at every scale, so "always one line" is not reachable on a 360 dp phone while the numerals stay at the
+   * size INV-24 wants them. What to give up for it — the leading set number, the `×`, the unit label — is a call for
+   * [07 §6](../../../../../docs/07-brand-and-ui.md) to make, and it is recorded as an open question there.
+   */
   line: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: space[2] },
   setNumber: { minWidth: sizes.icon },
   field: {
@@ -185,7 +227,6 @@ const styles = StyleSheet.create({
   complete: {
     width: sizes.targetWorkout,
     height: sizes.targetWorkout,
-    marginLeft: 'auto',
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: radii.md,
