@@ -22,6 +22,7 @@ import { and, asc, desc, eq, isNull, ne } from 'drizzle-orm';
 import { uuidV7 } from '@/crypto/identifiers';
 
 import { db } from './client';
+import { normaliseSupersets, toggleSupersetWithNext } from './ordering';
 import { setLogs, workoutExercises, workouts } from './schema';
 
 export type SetType = 'warmup' | 'working' | 'drop' | 'backoff' | 'amrap';
@@ -39,12 +40,33 @@ export interface LiveSet {
   /** Null is "not recorded" and is never 0 (INV-03). */
   readonly rir: number | null;
   readonly isCompleted: boolean;
+  /** When the set was ticked, or null. The rest timer is derived from this rather than held in memory (INV-09). */
+  readonly completedAt: number | null;
 }
 
-export interface LiveExercise {
+/** What a session copies from its routine (03 §4), and may edit during the session. */
+export interface SessionTargets {
+  /** Null is no rest timer — never an invented default. */
+  readonly restSeconds: number | null;
+  readonly targetMinReps: number | null;
+  readonly targetMaxReps: number | null;
+  /** Shown beside a set as a target; never written into `set_logs.rir` (INV-03). */
+  readonly targetRir: number | null;
+}
+
+export const NO_SESSION_TARGETS: SessionTargets = {
+  restSeconds: null,
+  targetMinReps: null,
+  targetMaxReps: null,
+  targetRir: null,
+};
+
+export interface LiveExercise extends SessionTargets {
   readonly id: string;
   readonly exerciseId: string;
   readonly orderIndex: number;
+  /** Exercises sharing a value are supersetted together and alternate (FR-2.6). */
+  readonly supersetGroup: number | null;
   readonly sets: readonly LiveSet[];
 }
 
@@ -95,8 +117,8 @@ export function workoutRow(input: NewWorkout) {
     tz: input.tz,
     notes: null,
     perceivedFatigue: null,
-    // 'routine' and 'plan' arrive with the stages that build them (03 §4).
-    source: 'manual' as const,
+    // A routine start overrides this and `routineId` (src/db/routines.ts); 'plan' is task 005's (03 §4).
+    source: 'manual' as 'manual' | 'routine' | 'plan',
     createdAt: input.startedAt,
     updatedAt: input.startedAt,
     deletedAt: null,
@@ -111,6 +133,9 @@ export interface NewWorkoutExercise {
   readonly exerciseId: string;
   readonly orderIndex: number;
   readonly now: number;
+  /** Carried over from a routine; an exercise added by hand mid-session has neither. */
+  readonly supersetGroup?: number | null;
+  readonly targets?: SessionTargets;
 }
 
 export function workoutExerciseRow(input: NewWorkoutExercise) {
@@ -120,9 +145,10 @@ export function workoutExerciseRow(input: NewWorkoutExercise) {
     workoutId: input.workoutId,
     exerciseId: input.exerciseId,
     orderIndex: input.orderIndex,
-    supersetGroup: null,
+    supersetGroup: input.supersetGroup ?? null,
     notes: null,
     plannedExerciseId: null,
+    ...(input.targets ?? NO_SESSION_TARGETS),
     createdAt: input.now,
     updatedAt: input.now,
     deletedAt: null,
@@ -154,9 +180,11 @@ export function setLogRow(input: NewSetLog) {
     userId: input.userId,
     workoutExerciseId: input.workoutExerciseId,
     setIndex: input.setIndex,
-    setType: 'working' as const,
-    weightKg: null,
-    reps: null,
+    // Widened rather than literal: a routine start pre-fills the type, weight and reps (src/db/routines.ts). The RIR
+    // stays literally null — nothing pre-fills it (INV-03, task 004 § Stages, decision 3).
+    setType: 'working' as SetType,
+    weightKg: null as number | null,
+    reps: null as number | null,
     rir: null,
     distanceM: null,
     durationS: null,
@@ -302,6 +330,89 @@ export function removeSet(setLogId: string, now: number): void {
   db.update(setLogs).set({ deletedAt: now, updatedAt: now }).where(eq(setLogs.id, setLogId)).run();
 }
 
+/**
+ * Change a set's type — FR-2.9. Only `working` and `amrap` count (INV-04), and that judgement is the core's
+ * `is_counted_set()`, never a filter here: this writes the fact and nothing else.
+ */
+export function setSetType(setLogId: string, setType: SetType, now: number): void {
+  db.update(setLogs).set({ setType, updatedAt: now }).where(eq(setLogs.id, setLogId)).run();
+}
+
+/**
+ * This exercise's rest for the rest of the session, in seconds — null is no timer. `±15 s` on a running timer lands
+ * here too, which is what keeps the timer derivable (task 004 § Stages, decision 2).
+ */
+export function setExerciseRest(workoutExerciseId: string, restSeconds: number | null, now: number): void {
+  db.update(workoutExercises)
+    .set({ restSeconds, updatedAt: now })
+    .where(eq(workoutExercises.id, workoutExerciseId))
+    .run();
+}
+
+/** The live exercises of a workout, in order — what the ordering writes below renumber and regroup. */
+function liveSessionExercises(workoutId: string) {
+  return db
+    .select({ id: workoutExercises.id, supersetGroup: workoutExercises.supersetGroup })
+    .from(workoutExercises)
+    .where(and(eq(workoutExercises.workoutId, workoutId), isNull(workoutExercises.deletedAt)))
+    .orderBy(asc(workoutExercises.orderIndex))
+    .all();
+}
+
+type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+function writeSessionSupersets(
+  tx: Transaction,
+  rows: readonly { readonly id: string; readonly supersetGroup: number | null }[],
+  groups: readonly (number | null)[],
+  now: number,
+): void {
+  rows.forEach((row, at) => {
+    const group = groups[at] ?? null;
+    if (group === row.supersetGroup) return;
+    tx.update(workoutExercises).set({ supersetGroup: group, updatedAt: now }).where(eq(workoutExercises.id, row.id)).run();
+  });
+}
+
+/**
+ * Take an exercise out of the session — FR-2.8. A tombstone, like every removal here (sync replicates it, task 006),
+ * and the superset groups re-read so the one left behind is not a superset of one.
+ */
+export function removeSessionExercise(workoutId: string, workoutExerciseId: string, now: number): void {
+  db.transaction((tx) => {
+    tx.update(workoutExercises)
+      .set({ deletedAt: now, updatedAt: now })
+      .where(eq(workoutExercises.id, workoutExerciseId))
+      .run();
+    const rows = liveSessionExercises(workoutId);
+    writeSessionSupersets(tx, rows, normaliseSupersets(rows.map((row) => row.supersetGroup)), now);
+  });
+}
+
+/**
+ * Put the session's exercises in a new order — FR-2.8. `workout_exercises` has no unique index on its order, so one
+ * pass is safe here, unlike a routine's two (`./routines`, `reorderPlan`).
+ */
+export function reorderSessionExercises(workoutId: string, orderedIds: readonly string[], now: number): void {
+  db.transaction((tx) => {
+    orderedIds.forEach((id, at) => {
+      tx.update(workoutExercises).set({ orderIndex: at + 1, updatedAt: now }).where(eq(workoutExercises.id, id)).run();
+    });
+    const rows = liveSessionExercises(workoutId);
+    writeSessionSupersets(tx, rows, normaliseSupersets(rows.map((row) => row.supersetGroup)), now);
+  });
+}
+
+/** Link the exercise at `index` to the one below it, or unlink them (FR-2.6) — the routine editor's rule, mid-session. */
+export function toggleSessionSuperset(workoutId: string, index: number, now: number): void {
+  const rows = liveSessionExercises(workoutId);
+  const groups = toggleSupersetWithNext(
+    rows.map((row) => row.supersetGroup),
+    index,
+  );
+  db.transaction((tx) => writeSessionSupersets(tx, rows, groups, now));
+}
+
 /** Finish a workout. The finish flow proper — PRs, fatigue, the celebration — is a later stage. */
 export function endWorkout(workoutId: string, now: number): void {
   db.update(workouts).set({ endedAt: now, updatedAt: now }).where(eq(workouts.id, workoutId)).run();
@@ -335,6 +446,11 @@ export function readOpenWorkout(userId: string): LiveWorkout | null {
     id: row.id,
     exerciseId: row.exerciseId,
     orderIndex: row.orderIndex,
+    supersetGroup: row.supersetGroup,
+    restSeconds: row.restSeconds,
+    targetMinReps: row.targetMinReps,
+    targetMaxReps: row.targetMaxReps,
+    targetRir: row.targetRir,
     sets: db
       .select()
       .from(setLogs)
@@ -413,5 +529,6 @@ function toLiveSet(row: typeof setLogs.$inferSelect): LiveSet {
     reps: row.reps,
     rir: row.rir,
     isCompleted: row.isCompleted,
+    completedAt: row.completedAt,
   };
 }

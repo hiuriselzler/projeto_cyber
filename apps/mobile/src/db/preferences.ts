@@ -24,3 +24,21 @@ export function readThemePreference(): ThemePreference {
 export function writeThemePreference(preference: ThemePreference): void {
   Storage.setItemSync(THEME_KEY, preference);
 }
+
+const SKIPPED_REST_KEY = 'workout.rest_skipped_after';
+
+/**
+ * The set whose rest the user skipped, or null.
+ *
+ * The running rest timer is derived from the database — the last completed set plus its exercise's rest — so it
+ * survives a force-quit with no state of its own (task 004 § Stages, decision 2). *Skipping* it is the one extra fact,
+ * and it lives here rather than in the schema: it is a device's opinion about a moment, never synced, and without it a
+ * skipped timer would come back on the next launch. Keyed by the set, so the next tick starts a fresh timer untouched.
+ */
+export function readSkippedRest(): string | null {
+  return Storage.getItemSync(SKIPPED_REST_KEY);
+}
+
+export function writeSkippedRest(setLogId: string): void {
+  Storage.setItemSync(SKIPPED_REST_KEY, setLogId);
+}

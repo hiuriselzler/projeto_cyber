@@ -1,8 +1,8 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
-import { listExercises } from '@/db/catalog';
-import { readPreviousPerformance, type SetField } from '@/db/strength';
+import { readExercise } from '@/db/catalog';
+import { readPreviousPerformance, type LiveWorkout, type SetField } from '@/db/strength';
 import {
   AppText,
   Button,
@@ -17,8 +17,13 @@ import {
 } from '@/ui';
 
 import { ExerciseBlock } from './ExerciseBlock';
+import { exerciseLabel } from './exerciseName';
+import { ExerciseOptionsSheet } from './ExerciseOptionsSheet';
 import { ExercisePicker } from './ExercisePicker';
+import { nextFocus } from './liveFlow';
+import { RestTimerBar } from './RestTimerBar';
 import { SetEditor } from './SetEditor';
+import { SetTypeSheet } from './SetTypeSheet';
 import { useLiveWorkout, useSignedInUserId } from './useLiveWorkout';
 
 /** Which column of `set_logs` each editable field of the row writes. */
@@ -45,6 +50,9 @@ export function LiveWorkoutScreen() {
   const [editing, setEditing] = useState<Editing | null>(null);
   const [draft, setDraft] = useState('');
   const [picking, setPicking] = useState(false);
+  /** The set whose type sheet is open, and the exercise whose options sheet is open (task 004 stage 5b). */
+  const [typeFor, setTypeFor] = useState<string | null>(null);
+  const [optionsFor, setOptionsFor] = useState<string | null>(null);
   /**
    * The keypad's height, in state as well as in a ref — **the ref aims the scroll, the state makes the scroll
    * possible**, and stage 3 had only the ref.
@@ -103,6 +111,31 @@ export function LiveWorkoutScreen() {
     [locale, reveal, unitSystem],
   );
 
+  /**
+   * The ✓, and where focus goes next — 07 §6. Focus is computed from the workout **as SQLite now holds it**, the one
+   * `setCompleted` hands back, so a superset alternates by what is actually done rather than by what the screen
+   * remembers (FR-2.6). With the keypad open it moves to the next set's weight; otherwise the next set is scrolled
+   * into view, ready for one tap on its pre-filled row.
+   */
+  const toggleComplete = useCallback(
+    (setLogId: string, isCompleted: boolean) => {
+      const fresh = workout.setCompleted(setLogId, isCompleted);
+      if (!isCompleted || fresh === null) return;
+      const next = nextFocus(fresh, setLogId);
+      if (next === null) {
+        setEditing(null);
+        return;
+      }
+      if (editing === null) {
+        reveal(next.setLogId);
+        return;
+      }
+      const set = findSet(fresh, next.setLogId);
+      startEditing(next.setLogId, 'weight', set?.weightKg ?? null, set?.reps ?? null);
+    },
+    [editing, reveal, startEditing, workout],
+  );
+
   if (userId === null) {
     return <Screen />;
   }
@@ -127,6 +160,14 @@ export function LiveWorkoutScreen() {
         <AppText variant="title">{live.title}</AppText>
         <Button variant="secondary" label={t('workout.finish')} onPress={workout.finish} />
       </View>
+
+      <RestTimerBar
+        workout={live}
+        skippedRest={workout.skippedRest}
+        onLess={() => workout.adjustRest(-15)}
+        onMore={() => workout.adjustRest(15)}
+        onSkip={workout.skipRest}
+      />
 
       <ScrollView
         ref={scroll}
@@ -153,8 +194,10 @@ export function LiveWorkoutScreen() {
                 exercise={exercise}
                 editing={editing}
                 onEdit={startEditing}
-                onToggleComplete={workout.setCompleted}
+                onToggleComplete={toggleComplete}
                 onAddSet={() => workout.addSet(exercise.id)}
+                onChangeType={setTypeFor}
+                onOptions={() => setOptionsFor(exercise.id)}
                 onRowLayout={(setLogId, top, height) =>
                   rowBoxes.current.set(setLogId, { blockId: exercise.id, top, height })
                 }
@@ -186,6 +229,19 @@ export function LiveWorkoutScreen() {
         </View>
       )}
 
+      <LiveSheets
+        userId={userId}
+        live={live}
+        typeFor={typeFor}
+        optionsFor={optionsFor}
+        onCloseType={() => setTypeFor(null)}
+        onCloseOptions={() => setOptionsFor(null)}
+        controller={workout}
+        onSetRemoved={(setLogId) => {
+          if (editing?.setLogId === setLogId) setEditing(null);
+        }}
+      />
+
       <ExercisePicker
         visible={picking}
         userId={userId}
@@ -209,6 +265,8 @@ function ExerciseBlockFor({
   onToggleComplete,
   onAddSet,
   onRowLayout,
+  onChangeType,
+  onOptions,
 }: {
   readonly userId: string;
   readonly workoutId: string;
@@ -218,11 +276,12 @@ function ExerciseBlockFor({
   readonly onToggleComplete: (setLogId: string, isCompleted: boolean) => void;
   readonly onAddSet: () => void;
   readonly onRowLayout: (setLogId: string, top: number, height: number) => void;
+  readonly onChangeType: (setLogId: string) => void;
+  readonly onOptions: () => void;
 }) {
-  const catalog = useMemo(
-    () => listExercises(userId).find((one) => one.id === exercise.exerciseId),
-    [exercise.exerciseId, userId],
-  );
+  // `readExercise`, not the live catalog list: an exercise hidden after it was added — or one a routine carried in —
+  // must still be named in the workout it is part of (INV-11). The list excludes hidden rows and left this blank.
+  const catalog = useMemo(() => readExercise(userId, exercise.exerciseId), [exercise.exerciseId, userId]);
   const previous = useMemo(
     () => readPreviousPerformance({ userId, exerciseId: exercise.exerciseId, exceptWorkoutId: workoutId }),
     [exercise.exerciseId, userId, workoutId],
@@ -241,8 +300,93 @@ function ExerciseBlockFor({
       onToggleComplete={onToggleComplete}
       onAddSet={onAddSet}
       onRowLayout={onRowLayout}
+      onChangeType={onChangeType}
+      onOptions={onOptions}
     />
   );
+}
+
+/**
+ * The two sheets a live workout opens: a set's type (with its removal), and an exercise's options. Mounted only while
+ * open, each from the caller's own state, so neither holds a copy of anything the database already says.
+ */
+function LiveSheets({
+  userId,
+  live,
+  typeFor,
+  optionsFor,
+  onCloseType,
+  onCloseOptions,
+  controller,
+  onSetRemoved,
+}: {
+  readonly userId: string;
+  readonly live: LiveWorkout;
+  readonly typeFor: string | null;
+  readonly optionsFor: string | null;
+  readonly onCloseType: () => void;
+  readonly onCloseOptions: () => void;
+  readonly controller: ReturnType<typeof useLiveWorkout>;
+  readonly onSetRemoved: (setLogId: string) => void;
+}) {
+  const t = useT();
+  const typed = typeFor === null ? undefined : findSet(live, typeFor);
+  const index = optionsFor === null ? -1 : live.exercises.findIndex((one) => one.id === optionsFor);
+  const exercise = live.exercises[index];
+  const catalog = useMemo(
+    () => (exercise === undefined ? null : readExercise(userId, exercise.exerciseId)),
+    [exercise, userId],
+  );
+
+  return (
+    <>
+      {typed === undefined ? null : (
+        <SetTypeSheet
+          visible
+          setNumber={typed.setIndex}
+          setType={typed.setType}
+          onChoose={(setType) => {
+            controller.setType(typed.id, setType);
+            onCloseType();
+          }}
+          onRemove={() => {
+            controller.removeSet(typed.id);
+            onSetRemoved(typed.id);
+            onCloseType();
+          }}
+          onClose={onCloseType}
+        />
+      )}
+      {exercise === undefined ? null : (
+        <ExerciseOptionsSheet
+          visible
+          title={catalog === null ? '' : exerciseLabel(catalog, t)}
+          restSeconds={exercise.restSeconds}
+          isFirst={index === 0}
+          isLast={index === live.exercises.length - 1}
+          linkedBelow={
+            exercise.supersetGroup !== null && live.exercises[index + 1]?.supersetGroup === exercise.supersetGroup
+          }
+          onRest={(seconds) => controller.setRest(exercise.id, seconds)}
+          onMove={(delta) => controller.moveExercise(index, delta)}
+          onToggleSuperset={() => controller.toggleSuperset(index)}
+          onRemove={() => {
+            controller.removeExercise(exercise.id);
+            onCloseOptions();
+          }}
+          onClose={onCloseOptions}
+        />
+      )}
+    </>
+  );
+}
+
+function findSet(live: LiveWorkout, setLogId: string) {
+  for (const exercise of live.exercises) {
+    const set = exercise.sets.find((one) => one.id === setLogId);
+    if (set !== undefined) return set;
+  }
+  return undefined;
 }
 
 function rirOf(live: { readonly exercises: readonly { readonly sets: readonly { readonly id: string; readonly rir: number | null }[] }[] }, setLogId: string): number | null {

@@ -41,7 +41,7 @@ export { NumericKeypad } from './components/NumericKeypad';
 export { RirChips } from './components/RirChips';
 export { Screen } from './components/Screen';
 export { SegmentedControl, type SegmentedOption } from './components/SegmentedControl';
-export { SetRow, type PreviousSet, type SetRowField, type SetRowProps } from './components/SetRow';
+export { SetRow, type PreviousSet, type SetRowField, type SetRowProps, type SetRowType } from './components/SetRow';
 export { Sheet } from './components/Sheet';
 export { TextField, type TextFieldProps } from './components/TextField';
 export { TrackRow } from './components/TrackRow';

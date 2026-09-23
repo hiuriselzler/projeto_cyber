@@ -378,9 +378,17 @@ export const workoutExercises = sqliteTable(
     plannedExerciseId: text('planned_exercise_id').references(() => plannedExercises.id, {
       onDelete: 'set null',
     }),
+    // Copied from the routine (or plan) at start and editable during the session, so editing the routine afterwards
+    // never moves a timer already running. NULL rest is no timer (task 004 stage 5, 03 §4).
+    restSeconds: integer('rest_seconds'),
+    targetMinReps: integer('target_min_reps'),
+    targetMaxReps: integer('target_max_reps'),
+    // Shown beside a set as a target; never written into set_logs.rir (INV-03).
+    targetRir: integer('target_rir'),
     ...syncColumns(),
   },
   (t) => [
+    between('workout_exercises', 'target_rir', 0, 10),
     index('workout_exercises_workout_order_idx').on(t.workoutId, t.orderIndex),
     index('workout_exercises_exercise_workout_idx').on(t.exerciseId, t.workoutId),
   ],

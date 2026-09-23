@@ -163,6 +163,14 @@ Rules:
 - Migrations must be forward-only and tolerate skipped versions — a user can jump from app
   version 3 to version 11 in one store update.
 - A local migration **never** ships over OTA ([05 §9](05-integrations.md)).
+- **Read every generated migration, and never ship a table rebuild over a table with children.** For anything SQLite
+  cannot `ALTER` in place — a table-level CHECK, a changed column — `drizzle-kit generate` writes a rebuild: create
+  `__new_x`, copy, `DROP TABLE x`, rename, bracketed by `PRAGMA foreign_keys=OFF/ON`. Under the expo migrator that
+  pragma is a **no-op**, because every pending migration runs inside one `BEGIN … COMMIT`, and with foreign keys on
+  (`src/db/client.ts`) the `DROP` is an implicit `DELETE` that cascades. Task 004 stage 5's first draft of
+  `0002` would have deleted every `set_logs` row on the device — and its copy step also selected columns the old
+  table did not have. Prefer `ALTER TABLE … ADD COLUMN`, which accepts a column-level CHECK; keep Drizzle's snapshot,
+  which describes the result; and prove the hand-written file against a database holding children before it ships.
 
 **Compatibility rule between the two streams:** the client schema may lag the server schema; the
 sync protocol ignores unknown fields on both sides and never treats a missing column as a

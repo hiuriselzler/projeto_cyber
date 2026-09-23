@@ -101,6 +101,15 @@ const fences = [
     imports: [{ name: 'expo-location' }, { name: 'expo-task-manager' }],
   },
   {
+    // Haptics and notifications differ between Android and iOS (channels, permission models), so they are platform
+    // code (responsibility map). expo-haptics was confined by convention alone from task 004 stage 3; stage 5 made it
+    // a rule, when the rest timer brought expo-notifications with it.
+    id: 'device-feedback',
+    allowedIn: ['platform'],
+    reason: 'haptics and notifications live behind src/platform (INV-28, task 004 stage 5)',
+    imports: [{ name: 'expo-haptics' }, { name: 'expo-notifications' }],
+  },
+  {
     id: 'core-binding',
     allowedIn: ['domain'],
     reason: 'only src/domain imports the core-rs binding (ADR-012)',

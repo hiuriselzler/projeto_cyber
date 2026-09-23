@@ -93,7 +93,9 @@ Jest tests, and none was findable without a device.
 | **2** | The catalog seeds itself from the committed `reference.json`, fingerprinted; the bilingual search matcher | ☑ 2026-09-19 |
 | **3** | **The set row** and the live workout, every mutation a synchronous SQLite write (INV-09); the minimum exercise picker | ☑ 2026-09-19, device pass part-run |
 | **4** | **The catalog screen** — browse, search, filter by muscle and modality; custom exercises; fork-on-edit of a global; archive that never orphans history | ☑ 2026-09-22, device pass not yet run |
-| **5** | Routines, supersets and start-from-routine; set types; the rest timer with haptics and its notification | ☐ |
+| **5a** | Routines — build, edit, reorder, duplicate, folders, archive; supersets; start-from-routine pre-filling last-used weights and carrying the routine's targets and rest | ☑ 2026-09-23, device pass not yet run |
+| **5b** | The live session finished off — set types; the rest timer with haptics and its notification; ✓ advancing focus (superset-aware); removing and reordering exercises mid-session; reopening the workout in progress on relaunch | ☑ 2026-09-23, device pass not yet run |
+| **5c** | The `duration` and `distance_duration` tracking modes — the set row that logs them, and the create form offering them | ☐ |
 | **6** | The finish flow — PR detection and its celebration, perceived fatigue, notes, retroactive logging | ☐ |
 | **7** | History and per-exercise charts; `personal_records` as a cache, with its rebuild command | ☐ |
 | **8** | The API mirror endpoints, and the closing device pass over the whole loop | ☐ |
@@ -111,7 +113,7 @@ log on 2026-09-21 and repeated here because the code reads this file:
   about something invisible.
 - **The create form offers only the tracking modes the set row can log** — `weight_reps` and
   `reps_only`. `duration` and `distance_duration` are FR-2.3's and stay in the schema; offering them
-  before stage 5's set row handles them would create an exercise the app cannot log.
+  before stage 5c's set row handles them would create an exercise the app cannot log.
 
 **Closed 2026-09-22, before the stage's device pass.** Landing the screen surfaced three loose ends,
 found by reading the stage against its own code rather than by a new requirement:
@@ -140,14 +142,55 @@ screen is a placeholder until [task 010](010-unified-calendar-and-analytics.md))
 `catalog.field_notes` (no acceptance criterion asks for a notes field on the create form; noted, not
 built, to avoid scope creep into stage 5).
 
+**Stage 5 was re-cut on 2026-09-23, before any of it was built**, into 5a, 5b and 5c above. Reading the task against
+the code found four things this file promises that no stage owned: ✓ advancing focus (§ Scope, 07 §6 — never built),
+removing and reordering exercises mid-session (FR-2.8 — only adding exists), reopening the workout in progress on
+relaunch (the force-quit criterion below — relaunch lands on home), and the two tracking modes stage 4 deferred "to
+stage 5" when stage 5's row did not mention them. 5c comes before stage 6.
+
+**Stage 5 carries seven decisions**, recorded in PROJECT-STATUS's decision log on 2026-09-23 and repeated here because
+the code reads this file:
+
+1. **The live session carries its own rest and targets.** `workout_exercises` gains `rest_seconds`, `target_min_reps`,
+   `target_max_reps` and `target_rir` ([03 §4](../03-database-schema.md)), mirroring `routine_exercises` and
+   `planned_exercises`. They are **copied** when a workout starts from a routine and editable during the session, so
+   editing the routine afterwards never moves a timer that is already running. `rest_seconds` NULL means **no timer** —
+   not an invented default: a rest period is the user's number, not the app's.
+2. **The running rest timer is derived, not stored.** It ends at the latest completed set's `completed_at` plus its
+   exercise's `rest_seconds`, so it survives a force-quit with no state of its own (INV-09). *Skipping* it is the one
+   extra fact, and it is device-local — a small record in the key-value store beside the theme override, never synced —
+   so a skipped timer does not reappear after a relaunch. `−15 s` and `+15 s` on a running timer change that exercise's
+   `rest_seconds` for the rest of the session, which is both what keeps the timer derivable and what a lifter who
+   needed longer on this exercise actually meant.
+3. **Start-from-routine pre-fills the weight and the reps, never the RIR.** The weight and reps are last time's for
+   the same set index (FR-2.7), falling back to last time's nearest *earlier* set — a fourth set after a three-set
+   pyramid starts from the third, not the first — and the reps to the routine's `target_min_reps` when there is no last
+   time at all. A set takes last time's **type** only from the same index: a warm-up stays a warm-up, and a fallback
+   never turns a new set into one. The number of sets is the routine's `target_sets`, else last time's count, else
+   one. **RIR stays blank**, and the routine's `target_rir` is shown beside the
+   row as a target, not written into it: a RIR the user never looked at, stored and then ticked, is an e1RM input
+   they did not choose — the rule that makes `5+` store nothing and a blank chip store NULL (INV-03). FR-2.10's "defaults
+   to the target RIR" is scoped to a *plan* and is task 005's to build.
+4. **A superset alternates, and rests once per round.** ✓ moves focus to the same set of the next exercise in the group,
+   and after the group's last exercise back to the first one's next set. The rest timer starts only after the last
+   exercise of a round; ticking an earlier one moves straight on (FR-2.6).
+5. **A set's type is changed from a visible control.** The task's own "long-press or swipe" meets
+   [07 §5](../07-brand-and-ui.md)'s rule against hidden-only actions, so the set number is a button that opens a
+   set-type sheet, and long-press is a shortcut to the same sheet. No swipe. A non-working set shows a letter in place of
+   its number — `W`, `D`, `B`, `A` — and says its type aloud, so the type is never colour alone (INV-24).
+6. **Notification permission is asked at the first rest timer**, never at launch. Refused, the timer still runs on
+   screen with its haptic, and the app does not ask again.
+7. **The re-cut above.**
+
 ## Acceptance criteria
 - [ ] A full workout can be logged start to finish in airplane mode. *(Stage 3 logged one set start to finish with
       no network involved, but airplane mode itself was not switched on, and "full" means routines, set types and
       the finish flow, which are stages 5–6 in the table above.)*
 - [ ] Force-quitting mid-workout and reopening restores the exact state, including the set in
       progress and the running rest timer (INV-09). *(Stage 3: the **state** survives a force-stop and comes back
-      exactly — see the device list. Reopening lands on the home route rather than the workout, and the rest timer
-      does not exist yet, so this stays open.)*
+      exactly — see the device list. **Stage 5b built the rest of it** (2026-09-23): a cold start with a workout open
+      lands in it, and the rest timer is derived from the rows, so there is nothing of it to lose — proven by
+      `liveFlow.test.ts` against the rows, **not yet on the phone**, so this stays open.)*
 - [x] Tapping ✓ renders in < 100 ms on a mid-range Android device (measure, do not assume) —
       **p50 10.5 ms, p95 12.4 ms, worst 20.1 ms** on a Galaxy S21 FE, 2026-09-19, for the write and the re-read
 - [ ] RIR left blank stores NULL; a chart or total never treats it as 0. *(Storage half proven on the device — a
@@ -211,6 +254,21 @@ set-logging UI this task builds; `SetRow` and `NumericKeypad` existed from task 
       stage 5's and is not covered
 - [x] **`5+` stores nothing by itself** (open question 9) — tapping it opened `RIR 5 6 7 8 9 10` while the row still
       read *"RIR não registrado"*; the 7 tapped afterwards is what was stored
+
+**Stage 5 on the device** *(added 2026-09-23 — built and green in CI, none of it run on a phone yet)*
+- [ ] **Migration `0002` on a device already holding logged sets** — every `set_logs` row survives, and
+      `PRAGMA foreign_key_check` is empty afterwards. Proven against `node:sqlite` with foreign keys on; the device is
+      the claim that matters ([06 §4](../06-operations.md))
+- [ ] A routine is built, reordered (the two-pass renumber clearing SQLite's row-by-row unique check), supersetted,
+      duplicated, archived and restored — and started, with weights and reps pre-filled and every RIR blank
+- [ ] **The rest notification arrives with the screen off**, on time — Android may defer a non-exact alarm under Doze;
+      measure how late, and decide whether that needs `SCHEDULE_EXACT_ALARM`
+- [ ] Notification permission is asked at the first rest timer and not at launch; refused, the timer still runs with
+      its haptic and the app never asks again
+- [ ] **Force-quit mid-rest**: the cold start reopens the workout, and the bar is counting the same rest
+- [ ] A superset alternates on the ✓ and rests once per round; ✓ with the keypad open moves it to the next set's weight
+- [ ] TalkBack reaches the set type through the row's "Change set type" action, and the timer bar reads its time left
+- [ ] ✓ latency re-measured on a routine-started session, with the timer bar ticking beside the rows
 
 **Found on the device, and not yet fixed**
 - [x] **The set row reflows at font scale 0.86** — *half answered 2026-09-21, and the half that was a defect is

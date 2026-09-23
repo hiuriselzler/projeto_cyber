@@ -19,3 +19,13 @@ export function confirmTap(): void {
     // A haptic is a courtesy. Failing to deliver one is never worth interrupting a workout for.
   });
 }
+
+/**
+ * The rest is over — felt, because the lifter is looking at a bar or at the floor, not at the phone (07 §6). A
+ * notification-style pattern rather than the ✓'s single impact, so the two are told apart without looking.
+ */
+export function restOverTap(): void {
+  void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {
+    // A courtesy, as above.
+  });
+}

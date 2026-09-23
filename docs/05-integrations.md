@@ -48,7 +48,7 @@ is additive.
 | `expo-secure-store` | Refresh token and the privacy key in Keychain / Keystore (04 §3, §6) |
 | libsodium via a native binding (candidate: `react-native-libsodium`) | argon2id, XChaCha20-Poly1305 and the OS CSPRNG for privacy zones. Imported only by `src/crypto/` ([ADR-007](decisions/ADR-007.md)); native, so a change to it is a store release, not OTA |
 | `expo-sqlite` | Local database ([ADR-001](decisions/ADR-001.md)) |
-| `expo-notifications` | Local reminders for planned sessions. **Local only in v1** — no push server, no device tokens, nothing to leak |
+| `expo-notifications` | The rest timer's end (task 004) and local reminders for planned sessions. **Local only in v1** — no push server, no device tokens, nothing to leak. Imported only by `src/platform/`, which owns the Android channel; permission is asked at the first rest timer, never at launch |
 | `expo-keep-awake` | Keep the screen on during a live workout, user-toggleable |
 | `expo-haptics` | Rest-timer completion, set logged |
 | `expo-image-picker` | Activity and progress photos (v2) |

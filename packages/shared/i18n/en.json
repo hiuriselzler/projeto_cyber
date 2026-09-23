@@ -402,7 +402,13 @@
     "set_row": {
       "rir": "RIR {rir}",
       "rir_blank": "RIR",
-      "previous": "{rir_recorded, select, yes {{weight} × {reps} @{rir} last time} other {{weight} × {reps} last time}}"
+      "previous": "{rir_recorded, select, yes {{weight} × {reps} @{rir} last time} other {{weight} × {reps} last time}}",
+      "type_letter": {
+        "warmup": "W",
+        "drop": "D",
+        "backoff": "B",
+        "amrap": "A"
+      }
     },
     "keypad": {
       "done": "Done"
@@ -443,7 +449,22 @@
     "choose_exercise": "Choose an exercise",
     "edit_weight": "Weight",
     "edit_reps": "Reps",
-    "edit_rir": "Reps in reserve"
+    "edit_rir": "Reps in reserve",
+    "target": "Target: {summary}",
+    "superset": "Superset",
+    "set_type_title": "Set {number}",
+    "set_type_note": "Warm-up, drop and back-off sets are logged, and not counted in volume or records.",
+    "remove_set": "Remove this set",
+    "exercise_options": "Options",
+    "rest": "Rest between sets",
+    "rest_hint": "Off means no rest timer. A rest set here lasts for the rest of this workout.",
+    "move_up": "Move up",
+    "move_down": "Move down",
+    "superset_link": "Superset with the next",
+    "superset_unlink": "Unlink from the next",
+    "remove_exercise": "Remove from this workout",
+    "close": "Close",
+    "resume_title": "A workout is in progress"
   },
   "modality": {
     "barbell": "Barbell",
@@ -493,6 +514,72 @@
     "name_taken": "You already have an exercise with this name.",
     "save": "Save",
     "cancel": "Cancel"
+  },
+  "routine": {
+    "title": "Routines",
+    "open": "Routines",
+    "create": "New routine",
+    "form_new_title": "New routine",
+    "form_edit_title": "Name and folder",
+    "field_name": "Name",
+    "field_folder": "Folder",
+    "field_folder_hint": "Optional. Routines in the same folder are listed together.",
+    "name_empty": "Give the routine a name.",
+    "no_folder": "No folder",
+    "count": "{count, plural, one {# exercise} other {# exercises}}",
+    "start": "Start",
+    "edit": "Edit",
+    "duplicate": "Duplicate",
+    "archive": "Archive",
+    "restore": "Restore",
+    "archived_title": "Archived",
+    "archived_note": "Archived routines keep every workout started from them.",
+    "archived_empty": "You have not archived any routine.",
+    "empty_title": "No routines yet",
+    "empty_body": "A routine is a list of exercises with targets. Start one and every set comes pre-filled from last time.",
+    "open_workout": "A workout is in progress. Finish it before starting another.",
+    "resume": "Back to the workout",
+    "add_exercise": "Add an exercise",
+    "exercises_empty": "Add the exercises this routine is made of.",
+    "targets": "Targets",
+    "targets_title": "Targets",
+    "targets_none": "No targets set",
+    "sets": "{count, plural, one {# set} other {# sets}}",
+    "reps_range": "{min}–{max} reps",
+    "reps": "{count, plural, one {# rep} other {# reps}}",
+    "rir": "RIR {rir}",
+    "rest": "rest {time}",
+    "move_up": "Move up",
+    "move_down": "Move down",
+    "remove": "Remove",
+    "superset_link": "Superset with the next",
+    "superset_unlink": "Unlink from the next",
+    "field_sets": "Sets",
+    "field_min_reps": "Minimum reps",
+    "field_max_reps": "Maximum reps",
+    "field_rir": "Target RIR",
+    "field_rir_hint": "Shown beside each set as a target. It is never logged for you.",
+    "field_rest": "Rest between sets",
+    "field_rest_hint": "Off means no rest timer.",
+    "rest_off": "Off",
+    "problem_sets": "Sets must be a whole number from 1 to 50.",
+    "problem_reps": "Reps must be a whole number.",
+    "problem_rep_range": "The minimum cannot be above the maximum.",
+    "problem_rir": "RIR is from 0 to 10.",
+    "problem_rest": "That rest is out of range.",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "rest": {
+    "title": "Rest",
+    "less": "−15 s",
+    "more": "+15 s",
+    "less_label": "Fifteen seconds less",
+    "more_label": "Fifteen seconds more",
+    "skip": "Skip",
+    "over_title": "Rest is over",
+    "over_body": "Next up: {exercise}",
+    "channel": "Rest timer"
   },
   "account": {
     "working": "Securing your account…",
@@ -638,7 +725,7 @@
   },
   "a11y": {
     "quantity": "{value} {unit}",
-    "set_row": "Set {number}, {weight}, {reps}, {rir}, {status}",
+    "set_row": "{kind, select, working {Set {number}} other {Set {number}, {type}}}, {weight}, {reps}, {rir}, {status}",
     "weight_none": "no weight",
     "reps": "{count, plural, one {# rep} other {# reps}}",
     "reps_none": "no reps",
@@ -660,6 +747,8 @@
     "track_row": "{has_reason, select, yes {{name}, level {level}, {progress}. {reason}} other {{name}, level {level}, {progress}}}",
     "track_progress": "{xp} of {next} XP",
     "track_progress_top": "{xp} XP, top level",
-    "level_up": "{track} reached level {level}. {reason}"
+    "level_up": "{track} reached level {level}. {reason}",
+    "change_set_type": "Change set type",
+    "rest_timer": "Rest, {time} left"
   }
 }

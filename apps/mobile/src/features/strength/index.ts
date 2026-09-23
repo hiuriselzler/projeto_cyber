@@ -1,3 +1,6 @@
-/** Strength: the live workout and the exercise catalog. Routines and history follow in later stages. */
+/** Strength: the live workout, the exercise catalog and routines. History follows in a later stage. */
 export { CatalogScreen } from './CatalogScreen';
 export { LiveWorkoutScreen } from './LiveWorkoutScreen';
+export { RoutineEditor } from './RoutineEditor';
+export { RoutinesScreen } from './RoutinesScreen';
+export { ResumeOpenWorkout } from './ResumeOpenWorkout';

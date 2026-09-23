@@ -51,12 +51,13 @@ function set(overrides: Partial<LiveSet> = {}): LiveSet {
     reps: null,
     rir: null,
     isCompleted: false,
+    completedAt: null,
     ...overrides,
   };
 }
 
 function exercise(sets: readonly LiveSet[]): LiveExercise {
-  return { id: 'we1', exerciseId: 'e-bench', orderIndex: 1, sets };
+  return { id: 'we1', exerciseId: 'e-bench', orderIndex: 1, supersetGroup: null, restSeconds: null, targetMinReps: null, targetMaxReps: null, targetRir: null, sets };
 }
 
 function noop() {

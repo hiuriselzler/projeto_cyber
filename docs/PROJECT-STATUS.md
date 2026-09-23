@@ -21,7 +21,7 @@ when its own criteria are ticked. Tick the box here only then.
 | **Decisions** | 15 ADRs, **all now accepted**. [ADR-004](decisions/ADR-004.md)'s spike passed on 2026-09-18 and its outcome is recorded: **option B, the single Rust core**. Its four pre-launch conditions remain outstanding, in tasks 005 and 006 |
 | **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **5 complete** (001, 002, 011, 003, 019) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) — the core loop. In progress since 2026-09-19; stages 0–4 written, stage 4 closed 2026-09-22, stage 3's device pass still open on three items.** Task 017 is complete and ADR-004 is settled, so nothing blocks it. It is the largest task in the project and the one its own file says *deserves more care than any other UI*; the Rust core is adopted from here on, with e1RM (INV-07) and `is_counted_set()` (INV-04) its first real residents. **A full set was logged on a Galaxy S21 FE in Portuguese and the ✓ measured at p50 10.5 ms**, against NFR-2's 100 ms. **Stage 4 — the catalog screen — closed 2026-09-22**: browse, bilingual search, filter by muscle and modality, custom exercises, fork-on-edit, archive and — found while landing it — a matching *unhide* view, search wired into the live-workout exercise picker (which had been listing all 201 rows unfiltered), and a typecheck bug in the new test's catalog typing. Its own device pass (accessibility, font scale) has not run yet. What is left of **stage 3's** pass: the imperial half of the 200 % font-size check, TalkBack actually switched on, and `Sheet`'s lost exit animation (attempted and reverted 2026-09-21 — blocked on this project's own `react-hooks/set-state-in-effect` rule, needs a `reanimated`-based fix). The set row's font-scale-0.86 reflow defect is fixed; whether its numbers must hold one line at default scale is an open design question in [07 §6](07-brand-and-ui.md). Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
+| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) — the core loop. In progress since 2026-09-19; stages 0–4 written, stage 4 closed 2026-09-22, stage 3's device pass still open on three items.** Task 017 is complete and ADR-004 is settled, so nothing blocks it. It is the largest task in the project and the one its own file says *deserves more care than any other UI*; the Rust core is adopted from here on, with e1RM (INV-07) and `is_counted_set()` (INV-04) its first real residents. **A full set was logged on a Galaxy S21 FE in Portuguese and the ✓ measured at p50 10.5 ms**, against NFR-2's 100 ms. **Stage 5 was re-cut on 2026-09-23 into 5a (routines), 5b (the live session finished off) and 5c (the other two tracking modes); 5a and 5b were built the same day, green in CI, with their device pass not yet run — and the one migration they needed had to be rewritten by hand, because the generated one would have deleted every logged set on the device ([06 §4](06-operations.md)). 5c is next.** **Stage 4 — the catalog screen — closed 2026-09-22**: browse, bilingual search, filter by muscle and modality, custom exercises, fork-on-edit, archive and — found while landing it — a matching *unhide* view, search wired into the live-workout exercise picker (which had been listing all 201 rows unfiltered), and a typecheck bug in the new test's catalog typing. Its own device pass (accessibility, font scale) has not run yet. What is left of **stage 3's** pass: the imperial half of the 200 % font-size check, TalkBack actually switched on, and `Sheet`'s lost exit animation (attempted and reverted 2026-09-21 — blocked on this project's own `react-hooks/set-state-in-effect` rule, needs a `reanimated`-based fix). The set row's font-scale-0.86 reflow defect is fixed; whether its numbers must hold one line at default scale is an open design question in [07 §6](07-brand-and-ui.md). Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
 
 ### The decision that was open is closed — option B
 
@@ -461,6 +461,9 @@ These are real blockers scattered across the docs. Nothing will surface them at 
 - [ ] **`packages/core-native`'s `.so` files are gitignored and do not travel with a commit** — a second checkout
       links a newer binding surface against an older binary and fails on `undefined symbol`. Commit them, or have
       CI regenerate and compare ([06 §1](06-operations.md))
+- [ ] **Typed routes are not a CI gate.** `.expo/types/router.d.ts` is gitignored and generated only by `expo start`, so
+      CI's `tsc` accepts any `href` while a developer's `tsc` checks against whatever stale copy they last generated
+      (found in task 004 stage 5, 2026-09-23). Generate it in CI before `tsc`, or accept that routes are unchecked
 
 ### Standing review checklist
 - [ ] Every PR touching entitlements is checked against INV-26
@@ -525,6 +528,7 @@ nothing itself ([task 004](tasks/004-exercise-catalog-and-logging.md) § Scope).
 | 2026-09-18 | **[ADR-004](decisions/ADR-004.md) settled — option B, the single Rust core.** The spike's bar is met in full; task 004 is unblocked. The four pre-launch conditions are untouched and still required |
 | 2026-09-19 | [ADR-012](decisions/ADR-012.md) **amended** — `src/db/` mints row ids through `src/crypto/`'s identifier entry point, and nothing else in that folder. INV-16 had no legal path to a UUIDv7 from the folder that creates training rows |
 | 2026-09-19 | [ADR-014](decisions/ADR-014.md) **amended** — a design-system component with a state prop is tested by **moving** it, not by rendering each value. `Sheet` never opened for nine days and every gate stayed green |
+| 2026-09-23 | Task 004 stage 5 re-cut into 5a/5b/5c; the live session carries its own rest and targets; the rest timer is derived; a routine pre-fills weight and reps, never RIR — see the dated entry below |
 
 ### 2026-09-08 — documentation reconciliation pass
 
@@ -1788,3 +1792,78 @@ that the next person can read the shape of the task without asking.
   reasonably read as a bug.
 
 - No invariant changed and no ADR was added. Counts unchanged: 49 documents, 15 ADRs.
+
+### 2026-09-23 — task 004 stage 5 planned: re-cut in three, and seven decisions before the code
+
+**Stage 5 is re-cut into 5a, 5b and 5c** ([task 004](tasks/004-exercise-catalog-and-logging.md) § Stages). Reading the
+task against the code found four promises no stage owned: ✓ advancing focus (never built), removing and reordering
+exercises mid-session (FR-2.8 — only adding exists), reopening the workout in progress on relaunch (the force-quit
+criterion — relaunch lands on home), and the two tracking modes stage 4 deferred "to stage 5" when stage 5's row did not
+mention them. **5a** is routines, supersets and start-from-routine; **5b** finishes the live session — set types, the
+rest timer, focus, remove and reorder, resume; **5c** is the `duration` and `distance_duration` set row, before stage 6.
+
+**Seven decisions**, each in the task file where the code will read them:
+
+- **`workout_exercises` gains `rest_seconds`, `target_min_reps`, `target_max_reps` and `target_rir`**
+  ([03 §4](03-database-schema.md)), in both schemas. They are *copied* from the routine at start, so a routine edited
+  afterwards never moves a timer that is already running; `rest_seconds` NULL is **no timer**, not an invented default.
+  A schema change after task 002, made while no user holds data — the cheap moment 002 names, still open.
+- **The running rest timer is derived** — the last completed set's `completed_at` plus its exercise's rest — so it
+  survives a force-quit with no state of its own (INV-09). Skipping it is a device-local record, never synced; `±15 s`
+  edits that exercise's rest for the rest of the session.
+- **A routine pre-fills the weight and the reps, never the RIR.** The target RIR is shown beside the row, not written
+  into it: a RIR stored before the user looked is an e1RM input they did not choose — the rule `5+` and the blank chip
+  already follow (INV-03). FR-2.10's plan default is task 005's.
+- **A superset alternates and rests once per round** (FR-2.6).
+- **A set's type changes from a visible control** — the set number is a button, long-press a shortcut, no swipe — and
+  a non-working set shows `W`/`D`/`B`/`A` and says its type (07 §5–6, INV-24).
+- **Notification permission is asked at the first rest timer**, never at launch, and never again once refused.
+- **`expo-haptics` and `expo-notifications` get a lint fence** (`device-feedback`, allowed in `src/platform/` only).
+  `expo-haptics` was confined by convention alone since stage 3; the fence makes it a rule, with a known-bad fixture.
+
+- No invariant changed and no ADR was added: the decisions sit inside INV-03, INV-09 and INV-24 rather than changing
+  them. Counts unchanged: 49 documents, 15 ADRs.
+
+### 2026-09-23 — task 004 stages 5a and 5b built: routines, and the live session finished off
+
+**Built, green in CI, and not yet on the phone.** Routines exist — build, rename, file in folders, reorder their
+exercises, superset neighbours, set targets and rest, duplicate, archive and restore — and starting one writes the whole
+pre-filled workout in **one synchronous transaction** after the ids are minted, refusing if a workout is already open.
+The live session gained set types, a rest timer with its haptic and notification, ✓ advancing focus (superset-aware),
+removing and reordering exercises, removing a set, and **a cold start reopening the workout in progress**.
+
+**⚠ The finding worth the entry: the generated migration would have deleted every logged set.** Adding four columns to
+`workout_exercises` — one with a CHECK — made `drizzle-kit generate` write a table rebuild. The expo migrator runs every
+pending migration inside one `BEGIN … COMMIT`, where the rebuild's `PRAGMA foreign_keys=OFF` is a no-op; with foreign
+keys on since stage 2, its `DROP TABLE` is an implicit `DELETE` that cascades into `set_logs`. (Its copy step also
+selected the four new columns from a table that did not have them, so it would have failed — on a device, at launch.)
+Replaced by hand with `ADD COLUMN`s, the snapshot kept, and proven against `node:sqlite` with foreign keys on: the logged
+set survives, the CHECK bites, `foreign_key_check` is empty. The rule is now in [06 §4](06-operations.md), because the
+next migration will meet the same generator.
+
+**Four smaller things found on the way:**
+- **A hidden exercise showed a blank name mid-workout.** The live block looked its exercise up in the *live* catalog
+  list, which excludes hidden rows — so hiding one mid-session, or starting a routine holding one, drew an empty
+  heading. Now `readExercise`, which does not filter; the routine editor uses the same.
+- **`expo-haptics` had no fence.** Confined to `src/platform/` by convention since stage 3; now the `device-feedback`
+  fence covers it and `expo-notifications`, with a known-bad fixture (49 fixtures).
+- **The local typed-routes file was stale** (2026-09-21), and `tsc` rejected the new routes against it. It is
+  gitignored and CI has no copy, so typed routes are **not enforced in CI at all** — regenerated here by starting Expo.
+  Noted, not fixed: a CI step that generates it would make typed routes a gate rather than a local courtesy.
+- **A rest-bar test that proved nothing** was caught by mutation before it was committed: the haptic guard's test
+  passed with the guard removed. Rewritten around the case the guard exists for, and watched failing (8 of 8).
+
+**Decided while building**, each in the task file: a routine's `reorder` in FR-2.5 is its exercises' order — the
+routines list keeps creation order, and a reorder function nobody called was deleted rather than left as another
+"written, tested, never called"; a removed routine exercise becomes a tombstone parked **below** every live index, so
+the two-pass renumber never meets it; and the set-type letters are catalog content — `W D B A` in English, `Aq D B A`
+in Portuguese — for the native-speaker review to settle.
+
+**Verified, matching what CI runs**: mobile — `tsc`, `eslint`, **49** lint fixtures, the platform-file check, catalogs
+at **614** messages, the seed-version gate, `db:generate` with no drift, **877** Jest tests, up from 737 at 5a and 613
+before the stage. API — `ruff`, `ruff format`, `mypy`, six import contracts, `alembic upgrade`/`downgrade`/`upgrade`
+through `0005`, the seed, `check_schema` (40 tables), **347** pytest tests. Three key rules watched failing: a RIR
+pre-filled from the target (4 failures), rest mid-superset (1), the stale-clock buzz (8).
+
+- No invariant changed and no ADR was added. One document gained a rule (06 §4). Counts unchanged: 49 documents,
+  15 ADRs. One dependency added, `expo-notifications`, which needs a fresh prebuild on the device.

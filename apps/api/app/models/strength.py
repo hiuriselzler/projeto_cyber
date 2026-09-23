@@ -164,6 +164,11 @@ class WorkoutExercise(OwnedByUser, SyncColumns, Base):
     superset_group: Mapped[int | None] = mapped_column(SmallInteger)
     notes: Mapped[str | None]
     planned_exercise_id: Mapped[uuid.UUID | None]
+    # Copied from the routine at start, editable during the session (task 004 stage 5, 03 §4).
+    rest_seconds: Mapped[int | None] = mapped_column(SmallInteger)
+    target_min_reps: Mapped[int | None] = mapped_column(SmallInteger)
+    target_max_reps: Mapped[int | None] = mapped_column(SmallInteger)
+    target_rir: Mapped[int | None] = mapped_column(SmallInteger)
 
 
 class SetLog(OwnedByUser, SyncColumns, Base):

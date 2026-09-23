@@ -317,6 +317,13 @@ workout_exercises (
   exercise_id uuid NOT NULL → exercises,        -- NO ACTION: never orphan history (INV-11, ADR-013)
   order_index int NOT NULL, superset_group smallint NULL, notes text NULL,
   planned_exercise_id uuid NULL → planned_exercises,   -- ON DELETE SET NULL (INV-18)
+  rest_seconds    smallint NULL,        -- NULL = no rest timer; never an invented default
+  target_min_reps smallint NULL,
+  target_max_reps smallint NULL,
+  target_rir      smallint NULL CHECK (target_rir IS NULL OR target_rir BETWEEN 0 AND 10),
+      -- the four above are COPIED from the routine (or plan) when the workout starts, and editable during it:
+      -- editing the routine afterwards must never move a timer that is already running (task 004 stage 5).
+      -- target_rir is shown beside a set as a target and is never written into set_logs.rir (INV-03).
   ‹sync›
 )
 INDEX (workout_id, order_index)

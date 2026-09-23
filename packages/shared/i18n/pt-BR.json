@@ -402,7 +402,13 @@
     "set_row": {
       "rir": "RIR {rir}",
       "rir_blank": "RIR",
-      "previous": "{rir_recorded, select, yes {Última vez: {weight} × {reps} @{rir}} other {Última vez: {weight} × {reps}}}"
+      "previous": "{rir_recorded, select, yes {Última vez: {weight} × {reps} @{rir}} other {Última vez: {weight} × {reps}}}",
+      "type_letter": {
+        "warmup": "Aq",
+        "drop": "D",
+        "backoff": "B",
+        "amrap": "A"
+      }
     },
     "keypad": {
       "done": "OK"
@@ -443,7 +449,22 @@
     "choose_exercise": "Escolha um exercício",
     "edit_weight": "Carga",
     "edit_reps": "Repetições",
-    "edit_rir": "Repetições em reserva"
+    "edit_rir": "Repetições em reserva",
+    "target": "Meta: {summary}",
+    "superset": "Superset",
+    "set_type_title": "Série {number}",
+    "set_type_note": "Séries de aquecimento, drop e back-off são registradas, mas não entram no volume nem nos recordes.",
+    "remove_set": "Remover esta série",
+    "exercise_options": "Opções",
+    "rest": "Descanso entre séries",
+    "rest_hint": "Desligado significa sem cronômetro. O descanso definido aqui vale até o fim deste treino.",
+    "move_up": "Mover para cima",
+    "move_down": "Mover para baixo",
+    "superset_link": "Superset com o próximo",
+    "superset_unlink": "Desfazer superset com o próximo",
+    "remove_exercise": "Remover deste treino",
+    "close": "Fechar",
+    "resume_title": "Há um treino em andamento"
   },
   "modality": {
     "barbell": "Barra",
@@ -493,6 +514,72 @@
     "name_taken": "Você já tem um exercício com esse nome.",
     "save": "Salvar",
     "cancel": "Cancelar"
+  },
+  "routine": {
+    "title": "Rotinas",
+    "open": "Rotinas",
+    "create": "Nova rotina",
+    "form_new_title": "Nova rotina",
+    "form_edit_title": "Nome e pasta",
+    "field_name": "Nome",
+    "field_folder": "Pasta",
+    "field_folder_hint": "Opcional. Rotinas na mesma pasta aparecem juntas.",
+    "name_empty": "Dê um nome à rotina.",
+    "no_folder": "Sem pasta",
+    "count": "{count, plural, one {# exercício} other {# exercícios}}",
+    "start": "Iniciar",
+    "edit": "Editar",
+    "duplicate": "Duplicar",
+    "archive": "Arquivar",
+    "restore": "Restaurar",
+    "archived_title": "Arquivadas",
+    "archived_note": "Rotinas arquivadas mantêm todos os treinos iniciados a partir delas.",
+    "archived_empty": "Você não arquivou nenhuma rotina.",
+    "empty_title": "Nenhuma rotina ainda",
+    "empty_body": "Uma rotina é uma lista de exercícios com metas. Inicie uma e cada série já vem preenchida com a última vez.",
+    "open_workout": "Há um treino em andamento. Encerre-o antes de iniciar outro.",
+    "resume": "Voltar ao treino",
+    "add_exercise": "Adicionar exercício",
+    "exercises_empty": "Adicione os exercícios que formam esta rotina.",
+    "targets": "Metas",
+    "targets_title": "Metas",
+    "targets_none": "Sem metas definidas",
+    "sets": "{count, plural, one {# série} other {# séries}}",
+    "reps_range": "{min}–{max} repetições",
+    "reps": "{count, plural, one {# repetição} other {# repetições}}",
+    "rir": "RIR {rir}",
+    "rest": "descanso {time}",
+    "move_up": "Mover para cima",
+    "move_down": "Mover para baixo",
+    "remove": "Remover",
+    "superset_link": "Superset com o próximo",
+    "superset_unlink": "Desfazer superset com o próximo",
+    "field_sets": "Séries",
+    "field_min_reps": "Repetições mínimas",
+    "field_max_reps": "Repetições máximas",
+    "field_rir": "RIR alvo",
+    "field_rir_hint": "Aparece ao lado de cada série como meta. Nunca é registrado por você.",
+    "field_rest": "Descanso entre séries",
+    "field_rest_hint": "Desligado significa sem cronômetro de descanso.",
+    "rest_off": "Desligado",
+    "problem_sets": "Séries: um número inteiro de 1 a 50.",
+    "problem_reps": "Repetições: um número inteiro.",
+    "problem_rep_range": "O mínimo não pode passar do máximo.",
+    "problem_rir": "O RIR vai de 0 a 10.",
+    "problem_rest": "Esse descanso está fora do intervalo.",
+    "save": "Salvar",
+    "cancel": "Cancelar"
+  },
+  "rest": {
+    "title": "Descanso",
+    "less": "−15 s",
+    "more": "+15 s",
+    "less_label": "Quinze segundos a menos",
+    "more_label": "Quinze segundos a mais",
+    "skip": "Pular",
+    "over_title": "Descanso encerrado",
+    "over_body": "A seguir: {exercise}",
+    "channel": "Cronômetro de descanso"
   },
   "account": {
     "working": "Protegendo sua conta…",
@@ -638,7 +725,7 @@
   },
   "a11y": {
     "quantity": "{value} {unit}",
-    "set_row": "Série {number}, {weight}, {reps}, {rir}, {status}",
+    "set_row": "{kind, select, working {Série {number}} other {Série {number}, {type}}}, {weight}, {reps}, {rir}, {status}",
     "weight_none": "sem carga",
     "reps": "{count, plural, one {# repetição} other {# repetições}}",
     "reps_none": "sem repetições",
@@ -660,6 +747,8 @@
     "track_row": "{has_reason, select, yes {{name}, nível {level}, {progress}. {reason}} other {{name}, nível {level}, {progress}}}",
     "track_progress": "{xp} de {next} XP",
     "track_progress_top": "{xp} XP, nível máximo",
-    "level_up": "{track} chegou ao nível {level}. {reason}"
+    "level_up": "{track} chegou ao nível {level}. {reason}",
+    "change_set_type": "Mudar o tipo da série",
+    "rest_timer": "Descanso, faltam {time}"
   }
 }

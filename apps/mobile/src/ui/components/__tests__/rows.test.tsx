@@ -38,6 +38,8 @@ const WORDS = {
     sentence: (weight: string) => `Set 3, ${weight}, 6 reps, RIR 2, incomplete`,
     sentenceNoRir: (weight: string) => `Set 3, ${weight}, 6 reps, RIR not recorded, incomplete`,
     sentenceComplete: (weight: string) => `Set 3, ${weight}, 6 reps, RIR 2, complete`,
+    sentenceWarmup: (weight: string) => `Set 3, Warm-up, ${weight}, 6 reps, RIR 2, incomplete`,
+    warmupLetter: 'W',
     previous: (weight: string) => `${weight} × 6 @2 last time`,
     day: 'Day 3',
     completedCell: 'Day 3, Completed',
@@ -52,6 +54,8 @@ const WORDS = {
     sentence: (weight: string) => `Série 3, ${weight}, 6 repetições, RIR 2, não concluída`,
     sentenceNoRir: (weight: string) => `Série 3, ${weight}, 6 repetições, RIR não registrado, não concluída`,
     sentenceComplete: (weight: string) => `Série 3, ${weight}, 6 repetições, RIR 2, concluída`,
+    sentenceWarmup: (weight: string) => `Série 3, Aquecimento, ${weight}, 6 repetições, RIR 2, não concluída`,
+    warmupLetter: 'Aq',
     previous: (weight: string) => `Última vez: ${weight} × 6 @2`,
     day: 'Dia 3',
     completedCell: 'Dia 3, Concluído',
@@ -124,6 +128,47 @@ describe.each(MATRIX)('$locale, $unitSystem, $preference', (setting) => {
       await fireEvent(row, 'accessibilityAction', { nativeEvent: { actionName: 'activate' } });
       expect(onEdit).toHaveBeenLastCalledWith('reps');
       expect(onToggleComplete).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('set row, by type (FR-2.9, task 004 stage 5b)', () => {
+    const base = { setNumber: 3, weightKg: load, reps: 6, rir: 2, completed: false } as const;
+
+    it('shows a working set by its number, and says nothing extra about its type', async () => {
+      await renderUi(<SetRow {...base} setType="working" onEdit={jest.fn()} onToggleComplete={jest.fn()} />, setting);
+
+      expect(screen.getByText('3')).toBeOnTheScreen();
+      expect(screen.getByLabelText(words.sentence(shown.spoken))).toBeOnTheScreen();
+    });
+
+    it('shows any other type by its letter in the number’s place, and says the type aloud — never colour alone (INV-24)', async () => {
+      await renderUi(<SetRow {...base} setType="warmup" onEdit={jest.fn()} onToggleComplete={jest.fn()} />, setting);
+
+      expect(screen.getByText(words.warmupLetter)).toBeOnTheScreen();
+      expect(screen.queryByText('3')).toBeNull();
+      expect(screen.getByLabelText(words.sentenceWarmup(shown.spoken))).toBeOnTheScreen();
+    });
+
+    it('opens the type choice from the number, by tap, by long-press and by screen-reader action (07 §5)', async () => {
+      const onChangeType = jest.fn();
+      await renderUi(
+        <SetRow {...base} onEdit={jest.fn()} onToggleComplete={jest.fn()} onChangeType={onChangeType} />,
+        setting,
+      );
+
+      await fireEvent.press(screen.getByTestId('set-row-type'));
+      await fireEvent(screen.getByTestId('set-row-type'), 'longPress');
+      await fireEvent(screen.getByLabelText(words.sentence(shown.spoken)), 'accessibilityAction', {
+        nativeEvent: { actionName: 'changeType' },
+      });
+      expect(onChangeType).toHaveBeenCalledTimes(3);
+    });
+
+    it('offers no type action at all when the caller gives no way to change it', async () => {
+      await renderUi(<SetRow {...base} onEdit={jest.fn()} onToggleComplete={jest.fn()} />, setting);
+
+      const actions = screen.getByLabelText(words.sentence(shown.spoken)).props.accessibilityActions as { name: string }[];
+      expect(actions.map((action) => action.name)).not.toContain('changeType');
     });
   });
 

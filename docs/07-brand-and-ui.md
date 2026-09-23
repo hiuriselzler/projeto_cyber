@@ -426,6 +426,15 @@ Nothing is fully round except a status dot. A pill-shaped control reads as frien
   and, on a Galaxy S21 FE at font scale 0.86, lost by about three dp — breaking to a second line with a third of the
   row empty beside it. Task 004 stage 3 device pass.)*
 
+- **The set number is also the set's type** *(task 004 stage 5, 2026-09-23)*. A working set shows its number; a
+  warm-up, drop, back-off or AMRAP set shows `W`, `D`, `B` or `A` in its place, and the spoken sentence names the type.
+  A letter, not a colour, carries it (INV-24). The number is a button that opens a set-type sheet, with long-press as a
+  shortcut to the same sheet — never a swipe, and never a gesture with no visible alternative (§5).
+- **The rest timer** counts down in tabular figures in a bar pinned above the list — reachable by the thumb, never over
+  the row being edited — with `−15 s`, `+15 s` and *skip*. It ends with a haptic, and with a local notification when
+  the app is not in front. It is derived from the last completed set rather than held in memory, so a force-quit
+  mid-rest brings it back still running.
+
 > **⚠ Open question — must the numbers hold one line at default font scale, and what pays for it?**
 >
 > The picture above shows one line, and on a 360 dp phone the numbers do not fit one at default scale. Measured on a

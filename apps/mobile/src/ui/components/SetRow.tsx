@@ -17,8 +17,16 @@ export interface PreviousSet {
 
 export type SetRowField = 'weight' | 'reps' | 'rir';
 
+/** FR-2.9. Only `working` and `amrap` count (INV-04) — a judgement the core makes, never this component. */
+export type SetRowType = 'warmup' | 'working' | 'drop' | 'backoff' | 'amrap';
+
 export interface SetRowProps {
   readonly setNumber: number;
+  /**
+   * A working set shows its number; any other type shows its letter there instead — `W`, `D`, `B`, `A` in English —
+   * and says its type aloud. A letter, never a colour alone (INV-24, 07 §6).
+   */
+  readonly setType?: SetRowType;
   /** Stored SI; shown in the user's unit system (INV-01). */
   readonly weightKg: number | null;
   readonly reps: number | null;
@@ -31,6 +39,11 @@ export interface SetRowProps {
   readonly editing?: SetRowField | null;
   readonly onEdit: (field: SetRowField) => void;
   readonly onToggleComplete: () => void;
+  /**
+   * Open the set-type choice. The set number is the visible control for it, and long-press is a shortcut to the same
+   * place — never a swipe, and never a gesture with no visible alternative (07 §5). Omitted, the number is plain text.
+   */
+  readonly onChangeType?: () => void;
 }
 
 const NONE = '—';
@@ -42,6 +55,7 @@ const NONE = '—';
  */
 export function SetRow({
   setNumber,
+  setType = 'working',
   weightKg,
   reps,
   rir,
@@ -50,6 +64,7 @@ export function SetRow({
   editing = null,
   onEdit,
   onToggleComplete,
+  onChangeType,
 }: SetRowProps) {
   const { colors } = useTheme();
   const { locale, unitSystem } = useLocale();
@@ -57,6 +72,8 @@ export function SetRow({
 
   const weight = weightKg === null ? null : formatWeight(weightKg, unitSystem, locale);
   const sentence = t('a11y.set_row', {
+    kind: setType === 'working' ? 'working' : 'other',
+    type: t(`set_type.${setType}`),
     number: setNumber,
     weight: weight === null ? t('a11y.weight_none') : spokenQuantity(t, weight),
     reps: reps === null ? t('a11y.reps_none') : t('a11y.reps', { count: reps }),
@@ -70,7 +87,10 @@ export function SetRow({
     if (nativeEvent.actionName === 'editWeight') onEdit('weight');
     if (nativeEvent.actionName === 'editReps') onEdit('reps');
     if (nativeEvent.actionName === 'editRir') onEdit('rir');
+    if (nativeEvent.actionName === 'changeType') onChangeType?.();
   };
+
+  const marker = setType === 'working' ? String(setNumber) : t(`ui.set_row.type_letter.${setType}`);
 
   return (
     <View
@@ -82,6 +102,7 @@ export function SetRow({
         { name: 'editWeight', label: t('a11y.edit_weight') },
         { name: 'editReps', label: t('a11y.edit_reps') },
         { name: 'editRir', label: t('a11y.edit_rir') },
+        ...(onChangeType === undefined ? [] : [{ name: 'changeType', label: t('a11y.change_set_type') }]),
       ]}
       onAccessibilityAction={onAccessibilityAction}
       style={[
@@ -95,9 +116,20 @@ export function SetRow({
     >
       <View style={styles.numbers}>
         <View style={styles.line}>
-          <AppText variant="metric" tone="textSecondary" style={styles.setNumber}>
-            {setNumber}
-          </AppText>
+          <Pressable
+            testID="set-row-type"
+            disabled={onChangeType === undefined}
+            onPress={onChangeType}
+            onLongPress={onChangeType}
+            // The marker keeps its narrow column so the numbers are not pushed onto a second line (07 §6's open
+            // question); the slop is what makes it a full-size target anyway.
+            hitSlop={{ top: space[2], bottom: space[2], left: space[2], right: space[1] }}
+            style={styles.setNumber}
+          >
+            <AppText variant="metric" tone={setType === 'working' ? 'textSecondary' : 'accent'}>
+              {marker}
+            </AppText>
+          </Pressable>
 
           <Field testID="set-row-weight" active={editing === 'weight'} onPress={() => onEdit('weight')}>
             <AppText variant="metricLg">{weight === null ? NONE : weight.text}</AppText>
@@ -212,7 +244,7 @@ const styles = StyleSheet.create({
    * [07 §6](../../../../../docs/07-brand-and-ui.md) to make, and it is recorded as an open question there.
    */
   line: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: space[2] },
-  setNumber: { minWidth: sizes.icon },
+  setNumber: { minWidth: sizes.icon, minHeight: sizes.targetWorkout, justifyContent: 'center' },
   field: {
     minHeight: sizes.targetWorkout,
     minWidth: sizes.targetMin,
