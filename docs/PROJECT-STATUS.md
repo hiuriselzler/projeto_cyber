@@ -1867,3 +1867,33 @@ pre-filled from the target (4 failures), rest mid-superset (1), the stale-clock 
 
 - No invariant changed and no ADR was added. One document gained a rule (06 §4). Counts unchanged: 49 documents,
   15 ADRs. One dependency added, `expo-notifications`, which needs a fresh prebuild on the device.
+
+### 2026-09-23 — task 004 stage 5 on the phone: the migration holds, and the notification was being thrown away
+
+First device pass for stages 5a–5b, on the Galaxy S21 FE, with a development build of `228069e` installed **over** the
+previous one so the phone kept its data — one open workout, two completed sets — for the migration to meet.
+
+**Proven on the phone:** migration `0002` against real logged sets (rehearsed first on a copy pulled off the device,
+then run by the app: both sets intact, `foreign_key_check` empty); **every cold start landing in the open workout**; and
+**a force-quit mid-rest coming back to the same rest** — ticked at 21:00:37 with a 2:00 rest, force-stopped, relaunched,
+reading 1:43 seventeen seconds later. The task file's stage-5 device list says what is ticked and what is not.
+
+**Two defects, both in the notification, both fixed and both invisible to every gate:**
+
+- **⚠ The rest notification was dropped whenever the screen was off** — the one case it exists for. The foreground
+  handler returned "show nothing" unconditionally, believing it is only consulted while the app is on screen; it is
+  consulted whenever the process is alive. The alarm fired, reached the handler, and was discarded. Now it asks
+  `AppState`; the next screen-off rest was delivered.
+- **A force-quit mid-rest lost the notification**, because Android cancels a force-stopped app's alarms and only a
+  mutation rescheduled one. The notification now follows the workout from an effect that runs on mount too.
+
+**Not settled:** how late the notification is. One clean delivery was ~39 s late on a 2:00 rest, the first alarm ~22 s —
+Android deferring an inexact alarm. The later timing runs were disturbed by hand on the phone and were abandoned at the
+owner's request, so whether `SCHEDULE_EXACT_ALARM` is worth asking for stays open. **Also not run:** routines on the
+device, supersets, the refused-permission path, TalkBack, and ✓ latency on a routine session.
+
+**Carried into stage 5c**, both found during the pass: the ✓ completes a set with no weight and no reps — 03 §4's
+"completion requires the tracking mode's fields" is enforced nowhere — and 15 seeded `duration` / `distance_duration`
+exercises are pickable today and logged as weight × reps, while the 31 `reps_only` ones show a weight field.
+
+- No invariant changed and no ADR was added. Counts unchanged: 49 documents, 15 ADRs.

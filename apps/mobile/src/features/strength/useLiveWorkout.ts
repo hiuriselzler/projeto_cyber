@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 
 import { getSessionState, subscribeToSession } from '@/account';
 import { readExercise } from '@/db/catalog';
@@ -69,8 +69,8 @@ export interface LiveWorkoutController {
  * rather than an optimistic guess. That is the whole discipline: if the process dies between the write and the read,
  * the next launch finds the write. If it renders first and writes later, it does not.
  *
- * The rest notification follows the same rule from the other side: after every write the running rest is **derived**
- * from the fresh read, and the one scheduled notification is moved to match it — or taken back. Nothing about the
+ * The rest notification follows the same rule from the other side: whenever the workout changes, and on mount, the
+ * running rest is **derived** from it, and the one scheduled notification is moved to match — or taken back. Nothing about the
  * timer lives in memory that the database does not already imply (task 004 § Stages, decision 2).
  */
 export function useLiveWorkout(userId: string | null): LiveWorkoutController {
@@ -117,12 +117,21 @@ export function useLiveWorkout(userId: string | null): LiveWorkoutController {
     [t, userId],
   );
 
+  /**
+   * The notification follows the workout, **including on mount**. Android cancels an app's scheduled alarms when it is
+   * force-stopped, so a relaunch mid-rest — the case INV-09 is about — must schedule it again from the rows; only
+   * mutations called this at first, and the stage 5 device pass found the gap. An effect also keeps scheduling off the
+   * ✓'s path: the write and the re-read are the tap, and this runs after the paint.
+   */
+  useEffect(() => {
+    syncRestAlert(workout, skippedRest);
+  }, [workout, skippedRest, syncRestAlert]);
+
   const refresh = useCallback((): LiveWorkout | null => {
     const fresh = userId === null ? null : readOpenWorkout(userId);
     setWorkout(fresh);
-    syncRestAlert(fresh, skippedRest);
     return fresh;
-  }, [skippedRest, syncRestAlert, userId]);
+  }, [userId]);
 
   const start = useCallback(
     (title: string) => {
@@ -216,8 +225,7 @@ export function useLiveWorkout(userId: string | null): LiveWorkoutController {
     if (rest === null) return;
     writeSkippedRest(rest.setLogId);
     setSkippedRest(rest.setLogId);
-    syncRestAlert(workout, rest.setLogId);
-  }, [skippedRest, syncRestAlert, workout]);
+  }, [skippedRest, workout]);
 
   const moveExercise = useCallback(
     (index: number, delta: -1 | 1) => {

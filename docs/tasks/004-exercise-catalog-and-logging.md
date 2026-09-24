@@ -255,20 +255,48 @@ set-logging UI this task builds; `SetRow` and `NumericKeypad` existed from task 
 - [x] **`5+` stores nothing by itself** (open question 9) — tapping it opened `RIR 5 6 7 8 9 10` while the row still
       read *"RIR não registrado"*; the 7 tapped afterwards is what was stored
 
-**Stage 5 on the device** *(added 2026-09-23 — built and green in CI, none of it run on a phone yet)*
-- [ ] **Migration `0002` on a device already holding logged sets** — every `set_logs` row survives, and
-      `PRAGMA foreign_key_check` is empty afterwards. Proven against `node:sqlite` with foreign keys on; the device is
-      the claim that matters ([06 §4](../06-operations.md))
+**Stage 5 on the device** *(added 2026-09-23; first pass run the same evening on the Galaxy S21 FE, Android 16, pt-BR,
+metric, dark — a development build carrying commit `228069e`, installed **over** the previous build so its data stayed)*
+- [x] **Migration `0002` on a device already holding logged sets** — the phone held one open workout, two exercises and
+      two completed sets. Rehearsed first against a copy of that database pulled off the phone, then run by the app
+      itself: **3 migrations applied, both sets intact, `foreign_key_check` empty, `integrity_check` ok**, and the CHECK
+      on `target_rir` present on the column ([06 §4](../06-operations.md))
 - [ ] A routine is built, reordered (the two-pass renumber clearing SQLite's row-by-row unique check), supersetted,
       duplicated, archived and restored — and started, with weights and reps pre-filled and every RIR blank
-- [ ] **The rest notification arrives with the screen off**, on time — Android may defer a non-exact alarm under Doze;
-      measure how late, and decide whether that needs `SCHEDULE_EXACT_ALARM`
+- [ ] **The rest notification arrives with the screen off**, on time. **Arrives: yes, after a fix (below). On time: not
+      settled.** One clean screen-off delivery was **~39 s late** on a 2:00 rest, and the first alarm fired ~22 s late —
+      Android deferring a non-exact alarm. The timing runs after that were disturbed by hand on the phone and are not
+      evidence either way, so they were abandoned at the owner's request; whether `SCHEDULE_EXACT_ALARM` is worth asking
+      for is still open
 - [ ] Notification permission is asked at the first rest timer and not at launch; refused, the timer still runs with
-      its haptic and the app never asks again
-- [ ] **Force-quit mid-rest**: the cold start reopens the workout, and the bar is counting the same rest
+      its haptic and the app never asks again. *Half: nothing was asked at launch; at the first rest the permission was
+      granted by hand on the phone (`USER_SET`) and the channel was created, named "Cronômetro de descanso". The refused
+      path was not run*
+- [x] **Force-quit mid-rest**: the cold start reopens the workout, and the bar is counting the same rest — set ticked at
+      21:00:37 with a 2:00 rest, force-stopped five seconds later, cold-started, and the bar read **1:43** at 21:00:54:
+      the same rest, where it should be. **Every cold start of the pass landed in the open workout by itself**, and every
+      set ticked before a force-stop was there afterwards
 - [ ] A superset alternates on the ✓ and rests once per round; ✓ with the keypad open moves it to the next set's weight
 - [ ] TalkBack reaches the set type through the row's "Change set type" action, and the timer bar reads its time left
 - [ ] ✓ latency re-measured on a routine-started session, with the timer bar ticking beside the rows
+
+**Found by the stage 5 device pass** *(2026-09-23 — two fixed the same evening, two carried into stage 5c)*
+- [x] **⚠ The rest notification was silently dropped with the screen off.** The alarm fired, `expo-notifications` handed
+      it to the app's handler — which returned "show nothing", unconditionally, on the belief that it is only consulted in
+      the foreground. It is consulted whenever the process is alive, and a gym phone with its screen off usually has one.
+      Now it suppresses only while the app is actually on screen (`AppState`), in `src/platform/notifications.ts`; the
+      next screen-off rest was delivered. A regression test, `src/platform/__tests__/notifications.test.ts`, fails against
+      the old handler
+- [x] **A force-quit mid-rest lost the notification.** Android cancels an app's alarms when it is force-stopped, and only
+      a mutation rescheduled one, so the relaunched app showed the bar counting and would never have announced its end.
+      The notification now follows the workout from an effect that also runs on mount — which also moves the scheduling
+      off the ✓'s path. Watched: after the relaunch the alarm was pending again
+- [ ] **The ✓ completes an empty set.** Sets 2–8 of the pass were ticked with no weight and no reps and stored as
+      completed. 03 §4 says "`is_completed = true` requires the fields its tracking mode needs — enforced in the service
+      layer", and nothing enforces it. Stage 5c's, because the required fields *are* the tracking mode's
+- [ ] **15 seeded exercises can be picked and are logged as weight × reps** — 10 `duration` (plank, dead hang, wall sit…)
+      and 5 `distance_duration` (farmer's walk, sled push…) — and the 31 `reps_only` globals show a weight field, because
+      the set row ignores `tracking` entirely. Found reading ahead for 5c; stage 5c's
 
 **Found on the device, and not yet fixed**
 - [x] **The set row reflows at font scale 0.86** — *half answered 2026-09-21, and the half that was a defect is

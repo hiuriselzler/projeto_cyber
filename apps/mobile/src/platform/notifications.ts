@@ -11,6 +11,7 @@
  * screen, with its haptic, and a failure here is never allowed to reach a workout.
  */
 import * as Notifications from 'expo-notifications';
+import { AppState } from 'react-native';
 
 /** One rest notification at a time: scheduling again under the same identifier replaces the last one. */
 const REST_IDENTIFIER = 'rest-timer';
@@ -21,10 +22,23 @@ export type NotificationPermission = 'granted' | 'denied' | 'undetermined';
 /**
  * While the app is in front, a rest ending is felt as a haptic and seen on the timer bar — a banner on top of that
  * would be the same news twice. The notification is for the phone in a pocket.
+ *
+ * **"In front" is asked, not assumed.** This handler runs whenever the app's process is alive, not only while it is on
+ * screen — and a gym phone with its screen off usually still has the process alive. The first version suppressed
+ * unconditionally, on the belief that it was only consulted in the foreground; on the Galaxy S21 FE (task 004 stage 5
+ * device pass, 2026-09-23) the rest alarm fired with the screen off, reached this handler, and was silently dropped —
+ * the one delivery the notification exists for.
  */
 Notifications.setNotificationHandler({
-  handleNotification: () =>
-    Promise.resolve({ shouldShowBanner: false, shouldShowList: false, shouldPlaySound: false, shouldSetBadge: false }),
+  handleNotification: () => {
+    const onScreen = AppState.currentState === 'active';
+    return Promise.resolve({
+      shouldShowBanner: !onScreen,
+      shouldShowList: !onScreen,
+      shouldPlaySound: !onScreen,
+      shouldSetBadge: false,
+    });
+  },
 });
 
 /**
