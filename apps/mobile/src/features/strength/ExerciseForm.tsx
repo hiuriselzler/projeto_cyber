@@ -8,6 +8,7 @@ import {
   listMuscleGroups,
   listUserExerciseNames,
   MODALITIES,
+  TRACKING,
   updateUserExercise,
   validateExerciseName,
   type CatalogExercise,
@@ -20,13 +21,11 @@ import { AppText, Button, Chip, Sheet, space, TextField, useT } from '@/ui';
 import { exerciseLabel } from './exerciseName';
 
 /**
- * Only the two tracking modes the set row can actually log *(decided 2026-09-21)*.
- *
- * FR-2.3's `duration` and `distance_duration` stay in the schema and arrive with the set row that handles them
- * (stage 5). Offering all four now would let someone build an exercise the app cannot log — a dead end they would
- * reasonably read as a bug, and a worse outcome than a shorter list.
+ * All four of FR-2.3's tracking modes *(since task 004 stage 5c)*. Stage 4 offered only the two the set row could log,
+ * rather than let someone build an exercise the app could not; 5c gave the row a time and a distance, and the
+ * deferral ended with it.
  */
-const OFFERED_TRACKING: readonly Tracking[] = ['weight_reps', 'reps_only'];
+const OFFERED_TRACKING: readonly Tracking[] = TRACKING;
 
 export type FormTarget =
   | { readonly kind: 'new' }

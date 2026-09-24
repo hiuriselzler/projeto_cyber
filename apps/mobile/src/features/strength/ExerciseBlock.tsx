@@ -74,12 +74,19 @@ export function ExerciseBlock({
             <SetRow
               setNumber={set.setIndex}
               setType={set.setType}
+              tracking={exercise.tracking}
+              durationS={set.durationS}
+              distanceM={set.distanceM}
               onChangeType={onChangeType === undefined ? undefined : () => onChangeType(set.id)}
               weightKg={set.weightKg}
               reps={set.reps}
               rir={set.rir}
               completed={set.isCompleted}
-              previous={last === undefined ? null : { weightKg: last.weightKg, reps: last.reps, rir: last.rir }}
+              previous={
+                last === undefined
+                  ? null
+                  : { weightKg: last.weightKg, reps: last.reps, rir: last.rir, durationS: last.durationS, distanceM: last.distanceM }
+              }
               editing={editing?.setLogId === set.id ? editing.field : null}
               onEdit={(field) => onEdit(set.id, field)}
               onToggleComplete={() => onToggleComplete(set.id, !set.isCompleted)}

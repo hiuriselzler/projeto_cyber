@@ -338,7 +338,8 @@ set_logs (
   weight_kg    numeric(9,4) NULL CHECK (weight_kg IS NULL OR weight_kg >= 0),   -- INV-02 precision
   reps         smallint NULL CHECK (reps IS NULL OR reps BETWEEN 0 AND 1000),
   rir          smallint NULL CHECK (rir IS NULL OR rir BETWEEN 0 AND 10),   -- INV-03
-  distance_m   int NULL,                        -- tracking = distance_duration
+  distance_m   numeric(9,3) NULL,               -- tracking = distance_duration. Not int: 100 ft typed is 30.48 m,
+                                                -- and an integer read it back as 98 ft (task 004 stage 5c, INV-01)
   duration_s   int NULL,                        -- tracking = duration
   is_completed boolean NOT NULL DEFAULT false,
   completed_at timestamptz NULL,

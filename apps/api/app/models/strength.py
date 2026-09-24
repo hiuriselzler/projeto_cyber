@@ -186,7 +186,8 @@ class SetLog(OwnedByUser, SyncColumns, Base):
     weight_kg: Mapped[Decimal | None] = mapped_column(Numeric(9, 4))
     reps: Mapped[int | None] = mapped_column(SmallInteger)
     rir: Mapped[int | None] = mapped_column(SmallInteger)
-    distance_m: Mapped[int | None] = mapped_column(Integer)
+    # Decimals, so a distance typed in feet reads back as typed (task 004 stage 5c, 03 §4).
+    distance_m: Mapped[Decimal | None] = mapped_column(Numeric(9, 3))
     duration_s: Mapped[int | None] = mapped_column(Integer)
     is_completed: Mapped[bool] = mapped_column(server_default="false")
     completed_at: Mapped[datetime | None]

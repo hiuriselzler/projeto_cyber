@@ -23,12 +23,14 @@ import { uuidV7 } from '@/crypto/identifiers';
 
 import { db } from './client';
 import { normaliseSupersets, toggleSupersetWithNext } from './ordering';
-import { setLogs, workoutExercises, workouts } from './schema';
+import { exercises, setLogs, workoutExercises, workouts, type Tracking } from './schema';
 
 export type SetType = 'warmup' | 'working' | 'drop' | 'backoff' | 'amrap';
 
-/** The three numbers a set row edits. `distance_m` and `duration_s` belong to other tracking modes (03 §4). */
-export type SetField = 'weightKg' | 'reps' | 'rir';
+/** The numbers a set row edits — which of them depends on the exercise's tracking mode (FR-2.3, task 004 stage 5c). */
+export type SetField = 'weightKg' | 'reps' | 'rir' | 'durationS' | 'distanceM';
+
+export type { Tracking };
 
 export interface LiveSet {
   readonly id: string;
@@ -39,6 +41,10 @@ export interface LiveSet {
   readonly reps: number | null;
   /** Null is "not recorded" and is never 0 (INV-03). */
   readonly rir: number | null;
+  /** Seconds — a hold, or the time a carry took (`duration`, `distance_duration`). */
+  readonly durationS: number | null;
+  /** Metres, to the millimetre the column holds (`distance_duration`, 03 §4). */
+  readonly distanceM: number | null;
   readonly isCompleted: boolean;
   /** When the set was ticked, or null. The rest timer is derived from this rather than held in memory (INV-09). */
   readonly completedAt: number | null;
@@ -67,6 +73,8 @@ export interface LiveExercise extends SessionTargets {
   readonly orderIndex: number;
   /** Exercises sharing a value are supersetted together and alternate (FR-2.6). */
   readonly supersetGroup: number | null;
+  /** What this exercise logs — which fields its row shows and which one completing a set needs (FR-2.3). */
+  readonly tracking: Tracking;
   readonly sets: readonly LiveSet[];
 }
 
@@ -186,8 +194,8 @@ export function setLogRow(input: NewSetLog) {
     weightKg: null as number | null,
     reps: null as number | null,
     rir: null,
-    distanceM: null,
-    durationS: null,
+    distanceM: null as number | null,
+    durationS: null as number | null,
     isCompleted: false,
     completedAt: null,
     plannedSetId: null,
@@ -209,7 +217,30 @@ export function completionPatch(isCompleted: boolean, now: number) {
   return { isCompleted, completedAt: isCompleted ? now : null, updatedAt: now };
 }
 
-/** What editing one of the set row's three numbers changes. Clearing a field writes null, never 0 (INV-03). */
+/**
+ * What a set of this tracking mode must hold before it can be completed, or null if it holds it — 03 §4's
+ * "`is_completed = true` requires the fields its tracking mode needs, enforced in the service layer" (task 004 stage 5c).
+ *
+ * Reps for the two rep modes, the time for a hold, the distance for a carry. **Weight is never required**: blank is a
+ * bodyweight set or a load not recorded, and both are real sets. Before this, the ✓ completed a row with nothing in it
+ * — the stage 5 device pass ticked seven of them — and an empty "completed" set is a small lie every total then reads.
+ */
+export function missingForCompletion(
+  tracking: Tracking,
+  set: Pick<LiveSet, 'reps' | 'durationS' | 'distanceM'>,
+): SetField | null {
+  switch (tracking) {
+    case 'weight_reps':
+    case 'reps_only':
+      return set.reps === null ? 'reps' : null;
+    case 'duration':
+      return set.durationS === null ? 'durationS' : null;
+    case 'distance_duration':
+      return set.distanceM === null ? 'distanceM' : null;
+  }
+}
+
+/** What editing one of the set row's numbers changes. Clearing a field writes null, never 0 (INV-03). */
 export function fieldPatch(field: SetField, value: number | null, now: number) {
   return { [field]: value, updatedAt: now } as Record<string, number | null>;
 }
@@ -435,14 +466,17 @@ export function readOpenWorkout(userId: string): LiveWorkout | null {
     return null;
   }
 
+  // Joined for `tracking`, which decides the row's fields and what the ✓ needs. The exercise may be hidden since —
+  // a join, not the live catalog list, so a hidden exercise still logs the way it always did (INV-11).
   const exerciseRows = db
-    .select()
+    .select({ row: workoutExercises, tracking: exercises.tracking })
     .from(workoutExercises)
+    .innerJoin(exercises, eq(exercises.id, workoutExercises.exerciseId))
     .where(and(eq(workoutExercises.workoutId, workout.id), isNull(workoutExercises.deletedAt)))
     .orderBy(asc(workoutExercises.orderIndex))
     .all();
 
-  const exercises = exerciseRows.map((row) => ({
+  const liveExercises = exerciseRows.map(({ row, tracking }) => ({
     id: row.id,
     exerciseId: row.exerciseId,
     orderIndex: row.orderIndex,
@@ -451,6 +485,7 @@ export function readOpenWorkout(userId: string): LiveWorkout | null {
     targetMinReps: row.targetMinReps,
     targetMaxReps: row.targetMaxReps,
     targetRir: row.targetRir,
+    tracking,
     sets: db
       .select()
       .from(setLogs)
@@ -466,7 +501,7 @@ export function readOpenWorkout(userId: string): LiveWorkout | null {
     startedAt: workout.startedAt,
     localDate: workout.localDate,
     tz: workout.tz,
-    exercises,
+    exercises: liveExercises,
   };
 }
 
@@ -528,6 +563,8 @@ function toLiveSet(row: typeof setLogs.$inferSelect): LiveSet {
     weightKg: row.weightKg,
     reps: row.reps,
     rir: row.rir,
+    durationS: row.durationS,
+    distanceM: row.distanceM,
     isCompleted: row.isCompleted,
     completedAt: row.completedAt,
   };

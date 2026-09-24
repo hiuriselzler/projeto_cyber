@@ -407,7 +407,8 @@ export const setLogs = sqliteTable(
     weightKg: real('weight_kg'),
     reps: integer('reps'),
     rir: integer('rir'),
-    distanceM: integer('distance_m'),
+    // Decimals, not whole metres: 100 ft is 30.48 m, and an integer read it back as 98 ft (task 004 stage 5c).
+    distanceM: real('distance_m'),
     durationS: integer('duration_s'),
     isCompleted: integer('is_completed', { mode: 'boolean' }).notNull().default(false),
     completedAt: integer('completed_at'),

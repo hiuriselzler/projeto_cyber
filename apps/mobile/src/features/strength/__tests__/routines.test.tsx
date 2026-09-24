@@ -97,6 +97,8 @@ function set(overrides: Partial<LiveSet> = {}): LiveSet {
     weightKg: null,
     reps: null,
     rir: null,
+    durationS: null,
+    distanceM: null,
     isCompleted: false,
     completedAt: null,
     ...overrides,
@@ -109,6 +111,7 @@ function liveExercise(overrides: Partial<LiveExercise> = {}): LiveExercise {
     exerciseId: 'e-bench',
     orderIndex: 1,
     supersetGroup: null,
+    tracking: 'weight_reps',
     restSeconds: null,
     targetMinReps: null,
     targetMaxReps: null,
@@ -234,5 +237,24 @@ describe.each(MATRIX)('$locale, $unitSystem, $preference', (setting) => {
     expect(onSave).not.toHaveBeenCalled();
     const message = setting.locale === 'pt-BR' ? 'O mínimo não pode passar do máximo.' : 'The minimum cannot be above the maximum.';
     expect(screen.getByText(message)).toBeOnTheScreen();
+  });
+
+  it('offers no rep range and no RIR for a time or distance exercise, and keeps none on save (5c decision 5)', async () => {
+    const onSave = jest.fn();
+    await renderUi(
+      <TargetsSheet
+        title={SHEET_TITLE}
+        targets={{ ...NONE, targetSets: 3, targetMinReps: 8, targetMaxReps: 10, targetRir: 2 }}
+        countsReps={false}
+        onClose={noop}
+        onSave={onSave}
+      />,
+      setting,
+    );
+    expect(screen.queryByText(setting.locale === 'pt-BR' ? 'Repetições mínimas' : 'Minimum reps')).toBeNull();
+    expect(screen.queryByText(setting.locale === 'pt-BR' ? 'RIR alvo' : 'Target RIR')).toBeNull();
+
+    await fireEvent.press(screen.getByText(setting.locale === 'pt-BR' ? 'Salvar' : 'Save'));
+    expect(onSave).toHaveBeenCalledWith({ ...NONE, targetSets: 3 });
   });
 });

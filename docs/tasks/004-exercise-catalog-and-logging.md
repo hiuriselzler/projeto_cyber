@@ -95,7 +95,7 @@ Jest tests, and none was findable without a device.
 | **4** | **The catalog screen** — browse, search, filter by muscle and modality; custom exercises; fork-on-edit of a global; archive that never orphans history | ☑ 2026-09-22, device pass not yet run |
 | **5a** | Routines — build, edit, reorder, duplicate, folders, archive; supersets; start-from-routine pre-filling last-used weights and carrying the routine's targets and rest | ☑ 2026-09-23, device pass not yet run |
 | **5b** | The live session finished off — set types; the rest timer with haptics and its notification; ✓ advancing focus (superset-aware); removing and reordering exercises mid-session; reopening the workout in progress on relaunch | ☑ 2026-09-23, device pass not yet run |
-| **5c** | The `duration` and `distance_duration` tracking modes — the set row that logs them, and the create form offering them | ☐ |
+| **5c** | The `duration` and `distance_duration` tracking modes — the set row that logs them, and the create form offering them | ☑ 2026-09-23, device pass not yet run |
 | **6** | The finish flow — PR detection and its celebration, perceived fatigue, notes, retroactive logging | ☐ |
 | **7** | History and per-exercise charts; `personal_records` as a cache, with its rebuild command | ☐ |
 | **8** | The API mirror endpoints, and the closing device pass over the whole loop | ☐ |
@@ -181,6 +181,31 @@ the code reads this file:
 6. **Notification permission is asked at the first rest timer**, never at launch. Refused, the timer still runs on
    screen with its haptic, and the app does not ask again.
 7. **The re-cut above.**
+
+**Stage 5c carries seven decisions** *(2026-09-23, before the code)*, closing two gaps the stage 5 device pass found — the
+✓ completing an empty set, and 15 seeded time and distance exercises logged as weight × reps:
+
+1. **Each tracking mode has its own row** (FR-2.3). `weight_reps`: weight × reps, RIR. `reps_only`: reps, RIR — no
+   weight field. `duration`: time, **no RIR** — reps in reserve is undefined for a hold, so it stays NULL (INV-03).
+   `distance_duration`: weight · distance · time, no RIR — the load is what a carry progresses. A weighted plank is a
+   `weight_reps` exercise of the user's own, not a fifth mode.
+2. **A time is typed on the app's keypad, filling from the right** — `1`, `3`, `0` reads **1:30** — and stored as
+   seconds. A live hold stopwatch is a later nicety, not 5c.
+3. **`set_logs.distance_m` holds decimals** — `numeric(9,3)` on the server, `real` on the device ([03 §4](../03-database-schema.md)).
+   As an integer, 100 ft typed became 30.48 m, stored 30, read back **98 ft**: the class of defect INV-02's precision
+   work fixed for pounds, arriving through distance. Short distances show in m or **ft** (ADR-008's m/ft pairing); whether
+   US lifters want yards for sleds is for the imperial review.
+4. **The ✓ does not complete a row missing its tracking mode's required field** — reps for the two rep modes, time for
+   `duration`, distance for `distance_duration`; weight is never required, because blank is bodyweight or "not
+   recorded". It opens the keypad on the missing field instead: one tap to the fix, no error. The rule is 03 §4's
+   "enforced in the service layer" — a pure predicate in `src/db`, and the API's in stage 8.
+5. **Routines**: the targets sheet hides the rep range for a time or distance exercise (sets and rest still apply). No
+   target-time or target-distance column is added — an open question, not 5c. A routine start pre-fills last time's
+   time and distance by the same nearest-earlier rule as weight and reps.
+6. **The create form offers all four modes**, ending stage 4's deferral.
+7. **Records and charts for time and distance are not 5c's.** A plank set counts as a set (INV-04's predicate is type
+   and completion) with zero tonnage and no PR; "longest hold" or "farthest carry" would be new PR kinds, and that is an
+   open question for stages 6–7.
 
 ## Acceptance criteria
 - [ ] A full workout can be logged start to finish in airplane mode. *(Stage 3 logged one set start to finish with
@@ -291,12 +316,14 @@ metric, dark — a development build carrying commit `228069e`, installed **over
       a mutation rescheduled one, so the relaunched app showed the bar counting and would never have announced its end.
       The notification now follows the workout from an effect that also runs on mount — which also moves the scheduling
       off the ✓'s path. Watched: after the relaunch the alarm was pending again
-- [ ] **The ✓ completes an empty set.** Sets 2–8 of the pass were ticked with no weight and no reps and stored as
+- [x] **The ✓ completes an empty set.** Sets 2–8 of the pass were ticked with no weight and no reps and stored as
       completed. 03 §4 says "`is_completed = true` requires the fields its tracking mode needs — enforced in the service
-      layer", and nothing enforces it. Stage 5c's, because the required fields *are* the tracking mode's
-- [ ] **15 seeded exercises can be picked and are logged as weight × reps** — 10 `duration` (plank, dead hang, wall sit…)
+      layer", and nothing enforced it. **Fixed in stage 5c**: `missingForCompletion` in `src/db`'s pure half, and a ✓ on
+      such a row opens the keypad on the missing field. In CI, not yet on the phone
+- [x] **15 seeded exercises can be picked and are logged as weight × reps** — 10 `duration` (plank, dead hang, wall sit…)
       and 5 `distance_duration` (farmer's walk, sled push…) — and the 31 `reps_only` globals show a weight field, because
-      the set row ignores `tracking` entirely. Found reading ahead for 5c; stage 5c's
+      the set row ignored `tracking` entirely. **Fixed in stage 5c**: the row draws each mode's own fields. In CI, not yet
+      on the phone
 
 **Found on the device, and not yet fixed**
 - [x] **The set row reflows at font scale 0.86** — *half answered 2026-09-21, and the half that was a defect is

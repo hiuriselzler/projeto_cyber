@@ -430,6 +430,10 @@ Nothing is fully round except a status dot. A pill-shaped control reads as frien
   warm-up, drop, back-off or AMRAP set shows `W`, `D`, `B` or `A` in its place, and the spoken sentence names the type.
   A letter, not a colour, carries it (INV-24). The number is a button that opens a set-type sheet, with long-press as a
   shortcut to the same sheet — never a swipe, and never a gesture with no visible alternative (§5).
+- **The row follows what the exercise tracks** *(task 004 stage 5c)*: weight × reps with RIR; reps with RIR; a time
+  alone; or weight · distance · time for a carry. A hold and a carry have no RIR chip — there are no reps to hold in
+  reserve. A time is typed on the same keypad, filling from the right (`130` → 1:30), and shown in tabular figures.
+  A ✓ on a row missing what its mode needs opens the keypad on that field instead of completing it.
 - **The rest timer** counts down in tabular figures in a bar pinned above the list — reachable by the thumb, never over
   the row being edited — with `−15 s`, `+15 s` and *skip*. It ends with a haptic, and with a local notification when
   the app is not in front. It is derived from the last completed set rather than held in memory, so a force-quit

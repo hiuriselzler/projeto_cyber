@@ -172,6 +172,68 @@ describe.each(MATRIX)('$locale, $unitSystem, $preference', (setting) => {
     });
   });
 
+  describe('set row, by tracking mode (FR-2.3, task 004 stage 5c)', () => {
+    const pt = setting.locale === 'pt-BR';
+    const common = { setNumber: 1, completed: false, onEdit: jest.fn(), onToggleComplete: jest.fn() } as const;
+
+    it('shows a hold as a time alone — no weight, no reps, and no RIR, which a hold does not have (INV-03)', async () => {
+      await renderUi(<SetRow {...common} tracking="duration" weightKg={null} reps={null} rir={null} durationS={90} />, setting);
+
+      expect(screen.getByText('1:30')).toHaveStyle({ fontVariant: ['tabular-nums'] });
+      expect(screen.queryByTestId('set-row-weight')).toBeNull();
+      expect(screen.queryByTestId('set-row-reps')).toBeNull();
+      expect(screen.queryByTestId('set-row-rir')).toBeNull();
+      expect(
+        screen.getByLabelText(pt ? 'Série 1, 1 minuto e 30 segundos, não concluída' : 'Set 1, 1 minute 30 seconds, incomplete'),
+      ).toBeOnTheScreen();
+    });
+
+    it('shows a carry as weight, distance and time, the distance in the user’s own unit (INV-01)', async () => {
+      await renderUi(
+        <SetRow {...common} tracking="distance_duration" weightKg={load} reps={null} rir={null} distanceM={30.48} durationS={40} />,
+        setting,
+      );
+
+      const distance = setting.unitSystem === 'imperial' ? '100' : pt ? '30,5' : '30.5';
+      expect(screen.getByText(distance)).toBeOnTheScreen();
+      expect(screen.getByText(setting.unitSystem === 'imperial' ? 'ft' : 'm')).toBeOnTheScreen();
+      expect(screen.getByText('0:40')).toBeOnTheScreen();
+      expect(screen.queryByTestId('set-row-rir')).toBeNull();
+      expect(screen.queryByText('×')).toBeNull();
+    });
+
+    it('shows a reps-only set without a weight field, and names the reps', async () => {
+      await renderUi(<SetRow {...common} tracking="reps_only" weightKg={null} reps={12} rir={2} />, setting);
+
+      expect(screen.queryByTestId('set-row-weight')).toBeNull();
+      expect(screen.getByText(pt ? 'repetições' : 'reps')).toBeOnTheScreen();
+      expect(screen.getByText('RIR 2')).toBeOnTheScreen();
+    });
+
+    it('offers exactly the edit actions its mode has, by touch and by screen reader', async () => {
+      const onEdit = jest.fn();
+      await renderUi(
+        <SetRow {...common} onEdit={onEdit} tracking="distance_duration" weightKg={null} reps={null} rir={null} />,
+        setting,
+      );
+      await fireEvent.press(screen.getByTestId('set-row-distance'));
+      await fireEvent.press(screen.getByTestId('set-row-time'));
+      expect(onEdit.mock.calls).toEqual([['distance'], ['time']]);
+
+      const row = screen.getByLabelText(pt ? /Série 1, sem carga, sem distância, sem tempo/ : /Set 1, no weight, no distance, no time/);
+      const actions = (row.props.accessibilityActions as { name: string }[]).map((action) => action.name);
+      expect(actions).toEqual(['activate', 'editWeight', 'editDistance', 'editDuration']);
+    });
+
+    it('says last time in the mode’s own terms', async () => {
+      await renderUi(
+        <SetRow {...common} tracking="duration" weightKg={null} reps={null} rir={null} previous={{ weightKg: null, reps: null, rir: null, durationS: 45 }} />,
+        setting,
+      );
+      expect(screen.getByText(pt ? 'Última vez: 0:45' : '0:45 last time')).toBeOnTheScreen();
+    });
+  });
+
   describe('cycle cell', () => {
     it('names the day by its index in the cycle and the status in words (INV-25)', async () => {
       await renderUi(<CycleCell dayIndex={3} status="completed" />, setting);

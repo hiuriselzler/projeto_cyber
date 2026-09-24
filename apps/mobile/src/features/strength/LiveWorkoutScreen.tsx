@@ -2,13 +2,22 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { readExercise } from '@/db/catalog';
-import { readPreviousPerformance, type LiveWorkout, type SetField } from '@/db/strength';
+import {
+  missingForCompletion,
+  readPreviousPerformance,
+  type LiveSet,
+  type LiveWorkout,
+  type SetField,
+  type Tracking,
+} from '@/db/strength';
 import {
   AppText,
   Button,
   EmptyState,
   offsetToReveal,
   Screen,
+  secondsToTimeDigits,
+  shortDistanceForKeypad,
   space,
   useLocale,
   useT,
@@ -27,7 +36,38 @@ import { SetTypeSheet } from './SetTypeSheet';
 import { useLiveWorkout, useSignedInUserId } from './useLiveWorkout';
 
 /** Which column of `set_logs` each editable field of the row writes. */
-const COLUMN: Record<SetRowField, SetField> = { weight: 'weightKg', reps: 'reps', rir: 'rir' };
+const COLUMN: Record<SetRowField, SetField> = {
+  weight: 'weightKg',
+  reps: 'reps',
+  rir: 'rir',
+  time: 'durationS',
+  distance: 'distanceM',
+};
+
+/** The row field that edits each column — how a missing column becomes the keypad the ✓ opens (task 004 stage 5c). */
+const FIELD_OF: Record<SetField, SetRowField> = {
+  weightKg: 'weight',
+  reps: 'reps',
+  rir: 'rir',
+  durationS: 'time',
+  distanceM: 'distance',
+};
+
+/**
+ * Where the keypad lands when focus moves on with it open: the first thing each mode's row asks for. A switch, not a
+ * lookup object, for the reason `SetRow`'s `sentenceKey` gives: the INV-23 fence reads `duration: <literal>` as a timing.
+ */
+function firstField(tracking: Tracking): SetRowField {
+  switch (tracking) {
+    case 'weight_reps':
+    case 'distance_duration':
+      return 'weight';
+    case 'reps_only':
+      return 'reps';
+    case 'duration':
+      return 'time';
+  }
+}
 
 interface Editing {
   readonly setLogId: string;
@@ -95,17 +135,9 @@ export function LiveWorkoutScreen() {
   }, []);
 
   const startEditing = useCallback(
-    (setLogId: string, field: SetRowField, weightKg: number | null, reps: number | null) => {
+    (setLogId: string, field: SetRowField, set: LiveSet | undefined) => {
       setEditing({ setLogId, field });
-      setDraft(
-        field === 'weight'
-          ? weightKg === null
-            ? ''
-            : weightForKeypad(weightKg, unitSystem, locale)
-          : reps === null
-            ? ''
-            : String(reps),
-      );
+      setDraft(set === undefined ? '' : draftFor(field, set, unitSystem, locale));
       reveal(setLogId);
     },
     [locale, reveal, unitSystem],
@@ -119,6 +151,16 @@ export function LiveWorkoutScreen() {
    */
   const toggleComplete = useCallback(
     (setLogId: string, isCompleted: boolean) => {
+      // **A row missing what its mode needs is not completed** — the keypad opens on that field instead: one tap to the
+      // fix, and no error to read mid-set (03 §4, task 004 stage 5c). Checked against the rows as read, before any write.
+      const current = workout.workout === null ? undefined : findWithExercise(workout.workout, setLogId);
+      if (isCompleted && current !== undefined) {
+        const missing = missingForCompletion(current.tracking, current.set);
+        if (missing !== null) {
+          startEditing(setLogId, FIELD_OF[missing], current.set);
+          return;
+        }
+      }
       const fresh = workout.setCompleted(setLogId, isCompleted);
       if (!isCompleted || fresh === null) return;
       const next = nextFocus(fresh, setLogId);
@@ -130,8 +172,8 @@ export function LiveWorkoutScreen() {
         reveal(next.setLogId);
         return;
       }
-      const set = findSet(fresh, next.setLogId);
-      startEditing(next.setLogId, 'weight', set?.weightKg ?? null, set?.reps ?? null);
+      const target = findWithExercise(fresh, next.setLogId);
+      if (target !== undefined) startEditing(next.setLogId, firstField(target.tracking), target.set);
     },
     [editing, reveal, startEditing, workout],
   );
@@ -272,7 +314,7 @@ function ExerciseBlockFor({
   readonly workoutId: string;
   readonly exercise: Parameters<typeof ExerciseBlock>[0]['exercise'];
   readonly editing: Editing | null;
-  readonly onEdit: (setLogId: string, field: SetRowField, weightKg: number | null, reps: number | null) => void;
+  readonly onEdit: (setLogId: string, field: SetRowField, set: LiveSet | undefined) => void;
   readonly onToggleComplete: (setLogId: string, isCompleted: boolean) => void;
   readonly onAddSet: () => void;
   readonly onRowLayout: (setLogId: string, top: number, height: number) => void;
@@ -294,8 +336,11 @@ function ExerciseBlockFor({
       previous={previous}
       editing={editing}
       onEdit={(setLogId, field) => {
-        const set = exercise.sets.find((one) => one.id === setLogId);
-        onEdit(setLogId, field, set?.weightKg ?? null, set?.reps ?? null);
+        onEdit(
+          setLogId,
+          field,
+          exercise.sets.find((one) => one.id === setLogId),
+        );
       }}
       onToggleComplete={onToggleComplete}
       onAddSet={onAddSet}
@@ -379,6 +424,36 @@ function LiveSheets({
       )}
     </>
   );
+}
+
+/** A set and its exercise's tracking mode — what the ✓ checks and where focus lands. */
+function findWithExercise(live: LiveWorkout, setLogId: string): { set: LiveSet; tracking: Tracking } | undefined {
+  for (const exercise of live.exercises) {
+    const set = exercise.sets.find((one) => one.id === setLogId);
+    if (set !== undefined) return { set, tracking: exercise.tracking };
+  }
+  return undefined;
+}
+
+/** What the keypad starts from for a field: the stored value, in the user's unit and separator (INV-01). */
+function draftFor(
+  field: SetRowField,
+  set: LiveSet,
+  unitSystem: Parameters<typeof weightForKeypad>[1],
+  locale: Parameters<typeof weightForKeypad>[2],
+): string {
+  switch (field) {
+    case 'weight':
+      return set.weightKg === null ? '' : weightForKeypad(set.weightKg, unitSystem, locale);
+    case 'distance':
+      return set.distanceM === null ? '' : shortDistanceForKeypad(set.distanceM, unitSystem, locale);
+    case 'time':
+      return set.durationS === null ? '' : secondsToTimeDigits(set.durationS);
+    case 'reps':
+      return set.reps === null ? '' : String(set.reps);
+    case 'rir':
+      return '';
+  }
 }
 
 function findSet(live: LiveWorkout, setLogId: string) {

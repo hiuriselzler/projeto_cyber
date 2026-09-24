@@ -10,6 +10,11 @@ interface TargetsSheetProps {
   /** The exercise's name as the screen shows it — already resolved, translated or as typed (INV-27). */
   readonly title: string;
   readonly targets: RoutineTargets;
+  /**
+   * Whether the exercise is counted in reps. A rep range and a target RIR mean nothing for a plank or a carry, so the
+   * sheet does not offer them (task 004 § Stages, 5c decision 5); sets and rest still apply to every mode.
+   */
+  readonly countsReps?: boolean;
   readonly onClose: () => void;
   readonly onSave: (targets: RoutineTargets) => void;
 }
@@ -21,7 +26,7 @@ interface TargetsSheetProps {
  * row the set row uses, never a keyboard (FR-2.10), and the note under it says what the target is *for*: it is shown
  * beside each set and never logged on the user's behalf (INV-03, task 004 § Stages, decision 3).
  */
-export function TargetsSheet({ title, targets, onClose, onSave }: TargetsSheetProps) {
+export function TargetsSheet({ title, targets, countsReps = true, onClose, onSave }: TargetsSheetProps) {
   const t = useT();
   const [draft, setDraft] = useState<TargetsDraft>(() => draftFromTargets(targets));
   const [problem, setProblem] = useState<TargetProblem | null>(null);
@@ -37,7 +42,8 @@ export function TargetsSheet({ title, targets, onClose, onSave }: TargetsSheetPr
       setProblem(result.problem);
       return;
     }
-    onSave(result.targets);
+    // Fields the sheet does not show are not kept either: a rep range left over on a plank would be a target nobody set.
+    onSave(countsReps ? result.targets : { ...result.targets, targetMinReps: null, targetMaxReps: null, targetRir: null });
   };
 
   const message = problem === null ? undefined : t(`routine.problem_${problem}`);
@@ -52,35 +58,39 @@ export function TargetsSheet({ title, targets, onClose, onSave }: TargetsSheetPr
           keyboardType="number-pad"
           error={problem === 'sets' ? message : undefined}
         />
-        <View style={styles.pair}>
-          <View style={styles.half}>
-            <TextField
-              label={t('routine.field_min_reps')}
-              value={draft.minReps}
-              onChangeText={(minReps) => edit({ minReps })}
-              keyboardType="number-pad"
-              error={problem === 'reps' || problem === 'rep_range' ? message : undefined}
-            />
+        {countsReps ? (
+          <View style={styles.pair}>
+            <View style={styles.half}>
+              <TextField
+                label={t('routine.field_min_reps')}
+                value={draft.minReps}
+                onChangeText={(minReps) => edit({ minReps })}
+                keyboardType="number-pad"
+                error={problem === 'reps' || problem === 'rep_range' ? message : undefined}
+              />
+            </View>
+            <View style={styles.half}>
+              <TextField
+                label={t('routine.field_max_reps')}
+                value={draft.maxReps}
+                onChangeText={(maxReps) => edit({ maxReps })}
+                keyboardType="number-pad"
+              />
+            </View>
           </View>
-          <View style={styles.half}>
-            <TextField
-              label={t('routine.field_max_reps')}
-              value={draft.maxReps}
-              onChangeText={(maxReps) => edit({ maxReps })}
-              keyboardType="number-pad"
-            />
-          </View>
-        </View>
+        ) : null}
 
-        <View style={styles.field}>
-          <AppText variant="label" tone="textSecondary">
-            {t('routine.field_rir')}
-          </AppText>
-          <AppText variant="caption" tone="textMuted">
-            {t('routine.field_rir_hint')}
-          </AppText>
-          <RirChips value={draft.rir} onChange={(rir) => edit({ rir })} />
-        </View>
+        {countsReps ? (
+          <View style={styles.field}>
+            <AppText variant="label" tone="textSecondary">
+              {t('routine.field_rir')}
+            </AppText>
+            <AppText variant="caption" tone="textMuted">
+              {t('routine.field_rir_hint')}
+            </AppText>
+            <RirChips value={draft.rir} onChange={(rir) => edit({ rir })} />
+          </View>
+        ) : null}
 
         <View style={styles.field}>
           <AppText variant="label" tone="textSecondary">

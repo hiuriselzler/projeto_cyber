@@ -6,7 +6,10 @@ import {
   formatTemperature,
   formatWeight,
   KILOGRAMS_PER_POUND,
+  formatShortDistance,
+  keypadShortDistanceToMetres,
   keypadWeightToKilograms,
+  shortDistanceForKeypad,
   weightForKeypad,
 } from '../quantities';
 
@@ -107,5 +110,42 @@ describe('distance, elevation, temperature and duration', () => {
     expect(formatDuration(3909)).toBe('1:05:09');
     expect(formatDuration(309.9)).toBe('5:09');
     expect(formatDuration(0)).toBe('0:00');
+  });
+});
+
+/** What Postgres and SQLite keep of a set's distance: `numeric(9,3)` (task 004 stage 5c, 03 §4). */
+function storedAsSetDistance(metres: number): number {
+  return Math.round(metres * 1_000) / 1_000;
+}
+
+describe('a set’s distance — a carry, a sled push (task 004 stage 5c, INV-01)', () => {
+  it('shows metres, or feet for an imperial user — never kilometres or miles for a carry', () => {
+    expect(formatShortDistance(30, 'metric', 'en')).toEqual({ text: '30', amount: 30, unit: 'm' });
+    expect(formatShortDistance(12.5, 'metric', 'pt-BR').text).toBe('12,5');
+    expect(formatShortDistance(30.48, 'imperial', 'en')).toEqual({ text: '100', amount: 100, unit: 'ft' });
+  });
+
+  it('reads back exactly what an imperial user typed — the reason the column is no longer an integer', () => {
+    // As an integer, 100 ft stored 30 m and read back as 98 ft. Every tenth of a foot from 1 to 300 must survive.
+    for (let tenths = 10; tenths <= 3000; tenths += 1) {
+      const typed = (tenths / 10).toFixed(1);
+      const metres = keypadShortDistanceToMetres(typed, 'imperial');
+      expect(metres).not.toBeNull();
+      const readBack = formatShortDistance(storedAsSetDistance(metres ?? 0), 'imperial', 'en').text;
+      expect(readBack).toBe(String(Number(typed)));
+    }
+  });
+
+  it('would not have with whole metres — the defect this column change fixes', () => {
+    const metres = keypadShortDistanceToMetres('100', 'imperial') ?? 0;
+    expect(formatShortDistance(Math.round(metres), 'imperial', 'en').text).toBe('98.4');
+  });
+
+  it('takes the keypad in the user’s own unit and separator, and blank is not recorded', () => {
+    expect(keypadShortDistanceToMetres('25,5', 'metric')).toBe(25.5);
+    expect(keypadShortDistanceToMetres('100', 'imperial')).toBe(30.48);
+    expect(keypadShortDistanceToMetres('', 'metric')).toBeNull();
+    expect(shortDistanceForKeypad(30.48, 'imperial', 'pt-BR')).toBe('100');
+    expect(shortDistanceForKeypad(12.5, 'metric', 'pt-BR')).toBe('12,5');
   });
 });

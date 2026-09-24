@@ -9,6 +9,7 @@ import {
   completionPatch,
   fieldPatch,
   localDayOf,
+  missingForCompletion,
   setLogRow,
   workoutExerciseRow,
   workoutRow,
@@ -105,5 +106,27 @@ describe('a new exercise in a workout', () => {
     });
     expect(row.supersetGroup).toBeNull();
     expect(row.orderIndex).toBe(1);
+  });
+});
+
+describe('what completing a set needs (03 §4, task 004 stage 5c)', () => {
+  const empty = { reps: null, durationS: null, distanceM: null };
+
+  it('needs the reps for the two rep modes, and never the weight', () => {
+    expect(missingForCompletion('weight_reps', empty)).toBe('reps');
+    expect(missingForCompletion('reps_only', empty)).toBe('reps');
+    // A bodyweight set, or a load not recorded, is still a real set.
+    expect(missingForCompletion('weight_reps', { ...empty, reps: 8 })).toBeNull();
+  });
+
+  it('needs the time for a hold, and the distance for a carry', () => {
+    expect(missingForCompletion('duration', empty)).toBe('durationS');
+    expect(missingForCompletion('duration', { ...empty, durationS: 60 })).toBeNull();
+    expect(missingForCompletion('distance_duration', { ...empty, durationS: 40 })).toBe('distanceM');
+    expect(missingForCompletion('distance_duration', { ...empty, distanceM: 30.48 })).toBeNull();
+  });
+
+  it('takes a zero as recorded — 0 reps is a failed attempt, not a blank', () => {
+    expect(missingForCompletion('weight_reps', { ...empty, reps: 0 })).toBeNull();
   });
 });

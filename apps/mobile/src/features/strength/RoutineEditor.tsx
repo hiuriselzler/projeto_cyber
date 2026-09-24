@@ -4,6 +4,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { readExercise } from '@/db/catalog';
 import {
   addRoutineExercise,
+  countsReps,
   moveItem,
   readRoutine,
   removeRoutineExercise,
@@ -169,6 +170,7 @@ export function RoutineEditor({ routineId }: { readonly routineId: string }) {
         <TargetsSheet
           title={labels.get(editingTargets.exerciseId) ?? t('routine.targets_title')}
           targets={editingTargets}
+          countsReps={countsReps(editingTargets.tracking)}
           onClose={() => setEditingTargets(null)}
           onSave={(targets) => {
             updateRoutineExerciseTargets({ userId, routineExerciseId: editingTargets.id, targets, now: Date.now() });

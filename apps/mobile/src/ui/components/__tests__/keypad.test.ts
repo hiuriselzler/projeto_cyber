@@ -1,4 +1,12 @@
-import { applyKey, normalizeKeypadValue, offsetToReveal, type KeypadKey, type KeypadRules } from '../keypad';
+import {
+  applyKey,
+  normalizeKeypadValue,
+  offsetToReveal,
+  secondsToTimeDigits,
+  timeDigitsToSeconds,
+  type KeypadKey,
+  type KeypadRules,
+} from '../keypad';
 
 const ENGLISH: KeypadRules = { locale: 'en', allowDecimal: true, maxFractionDigits: 2, maxIntegerDigits: 4 };
 const PORTUGUESE: KeypadRules = { ...ENGLISH, locale: 'pt-BR' };
@@ -63,5 +71,31 @@ describe('keeping the edited row above the keypad (07 §6)', () => {
   it('keeps the top of a row in view when the space left is shorter than the row', () => {
     const short = { viewportHeight: 420, keypadHeight: 360, margin: 8 };
     expect(offsetToReveal({ ...short, rowTop: 500, rowBottom: 612, scrollOffset: 0 })).toBe(492);
+  });
+});
+
+describe('a time typed on the keypad (task 004 stage 5c)', () => {
+  const TIME: KeypadRules = { locale: 'en', allowDecimal: false, maxFractionDigits: 0, maxIntegerDigits: 4 };
+
+  it('fills from the right, like a microwave: 1, 3, 0 is a minute and a half', () => {
+    expect(timeDigitsToSeconds(typeKeys(['1', '3', '0'], TIME))).toBe(90);
+    expect(timeDigitsToSeconds('45')).toBe(45);
+    expect(timeDigitsToSeconds('1000')).toBe(600);
+  });
+
+  it('takes 90 as ninety seconds — a lifter who types it meant it', () => {
+    expect(timeDigitsToSeconds('90')).toBe(90);
+  });
+
+  it('reads nothing typed as not recorded, never as zero (INV-03’s rule, applied to a time)', () => {
+    expect(timeDigitsToSeconds('')).toBeNull();
+  });
+
+  it('starts the keypad from a stored time, and the round trip is exact under 100 minutes', () => {
+    expect(secondsToTimeDigits(90)).toBe('130');
+    expect(secondsToTimeDigits(45)).toBe('45');
+    for (let seconds = 0; seconds < 6_000; seconds += 1) {
+      expect(timeDigitsToSeconds(secondsToTimeDigits(seconds))).toBe(seconds);
+    }
   });
 });

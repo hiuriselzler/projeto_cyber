@@ -408,7 +408,9 @@
         "drop": "D",
         "backoff": "B",
         "amrap": "A"
-      }
+      },
+      "previous_parts": "Última vez: {parts}",
+      "reps_unit": "{count, plural, one {repetição} other {repetições}}"
     },
     "keypad": {
       "done": "OK"
@@ -464,7 +466,9 @@
     "superset_unlink": "Desfazer superset com o próximo",
     "remove_exercise": "Remover deste treino",
     "close": "Fechar",
-    "resume_title": "Há um treino em andamento"
+    "resume_title": "Há um treino em andamento",
+    "edit_duration": "Tempo",
+    "edit_distance": "Distância"
   },
   "modality": {
     "barbell": "Barra",
@@ -477,7 +481,9 @@
   },
   "tracking": {
     "weight_reps": "Carga e repetições",
-    "reps_only": "Só repetições"
+    "reps_only": "Só repetições",
+    "duration": "Tempo",
+    "distance_duration": "Distância e tempo"
   },
   "catalog": {
     "title": "Exercícios",
@@ -749,6 +755,16 @@
     "track_progress_top": "{xp} XP, nível máximo",
     "level_up": "{track} chegou ao nível {level}. {reason}",
     "change_set_type": "Mudar o tipo da série",
-    "rest_timer": "Descanso, faltam {time}"
+    "rest_timer": "Descanso, faltam {time}",
+    "set_row_reps_only": "{kind, select, working {Série {number}} other {Série {number}, {type}}}, {reps}, {rir}, {status}",
+    "set_row_duration": "{kind, select, working {Série {number}} other {Série {number}, {type}}}, {duration}, {status}",
+    "set_row_distance": "{kind, select, working {Série {number}} other {Série {number}, {type}}}, {weight}, {distance}, {duration}, {status}",
+    "duration_seconds": "{count, plural, one {# segundo} other {# segundos}}",
+    "duration_minutes": "{count, plural, one {# minuto} other {# minutos}}",
+    "duration_both": "{minutes} e {seconds}",
+    "duration_none": "sem tempo",
+    "distance_none": "sem distância",
+    "edit_duration": "Editar tempo",
+    "edit_distance": "Editar distância"
   }
 }

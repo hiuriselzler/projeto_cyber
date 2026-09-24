@@ -19,6 +19,8 @@ function sets(exerciseId: string, count: number, completed: readonly number[] = 
       weightKg: 40,
       reps: 6,
       rir: null,
+      durationS: null,
+      distanceM: null,
       isCompleted: done,
       completedAt: done ? (completedAt[setIndex] ?? T0) : null,
     };
@@ -31,6 +33,7 @@ function exercise(id: string, overrides: Partial<LiveExercise> & { sets: LiveSet
     exerciseId: `e-${id}`,
     orderIndex: 0,
     supersetGroup: null,
+    tracking: 'weight_reps',
     restSeconds: null,
     targetMinReps: null,
     targetMaxReps: null,

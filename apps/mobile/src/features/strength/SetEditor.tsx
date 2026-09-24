@@ -2,12 +2,14 @@ import { StyleSheet, View } from 'react-native';
 
 import {
   AppText,
+  keypadShortDistanceToMetres,
   keypadWeightToKilograms,
   NumericKeypad,
   parseDecimalInput,
   RirChips,
   sizes,
   space,
+  timeDigitsToSeconds,
   useLocale,
   useT,
   useTheme,
@@ -31,6 +33,20 @@ const HEADING: Record<SetRowField, string> = {
   weight: 'workout.edit_weight',
   reps: 'workout.edit_reps',
   rir: 'workout.edit_rir',
+  time: 'workout.edit_duration',
+  distance: 'workout.edit_distance',
+};
+
+/**
+ * How the keypad behaves for each field it serves. A weight takes two decimals; a distance one — a tenth of a metre or
+ * a foot is as fine as anyone measures a carry; a rep count and a time take none. A time is typed as digits filling
+ * from the right (`130` is 1:30), so four digits reach 99:59 (task 004 stage 5c).
+ */
+const KEYPAD: Record<Exclude<SetRowField, 'rir'>, { readonly allowDecimal: boolean; readonly maxFractionDigits: number }> = {
+  weight: { allowDecimal: true, maxFractionDigits: 2 },
+  distance: { allowDecimal: true, maxFractionDigits: 1 },
+  reps: { allowDecimal: false, maxFractionDigits: 0 },
+  time: { allowDecimal: false, maxFractionDigits: 0 },
 };
 
 /**
@@ -57,9 +73,7 @@ export function SetEditor({
 
   const change = (next: string) => {
     onDraftChange(next);
-    onValueChange(
-      field === 'weight' ? keypadWeightToKilograms(next, unitSystem) : wholeNumber(parseDecimalInput(next)),
-    );
+    onValueChange(valueOf(field, next, unitSystem));
   };
 
   return (
@@ -79,12 +93,20 @@ export function SetEditor({
           value={draft}
           onChange={change}
           onDone={onDone}
-          allowDecimal={field === 'weight'}
-          maxFractionDigits={field === 'weight' ? 2 : 0}
+          allowDecimal={KEYPAD[field].allowDecimal}
+          maxFractionDigits={KEYPAD[field].maxFractionDigits}
         />
       )}
     </View>
   );
+}
+
+/** What the keypad's text means, in SI (INV-01): kilograms, metres, seconds or a whole rep count. */
+function valueOf(field: SetRowField, text: string, unitSystem: Parameters<typeof keypadWeightToKilograms>[1]): number | null {
+  if (field === 'weight') return keypadWeightToKilograms(text, unitSystem);
+  if (field === 'distance') return keypadShortDistanceToMetres(text, unitSystem);
+  if (field === 'time') return timeDigitsToSeconds(text);
+  return wholeNumber(parseDecimalInput(text));
 }
 
 /** A rep count is whole. A half-typed `6,` parses to null, which is "not recorded" and not a zero. */

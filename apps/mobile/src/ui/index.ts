@@ -30,6 +30,8 @@ export {
   applyKey,
   normalizeKeypadValue,
   offsetToReveal,
+  secondsToTimeDigits,
+  timeDigitsToSeconds,
   type KeypadKey,
   type KeypadRules,
   type RevealGeometry,

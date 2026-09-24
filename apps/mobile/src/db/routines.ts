@@ -18,7 +18,7 @@ import { uuidV7 } from '@/crypto/identifiers';
 
 import { db } from './client';
 import { moveItem, normaliseSupersets, toggleSupersetWithNext } from './ordering';
-import { routineExercises, routines, setLogs, workoutExercises, workouts } from './schema';
+import { exercises, routineExercises, routines, setLogs, workoutExercises, workouts, type Tracking } from './schema';
 import {
   readOpenWorkout,
   readPreviousPerformance,
@@ -45,6 +45,8 @@ export interface RoutineExercise extends RoutineTargets {
   readonly orderIndex: number;
   /** Exercises sharing a value are supersetted together (FR-2.6). Null is a standalone exercise. */
   readonly supersetGroup: number | null;
+  /** The exercise's tracking mode, joined in: a rep range means nothing for a plank (task 004 stage 5c). */
+  readonly tracking: Tracking;
   readonly notes: string | null;
 }
 
@@ -196,6 +198,28 @@ export function tombstoneIndex(occupied: readonly number[]): number {
   return Math.min(0, ...occupied) - 1;
 }
 
+/**
+ * The five targets of a routine exercise, and nothing else.
+ *
+ * **Picked, never spread from the whole row.** `routineExerciseRow` spreads its `targets` after setting `id`, so handing
+ * it a whole routine exercise as "targets" — as `duplicateRoutine` did in stage 5a — copied the *original's* id onto
+ * the copy, and every duplicate failed on the primary key. No test reached it: the write half runs only on a device.
+ */
+export function targetsOf(exercise: RoutineTargets): RoutineTargets {
+  return {
+    targetSets: exercise.targetSets,
+    targetMinReps: exercise.targetMinReps,
+    targetMaxReps: exercise.targetMaxReps,
+    targetRir: exercise.targetRir,
+    restSeconds: exercise.restSeconds,
+  };
+}
+
+/** Whether an exercise's sets are counted in reps — the two modes a rep range and RIR mean anything for (FR-2.3). */
+export function countsReps(tracking: Tracking): boolean {
+  return tracking === 'weight_reps' || tracking === 'reps_only';
+}
+
 /** Everything the start plan needs to know about one routine exercise, and what was done with it last time. */
 export interface StartSource {
   readonly exercise: RoutineExercise;
@@ -209,6 +233,8 @@ export interface PrefilledSet {
   readonly setType: SetType;
   readonly weightKg: number | null;
   readonly reps: number | null;
+  readonly durationS: number | null;
+  readonly distanceM: number | null;
 }
 
 /**
@@ -217,6 +243,8 @@ export interface PrefilledSet {
  * - **How many:** the routine's `target_sets`, else as many as last time, else one.
  * - **Weight and reps:** last time's at the same set index, else last time's nearest *earlier* set — a fourth set after
  *   a three-set pyramid starts from the third — and the reps, with no last time at all, from `target_min_reps`.
+ * - **Time and distance** (task 004 stage 5c): last time's, by the same rule as weight. No routine target exists for
+ *   either, so with no last time they start blank; and the rep target is never written into a time or distance set.
  * - **Type:** last time's at the same index only. A fallback never turns a new set into a warm-up.
  * - **RIR: never.** A RIR written before the user looked, then ticked, is an e1RM input they did not choose — the
  *   rule that makes `5+` store nothing and a blank chip store NULL (INV-03). The routine's target RIR is shown beside
@@ -235,7 +263,9 @@ export function prefillSets(source: StartSource): PrefilledSet[] {
       setIndex,
       setType: same?.setType ?? 'working',
       weightKg: earlier?.weightKg ?? null,
-      reps: earlier?.reps ?? (previous.size === 0 ? exercise.targetMinReps : null),
+      reps: earlier?.reps ?? (previous.size === 0 && countsReps(exercise.tracking) ? exercise.targetMinReps : null),
+      durationS: earlier?.durationS ?? null,
+      distanceM: earlier?.distanceM ?? null,
     };
   });
 }
@@ -304,6 +334,8 @@ export function startFromRoutineRows(input: {
         setType: set.setType,
         weightKg: set.weightKg,
         reps: set.reps,
+        durationS: set.durationS,
+        distanceM: set.distanceM,
       });
     }
   });
@@ -329,6 +361,7 @@ const exerciseColumns = {
   targetRir: routineExercises.targetRir,
   restSeconds: routineExercises.restSeconds,
   notes: routineExercises.notes,
+  tracking: exercises.tracking,
 } as const;
 
 const liveExerciseCount = sql<number>`(
@@ -382,6 +415,7 @@ function liveExercises(userId: string, routineId: string): RoutineExercise[] {
   return db
     .select(exerciseColumns)
     .from(routineExercises)
+    .innerJoin(exercises, eq(exercises.id, routineExercises.exerciseId))
     .where(
       and(
         eq(routineExercises.routineId, routineId),
@@ -505,7 +539,7 @@ export async function duplicateRoutine(input: {
             exerciseId: exercise.exerciseId,
             orderIndex: at + 1,
             supersetGroup: exercise.supersetGroup,
-            targets: exercise,
+            targets: targetsOf(exercise),
             notes: exercise.notes,
             now: input.now,
           }),

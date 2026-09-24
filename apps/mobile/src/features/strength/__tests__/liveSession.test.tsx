@@ -31,6 +31,8 @@ function done(completedAt: number): LiveSet {
     weightKg: 60,
     reps: 8,
     rir: 2,
+    durationS: null,
+    distanceM: null,
     isCompleted: true,
     completedAt,
   };
@@ -42,6 +44,7 @@ function resting(restSeconds: number | null, completedAt = T0): LiveWorkout {
     exerciseId: 'e-bench',
     orderIndex: 1,
     supersetGroup: null,
+    tracking: 'weight_reps',
     restSeconds,
     targetMinReps: null,
     targetMaxReps: null,

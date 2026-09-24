@@ -408,7 +408,9 @@
         "drop": "D",
         "backoff": "B",
         "amrap": "A"
-      }
+      },
+      "previous_parts": "{parts} last time",
+      "reps_unit": "{count, plural, one {rep} other {reps}}"
     },
     "keypad": {
       "done": "Done"
@@ -464,7 +466,9 @@
     "superset_unlink": "Unlink from the next",
     "remove_exercise": "Remove from this workout",
     "close": "Close",
-    "resume_title": "A workout is in progress"
+    "resume_title": "A workout is in progress",
+    "edit_duration": "Time",
+    "edit_distance": "Distance"
   },
   "modality": {
     "barbell": "Barbell",
@@ -477,7 +481,9 @@
   },
   "tracking": {
     "weight_reps": "Weight and reps",
-    "reps_only": "Reps only"
+    "reps_only": "Reps only",
+    "duration": "Time",
+    "distance_duration": "Distance and time"
   },
   "catalog": {
     "title": "Exercises",
@@ -749,6 +755,16 @@
     "track_progress_top": "{xp} XP, top level",
     "level_up": "{track} reached level {level}. {reason}",
     "change_set_type": "Change set type",
-    "rest_timer": "Rest, {time} left"
+    "rest_timer": "Rest, {time} left",
+    "set_row_reps_only": "{kind, select, working {Set {number}} other {Set {number}, {type}}}, {reps}, {rir}, {status}",
+    "set_row_duration": "{kind, select, working {Set {number}} other {Set {number}, {type}}}, {duration}, {status}",
+    "set_row_distance": "{kind, select, working {Set {number}} other {Set {number}, {type}}}, {weight}, {distance}, {duration}, {status}",
+    "duration_seconds": "{count, plural, one {# second} other {# seconds}}",
+    "duration_minutes": "{count, plural, one {# minute} other {# minutes}}",
+    "duration_both": "{minutes} {seconds}",
+    "duration_none": "no time",
+    "distance_none": "no distance",
+    "edit_duration": "Edit time",
+    "edit_distance": "Edit distance"
   }
 }

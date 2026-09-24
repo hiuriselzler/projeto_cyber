@@ -63,6 +63,40 @@ export function formatDistance(metres: number, unitSystem: UnitSystem, locale: L
     : quantity(metres / 1000, DISTANCE_FRACTION_DIGITS, 'km', locale);
 }
 
+/** A carry or a sled push is metres or feet, typed to a tenth at most — never kilometres or miles (ADR-008's m/ft pair). */
+const SHORT_DISTANCE_FRACTION_DIGITS = 1;
+/** `set_logs.distance_m` is `numeric(9,3)`: a millimetre, which is what every keypad value is stored to. */
+const STORED_DISTANCE_FRACTION_DIGITS = 3;
+
+/** A set's distance (task 004 stage 5c) — metres, or feet for an imperial user. */
+export function formatShortDistance(metres: number, unitSystem: UnitSystem, locale: Locale): FormattedQuantity {
+  return unitSystem === 'imperial'
+    ? quantity(metres / METRES_PER_FOOT, SHORT_DISTANCE_FRACTION_DIGITS, 'ft', locale)
+    : quantity(metres, SHORT_DISTANCE_FRACTION_DIGITS, 'm', locale);
+}
+
+/** A stored distance as the keypad should start from: the user's unit and separator, without grouping. */
+export function shortDistanceForKeypad(metres: number, unitSystem: UnitSystem, locale: Locale): string {
+  const amount = unitSystem === 'imperial' ? metres / METRES_PER_FOOT : metres;
+  return formatDecimal(amount, locale, { maxFractionDigits: SHORT_DISTANCE_FRACTION_DIGITS, grouping: false });
+}
+
+/**
+ * Keypad input in m or ft, as metres to the millimetre the column holds.
+ *
+ * **Why the column is not an integer any more** (task 004 stage 5c): 100 ft is 30.48 m, an integer stored 30, and 30 m
+ * reads back as 98 ft — a user's own number changed by storage. At a millimetre, any value typed to a tenth of a foot
+ * reads back exactly as typed. Rounded here, once, so the phone and the server hold the same value.
+ */
+export function keypadShortDistanceToMetres(input: string, unitSystem: UnitSystem): number | null {
+  const amount = parseDecimalInput(input);
+  if (amount === null) {
+    return null;
+  }
+  const metres = unitSystem === 'imperial' ? amount * METRES_PER_FOOT : amount;
+  return roundForDisplay(metres, STORED_DISTANCE_FRACTION_DIGITS);
+}
+
 export function formatElevation(metres: number, unitSystem: UnitSystem, locale: Locale): FormattedQuantity {
   return unitSystem === 'imperial'
     ? quantity(metres / METRES_PER_FOOT, 0, 'ft', locale)

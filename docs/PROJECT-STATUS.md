@@ -21,7 +21,7 @@ when its own criteria are ticked. Tick the box here only then.
 | **Decisions** | 15 ADRs, **all now accepted**. [ADR-004](decisions/ADR-004.md)'s spike passed on 2026-09-18 and its outcome is recorded: **option B, the single Rust core**. Its four pre-launch conditions remain outstanding, in tasks 005 and 006 |
 | **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **5 complete** (001, 002, 011, 003, 019) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) — the core loop. In progress since 2026-09-19; stages 0–4 written, stage 4 closed 2026-09-22, stage 3's device pass still open on three items.** Task 017 is complete and ADR-004 is settled, so nothing blocks it. It is the largest task in the project and the one its own file says *deserves more care than any other UI*; the Rust core is adopted from here on, with e1RM (INV-07) and `is_counted_set()` (INV-04) its first real residents. **A full set was logged on a Galaxy S21 FE in Portuguese and the ✓ measured at p50 10.5 ms**, against NFR-2's 100 ms. **Stage 5 was re-cut on 2026-09-23 into 5a (routines), 5b (the live session finished off) and 5c (the other two tracking modes); 5a and 5b were built the same day, green in CI, with their device pass not yet run — and the one migration they needed had to be rewritten by hand, because the generated one would have deleted every logged set on the device ([06 §4](06-operations.md)). 5c is next.** **Stage 4 — the catalog screen — closed 2026-09-22**: browse, bilingual search, filter by muscle and modality, custom exercises, fork-on-edit, archive and — found while landing it — a matching *unhide* view, search wired into the live-workout exercise picker (which had been listing all 201 rows unfiltered), and a typecheck bug in the new test's catalog typing. Its own device pass (accessibility, font scale) has not run yet. What is left of **stage 3's** pass: the imperial half of the 200 % font-size check, TalkBack actually switched on, and `Sheet`'s lost exit animation (attempted and reverted 2026-09-21 — blocked on this project's own `react-hooks/set-state-in-effect` rule, needs a `reanimated`-based fix). The set row's font-scale-0.86 reflow defect is fixed; whether its numbers must hold one line at default scale is an open design question in [07 §6](07-brand-and-ui.md). Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
+| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) — the core loop. In progress since 2026-09-19; stages 0–4 written, stage 4 closed 2026-09-22, stage 3's device pass still open on three items.** Task 017 is complete and ADR-004 is settled, so nothing blocks it. It is the largest task in the project and the one its own file says *deserves more care than any other UI*; the Rust core is adopted from here on, with e1RM (INV-07) and `is_counted_set()` (INV-04) its first real residents. **A full set was logged on a Galaxy S21 FE in Portuguese and the ✓ measured at p50 10.5 ms**, against NFR-2's 100 ms. **Stage 5 was re-cut on 2026-09-23 into 5a (routines), 5b (the live session finished off) and 5c (the other two tracking modes); 5a and 5b were built the same day, green in CI, with their device pass not yet run — and the one migration they needed had to be rewritten by hand, because the generated one would have deleted every logged set on the device ([06 §4](06-operations.md)). 5c — each tracking mode logging as itself, and distance stored to the millimetre — was built the same evening, also green in CI; a device pass over 5a–5c, then stage 6, is next.** **Stage 4 — the catalog screen — closed 2026-09-22**: browse, bilingual search, filter by muscle and modality, custom exercises, fork-on-edit, archive and — found while landing it — a matching *unhide* view, search wired into the live-workout exercise picker (which had been listing all 201 rows unfiltered), and a typecheck bug in the new test's catalog typing. Its own device pass (accessibility, font scale) has not run yet. What is left of **stage 3's** pass: the imperial half of the 200 % font-size check, TalkBack actually switched on, and `Sheet`'s lost exit animation (attempted and reverted 2026-09-21 — blocked on this project's own `react-hooks/set-state-in-effect` rule, needs a `reanimated`-based fix). The set row's font-scale-0.86 reflow defect is fixed; whether its numbers must hold one line at default scale is an open design question in [07 §6](07-brand-and-ui.md). Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
 
 ### The decision that was open is closed — option B
 
@@ -1895,5 +1895,53 @@ device, supersets, the refused-permission path, TalkBack, and ✓ latency on a r
 **Carried into stage 5c**, both found during the pass: the ✓ completes a set with no weight and no reps — 03 §4's
 "completion requires the tracking mode's fields" is enforced nowhere — and 15 seeded `duration` / `distance_duration`
 exercises are pickable today and logged as weight × reps, while the 31 `reps_only` ones show a weight field.
+
+- No invariant changed and no ADR was added. Counts unchanged: 49 documents, 15 ADRs.
+
+### 2026-09-23 — task 004 stage 5c planned: the row follows what the exercise tracks
+
+Seven decisions, in the task file where the code reads them, closing the two gaps the stage 5 device pass carried
+forward. **Each tracking mode gets its own row** — a plank logs a time and no RIR, a carry logs weight, distance and
+time — so the 15 seeded time and distance exercises stop being logged as weight × reps. **The ✓ no longer completes a
+row missing its mode's required field**; it opens the keypad on that field — 03 §4's "enforced in the service layer",
+finally enforced. **`set_logs.distance_m` becomes `numeric(9,3)`** ([03 §4](03-database-schema.md)): as an integer, an
+imperial user's 100 ft read back as 98 ft — INV-02's precision lesson, arriving through distance, and a schema change
+made while no user holds data. Records for time and distance (longest hold, farthest carry) are left as an open question
+for stages 6–7, and a target time or distance on a routine as another.
+
+- No invariant changed and no ADR was added: 3 applies INV-01 exactly rather than changing it. Counts unchanged:
+  49 documents, 15 ADRs.
+
+### 2026-09-23 — task 004 stage 5c built: every tracking mode logs as itself
+
+**Built, green in CI, not yet on the phone.** The set row draws what its exercise tracks — weight × reps with RIR; reps
+with RIR; a time alone; weight · distance · time — so the 15 seeded holds and carries stop being logged as weight × reps,
+and the 31 reps-only exercises lose a weight field they never had a use for. A time is typed on the app's keypad,
+filling from the right (`130` → 1:30), and spoken as "1 minute 30 seconds". **The ✓ no longer completes a row missing
+what its mode needs** — it opens the keypad on that field. The create form offers all four modes; the targets sheet
+drops the rep range and RIR for a hold or a carry, and clears them on save. A routine start pre-fills last time's time
+and distance.
+
+**`set_logs.distance_m` holds decimals now** — `numeric(9,3)`, Alembic `0006` and device `0003`. As an integer, 100 ft
+read back as 98 ft; a test now round-trips every tenth of a foot from 1 to 300. The device migration is a table rebuild
+Drizzle generated, **kept as generated because it was read and proven first** (06 §4): nothing on the device references
+`set_logs`, so its `DROP` cascades into nothing, and against a copy of the test phone's own database every set
+survived, both CHECKs still bit after the rename, and 30.48 stored exactly.
+
+**Two things found on the way:**
+- **⚠ "Duplicate routine" could never have worked.** Stage 5a passed a whole routine exercise to the row builder as its
+  targets, and the builder spreads targets *after* setting `id` — so every copy carried the original's id and failed on
+  the primary key. The write half runs only on a device and the 5a device checklist never reached it. Fixed with
+  `targetsOf()`, which picks the five targets and nothing else, and a test that the copy keeps its own id.
+- **The INV-23 fence reads any `duration: <literal>` as an animation timing** — including a string such as a translation
+  key, and a tracking mode named `duration`. Worked *within* rather than around: the row's field is called `time`, and
+  the two lookups keyed by the tracking value are `switch` functions. Narrowing the selector to numeric literals would
+  change how INV-23 is enforced, which [`.agents/AGENTS.md`](../.agents/AGENTS.md) routes through an ADR, so it is
+  recorded here and not done.
+
+**Verified, matching what CI runs**: mobile — `tsc`, `eslint`, 49 lint fixtures, the platform-file check, catalogs at
+**630** messages, the seed-version gate, `db:generate` with no drift, **942** Jest tests, up from 879. API — `ruff`,
+`ruff format`, `mypy`, six import contracts, `alembic` up/down/up through `0006`, `check_schema`, **347** pytest tests.
+Watched failing: the completion rule (1) and whole-metre storage (2).
 
 - No invariant changed and no ADR was added. Counts unchanged: 49 documents, 15 ADRs.

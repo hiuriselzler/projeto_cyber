@@ -19,6 +19,7 @@ import {
   routineRow,
   startFromRoutineRows,
   targetProblem,
+  targetsOf,
   toggleSupersetWithNext,
   tombstoneIndex,
   type Routine,
@@ -37,6 +38,7 @@ function routineExercise(overrides: Partial<RoutineExercise> = {}): RoutineExerc
     exerciseId: 'e-squat',
     orderIndex: 1,
     supersetGroup: null,
+    tracking: 'weight_reps',
     ...NO_TARGETS,
     notes: null,
     ...overrides,
@@ -53,6 +55,8 @@ function done(setIndex: number, overrides: Partial<LiveSet> = {}): [number, Live
       weightKg: 40,
       reps: 6,
       rir: 2,
+      durationS: null,
+      distanceM: null,
       isCompleted: true,
       completedAt: NOW - 86_400_000,
       ...overrides,
@@ -200,8 +204,8 @@ describe('what a routine start pre-fills (FR-2.7, decision 3)', () => {
       previous: new Map([done(1, { weightKg: 60, reps: 8 }), done(2, { weightKg: 62.5, reps: 6 })]),
     });
     expect(sets).toEqual([
-      { setIndex: 1, setType: 'working', weightKg: 60, reps: 8 },
-      { setIndex: 2, setType: 'working', weightKg: 62.5, reps: 6 },
+      { setIndex: 1, setType: 'working', weightKg: 60, reps: 8, durationS: null, distanceM: null },
+      { setIndex: 2, setType: 'working', weightKg: 62.5, reps: 6, durationS: null, distanceM: null },
     ]);
   });
 
@@ -224,8 +228,8 @@ describe('what a routine start pre-fills (FR-2.7, decision 3)', () => {
   it('uses the routine’s minimum reps, and no weight, when there is no last time at all', () => {
     const sets = prefillSets({ exercise: routineExercise({ targetSets: 2, targetMinReps: 6, targetMaxReps: 8 }), previous: new Map() });
     expect(sets).toEqual([
-      { setIndex: 1, setType: 'working', weightKg: null, reps: 6 },
-      { setIndex: 2, setType: 'working', weightKg: null, reps: 6 },
+      { setIndex: 1, setType: 'working', weightKg: null, reps: 6, durationS: null, distanceM: null },
+      { setIndex: 2, setType: 'working', weightKg: null, reps: 6, durationS: null, distanceM: null },
     ]);
   });
 
@@ -292,5 +296,53 @@ describe('the rows a routine start writes', () => {
     expect(() => startFromRoutineRows({ userId: USER, routine, sources, ids: ids.slice(0, 2), now: NOW, tz: 'UTC' })).toThrow(
       /not enough ids/,
     );
+  });
+});
+
+describe('duplicating a routine (FR-2.5)', () => {
+  it('copies the five targets and nothing else — never the source row’s id', () => {
+    // Stage 5a handed a whole routine exercise to `routineExerciseRow` as its targets, which spreads them after `id`:
+    // every copy carried the original's id and the insert failed on the primary key.
+    const source = routineExercise({ id: 'original-id', exerciseId: 'e-squat', targetSets: 3, restSeconds: 120 });
+    const row = routineExerciseRow({
+      id: 'copy-id',
+      userId: USER,
+      routineId: 'copy-routine',
+      exerciseId: source.exerciseId,
+      orderIndex: 1,
+      supersetGroup: null,
+      targets: targetsOf(source),
+      notes: null,
+      now: NOW,
+    });
+    expect(row.id).toBe('copy-id');
+    expect(row.routineId).toBe('copy-routine');
+    expect(row).toMatchObject({ targetSets: 3, restSeconds: 120 });
+    expect(Object.keys(targetsOf(source)).sort()).toEqual(['restSeconds', 'targetMaxReps', 'targetMinReps', 'targetRir', 'targetSets']);
+  });
+});
+
+describe('pre-filling a time or a distance (task 004 stage 5c)', () => {
+  it('carries last time’s hold, by the same nearest-earlier rule as weight', () => {
+    const sets = prefillSets({
+      exercise: routineExercise({ tracking: 'duration', targetSets: 3 }),
+      previous: new Map([done(1, { weightKg: null, reps: null, rir: null, durationS: 60 }), done(2, { weightKg: null, reps: null, rir: null, durationS: 45 })]),
+    });
+    expect(sets.map((set) => set.durationS)).toEqual([60, 45, 45]);
+  });
+
+  it('carries last time’s load, distance and time for a carry', () => {
+    const [first] = prefillSets({
+      exercise: routineExercise({ tracking: 'distance_duration', targetSets: 1 }),
+      previous: new Map([done(1, { weightKg: 32, reps: null, rir: null, distanceM: 30.48, durationS: 40 })]),
+    });
+    expect(first).toMatchObject({ weightKg: 32, distanceM: 30.48, durationS: 40, reps: null });
+  });
+
+  it('never writes the rep target into a time or distance set', () => {
+    for (const tracking of ['duration', 'distance_duration'] as const) {
+      const [first] = prefillSets({ exercise: routineExercise({ tracking, targetSets: 1, targetMinReps: 8 }), previous: new Map() });
+      expect(first?.reps).toBeNull();
+    }
   });
 });
