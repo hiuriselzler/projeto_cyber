@@ -15,13 +15,13 @@ when its own criteria are ticked. Tick the box here only then.
 
 | | |
 |---|---|
-| **Phase** | **Tasks 001, 002, 011, 003 and 019 complete.** The schema exists in Postgres and SQLite, seeded and enforcing itself; the design system exists in `src/ui/`, token-driven and tested in both languages, both unit systems and both themes; accounts, sessions and the privacy key exist on both sides, with row-level security proven under the API's own role; and a user can delete their account, from the app or the web, with a 7-day grace period and one daily sweep. **Administrator rights arrived 2026-09-16**, so [task 017](tasks/017-local-toolchain-device-spike.md) — Docker, the device, the ADR-004 spike — is under way and must finish before task 004. **The spike is finished and [ADR-004](decisions/ADR-004.md) has its answer: option B, the single Rust core.** All four bar conditions are met — PyO3 from FastAPI, UniFFI from the physical device, and the Android artefacts built by CI on Linux *and* by EAS, the last verified by reading `libcyberathlete_core_ffi.so` for all three ABIs out of the built APK. **Task 004 is unblocked.** What is left in task 017 is not the spike: the README's Windows pass, and the device A-to-B privacy-key flow against a running API |
-| **Repository** | Private GitHub repository `hiuriselzler/projeto_cyber`. `main` holds the documentation and tasks 001, 002, 011, 003 and 019, each merged by pull request (#1; #5; #7 and #8; #9; #11); each further piece arrives the same way, with CI green before merge |
+| **Phase** | **Tasks 001, 002, 011, 003, 019 and 017 complete; [task 004](tasks/004-exercise-catalog-and-logging.md) in progress.** The schema exists in Postgres and SQLite, seeded and enforcing itself; the design system exists in `src/ui/`, token-driven and tested in both languages, both unit systems and both themes; accounts, sessions and the privacy key exist on both sides, with row-level security proven under the API's own role; a user can delete their account, from the app or the web; and [ADR-004](decisions/ADR-004.md) has its answer — **option B, the single Rust core**, proven through both bindings on the device. Task 004 has stages 0–5c built — the core's first residents, the seeded catalog, the set row, the catalog screen, routines, the rest timer, set types, and every tracking mode — with stages 6–8 to go (*updated 2026-09-23; this row had still described task 017 as under way*) |
+| **Repository** | Private GitHub repository `hiuriselzler/projeto_cyber`. `main` holds the documentation and tasks 001, 002, 011, 003, 019 and 017, each merged by pull request (#1; #5; #7 and #8; #9; #11; #16); each further piece arrives the same way, with CI green before merge. Task 004 is on `feat/task-004-catalog-and-logging`, pushed 2026-09-23, not yet merged |
 | **Docs** | 49 files, internally consistent, all cross-links resolving |
 | **Decisions** | 15 ADRs, **all now accepted**. [ADR-004](decisions/ADR-004.md)'s spike passed on 2026-09-18 and its outcome is recorded: **option B, the single Rust core**. Its four pre-launch conditions remain outstanding, in tasks 005 and 006 |
-| **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **5 complete** (001, 002, 011, 003, 019) |
+| **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **6 complete** (001, 002, 011, 003, 019, 017) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) — the core loop. In progress since 2026-09-19; stages 0–4 written, stage 4 closed 2026-09-22, stage 3's device pass still open on three items.** Task 017 is complete and ADR-004 is settled, so nothing blocks it. It is the largest task in the project and the one its own file says *deserves more care than any other UI*; the Rust core is adopted from here on, with e1RM (INV-07) and `is_counted_set()` (INV-04) its first real residents. **A full set was logged on a Galaxy S21 FE in Portuguese and the ✓ measured at p50 10.5 ms**, against NFR-2's 100 ms. **Stage 5 was re-cut on 2026-09-23 into 5a (routines), 5b (the live session finished off) and 5c (the other two tracking modes); 5a and 5b were built the same day, green in CI, with their device pass not yet run — and the one migration they needed had to be rewritten by hand, because the generated one would have deleted every logged set on the device ([06 §4](06-operations.md)). 5c — each tracking mode logging as itself, and distance stored to the millimetre — was built the same evening, also green in CI; a device pass over 5a–5c, then stage 6, is next.** **Stage 4 — the catalog screen — closed 2026-09-22**: browse, bilingual search, filter by muscle and modality, custom exercises, fork-on-edit, archive and — found while landing it — a matching *unhide* view, search wired into the live-workout exercise picker (which had been listing all 201 rows unfiltered), and a typecheck bug in the new test's catalog typing. Its own device pass (accessibility, font scale) has not run yet. What is left of **stage 3's** pass: the imperial half of the 200 % font-size check, TalkBack actually switched on, and `Sheet`'s lost exit animation (attempted and reverted 2026-09-21 — blocked on this project's own `react-hooks/set-state-in-effect` rule, needs a `reanimated`-based fix). The set row's font-scale-0.86 reflow defect is fixed; whether its numbers must hold one line at default scale is an open design question in [07 §6](07-brand-and-ui.md). Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
+| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) — the core loop, in progress since 2026-09-19. Stages 0–5c are built and green in CI; stages 6–8 remain** (the finish flow, history and charts, the API mirror and the closing device pass). **Next: a device pass over stages 5a–5c, then stage 6.** What that pass must cover is the task file's stage-5 device list: routines on the phone, supersets, the refused notification permission, TalkBack, ✓ latency on a routine session, and 5c's modes and migration `0003` — which need a fresh APK build. Already proven on the Galaxy S21 FE: the ✓ at p50 10.5 ms against NFR-2's 100 ms (stage 3), migration `0002` against real logged sets, every cold start reopening the workout in progress, and a force-quit mid-rest coming back to the same rest (2026-09-23). **Still open from earlier stages:** stage 4's own device pass (accessibility, font scale); from stage 3's, the imperial half of the 200 % font check, TalkBack actually switched on, and `Sheet`'s lost exit animation, which needs a `reanimated`-based fix. Whether the set row's numbers must hold one line at default scale is an open design question in [07 §6](07-brand-and-ui.md). Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
 
 ### The decision that was open is closed — option B
 
@@ -186,20 +186,20 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
 > **Task 004 is unblocked.**
 - [x] Administrator installs: Windows long paths, WSL2, Docker Desktop, Android Studio (SDK, NDK,
       platform tools), Visual Studio Build Tools and Rust with the Android targets and `cargo-ndk`
-- [ ] Local stack: `docker compose up`, roles created by the init hook, integration tests run locally,
+- [x] Local stack: `docker compose up`, roles created by the init hook, integration tests run locally,
       every README command verified on Windows
 - [x] **Development build on a physical Android device**, with hot reload; the API over `adb reverse`;
       a LAN address refused; the SQLite migration idempotent; secure storage surviving a restart
-- [ ] A release build refuses an `http://` API base URL, and its bundle carries no diagnostics code
-- [ ] Device checks moved from tasks 002, 011 and 003 — the Drizzle schema on a device, token changes,
+- [x] A release build refuses an `http://` API base URL, and its bundle carries no diagnostics code
+- [x] Device checks moved from tasks 002, 011 and 003 — the Drizzle schema on a device, token changes,
       live numerals and TalkBack, the libsodium binding, offline sign-in, the key-derivation timing
-- [ ] **⚠ ADR-004 spike — 2 days, hard timebox** (moved from task 001). `round_to_increment()` through
+- [x] **⚠ ADR-004 spike — 2 days, hard timebox** (moved from task 001). `round_to_increment()` through
       both bindings, called from FastAPI *and* from a physical Android device: `41.6 → 42.5`, and the tie
       `41.25 → 40`. Success defined in advance; WSL2 allowed locally; **the clock starts once a dev build
       runs on the device**. The iOS half is gate 1 of task 016
-- [ ] Rust CI job — `cargo deny`, clippy, fmt, Android cross-compilation — with `rand` and
+- [x] Rust CI job — `cargo deny`, clippy, fmt, Android cross-compilation — with `rand` and
       `SystemTime::now` each watched failing
-- [ ] **⚠ ADR-004 outcome written into the ADR.** Task 004 does not start while it is open
+- [x] **⚠ ADR-004 outcome written into the ADR.** Task 004 does not start while it is open
 
 #### ☐ 004 — Exercise catalog and workout logging · **XL** · depends: 002 · blocks: 005, 009
 > The core loop. Local-only, no sync. **This deserves more care than any other UI in the project.**
@@ -489,6 +489,11 @@ None are blocking; each has a stated assumption that will be built unless correc
 | 7 | The Android application id. **Permanent after the first Play Store upload** | `com.cyberathlete.app`, a placeholder in `apps/mobile/app.json` | Before the first Play upload |
 | 8 | Android backups: the generated manifest has `allowBackup="true"`, so local data — raw GPS points included — would reach device backups | Unchanged for now | Before [task 007](tasks/007-cardio-recording.md) |
 | 12 | Which address the per-IP rate limits count ([04 §5](04-security-and-auth.md)). The API reads the socket's peer, `request.client.host`; behind a hosting platform's proxy that is the proxy for everyone, so registration would allow 5 an hour across all users | The client address comes from the platform's forwarded header, trusted only when the request arrives from the platform's own proxy — configured once the host is chosen ([05 §5](05-integrations.md)) | Before the first deploy |
+| 13 | Is a rest notification ~22–40 s late with the screen off acceptable, or does the app ask for `SCHEDULE_EXACT_ALARM`? One clean sample on the S21 FE: ~39 s on a 2:00 rest | Inexact alarms; the on-screen timer and its haptic are exact | Before launch, with more samples ([task 004](tasks/004-exercise-catalog-and-logging.md)) |
+| 14 | A target time or distance on a routine exercise — a schema addition | None: holds and carries get sets and rest, and pre-fill from last time | Task 005, where prescriptions live |
+| 15 | Personal records for time and distance — longest hold, farthest carry | Not built; such sets count as sets, with zero tonnage and no PR | Stages 6–7 of task 004 |
+| 16 | Short imperial distances in feet or yards (sleds are often yards in US gyms) | Feet, following ADR-008's m/ft pair | The imperial pass of task 004's device checks |
+| 17 | The Portuguese set-type letters — `Aq D B A` | As written, catalog content | The native-speaker review ([07 §9](07-brand-and-ui.md)) |
 
 **Closed 2026-09-09** — target RIR granularity (now `rir_mode` on the progression rule);
 cardio intensity (both zones and pace ranges); bodyweight volume (summed); and the octopus
@@ -1943,5 +1948,17 @@ survived, both CHECKs still bit after the rename, and 30.48 stored exactly.
 **630** messages, the seed-version gate, `db:generate` with no drift, **942** Jest tests, up from 879. API — `ruff`,
 `ruff format`, `mypy`, six import contracts, `alembic` up/down/up through `0006`, `check_schema`, **347** pytest tests.
 Watched failing: the completion rule (1) and whole-metre storage (2).
+
+- No invariant changed and no ADR was added. Counts unchanged: 49 documents, 15 ADRs.
+
+### 2026-09-23 — the status rows caught up
+
+A check of every document against the day's work found this file's own summary behind itself, in places older than
+task 004: the **Phase** row still described task 017 as under way, days after it merged; the **Tasks** row counted
+5 complete rather than 6; the **Repository** row left out PR #16; and task 017's checklist here showed six unticked
+boxes under a ☑ while its own file has all 23 criteria ticked. The **Next action** row said "stages 0–4" beside a
+paragraph about 5a–5c. All corrected. Five open questions the stage-5 work raised were in the task file but not in the
+table above — rest-notification lateness, a target time or distance, records for time and distance, feet or yards, and
+the Portuguese set-type letters — now numbered 13–17 there, each with the assumption being built.
 
 - No invariant changed and no ADR was added. Counts unchanged: 49 documents, 15 ADRs.

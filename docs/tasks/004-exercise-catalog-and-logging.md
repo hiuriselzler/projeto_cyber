@@ -94,7 +94,7 @@ Jest tests, and none was findable without a device.
 | **3** | **The set row** and the live workout, every mutation a synchronous SQLite write (INV-09); the minimum exercise picker | ☑ 2026-09-19, device pass part-run |
 | **4** | **The catalog screen** — browse, search, filter by muscle and modality; custom exercises; fork-on-edit of a global; archive that never orphans history | ☑ 2026-09-22, device pass not yet run |
 | **5a** | Routines — build, edit, reorder, duplicate, folders, archive; supersets; start-from-routine pre-filling last-used weights and carrying the routine's targets and rest | ☑ 2026-09-23, device pass not yet run |
-| **5b** | The live session finished off — set types; the rest timer with haptics and its notification; ✓ advancing focus (superset-aware); removing and reordering exercises mid-session; reopening the workout in progress on relaunch | ☑ 2026-09-23, device pass not yet run |
+| **5b** | The live session finished off — set types; the rest timer with haptics and its notification; ✓ advancing focus (superset-aware); removing and reordering exercises mid-session; reopening the workout in progress on relaunch | ☑ 2026-09-23, device pass part-run the same evening |
 | **5c** | The `duration` and `distance_duration` tracking modes — the set row that logs them, and the create form offering them | ☑ 2026-09-23, device pass not yet run |
 | **6** | The finish flow — PR detection and its celebration, perceived fatigue, notes, retroactive logging | ☐ |
 | **7** | History and per-exercise charts; `personal_records` as a cache, with its rebuild command | ☐ |
