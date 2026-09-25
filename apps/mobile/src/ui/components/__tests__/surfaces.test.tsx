@@ -6,6 +6,8 @@ import { fireEvent, screen } from '@testing-library/react-native';
 import { useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 
+import { space } from '../../tokens';
+
 import { MATRIX, renderUi, TEST_METRICS } from '../../../../test/render';
 import { PLACEHOLDER_LEVELS } from '../../brand/marks.generated';
 import { EmptyState } from '../EmptyState';
@@ -157,6 +159,33 @@ describe('the mark’s slots', () => {
  * Jest could not have caught it, because the harness had no insets at all. It has them now
  * (`TEST_METRICS`), and this is the guard.
  */
+/**
+ * The task 004 stage 6 device pass found the exercise picker's sheet taller than the screen — its title, close button
+ * and search field above the top edge — because the sheet neither kept out of the insets nor shrank. These pin both.
+ */
+describe('a sheet', () => {
+  it('keeps below the status bar, with backdrop left above it to tap', async () => {
+    await renderUi(
+      <Sheet visible onClose={jest.fn()}>
+        <EmptyState title="" />
+      </Sheet>,
+    );
+
+    const style = StyleSheet.flatten(screen.getByTestId('sheet-frame').props.style);
+    expect(style.paddingTop).toBe(TEST_METRICS.insets.top + space[12]);
+  });
+
+  it('shrinks to the room it has, so a long list inside scrolls instead of pushing its header off screen', async () => {
+    await renderUi(
+      <Sheet visible onClose={jest.fn()}>
+        <EmptyState title="" />
+      </Sheet>,
+    );
+
+    expect(StyleSheet.flatten(screen.getByTestId('sheet').props.style).flexShrink).toBe(1);
+  });
+});
+
 describe('a screen', () => {
   it('keeps its content out of the system insets', async () => {
     await renderUi(<Screen />);

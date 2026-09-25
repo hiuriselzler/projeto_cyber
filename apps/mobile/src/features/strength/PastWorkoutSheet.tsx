@@ -75,19 +75,27 @@ export function PastWorkoutSheet({ visible, onLog, onClose }: PastWorkoutSheetPr
           {t('past.note')}
         </AppText>
 
+        {/*
+         * The day on its own line and its two steps side by side beneath it: in one row the three wrapped on a 360 dp
+         * phone, leaving "Dia seguinte" alone on a line (task 004 stage 6 device pass).
+         */}
         <View style={styles.field}>
           <AppText variant="label" tone="textSecondary">
             {t('past.day')}
           </AppText>
-          <View style={styles.row}>
-            <Button variant="secondary" label={t('past.earlier')} onPress={() => setDaysBack(daysBack + 1)} />
-            <AppText variant="metric">{formatCalendarDay(day, locale)}</AppText>
-            <Button
-              variant="secondary"
-              label={t('past.later')}
-              disabled={daysBack === 0}
-              onPress={() => setDaysBack(Math.max(0, daysBack - 1))}
-            />
+          <AppText variant="metric">{formatCalendarDay(day, locale)}</AppText>
+          <View style={styles.steps}>
+            <View style={styles.step}>
+              <Button variant="secondary" label={t('past.earlier')} onPress={() => setDaysBack(daysBack + 1)} />
+            </View>
+            <View style={styles.step}>
+              <Button
+                variant="secondary"
+                label={t('past.later')}
+                disabled={daysBack === 0}
+                onPress={() => setDaysBack(Math.max(0, daysBack - 1))}
+              />
+            </View>
           </View>
         </View>
 
@@ -115,14 +123,7 @@ export function PastWorkoutSheet({ visible, onLog, onClose }: PastWorkoutSheetPr
           </AppText>
         )}
 
-        <NumericKeypad
-          value={digits[editing]}
-          onChange={(next) => setDigits({ ...digits, [editing]: next })}
-          onDone={() => setEditing(editing === 'start' ? 'end' : 'start')}
-          allowDecimal={false}
-          maxIntegerDigits={4}
-        />
-
+        {/* Above the keypad, so the one action the sheet is for is in view without scrolling (device pass). */}
         <Button
           label={t('past.confirm')}
           disabled={startsAt === null || endsAt === null || error !== null}
@@ -131,6 +132,15 @@ export function PastWorkoutSheet({ visible, onLog, onClose }: PastWorkoutSheetPr
             if (pastWorkoutProblem({ startsAt, endsAt, now: Date.now() }) === null) onLog(startsAt, endsAt);
           }}
         />
+
+        <NumericKeypad
+          value={digits[editing]}
+          onChange={(next) => setDigits({ ...digits, [editing]: next })}
+          onDone={() => setEditing(editing === 'start' ? 'end' : 'start')}
+          allowDecimal={false}
+          maxIntegerDigits={4}
+        />
+
         <Button variant="quiet" label={t('past.cancel')} onPress={onClose} />
       </ScrollView>
     </Sheet>
@@ -141,4 +151,6 @@ const styles = StyleSheet.create({
   body: { gap: space[4], paddingBottom: space[4] },
   field: { gap: space[1] },
   row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: space[3] },
+  steps: { flexDirection: 'row', gap: space[3] },
+  step: { flex: 1 },
 });

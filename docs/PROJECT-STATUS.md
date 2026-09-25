@@ -21,7 +21,7 @@ when its own criteria are ticked. Tick the box here only then.
 | **Decisions** | 15 ADRs, **all now accepted**. [ADR-004](decisions/ADR-004.md)'s spike passed on 2026-09-18 and its outcome is recorded: **option B, the single Rust core**. Its four pre-launch conditions remain outstanding, in tasks 005 and 006 |
 | **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **6 complete** (001, 002, 011, 003, 019, 017) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) — the core loop, in progress since 2026-09-19. Stages 0–6 are built and green locally on every gate CI runs; stages 7–8 remain** (history and charts, the API mirror and the closing device pass). **Next: one device pass over stages 5a–6, on a fresh APK, then stage 7.** Stage 6 was built before the 5a–5c pass was run, so one build covers both lists in the task file: routines on the phone, supersets, the refused notification permission, TalkBack, ✓ latency on a routine session, 5c's modes and migration `0003`, and stage 6's finish flow, records, past workout and discard. The APK needs the `.so` files rebuilt on 2026-09-24 for `personal_bests`. Already proven on the Galaxy S21 FE: the ✓ at p50 10.5 ms against NFR-2's 100 ms (stage 3), migration `0002` against real logged sets, every cold start reopening the workout in progress, and a force-quit mid-rest coming back to the same rest (2026-09-23). **Still open from earlier stages:** stage 4's own device pass (accessibility, font scale); from stage 3's, the imperial half of the 200 % font check, TalkBack actually switched on, and `Sheet`'s lost exit animation, which needs a `reanimated`-based fix. Whether the set row's numbers must hold one line at default scale is an open design question in [07 §6](07-brand-and-ui.md). Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
+| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) — the core loop, in progress since 2026-09-19. Stages 0–6 are built and green locally on every gate CI runs; stages 7–8 remain** (history and charts, the API mirror and the closing device pass). **Stage 6 has been on the phone (2026-09-24)** — records matched the fixture's predictions three times out of three, and the pass found and fixed a sheet that ran off the screen. **Next: the rest of the stage 5 device list, on the build already installed, then stage 7.** What remains there: routines on the phone, supersets, the refused notification permission, TalkBack (stage 5's and stage 6's), ✓ latency on a routine session, and 5c's modes on the device (migration `0003` is already applied there). Already proven on the Galaxy S21 FE: the ✓ at p50 10.5 ms against NFR-2's 100 ms (stage 3), migration `0002` against real logged sets, every cold start reopening the workout in progress, and a force-quit mid-rest coming back to the same rest (2026-09-23). **Still open from earlier stages:** stage 4's own device pass (accessibility, font scale); from stage 3's, the imperial half of the 200 % font check, TalkBack actually switched on, and `Sheet`'s lost exit animation, which needs a `reanimated`-based fix. Whether the set row's numbers must hold one line at default scale is an open design question in [07 §6](07-brand-and-ui.md). Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
 
 ### The decision that was open is closed — option B
 
@@ -2032,5 +2032,54 @@ was fast-forwarded to the branch head first; it now carries this stage's `core-r
 - Core: fmt, clippy `-D warnings`, 49 unit tests and 6 fixture tests.
 - API: `ruff`, `ruff format`, `mypy`, six import contracts, and 158 unit tests. The integration suite needs the
   local Postgres and was not run, but nothing the API touches changed except `app/domain/strength.py`'s re-export.
+
+- No invariant changed and no ADR was added. Counts unchanged: 49 documents, 15 ADRs.
+
+### 2026-09-24 — task 004 stage 6 on the phone: the records hold, and every tall sheet ran off the screen
+
+The first device pass for stage 6, the same evening, on the Galaxy S21 FE (Android 16, pt-BR, metric, dark), with a
+development build of `a662add`. It was built in WSL2 in under two minutes (an incremental Gradle build, arm64 only)
+and installed over the previous build, so the phone kept its data. The packaged core library was checked for
+`personal_bests` before installing.
+
+**The client half of the fixture criterion is settled.** Three finishes were predicted from the fixture's rules before
+the tap, and the phone showed exactly those records, read back from SQLite as well as from the screen:
+- a first-ever session, where an e1RM past 12 effective reps is refused;
+- a second session beating it, at **83,33 kg**;
+- a past workout dated *before* the second but judged against it, taking the heaviest-weight record and not the e1RM
+  one — decision 2, the current best whatever the date, on real data.
+
+**Also proven on the phone:**
+- A 100 kg warm-up celebrated nothing and was not counted.
+- Fatigue cleared to NULL, not 0.
+- A note survived a force-stop with the finish sheet open.
+- Discard left a tombstone that no cold start reopens.
+- A past workout ran no timer and scheduled no alarm, its set dated to the chosen end with `updated_at` real.
+
+The task file's stage-6 list has the numbers. TalkBack was not run. The acceptance criterion *the e1RM fixture
+produces identical results in Python and TypeScript* is now ticked.
+
+**⚠ The finding worth the entry: every tall `Sheet` ran off the top of the screen.** It is stage 4's, and its device
+pass had never run. The modal is drawn edge to edge, and the sheet neither kept out of the insets nor shrank. So the
+exercise picker grew to 201 rows tall, pushing its title, close button and search field above the top edge, and it
+could be left only by the system back button. The picker's own list was set to shrink, with nothing above it to
+shrink against, and the comment beside it claimed the sheet "fits any screen". **Every Jest suite passed throughout**,
+the same shape as stage 3's `Sheet` defect: a layout claim that only a phone can check. Fixed in `Sheet`:
+- insets on both edges, and a strip of backdrop to tap;
+- `flexShrink`, so a list inside it scrolls;
+- a `KeyboardAvoidingView`, because the same edge-to-edge modal also left the picker's search results under the
+  keyboard.
+
+Two tests pin the geometry, one watched failing; the phone confirmed both.
+
+**Three smaller fixes**, all verified on the phone:
+- The past-workout sheet's *Registrar* sat below its keypad, off-screen, and *Dia seguinte* wrapped alone. The day
+  now has its own line with its two steps side by side, and *Registrar* is above the keypad.
+- "0 série marcada" is gone: CLDR puts Portuguese 0 with the singular, which reads wrong in Brazil. **Worth the
+  native-speaker review's attention across every plural message**, not just this one.
+- Recorded, not fixed:
+  - the dev client's floating *Tools* button covers *Encerrar* (development builds only);
+  - the ✓ has no accessible name of its own, which is for the TalkBack criterion;
+  - a fork reads identically to its global in the picker, which is a design question.
 
 - No invariant changed and no ADR was added. Counts unchanged: 49 documents, 15 ADRs.

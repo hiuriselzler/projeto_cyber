@@ -96,7 +96,7 @@ Jest tests, and none was findable without a device.
 | **5a** | Routines — build, edit, reorder, duplicate, folders, archive; supersets; start-from-routine pre-filling last-used weights and carrying the routine's targets and rest | ☑ 2026-09-23, device pass not yet run |
 | **5b** | The live session finished off — set types; the rest timer with haptics and its notification; ✓ advancing focus (superset-aware); removing and reordering exercises mid-session; reopening the workout in progress on relaunch | ☑ 2026-09-23, device pass part-run the same evening |
 | **5c** | The `duration` and `distance_duration` tracking modes — the set row that logs them, and the create form offering them | ☑ 2026-09-23, device pass not yet run |
-| **6** | The finish flow — PR detection and its celebration, perceived fatigue, notes, retroactive logging | ☑ 2026-09-24, device pass not yet run |
+| **6** | The finish flow — PR detection and its celebration, perceived fatigue, notes, retroactive logging | ☑ 2026-09-24, device pass run the same evening (TalkBack not) |
 | **7** | History and per-exercise charts; `personal_records` as a cache, with its rebuild command | ☐ |
 | **8** | The API mirror endpoints, and the closing device pass over the whole loop | ☐ |
 
@@ -271,9 +271,13 @@ the code reads this file:
       **p50 10.5 ms, p95 12.4 ms, worst 20.1 ms** on a Galaxy S21 FE, 2026-09-19, for the write and the re-read
 - [ ] RIR left blank stores NULL; a chart or total never treats it as 0. *(Storage half proven on the device — a
       blank row reads "RIR não registrado" and `5+` writes nothing. No chart or total exists to check yet.)*
-- [ ] Warm-up sets appear in the log but are excluded from volume, PRs and set counts
+- [ ] Warm-up sets appear in the log but are excluded from volume, PRs and set counts. *(Stage 6, on the phone: a 100 kg
+      warm-up before a 62,5 kg working set celebrated nothing, and the summary counted 1 set and 500 kg. "Appear in the
+      log" means the history screen, which is stage 7's.)*
 - [ ] Archiving an exercise leaves every historical set intact and displayable
-- [ ] The e1RM fixture produces identical results in Python and TypeScript
+- [x] The e1RM fixture produces identical results in Python and TypeScript — Rust and Python run the shared fixtures;
+      the TypeScript half runs through the same core on the phone, where stage 6's finishes showed exactly the e1RMs
+      Epley gives — 80 kg for 60 × 8 @ 2, 83,33 kg for 62,5 × 8 @ 2 — and none past 12 effective reps (2026-09-24)
 - [ ] A weighted pull-up at body weight 80 kg + 20 kg × 5 @ RIR 2 has an e1RM of **123.3 kg**
       (100 kg × (1 + 7/30)); logging a new body weight a week later leaves that e1RM unchanged; and with
       no body weight logged by the set's date, its e1RM is NULL
@@ -376,24 +380,61 @@ metric, dark — a development build carrying commit `228069e`, installed **over
       the set row ignored `tracking` entirely. **Fixed in stage 5c**: the row draws each mode's own fields. In CI, not yet
       on the phone
 
-**Stage 6 on the device** *(added 2026-09-24 with the stage; not yet run. It needs a fresh APK: the core gained
-`personal_bests`, and the `.so` files were rebuilt in WSL2 for it)*
-- [ ] **The e1RM and records fixtures agree on the phone.** `personal_bests` and `detect_prs` are proven in Rust and
-      Python; the client half of "identical results in Python and TypeScript" is settled here, as stage 1 said. A
-      workout with a known best (for example 100 kg × 5 @ 2 after 90 kg × 5 @ 2) must show exactly the records the
-      fixture predicts
-- [ ] Finishing: the sheet counts ticked and unticked sets; fatigue takes a tap and clears with a second; the note
-      survives a force-quit with the sheet open; *Finish* lands on the summary, and *Done* lands home
-- [ ] **A warm-up heavier than every working set celebrates nothing, and is not in the summary's counted sets** — the
-      PR and set-count half of the warm-up criterion above, on the device
-- [ ] Nothing ticked: the sheet offers only *Discard*, and a discarded workout never returns on a cold start nor
-      becomes the next session's "last time"
-- [ ] A past workout, logged for yesterday: no rest bar and no notification, and after finishing `local_date`,
-      `started_at` and `ended_at` read what was chosen, each set's `completed_at` is the chosen end, and each
-      `updated_at` is the real time
-- [ ] The summary with TalkBack on: the heading, each record as one element, *Done*; under reduce motion, no rise
+**Stage 6 on the device** *(run 2026-09-24 on the Galaxy S21 FE, Android 16, pt-BR, metric, dark — a development
+build of `a662add` built in WSL2 with the `.so` files rebuilt for `personal_bests`, installed **over** the previous build
+so the phone kept its data. Every value below was read back from the phone's SQLite, not only from the screen)*
+- [x] **The e1RM and records fixtures agree on the phone** — the client half of "identical results in Python and
+      TypeScript" that stage 1 said only a device could settle. Three finishes, each predicted from the fixture's rules
+      before the tap and matched exactly:
+      - a first-ever session: seven records, none for an e1RM past 12 effective reps (100 × 12 @ 10), and 80 kg for
+        60 × 8 @ 2;
+      - 62,5 × 8 @ 2 against it: heaviest weight, **83,33 kg** e1RM, 8 reps at 62,5 kg and 500 kg of volume;
+      - a past workout dated *before* that one, 65 × 6 @ 2: heaviest weight and 6 reps at 65 kg only, with no e1RM
+        record (≈ 82,33 < 83,33) and no volume record (390 < 500). The current best, whatever the date (decision 2).
+- [x] Finishing: the sheet counted "9 séries marcadas" and, later, "2 séries marcadas" with "1 série não marcada"; fatigue 7
+      stored 7, a second tap stored **NULL, not 0**, and 6 stored 6; the note, typed and then force-stopped with the sheet
+      open, was in the row and back in the field after the cold start, which reopened the workout. *Finalizar* landed on
+      the summary; *Concluir* went home
+- [x] **A 100 kg warm-up before a 62,5 kg working set celebrated nothing**, and the summary counted **1** set and 500 kg —
+      the PR and set-count half of the warm-up criterion above
+- [x] Nothing ticked: the sheet offered only *Descartar*; the row took `ended_at` and `deleted_at` and stayed; the cold start
+      landed on home, not in it; and the next bench session's "last time" still came from the last finished one
+- [x] A past workout for yesterday, 18:00–19:30, on an exercise given a 1:00 rest: after the ✓ only the target caption
+      showed — no bar, no *Pular*, and no alarm registered for the app. The set's `completed_at` read **19:30 on the 23rd**
+      and its `updated_at` the real time; `local_date` 2026-09-23; after finishing `ended_at` read 19:30 and the device
+      store was empty again. The exercise's note and rest were in `workout_exercises`
+- [ ] The summary with TalkBack on: the heading, each record as one element, *Done*; under reduce motion, no rise. *Not
+      run: switching TalkBack on is a phone setting. The tree gives the heading its role; whether each record reads as
+      one element needs the screen reader itself*
 - [ ] *Stage 7's, recorded here so it is not lost:* nothing reopens an older summary until workout detail exists. Once
       it does, an old workout must name the same records, and none that a later workout has since beaten (decision 2)
+
+**Found by the stage 6 device pass** *(2026-09-24 — four fixed the same evening, and verified on the phone after the fix;
+three recorded)*
+- [x] **⚠ Every tall sheet ran off the top of the screen — the exercise picker could be neither searched nor closed.**
+      Stage 4's, and invisible until its device pass: `Sheet` neither kept out of the system insets (the modal is drawn edge
+      to edge) nor shrank, so the picker grew to the height of 201 rows and pushed its own title, close button and search
+      field above the top edge; only the system back button left it. Fixed in `Sheet`: the frame keeps the top inset plus a
+      strip of backdrop to tap, the bottom inset pads the sheet, and the sheet shrinks so a list inside scrolls. Two tests
+      pin it (`surfaces.test.tsx`), one watched failing
+- [x] **Search results sat under the keyboard.** The same edge-to-edge modal is not resized for the keyboard, so typing
+      in the picker hid everything it found, and a tap meant for a result typed a letter. Fixed with a
+      `KeyboardAvoidingView` in `Sheet`, one behaviour on every OS (INV-28); the results now sit above the keyboard
+- [x] **The past-workout sheet hid its own button**: *Dia seguinte* wrapped alone onto a line, and *Registrar* sat below
+      the keypad, off-screen. The day now has its own line with its two steps side by side, and *Registrar* is above the
+      keypad
+- [x] **"0 série marcada"** in the finish sheet with nothing ticked — CLDR's Portuguese rule puts 0 with the singular, which
+      reads wrong in Brazil, and the sentence beneath already says nothing was ticked. The count is no longer shown at
+      zero. *Other `{count, plural}` messages can meet a zero too; the native-speaker review should look at them as a set*
+- [ ] **The development client's floating *Tools* button covers the right edge of *Encerrar*.** A tap there opens the dev
+      menu. Development builds only, so not a product defect — but it is the workout's primary action, and it cost this
+      pass a tap
+- [ ] **The ✓ has no accessible name of its own** in the tree: the row is one element carrying the sentence, and the ✓
+      inside it is an unlabelled button. Whether TalkBack reaches it through the row is the open TalkBack criterion's to
+      settle
+- [ ] **A forked global and the global itself read identically in the picker** — "Abdominal bicicleta" twice, one of
+      them the user's own copy. Stage 4's fork-on-edit, working as decided; whether a fork should be marked as the user's
+      is a design question, not a defect
 
 **Found on the device, and not yet fixed**
 - [x] **The set row reflows at font scale 0.86** — *half answered 2026-09-21, and the half that was a defect is

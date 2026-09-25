@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { Animated, Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Animated, KeyboardAvoidingView, Modal, Pressable, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useT } from '../i18n/LocaleProvider';
 import { easingOf, motionFor } from '../motion/motion';
@@ -24,6 +25,7 @@ interface SheetProps {
 export function Sheet({ visible, onClose, title, children }: SheetProps) {
   const theme = useTheme();
   const t = useT();
+  const insets = useSafeAreaInsets();
   const reduceMotion = useReduceMotion();
   // Held in state, not a ref: the value is read while rendering, and created once.
   const [progress] = useState(() => new Animated.Value(visible ? 1 : 0));
@@ -72,14 +74,32 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
 
   return (
     <Modal transparent visible animationType="none" onRequestClose={onClose}>
-      <View style={styles.frame}>
+      {/*
+       * Inside the system's insets, and never taller than the screen (task 004 stage 6 device pass). The modal is drawn
+       * edge to edge, so without the top inset a tall sheet ran under the status bar; and without `flexShrink` it grew to
+       * the height of its content, so the exercise picker's 201 rows pushed its own title, close button and search field
+       * off the top of the screen — a sheet the user could neither search nor close. The strip kept above it is backdrop
+       * to tap, so the sheet can always be dismissed by touch as well as by its button.
+       */}
+      {/*
+       * And above the keyboard: the modal is drawn edge to edge, so the window is not resized for it, and a search
+       * field's results were left underneath the keyboard (the exercise picker, same pass). `padding` is the one
+       * behaviour, on every OS — no branch on the platform (INV-28).
+       */}
+      <KeyboardAvoidingView
+        behavior="padding"
+        style={[styles.frame, { paddingTop: insets.top + space[12] }]}
+        testID="sheet-frame"
+      >
         <Pressable style={styles.dismiss} onPress={onClose} accessible={false} />
         <Animated.View
+          testID="sheet"
           accessibilityViewIsModal
           style={[
             styles.sheet,
             theme.elevation,
             {
+              paddingBottom: space[4] + insets.bottom,
               opacity: progress,
               transform: [{ translateY: rise }],
               backgroundColor: theme.colors.bgElevated,
@@ -95,7 +115,7 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
           </View>
           {children}
         </Animated.View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -104,6 +124,8 @@ const styles = StyleSheet.create({
   frame: { flex: 1, justifyContent: 'flex-end' },
   dismiss: { flex: 1 },
   sheet: {
+    // Shrinks to what the frame leaves, so a long list inside scrolls instead of pushing the header off screen.
+    flexShrink: 1,
     padding: space[4],
     gap: space[3],
     borderTopLeftRadius: radii.lg,

@@ -52,7 +52,11 @@ export function FinishSheet({
     <Sheet visible={visible} onClose={onClose} title={t('finish.title')}>
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.body}>
         <View style={styles.field}>
-          <AppText>{t('finish.ticked', { count: ticked })}</AppText>
+          {/*
+           * No count at zero: "Nenhuma série foi marcada" below already says it, and the plural rule gave "0 série
+           * marcada", which reads wrong in Brazilian Portuguese (task 004 stage 6 device pass).
+           */}
+          {ticked > 0 ? <AppText>{t('finish.ticked', { count: ticked })}</AppText> : null}
           {unticked > 0 ? (
             <AppText variant="caption" tone="textSecondary">
               {t('finish.unticked', { count: unticked })}

@@ -162,6 +162,8 @@ describe.each(MATRIX)('$locale, $unitSystem, $preference', (setting) => {
       const onDiscard = jest.fn();
       await renderUi(<FinishSheet {...FINISH_BASE} ticked={0} unticked={4} onDiscard={onDiscard} />, setting);
       expect(screen.queryByRole('button', { name: words.finish })).toBeNull();
+      // No "0 série marcada": the plural rule reads wrong in pt-BR, and the sentence below already says it (device pass).
+      expect(screen.queryByText(/^0 /)).toBeNull();
       await fireEvent.press(screen.getByRole('button', { name: words.discard }));
       expect(onDiscard).toHaveBeenCalledTimes(1);
     });
