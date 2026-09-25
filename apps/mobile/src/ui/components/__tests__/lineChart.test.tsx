@@ -58,6 +58,18 @@ describe.each(MATRIX)('$locale, $unitSystem, $preference', (setting) => {
     expect(screen.queryByText('0 u')).toBeNull();
   });
 
+  it('starts the line to the right of its widest axis value, however large the font (stage 7 device pass)', async () => {
+    await renderUi(chart(), setting);
+    await layOut();
+    const firstX = () => Number(/^M([\d.]+)/.exec(String(screen.getByTestId('line-chart-segment').props.d))?.[1]);
+    expect(firstX()).toBeLessThan(20);
+
+    for (const tick of screen.getAllByTestId('line-chart-tick')) {
+      await fireEvent(tick, 'layout', { nativeEvent: { layout: { width: 48, height: 16, x: 0, y: 0 } } });
+    }
+    expect(firstX()).toBeGreaterThanOrEqual(48);
+  });
+
   it('moves the readout to the session nearest a tap — the gap included, said as a gap', async () => {
     await renderUi(chart(), setting);
     await layOut();

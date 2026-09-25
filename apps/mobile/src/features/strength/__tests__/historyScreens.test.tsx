@@ -58,6 +58,7 @@ const WORDS = {
     empty: 'No finished workouts yet',
     more: 'Show older workouts',
     twoSets: '2 counted sets',
+    noSets: 'no counted sets',
     warmup: 'Warm-up',
     notTicked: 'not ticked',
     noRecords: 'This workout holds no record today.',
@@ -74,6 +75,7 @@ const WORDS = {
     empty: 'Nenhum treino finalizado ainda',
     more: 'Mostrar treinos mais antigos',
     twoSets: '2 séries contadas',
+    noSets: 'nenhuma série contada',
     warmup: 'Aquecimento',
     notTicked: 'não marcada',
     noRecords: 'Este treino não detém nenhum recorde hoje.',
@@ -156,6 +158,19 @@ describe.each(MATRIX)('$locale, $unitSystem, $preference', (setting) => {
       expect(screen.getByText('Treino A')).toBeOnTheScreen();
       expect(screen.getByText(words.twoSets)).toBeOnTheScreen();
       expect(screen.queryByText(words.more)).toBeNull();
+    });
+
+    it('says a workout with nothing counted in words, never "0 série contada" (stage 7 device pass)', async () => {
+      jest.mocked(listFinishedWorkouts).mockReturnValue([{ id: 'w1', title: 'Treino A', startedAt: 1, localDate: '2026-09-23' }]);
+      jest.mocked(sessionMetrics).mockReturnValue([metrics({ countedSets: 0, volumeKg: null })]);
+      await renderUi(<WorkoutHistoryScreen />, setting);
+      expect(screen.getByText(words.noSets)).toBeOnTheScreen();
+    });
+
+    it('opens a workout’s detail from its row', async () => {
+      jest.mocked(listFinishedWorkouts).mockReturnValue([{ id: 'w1', title: 'Treino A', startedAt: 1, localDate: '2026-09-23' }]);
+      jest.mocked(sessionMetrics).mockReturnValue([metrics()]);
+      await renderUi(<WorkoutHistoryScreen />, setting);
       await fireEvent.press(screen.getByRole('button', { name: new RegExp('^Treino A') }));
       expect(mockPush).toHaveBeenCalledWith({ pathname: '/workouts/[id]', params: { id: 'w1' } });
     });

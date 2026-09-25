@@ -516,7 +516,7 @@
     "empty_title": "Nenhum treino finalizado ainda",
     "empty_body": "Finalize um treino e ele aparece aqui, com cada série como você registrou.",
     "more": "Mostrar treinos mais antigos",
-    "counted_sets": "{count, plural, one {# série contada} other {# séries contadas}}",
+    "counted_sets": "{count, plural, =0 {nenhuma série contada} one {# série contada} other {# séries contadas}}",
     "row": "{title}, {day}, {sets}",
     "row_volume": "{title}, {day}, {sets}, {volume}",
     "fatigue": "Cansaço {value} de 10",

@@ -72,10 +72,21 @@ export function niceTicks(min: number, max: number, count = 3): number[] {
 /**
  * Where every point sits in a `width` × `height` box, `inset` in from each edge so a dot at the extreme is drawn whole.
  * Time runs left to right; a single day sits in the middle.
+ *
+ * `gutter` is room kept clear on the left for the axis values, which sit on their gridlines there: without it the
+ * oldest point, when it is also the lowest, is drawn straight through its own axis label. `headroom` keeps the top
+ * gridline one label below the top edge, so its value, standing on it, stays inside the plot — at 200 % font it rose
+ * over the readout above (both found on the task 004 stage 7 device pass).
  */
 export function plotChart(
   points: readonly ChartPoint[],
-  box: { readonly width: number; readonly height: number; readonly inset: number },
+  box: {
+    readonly width: number;
+    readonly height: number;
+    readonly inset: number;
+    readonly gutter?: number;
+    readonly headroom?: number;
+  },
 ): Plot {
   const values = points.flatMap((point) => (point.y === null ? [] : [point.y]));
   const ticks = values.length === 0 ? [] : niceTicks(Math.min(...values), Math.max(...values));
@@ -85,10 +96,12 @@ export function plotChart(
   const left = Math.min(...xs);
   const right = Math.max(...xs);
 
-  const innerWidth = Math.max(0, box.width - 2 * box.inset);
-  const innerHeight = Math.max(0, box.height - 2 * box.inset);
-  const xOf = (x: number) => box.inset + (right === left ? innerWidth / 2 : ((x - left) / (right - left)) * innerWidth);
-  const yOf = (y: number) => box.inset + innerHeight - ((y - bottom) / (top - bottom)) * innerHeight;
+  const start = (box.gutter ?? 0) + box.inset;
+  const innerWidth = Math.max(0, box.width - start - box.inset);
+  const ceiling = Math.max(box.inset, box.headroom ?? 0);
+  const innerHeight = Math.max(0, box.height - ceiling - box.inset);
+  const xOf = (x: number) => start + (right === left ? innerWidth / 2 : ((x - left) / (right - left)) * innerWidth);
+  const yOf = (y: number) => ceiling + innerHeight - ((y - bottom) / (top - bottom)) * innerHeight;
 
   const plotted: PlottedPoint[] = points.map((point) => ({
     key: point.key,

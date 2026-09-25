@@ -516,7 +516,7 @@
     "empty_title": "No finished workouts yet",
     "empty_body": "Finish a workout and it appears here, with every set as you logged it.",
     "more": "Show older workouts",
-    "counted_sets": "{count, plural, one {# counted set} other {# counted sets}}",
+    "counted_sets": "{count, plural, =0 {no counted sets} one {# counted set} other {# counted sets}}",
     "row": "{title}, {day}, {sets}",
     "row_volume": "{title}, {day}, {sets}, {volume}",
     "fatigue": "Fatigue {value} of 10",

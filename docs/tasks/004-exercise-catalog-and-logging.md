@@ -97,7 +97,7 @@ Jest tests, and none was findable without a device.
 | **5b** | The live session finished off — set types; the rest timer with haptics and its notification; ✓ advancing focus (superset-aware); removing and reordering exercises mid-session; reopening the workout in progress on relaunch | ☑ 2026-09-23, device pass part-run the same evening |
 | **5c** | The `duration` and `distance_duration` tracking modes — the set row that logs them, and the create form offering them | ☑ 2026-09-23, device pass not yet run |
 | **6** | The finish flow — PR detection and its celebration, perceived fatigue, notes, retroactive logging | ☑ 2026-09-24, device pass run the same evening (TalkBack not) |
-| **7** | History and per-exercise charts; `personal_records` as a cache, with its rebuild command | ☑ 2026-09-25, device pass pending |
+| **7** | History and per-exercise charts; `personal_records` as a cache, with its rebuild command | ☑ 2026-09-25, device pass run the same evening (imperial and TalkBack not) |
 | **8** | The API mirror endpoints, and the closing device pass over the whole loop | ☐ |
 
 **Stage 4 carries three decisions the catalog screen forces**, recorded in PROJECT-STATUS's decision
@@ -320,12 +320,18 @@ sets — each over what counts (INV-04) and in one crossing of the boundary per 
       2026-09-24, when this note was found still saying "not yet on the phone")*
 - [x] Tapping ✓ renders in < 100 ms on a mid-range Android device (measure, do not assume) —
       **p50 10.5 ms, p95 12.4 ms, worst 20.1 ms** on a Galaxy S21 FE, 2026-09-19, for the write and the re-read
-- [ ] RIR left blank stores NULL; a chart or total never treats it as 0. *(Storage half proven on the device — a
-      blank row reads "RIR não registrado" and `5+` writes nothing. No chart or total exists to check yet.)*
-- [ ] Warm-up sets appear in the log but are excluded from volume, PRs and set counts. *(Stage 6, on the phone: a 100 kg
-      warm-up before a 62,5 kg working set celebrated nothing, and the summary counted 1 set and 500 kg. "Appear in the
-      log" means the history screen, which is stage 7's.)*
-- [ ] Archiving an exercise leaves every historical set intact and displayable
+- [x] RIR left blank stores NULL; a chart or total never treats it as 0. *(Storage half proven on the device — a
+      blank row reads "RIR não registrado" and `5+` writes nothing. **Chart half on the phone, stage 7 (2026-09-25):** the
+      bench press's e1RM chart runs 80 → 82,3 → 83,3 and stops at "Treino A", whose sets have no RIR, with the note saying
+      why — no point at zero; its top-set and volume charts carry that session normally)*
+- [x] Warm-up sets appear in the log but are excluded from volume, PRs and set counts. *(Stage 6, on the phone: a 100 kg
+      warm-up before a 62,5 kg working set celebrated nothing, and the summary counted 1 set and 500 kg. **Stage 7, on the
+      phone:** the same warm-up appears in the workout's detail and the exercise's history as "Aq · Aquecimento", while
+      the list counts that workout as 1 set and 500 kg and the top-set chart reads 62,5 kg, not 100)*
+- [ ] Archiving an exercise leaves every historical set intact and displayable. *(Stage 7: the exercise history reads
+      through an archived exercise and says it is hidden — in Jest (`historyScreens.test.tsx`) and by construction,
+      `readExercise` and `readExerciseSessions` not filtering on `deleted_at`. Not yet done on the phone: hide an exercise
+      with history and open it from an old workout's detail)*
 - [x] The e1RM fixture produces identical results in Python and TypeScript — Rust and Python run the shared fixtures;
       the TypeScript half runs through the same core on the phone, where stage 6's finishes showed exactly the e1RMs
       Epley gives — 80 kg for 60 × 8 @ 2, 83,33 kg for 62,5 × 8 @ 2 — and none past 12 effective reps (2026-09-24)
@@ -485,8 +491,10 @@ so the phone kept its data. Every value below was read back from the phone's SQL
 - [ ] The summary with TalkBack on: the heading, each record as one element, *Done*; under reduce motion, no rise. *Not
       run: switching TalkBack on is a phone setting. The tree gives the heading its role; whether each record reads as
       one element needs the screen reader itself*
-- [ ] *Stage 7's, recorded here so it is not lost:* nothing reopens an older summary until workout detail exists. Once
-      it does, an old workout must name the same records, and none that a later workout has since beaten (decision 2)
+- [x] *Stage 7's, recorded here so it is not lost:* nothing reopens an older summary until workout detail exists. Once
+      it does, an old workout must name the same records, and none that a later workout has since beaten (decision 2).
+      **On the phone, 2026-09-25:** the past workout of the 23rd names "Maior carga: 65 kg" and "Mais repetições com 65
+      kg: 6" — the records stage 6's pass saw it take — and not its 82,33 kg e1RM, which the next day's 83,33 beat
 
 **Found by the stage 6 device pass** *(2026-09-24 — four fixed the same evening, and verified on the phone after the fix;
 three recorded)*
@@ -515,6 +523,39 @@ three recorded)*
       them the user's own copy. Stage 4's fork-on-edit, working as decided. **Decided 2026-09-24: mark it.** Every
       exercise of the user's own — a fork or one they made — carries "Seu"/"Yours" in the picker and in the catalog's
       caption, and says it aloud ("Abdominal bicicleta, seu"), so the mark is never visual alone (INV-24)
+
+**Stage 7 on the device** *(run 2026-09-25 on the Galaxy S21 FE, Android 16, pt-BR, metric, dark — a development build
+of `d6354d3` built in WSL2 with the regenerated `.so`, `session_metrics` and `standing_records` checked in the packaged
+library, installed over the previous build so the phone kept the data of every earlier pass. Every number was predicted
+from the pulled SQLite copy before the screen was opened)*
+- [x] **The list**: four finished workouts, newest first — "Treino A" 7 sets 1.000 kg, "Treino" 1 set 500 kg, the past
+      workout of the 23rd 1 set 390 kg, and the 19th 9 sets 1.680 kg — and neither discarded one. A reps-only row and a
+      hold count as sets with no tonnage (INV-04, 5c decision 1)
+- [x] **The detail**: every set as logged, eight unticked rows marked "não marcada", the warm-up as "Aq · Aquecimento",
+      a hold as "1:30" and a carry as "24 kg · 30 m · 0:40", notes as typed; "Treino A" holds only "Maior volume em uma
+      sessão: 1.000 kg" for the bench — its 62,5 × 8 only ties the other workout's — and the carry's 24 kg
+- [x] **The charts**: the bench's top set 60 → 65 → 62,5, e1RM 80 → 82,3 → 83,3 with the gap and its note, volume ending
+      at 1.000; each opens on its latest value, and a tap moved the e1RM readout to "23/09/2026 · 82,3 kg" and nothing
+      else. The crossover draws one lone dot and no e1RM chart (12 reps at RIR 10 is past Epley's range); the row says
+      there is nothing to chart; the plank lists 1:30 and says time is not charted yet
+- [x] **200 % font**: after the two fixes below, every axis value stays inside its plot and the line starts clear of the
+      widest one. The phone's scale was restored to 0.86 afterwards
+- [ ] **Imperial**: not run. It needs the cached `users` row flipped, and this phone's database is every earlier pass's
+      record; the conversion is covered by Jest (`history.test.ts`, `historyFormats.test.ts`)
+- [ ] **TalkBack** on the chart's adjustable actions: not run (a phone setting); the tree gives the plot `adjustable`
+      and the summary as its label
+
+**Found by the stage 7 device pass** *(2026-09-25 — all three fixed and verified on the phone)*
+- [x] **The oldest point ran through its own axis label.** The values sit on their gridlines at the left edge, and when
+      the oldest session is also the lowest, the line started under "60 kg". The labels now have a gutter measured from
+      their own layout, so it grows with the font; a test lays the labels out and checks where the line starts, watched
+      failing with the gutter switched off
+- [x] **At 200 % the top axis value rose over the readout.** It stands on the top gridline, which sat a dot's radius from
+      the plot's top. The top gridline is now one measured label-height down
+- [x] **"0 série contada"** under a workout whose sets were all unticked — the zero-plural stage 6 found in the finish
+      sheet, in a new message. There a zero could be hidden; here it is the information, so the message has an explicit
+      `=0` case in both languages: "nenhuma série contada", "no counted sets". *The native-speaker review should look at
+      every `{count, plural}` message for the same thing*
 
 **Found on the device, and not yet fixed**
 - [x] **The set row reflows at font scale 0.86** — *half answered 2026-09-21, and the half that was a defect is

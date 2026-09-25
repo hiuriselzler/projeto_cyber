@@ -66,6 +66,18 @@ describe('a plot', () => {
     expect(plot.isolated.map((each) => each.key)).toEqual(['b']);
   });
 
+  it('keeps the axis values’ gutter clear, so the oldest point never lands on its own label', () => {
+    const plot = plotChart([point('a', 0, 60), point('b', 10, 80)], { ...BOX, gutter: 40 });
+    expect(plot.points[0]?.cx).toBe(40);
+    expect(plot.points[1]?.cx).toBe(200);
+  });
+
+  it('keeps the top gridline one label below the top edge, so its value stays inside the plot', () => {
+    const plot = plotChart([point('a', 0, 60), point('b', 10, 80)], { ...BOX, headroom: 32 });
+    const highest = plot.ticks.at(-1);
+    expect(highest?.y).toBeGreaterThanOrEqual(32);
+  });
+
   it('centres a single day', () => {
     const plot = plotChart([point('a', 5, 90)], BOX);
     expect(plot.points[0]?.cx).toBe(100);

@@ -15,13 +15,13 @@ when its own criteria are ticked. Tick the box here only then.
 
 | | |
 |---|---|
-| **Phase** | **Tasks 001, 002, 011, 003, 019 and 017 complete; [task 004](tasks/004-exercise-catalog-and-logging.md) in progress.** The schema exists in Postgres and SQLite, seeded and enforcing itself; the design system exists in `src/ui/`, token-driven and tested in both languages, both unit systems and both themes; accounts, sessions and the privacy key exist on both sides, with row-level security proven under the API's own role; a user can delete their account, from the app or the web; and [ADR-004](decisions/ADR-004.md) has its answer — **option B, the single Rust core**, proven through both bindings on the device. Task 004 has stages 0–6 built — the core's first residents, the seeded catalog, the set row, the catalog screen, routines, the rest timer, set types, every tracking mode, and the finish flow with its records — with stages 7–8 to go (*updated 2026-09-24*) |
-| **Repository** | Private GitHub repository `hiuriselzler/projeto_cyber`. `main` holds the documentation and tasks 001, 002, 011, 003, 019 and 017, each merged by pull request (#1; #5; #7 and #8; #9; #11; #16); each further piece arrives the same way, with CI green before merge. Task 004 is on `feat/task-004-catalog-and-logging`, in **draft [PR #17](https://github.com/hiuriselzler/projeto_cyber/pull/17)** (opened 2026-09-24, green on all five jobs as of `850ec31`), to be marked ready when stages 7–8 are done |
+| **Phase** | **Tasks 001, 002, 011, 003, 019 and 017 complete; [task 004](tasks/004-exercise-catalog-and-logging.md) in progress.** The schema exists in Postgres and SQLite, seeded and enforcing itself; the design system exists in `src/ui/`, token-driven and tested in both languages, both unit systems and both themes; accounts, sessions and the privacy key exist on both sides, with row-level security proven under the API's own role; a user can delete their account, from the app or the web; and [ADR-004](decisions/ADR-004.md) has its answer — **option B, the single Rust core**, proven through both bindings on the device. Task 004 has stages 0–7 built — the core's first residents, the seeded catalog, the set row, the catalog screen, routines, the rest timer, set types, every tracking mode, the finish flow with its records, and the history with its charts and the server's records cache — with stage 8 to go (*updated 2026-09-25*) |
+| **Repository** | Private GitHub repository `hiuriselzler/projeto_cyber`. `main` holds the documentation and tasks 001, 002, 011, 003, 019 and 017, each merged by pull request (#1; #5; #7 and #8; #9; #11; #16); each further piece arrives the same way, with CI green before merge. Task 004 is on `feat/task-004-catalog-and-logging`, in **draft [PR #17](https://github.com/hiuriselzler/projeto_cyber/pull/17)** (opened 2026-09-24, green on all five jobs as of `d6354d3`, stage 7), to be marked ready when stage 8 is done |
 | **Docs** | 49 files, internally consistent, all cross-links resolving |
 | **Decisions** | 15 ADRs, **all now accepted**. [ADR-004](decisions/ADR-004.md)'s spike passed on 2026-09-18 and its outcome is recorded: **option B, the single Rust core**. Its four pre-launch conditions remain outstanding, in tasks 005 and 006 |
 | **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **6 complete** (001, 002, 011, 003, 019, 017) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) — the core loop, in progress since 2026-09-19. Stages 0–6 are built; stages 7–8 remain** (history and charts, the API mirror and the closing device pass). **Next: stage 7, which is planned in the task file and waits on three decisions** (the chart library, the rebuild's scope, where history is reached — each with a recommendation). The branch is in draft [PR #17](https://github.com/hiuriselzler/projeto_cyber/pull/17), opened 2026-09-24 so CI checks it — no task-004 commit had been through CI before. **Its first run was green on all five jobs**, the Postgres integration suite included. Stages 5 and 6 have been on the phone (2026-09-24): records matched the fixture's predictions every time, and the passes found and fixed a sheet that ran off the screen, three screens that never showed their own writes, and a routine count that was always 0. **Still open on the device:** TalkBack (stages 3, 5 and 6), ✓ latency under a ticking rest bar, stage 4's own accessibility and font-scale pass, the imperial half of the 200 % font check, and `Sheet`'s lost exit animation, which needs a `reanimated`-based fix. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done, and the zero-plural found on the phone is worth their attention — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
+| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) — the core loop, in progress since 2026-09-19. Stages 0–7 are built; stage 8 remains** (the API mirror endpoints and the closing device pass over the whole loop). **Next: plan stage 8** in the task file before any code. Stage 7 — history, three charts, the records cache and its rebuild — was built and on the phone on 2026-09-25: every number matched a prediction made from the phone's own database, and the pass found and fixed an axis label under the line, a label over the readout at 200 % font, and "0 série contada". The branch is in draft [PR #17](https://github.com/hiuriselzler/projeto_cyber/pull/17), green on all five jobs. **Still open on the device:** TalkBack (stages 3, 5, 6 and 7), the imperial pass (stage 7's display half with it), hiding an exercise with history and reopening it, ✓ latency under a ticking rest bar, stage 4's own accessibility and font-scale pass, the imperial half of the 200 % font check, and `Sheet`'s lost exit animation, which needs a `reanimated`-based fix. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done, and the zero-plural found on the phone is worth their attention — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
 
 ### The decision that was open is closed — option B
 
@@ -211,7 +211,8 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
 - [ ] **RIR as a chip row, never a keyboard.** Blank stores NULL, never 0 (INV-03)
 - [ ] Set types, rest timer with haptics, notes, retroactive logging
 - [ ] **Every mutation writes to SQLite synchronously** (INV-09) — no React state is the only copy
-- [ ] History, charts, PR detection; `e1rm()` and `is_counted_set()` implemented **once**
+- [ ] History, charts, PR detection; `e1rm()` and `is_counted_set()` implemented **once** — *built, stages 1, 6 and 7;
+      ticked with the task's own criteria*
 - [ ] Mirror API endpoints so task 006 has something to sync against
 
 #### ☐ 005 — Strength progression planner · **XL** · depends: 004 · blocks: 009, 010, 013, 014
@@ -2179,5 +2180,39 @@ found two more, and one was due.
   locally** (Docker started for it).
 - Mobile: `tsc`, `eslint`, 50 lint fixtures, the platform-file check, catalogs at **709** messages, the seed-version
   gate, `db:generate` with no drift, and **1272** Jest tests, up from 1105.
+
+- No invariant changed and no ADR was added. Counts unchanged: 49 documents, 15 ADRs.
+
+### 2026-09-25 — task 004 stage 7 on the phone: every number as predicted, and three things only a phone could see
+
+The same evening, on the Galaxy S21 FE (Android 16, pt-BR, metric, dark), with a development build of `d6354d3`
+built in WSL2 and checked for the new core functions before installing. It was installed over the previous build,
+so the phone kept every earlier pass's workouts. That made it a good test bed: warm-ups, unticked rows, a workout
+logged afterwards, sets without RIR, a hold, a carry, and two discarded workouts. **Every number on screen was
+predicted from the pulled database before the screen was opened, and every one matched.** The task file's stage-7
+list has them. The two worth naming:
+- **The e1RM chart stops where RIR stops.** "Treino A"'s sets have no RIR, so the line ends at 83,3 kg with a note
+  rather than dropping to zero. That ticks *RIR left blank … a chart never treats it as 0*.
+- **An old workout names only what it still holds.** The past workout of the 23rd names its 65 kg records and not its
+  e1RM, which the next day beat. That closes the item stage 6 left for this stage, and *warm-ups appear in the log* is
+  ticked with it.
+
+**Found and fixed**, each verified on the phone:
+- **The oldest point was drawn through its own axis label** whenever it was also the lowest. The labels now have a
+  gutter measured from their own layout. A test checks where the line starts, and it failed with the gutter switched
+  off.
+- **At 200 % font the top axis value rose over the readout.** The top gridline now sits one measured label-height
+  down. Jest lays out nothing, so neither defect was reachable there. It is the same class as stage 6's sheet, a
+  layout claim only a phone can check.
+- **"0 série contada"** — stage 6's zero-plural again, in a new message. Here the zero is the information, so it gets
+  an explicit `=0` case in both languages instead of being hidden. **The native-speaker review should read every
+  `{count, plural}` message with zero in mind.**
+
+**Not run:**
+- Imperial: it would mean overwriting this phone's database, which holds the earlier passes' record.
+- TalkBack.
+- Hiding an exercise with history and reopening it.
+
+Jest covers each of them. After the fixes: 1298 Jest tests, and CI green on `d6354d3`.
 
 - No invariant changed and no ADR was added. Counts unchanged: 49 documents, 15 ADRs.

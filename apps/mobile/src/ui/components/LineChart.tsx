@@ -44,10 +44,21 @@ export function LineChart({ title, points, formatValue, speakValue, hue }: LineC
   const theme = useTheme();
   const t = useT();
   const [width, setWidth] = useState(0);
+  // The widest axis value as laid out — measured rather than guessed, since it grows with the font scale (07 §8). The
+  // line starts to its right, so the oldest point never runs through its own label (stage 7 device pass).
+  const [labelWidth, setLabelWidth] = useState(0);
+  // And the tallest, so the top value, standing on its gridline, stays inside the plot rather than over the readout.
+  const [labelHeight, setLabelHeight] = useState(0);
   // Null follows the latest point, so a chart that gains a session still opens where the reader is.
   const [chosen, setChosen] = useState<number | null>(null);
 
-  const plot = plotChart(points, { width, height: sizes.chartHeight, inset: sizes.chartDot + sizes.edgeSelected });
+  const plot = plotChart(points, {
+    width,
+    height: sizes.chartHeight,
+    inset: sizes.chartDot + sizes.edgeSelected,
+    gutter: labelWidth === 0 ? 0 : labelWidth + space[2],
+    headroom: labelHeight,
+  });
   const selected = Math.min(chosen ?? latestWithValue(points), points.length - 1);
   const point = points[selected];
   const place = plot.points[selected];
@@ -155,7 +166,13 @@ export function LineChart({ title, points, formatValue, speakValue, hue }: LineC
         {plot.ticks.map((tick) => (
           <View
             key={`tick:${String(tick.value)}`}
+            testID="line-chart-tick"
             pointerEvents="none"
+            onLayout={(event: LayoutChangeEvent) => {
+              const { width: wide, height: tall } = event.nativeEvent.layout;
+              setLabelWidth((widest) => Math.max(widest, wide));
+              setLabelHeight((tallest) => Math.max(tallest, tall));
+            }}
             style={[styles.tick, { bottom: sizes.chartHeight - tick.y }]}
           >
             <AppText variant="caption" tone="textMuted">
