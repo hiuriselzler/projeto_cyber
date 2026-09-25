@@ -205,7 +205,8 @@ the code reads this file:
 6. **The create form offers all four modes**, ending stage 4's deferral.
 7. **Records and charts for time and distance are not 5c's.** A plank set counts as a set (INV-04's predicate is type
    and completion) with zero tonnage and no PR; "longest hold" or "farthest carry" would be new PR kinds, and that is an
-   open question for stages 6–7.
+   open question for stages 6–7. *(Corrected 2026-09-24: a **loaded** carry does take a heaviest-weight record — the
+   core's rule asks only for a load. Found on the phone and kept by decision; open question 15.)*
 
 **Stage 6 carries nine decisions** *(2026-09-24, before the code)*, recorded in PROJECT-STATUS's decision log:
 
@@ -250,7 +251,8 @@ the code reads this file:
    INV-11's spirit. **With nothing ticked at all**, the sheet offers *Discard this workout* instead of *Finish*:
    discarding sets `deleted_at` and `ended_at`, so an empty session never becomes somebody's "last time".
 8. **The celebration is a summary screen**, reached by finishing. It shows the counted sets and the volume (through the
-   core, INV-04), then each record stated as a fact: "Heaviest weight · Bench press · 110 kg". There is **one** 600 ms
+   core, INV-04), then each record stated as a fact: "Heaviest weight · Bench press · 110 kg". *(Grouped by exercise
+   since 2026-09-24 — the name once, its records beneath it; a first session set four per exercise.)* There is **one** 600 ms
    emphasis for the whole list and **one** haptic, a static state under reduce motion, and no confetti, fanfare or
    count-up (07 §7, 08 §6). With no records it says so plainly and shows the totals. Time and distance records are still
    open question 15.
@@ -460,9 +462,10 @@ three recorded)*
 - [ ] **The ✓ has no accessible name of its own** in the tree: the row is one element carrying the sentence, and the ✓
       inside it is an unlabelled button. Whether TalkBack reaches it through the row is the open TalkBack criterion's to
       settle
-- [ ] **A forked global and the global itself read identically in the picker** — "Abdominal bicicleta" twice, one of
-      them the user's own copy. Stage 4's fork-on-edit, working as decided; whether a fork should be marked as the user's
-      is a design question, not a defect
+- [x] **A forked global and the global itself read identically in the picker** — "Abdominal bicicleta" twice, one of
+      them the user's own copy. Stage 4's fork-on-edit, working as decided. **Decided 2026-09-24: mark it.** Every
+      exercise of the user's own — a fork or one they made — carries "Seu"/"Yours" in the picker and in the catalog's
+      caption, and says it aloud ("Abdominal bicicleta, seu"), so the mark is never visual alone (INV-24)
 
 **Found on the device, and not yet fixed**
 - [x] **The set row reflows at font scale 0.86** — *half answered 2026-09-21, and the half that was a defect is

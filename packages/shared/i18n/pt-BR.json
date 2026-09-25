@@ -557,6 +557,8 @@
     "hidden_global_note": "Ocultar um exercício do catálogo vale só neste aparelho.",
     "hidden_empty": "Você não ocultou nenhum exercício.",
     "fork_note": "Exercícios do catálogo não podem ser alterados. Ao salvar, você cria a sua própria cópia, e o original continua como está.",
+    "yours": "Seu",
+    "yours_label": "{name}, seu",
     "form_new_title": "Novo exercício",
     "form_edit_title": "Editar exercício",
     "field_name": "Nome",

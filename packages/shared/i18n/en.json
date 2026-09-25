@@ -557,6 +557,8 @@
     "hidden_global_note": "Hiding a built-in exercise only affects this device.",
     "hidden_empty": "You haven't hidden anything.",
     "fork_note": "Built-in exercises can't be changed. Saving makes your own copy, and the original stays as it is.",
+    "yours": "Yours",
+    "yours_label": "{name}, yours",
     "form_new_title": "New exercise",
     "form_edit_title": "Edit exercise",
     "field_name": "Name",

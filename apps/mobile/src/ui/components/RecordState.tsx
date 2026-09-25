@@ -12,16 +12,25 @@ export interface RecordLine {
   readonly key: string;
   /** What kind of record — "Heaviest weight". */
   readonly kind: string;
-  /** Whose — the exercise, translated for a global and exactly as typed for the user's own (INV-27). */
-  readonly subject: string;
   /** The new value, in the user's unit system and locale (INV-01). */
   readonly value: string;
+}
+
+/**
+ * One exercise's records, under its name said once — grouped since the stage 6 device pass (decided 2026-09-24): a
+ * first session sets four records per exercise, and repeating the name on every one made the list twice as long.
+ */
+export interface RecordGroup {
+  readonly key: string;
+  /** Whose — the exercise, translated for a global and exactly as typed for the user's own (INV-27). */
+  readonly subject: string;
+  readonly records: readonly RecordLine[];
 }
 
 interface RecordStateProps {
   /** Already translated: "New personal records". */
   readonly title: string;
-  readonly records: readonly RecordLine[];
+  readonly groups: readonly RecordGroup[];
 }
 
 /**
@@ -32,7 +41,7 @@ interface RecordStateProps {
  * earned. Under reduce motion the emphasis is a static state (07 §7). A record is named in words, never marked by
  * colour alone (INV-24).
  */
-export function RecordState({ title, records }: RecordStateProps) {
+export function RecordState({ title, groups }: RecordStateProps) {
   const theme = useTheme();
   const reduceMotion = useReduceMotion();
   // Held in state, not a ref: the value is read while rendering, and created once.
@@ -65,13 +74,17 @@ export function RecordState({ title, records }: RecordStateProps) {
         <AppText variant="title" accessibilityRole="header">
           {title}
         </AppText>
-        {records.map((record) => (
-          <View key={record.key} accessible style={styles.record}>
-            <AppText variant="label" tone="textSecondary">
-              {record.kind}
-            </AppText>
-            <AppText>{record.subject}</AppText>
-            <AppText variant="metric">{record.value}</AppText>
+        {groups.map((group) => (
+          <View key={group.key} style={styles.group}>
+            <AppText variant="label">{group.subject}</AppText>
+            {group.records.map((record) => (
+              <View key={record.key} accessible style={styles.record}>
+                <AppText variant="caption" tone="textSecondary">
+                  {record.kind}
+                </AppText>
+                <AppText variant="metric">{record.value}</AppText>
+              </View>
+            ))}
           </View>
         ))}
       </View>
@@ -82,6 +95,7 @@ export function RecordState({ title, records }: RecordStateProps) {
 const styles = StyleSheet.create({
   card: { flexDirection: 'row', gap: space[3], padding: space[4], borderRadius: radii.lg },
   rule: { width: space[1], borderRadius: radii.sm, alignSelf: 'stretch' },
-  body: { flex: 1, gap: space[3] },
+  body: { flex: 1, gap: space[4] },
+  group: { gap: space[2] },
   record: { gap: space[1] },
 });

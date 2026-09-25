@@ -16,6 +16,7 @@ import {
   space,
   useLocale,
   useT,
+  type RecordGroup,
   type RecordLine,
 } from '@/ui';
 
@@ -63,7 +64,7 @@ export function WorkoutSummaryScreen({ workoutId }: { readonly workoutId: string
   }
 
   const { workout, totals, records } = summary;
-  const lines = records.map((entry, at) => recordLine(entry, at, userId, t, unitSystem, locale));
+  const groups = recordGroups(records, userId, t, unitSystem, locale);
 
   return (
     <Screen>
@@ -87,8 +88,8 @@ export function WorkoutSummaryScreen({ workoutId }: { readonly workoutId: string
           </AppText>
         ) : null}
 
-        {lines.length > 0 ? (
-          <RecordState title={t('summary.records_title', { count: lines.length })} records={lines} />
+        {records.length > 0 ? (
+          <RecordState title={t('summary.records_title', { count: records.length })} groups={groups} />
         ) : (
           <AppText tone="textSecondary">{t('summary.no_records')}</AppText>
         )}
@@ -99,26 +100,36 @@ export function WorkoutSummaryScreen({ workoutId }: { readonly workoutId: string
   );
 }
 
-/** One record in words, in the user's unit system and locale (INV-01, INV-27). */
-function recordLine(
-  { exerciseId, record }: ExerciseRecord,
-  at: number,
+/**
+ * The records in words, one group per exercise in workout order, each group's records in the core's order — in the
+ * user's unit system and locale (INV-01), each exercise named as INV-27 says.
+ */
+function recordGroups(
+  records: readonly ExerciseRecord[],
   userId: string,
   t: ReturnType<typeof useT>,
   unitSystem: ReturnType<typeof useLocale>['unitSystem'],
   locale: ReturnType<typeof useLocale>['locale'],
-): RecordLine {
+): RecordGroup[] {
   const weight = (kilograms: number) => {
     const quantity = formatWeight(kilograms, unitSystem, locale);
     return t('summary.quantity', { value: quantity.text, unit: t(`unit.${quantity.unit}`) });
   };
-  const catalog = readExercise(userId, exerciseId);
-  return {
-    key: `${exerciseId}:${record.kind}:${String(at)}`,
-    kind: t(RECORD_KIND_KEY[record.kind], { weight: record.weightKg === null ? '' : weight(record.weightKg) }),
-    subject: catalog === null ? '' : exerciseLabel(catalog, t),
-    value: isWeightRecord(record.kind) ? weight(record.value) : t('summary.reps', { count: record.value }),
-  };
+  const groups = new Map<string, RecordLine[]>();
+  records.forEach(({ exerciseId, record }, at) => {
+    const line: RecordLine = {
+      key: `${record.kind}:${String(at)}`,
+      kind: t(RECORD_KIND_KEY[record.kind], { weight: record.weightKg === null ? '' : weight(record.weightKg) }),
+      value: isWeightRecord(record.kind) ? weight(record.value) : t('summary.reps', { count: record.value }),
+    };
+    const lines = groups.get(exerciseId);
+    if (lines === undefined) groups.set(exerciseId, [line]);
+    else lines.push(line);
+  });
+  return [...groups.entries()].map(([exerciseId, lines]) => {
+    const catalog = readExercise(userId, exerciseId);
+    return { key: exerciseId, subject: catalog === null ? '' : exerciseLabel(catalog, t), records: lines };
+  });
 }
 
 const styles = StyleSheet.create({

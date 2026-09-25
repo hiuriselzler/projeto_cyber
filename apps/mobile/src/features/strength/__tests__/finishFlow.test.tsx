@@ -58,6 +58,7 @@ const WORDS = {
     noRecords: 'No new records this time.',
     heaviest: 'Heaviest weight',
     recordsTitle: 'New personal record',
+    recordsTitlePlural: 'New personal records',
     done: 'Done',
     summaryTitle: 'Workout finished',
   },
@@ -78,6 +79,7 @@ const WORDS = {
     noRecords: 'Nenhum recorde novo desta vez.',
     heaviest: 'Maior carga',
     recordsTitle: 'Novo recorde pessoal',
+    recordsTitlePlural: 'Novos recordes pessoais',
     done: 'Concluir',
     summaryTitle: 'Treino finalizado',
   },
@@ -264,12 +266,14 @@ describe.each(MATRIX)('$locale, $unitSystem, $preference', (setting) => {
 
     it('states each record as a fact, naming the user’s own exercise exactly as typed — and buzzes once', async () => {
       const heaviest: PrAchievement = { kind: 'max_weight', value: 110, weightKg: 110, reps: 3, rir: 1, setIndex: 0 };
-      jest.mocked(detectPrs).mockReturnValue([heaviest]);
+      const volume: PrAchievement = { kind: 'best_session_volume', value: 330, weightKg: null, reps: null, rir: null, setIndex: null };
+      jest.mocked(detectPrs).mockReturnValue([heaviest, volume]);
       await renderUi(<WorkoutSummaryScreen workoutId="w1" />, setting);
 
-      expect(screen.getByRole('header', { name: words.recordsTitle })).toBeOnTheScreen();
+      expect(screen.getByRole('header', { name: words.recordsTitlePlural })).toBeOnTheScreen();
       expect(screen.getByText(words.heaviest)).toBeOnTheScreen();
-      expect(screen.getByText('Supino do João')).toBeOnTheScreen();
+      // Two records, one exercise, named once (grouped — decided 2026-09-24).
+      expect(screen.getAllByText('Supino do João')).toHaveLength(1);
       // Judged against every other finished workout of the exercise, never this one (decision 2).
       expect(readExerciseHistory).toHaveBeenCalledWith({ userId: 'user-1', exerciseId: 'e-mine', exceptWorkoutId: 'w1' });
       expect(recordTap).toHaveBeenCalledTimes(1);

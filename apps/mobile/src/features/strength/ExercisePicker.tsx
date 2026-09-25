@@ -5,7 +5,7 @@ import { listExercises, type CatalogExercise } from '@/db/catalog';
 import { AppText, EmptyState, Sheet, sizes, space, TextField, useLocale, useT, useTheme } from '@/ui';
 
 import { filterCatalog, NO_FILTER } from './catalogFilter';
-import { exerciseLabel, type Translate } from './exerciseName';
+import { exerciseLabel, isOwnExercise, spokenName, type Translate } from './exerciseName';
 
 interface ExercisePickerProps {
   readonly visible: boolean;
@@ -68,11 +68,17 @@ export function ExercisePicker({ visible, userId, onClose, onPick }: ExercisePic
           renderItem={({ item }) => (
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={exerciseLabel(item, t)}
+              accessibilityLabel={spokenName(item, exerciseLabel(item, t), t)}
               onPress={() => pickAndReset(item.id)}
               style={[styles.row, { borderBottomColor: colors.borderSubtle }]}
             >
               <AppText>{exerciseLabel(item, t)}</AppText>
+              {/* A fork reads exactly like the built-in it came from; this is what tells them apart (device pass). */}
+              {isOwnExercise(item) ? (
+                <AppText variant="caption" tone="textMuted">
+                  {t('catalog.yours')}
+                </AppText>
+              ) : null}
             </Pressable>
           )}
         />

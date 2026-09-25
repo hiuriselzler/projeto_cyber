@@ -123,20 +123,29 @@ describe.each(MATRIX)('$locale, $unitSystem, $preference', (setting) => {
     expect(screen.getByText(words.level)).toBeOnTheScreen();
   });
 
-  it('states each personal record as a fact — its kind, whose, and the number (task 004 stage 6)', async () => {
-    const records = [
-      { key: 'a', kind: 'kind one', subject: 'Supino do João', value: '110 kg' },
-      { key: 'b', kind: 'kind two', subject: 'subject two', value: '7' },
+  it('states each personal record as a fact — whose, its kind and the number (task 004 stage 6)', async () => {
+    const groups = [
+      {
+        key: 'mine',
+        subject: 'Supino do João',
+        records: [
+          { key: 'a', kind: 'kind one', value: '110 kg' },
+          { key: 'b', kind: 'kind two', value: '7' },
+        ],
+      },
+      { key: 'other', subject: 'subject two', records: [{ key: 'c', kind: 'kind three', value: '500 kg' }] },
     ];
     const heading = 'records';
-    await renderUi(<RecordState title={heading} records={records} />, setting);
+    await renderUi(<RecordState title={heading} groups={groups} />, setting);
 
     expect(screen.getByRole('header', { name: heading })).toBeOnTheScreen();
-    for (const record of records) {
-      expect(screen.getByText(record.kind)).toBeOnTheScreen();
-      // The user's own exercise name reads back exactly as typed, never translated (INV-27).
-      expect(screen.getByText(record.subject)).toBeOnTheScreen();
-      expect(screen.getByText(record.value)).toBeOnTheScreen();
+    for (const group of groups) {
+      // The exercise is named once for its group, and the user's own name reads back exactly as typed (INV-27).
+      expect(screen.getAllByText(group.subject)).toHaveLength(1);
+      for (const record of group.records) {
+        expect(screen.getByText(record.kind)).toBeOnTheScreen();
+        expect(screen.getByText(record.value)).toBeOnTheScreen();
+      }
     }
   });
 

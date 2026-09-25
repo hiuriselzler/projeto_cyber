@@ -12,7 +12,7 @@ import {
 import { AppText, Button, Chip, EmptyState, Screen, sizes, space, TextField, useLocale, useT, useTheme } from '@/ui';
 
 import { filterCatalog, isFiltered, NO_FILTER, sortForDisplay, type CatalogFilter } from './catalogFilter';
-import { exerciseLabel, type Translate } from './exerciseName';
+import { exerciseLabel, isOwnExercise, spokenName, type Translate } from './exerciseName';
 import { ExerciseForm, type FormTarget } from './ExerciseForm';
 import { useDatabaseRead } from './useDatabaseRead';
 import { useSignedInUserId } from './useLiveWorkout';
@@ -244,14 +244,18 @@ function CatalogRow({
     <View style={[styles.row, { borderBottomColor: colors.borderSubtle }]}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={label}
+        accessibilityLabel={spokenName(exercise, label, t)}
         accessibilityHint={t('catalog.edit')}
         onPress={onEdit}
         style={styles.rowMain}
       >
         <AppText>{label}</AppText>
         <AppText variant="caption" tone="textMuted">
-          {[t(`modality.${exercise.modality}`), muscleKey === undefined ? null : t(muscleKey)]
+          {[
+            isOwnExercise(exercise) ? t('catalog.yours') : null,
+            t(`modality.${exercise.modality}`),
+            muscleKey === undefined ? null : t(muscleKey),
+          ]
             .filter((part) => part !== null)
             .join(' · ')}
         </AppText>

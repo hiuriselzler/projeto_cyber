@@ -23,6 +23,25 @@ export function exerciseLabel(exercise: CatalogExercise, translate: (key: string
 }
 
 /**
+ * Whether the exercise is the user's own — made by them, or a fork of a built-in one.
+ *
+ * Said on screen because a fork carries the built-in's translated name (ADR-008), so the picker listed "Abdominal
+ * bicicleta" twice with nothing to tell the two apart (task 004 stage 6 device pass; marking it decided 2026-09-24).
+ */
+export function isOwnExercise(exercise: Pick<CatalogExercise, 'ownerUserId'>): boolean {
+  return exercise.ownerUserId !== null;
+}
+
+/** What a screen reader hears for an exercise: its name, and "yours" when it is — the mark is never visual alone. */
+export function spokenName(
+  exercise: Pick<CatalogExercise, 'ownerUserId'>,
+  label: string,
+  translate: (key: string, options?: Record<string, unknown>) => string,
+): string {
+  return isOwnExercise(exercise) ? translate('catalog.yours_label', { name: label }) : label;
+}
+
+/**
  * Every name a row can be found by — the list `matchesSearch` matches against.
  *
  * **A global is known by its name in both languages**, which is the whole of ADR-008's search rule and one of this

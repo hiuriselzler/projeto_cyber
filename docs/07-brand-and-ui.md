@@ -406,11 +406,16 @@ Nothing is fully round except a status dot. A pill-shaped control reads as frien
 ### The set row — the single most important component
 ```
 ┌──────────────────────────────────────────────────┐
-│  3    40 kg   ×   6      RIR 2            ✓      │   ← 56 dp tall
+│  3    40 kg   ×   6                              │
+│       RIR 2                               ✓      │   ← ✓ a fixed 56 dp column, centred
 │       40 × 6 @2 last time                        │   ← caption, text-muted
 └──────────────────────────────────────────────────┘
 ```
-- Custom numeric keypad that **never covers the row being edited**. The OS keyboard is not used
+*(Redrawn 2026-09-24: the row reflows, and RIR takes its own line whenever the numbers do not fit one — which on a
+360 dp phone at default scale is most of the time. The one-line picture was an aim the measurements never met; see the
+decision below.)*
+- Custom numeric keypad that **never covers the field being edited** — on a tall screen the whole row; on a short
+  one, a wrapped row's second line may sit under it (decided 2026-09-24, below). The OS keyboard is not used
   for weights — it is slow, it fights the decimal separator (a Brazilian locale uses `,`), and it
   eats the screen.
   - **Reserving the keypad's height as list padding is part of the rule, not an implementation detail.** The scroll
@@ -439,7 +444,13 @@ Nothing is fully round except a status dot. A pill-shaped control reads as frien
   the app is not in front. It is derived from the last completed set rather than held in memory, so a force-quit
   mid-rest brings it back still running.
 
-> **⚠ Open question — must the numbers hold one line at default font scale, and what pays for it?**
+> **Decided 2026-09-24 — the row reflows (option 1 below).** The set number stays, because the set-type letter lives
+> there (`Aq`, `D`, `B`, `A`) and INV-24 wants the type shown, not only spoken; the unit stays, because an imperial user
+> needs it at a glance. The consequence for the keypad rule below is accepted with it: on a short screen the keypad
+> reveals **the field being edited**, and the second line of a wrapped row may sit under the keypad while it is open —
+> the value being typed is always in view, which is what the rule is for. The question as it was argued is kept below.
+>
+> **Open question, as it stood — must the numbers hold one line at default font scale, and what pays for it?**
 >
 > The picture above shows one line, and on a 360 dp phone the numbers do not fit one at default scale. Measured on a
 > Galaxy S21 FE, scale 1.0: 312 dp of row, 64 for the ✓ and its gap, ~250 needed by `40 kg × 6 RIR 7` against the 248

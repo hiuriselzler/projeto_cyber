@@ -13,7 +13,7 @@ import ptBR from '@cyberathlete/shared/i18n/pt-BR.json';
 import type { CatalogExercise } from '@/db/catalog';
 
 import { filterCatalog, isFiltered, NO_FILTER, sortForDisplay } from '../catalogFilter';
-import { exerciseLabel, exerciseSearchNames, type Translate } from '../exerciseName';
+import { exerciseLabel, exerciseSearchNames, isOwnExercise, spokenName, type Translate } from '../exerciseName';
 
 // `unknown` leaves, not `string`: some namespaces this file never reads (`achievement`, with its
 // `{name, description}` rows) hold objects, and the real catalogs must still fit the type.
@@ -168,5 +168,24 @@ describe('sortForDisplay', () => {
     sortForDisplay(ALL, translateIn('en'), 'en');
 
     expect(ALL).toEqual(copy);
+  });
+});
+
+describe('telling a fork from the built-in it came from (task 004 stage 6 device pass)', () => {
+  // A fork carries the built-in's translated name (ADR-008), so the two read identically; ownership is the difference.
+  const FORK = exercise({ id: 'fork', name: 'Abdominal bicicleta', ownerUserId: 'u1', forkedFromId: 'bicycle' });
+  const BUILT_IN = exercise({ id: 'bicycle', nameKey: 'exercise.bicycle_crunch' });
+  const say = (key: string, options?: Record<string, unknown>) =>
+    key === 'catalog.yours_label' ? `${String(options?.name)}, seu` : key;
+
+  it('marks the user’s own exercise, fork or not, and never a built-in one', () => {
+    expect(isOwnExercise(FORK)).toBe(true);
+    expect(isOwnExercise(MINE)).toBe(true);
+    expect(isOwnExercise(BUILT_IN)).toBe(false);
+  });
+
+  it('says it aloud as well, so the mark is never visual alone (INV-24)', () => {
+    expect(spokenName(FORK, 'Abdominal bicicleta', say)).toBe('Abdominal bicicleta, seu');
+    expect(spokenName(BUILT_IN, 'Abdominal bicicleta', say)).toBe('Abdominal bicicleta');
   });
 });
