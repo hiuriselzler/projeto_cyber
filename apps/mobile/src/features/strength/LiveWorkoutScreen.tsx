@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
@@ -29,7 +30,9 @@ import { ExerciseBlock } from './ExerciseBlock';
 import { exerciseLabel } from './exerciseName';
 import { ExerciseOptionsSheet } from './ExerciseOptionsSheet';
 import { ExercisePicker } from './ExercisePicker';
-import { nextFocus } from './liveFlow';
+import { FinishSheet } from './FinishSheet';
+import { nextFocus, tickCounts } from './liveFlow';
+import { PastWorkoutSheet } from './PastWorkoutSheet';
 import { RestTimerBar } from './RestTimerBar';
 import { SetEditor } from './SetEditor';
 import { SetTypeSheet } from './SetTypeSheet';
@@ -87,9 +90,13 @@ export function LiveWorkoutScreen() {
   const userId = useSignedInUserId();
   const workout = useLiveWorkout(userId);
 
+  const router = useRouter();
   const [editing, setEditing] = useState<Editing | null>(null);
   const [draft, setDraft] = useState('');
   const [picking, setPicking] = useState(false);
+  /** The finish sheet, and the past-workout sheet the empty screen offers (task 004 stage 6). */
+  const [finishing, setFinishing] = useState(false);
+  const [loggingPast, setLoggingPast] = useState(false);
   /** The set whose type sheet is open, and the exercise whose options sheet is open (task 004 stage 5b). */
   const [typeFor, setTypeFor] = useState<string | null>(null);
   const [optionsFor, setOptionsFor] = useState<string | null>(null);
@@ -190,26 +197,46 @@ export function LiveWorkoutScreen() {
         <EmptyState
           title={t('workout.none_title')}
           body={t('workout.none_body')}
-          action={<Button label={t('workout.start')} onPress={() => workout.start(t('workout.default_title'))} />}
+          action={
+            <View style={styles.actions}>
+              <Button label={t('workout.start')} onPress={() => workout.start(t('workout.default_title'))} />
+              <Button variant="secondary" label={t('workout.log_past')} onPress={() => setLoggingPast(true)} />
+            </View>
+          }
         />
+        {loggingPast ? (
+          <PastWorkoutSheet
+            visible
+            onClose={() => setLoggingPast(false)}
+            onLog={(startsAt, endsAt) => {
+              setLoggingPast(false);
+              workout.startPast(t('workout.default_title'), startsAt, endsAt);
+            }}
+          />
+        ) : null}
       </Screen>
     );
   }
+
+  const counts = tickCounts(live);
 
   return (
     <Screen>
       <View style={styles.header}>
         <AppText variant="title">{live.title}</AppText>
-        <Button variant="secondary" label={t('workout.finish')} onPress={workout.finish} />
+        <Button variant="secondary" label={t('workout.finish')} onPress={() => setFinishing(true)} />
       </View>
 
-      <RestTimerBar
-        workout={live}
-        skippedRest={workout.skippedRest}
-        onLess={() => workout.adjustRest(-15)}
-        onMore={() => workout.adjustRest(15)}
-        onSkip={workout.skipRest}
-      />
+      {/* Nobody is resting for a set done yesterday: a past workout has no timer (task 004 stage 6, decision 4). */}
+      {workout.pastEnd === null ? (
+        <RestTimerBar
+          workout={live}
+          skippedRest={workout.skippedRest}
+          onLess={() => workout.adjustRest(-15)}
+          onMore={() => workout.adjustRest(15)}
+          onSkip={workout.skipRest}
+        />
+      ) : null}
 
       <ScrollView
         ref={scroll}
@@ -293,6 +320,30 @@ export function LiveWorkoutScreen() {
           workout.addExercise(exerciseId);
         }}
       />
+
+      {/* Mounted only while open, so its note field starts from what is stored. */}
+      {finishing ? (
+        <FinishSheet
+          visible
+          ticked={counts.ticked}
+          unticked={counts.unticked}
+          fatigue={live.perceivedFatigue}
+          notes={live.notes}
+          onFatigue={workout.setFatigue}
+          onNotes={workout.setNotes}
+          onClose={() => setFinishing(false)}
+          onDiscard={() => {
+            setFinishing(false);
+            workout.discard();
+          }}
+          onFinish={() => {
+            setFinishing(false);
+            setEditing(null);
+            const finishedId = workout.finish();
+            if (finishedId !== null) router.replace({ pathname: '/summary/[id]', params: { id: finishedId } });
+          }}
+        />
+      ) : null}
     </Screen>
   );
 }
@@ -412,6 +463,8 @@ function LiveSheets({
           linkedBelow={
             exercise.supersetGroup !== null && live.exercises[index + 1]?.supersetGroup === exercise.supersetGroup
           }
+          notes={exercise.notes}
+          onNotes={(text) => controller.setExerciseNotes(exercise.id, text)}
           onRest={(seconds) => controller.setRest(exercise.id, seconds)}
           onMove={(delta) => controller.moveExercise(index, delta)}
           onToggleSuperset={() => controller.toggleSuperset(index)}
@@ -474,6 +527,7 @@ function rirOf(live: { readonly exercises: readonly { readonly sets: readonly { 
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space[2], padding: space[4] },
+  actions: { gap: space[3] },
   list: { padding: space[4], gap: space[6], paddingBottom: space[12] },
   // Over the list, not beside it: `offsetToReveal`'s geometry assumes the keypad covers the bottom of the viewport.
   editor: { position: 'absolute', left: 0, right: 0, bottom: 0 },

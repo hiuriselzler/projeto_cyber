@@ -29,3 +29,13 @@ export function restOverTap(): void {
     // A courtesy, as above.
   });
 }
+
+/**
+ * A personal record, felt once as the summary shows it (task 004 stage 6) — the one haptic 08 §6 allows a celebration,
+ * beside its single 600 ms emphasis. A single heavy impact: a fact, not a fanfare.
+ */
+export function recordTap(): void {
+  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {
+    // A courtesy, as above.
+  });
+}

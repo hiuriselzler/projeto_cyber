@@ -10,6 +10,7 @@
  */
 import e1rmFixture from '@cyberathlete/shared/fixtures/e1rm.json';
 import countedFixture from '@cyberathlete/shared/fixtures/is_counted_set.json';
+import bestsFixture from '@cyberathlete/shared/fixtures/personal_bests.json';
 import prFixture from '@cyberathlete/shared/fixtures/pr_detection.json';
 
 const SET_TYPES = ['warmup', 'working', 'drop', 'backoff', 'amrap'];
@@ -147,5 +148,40 @@ describe('the pr_detection fixture', () => {
       const positions = expected.map((achievement) => PR_KINDS.indexOf(achievement.kind));
       expect([name, positions]).toEqual([name, [...positions].sort((left, right) => left - right)]);
     }
+  });
+});
+
+describe('the personal_bests fixture (task 004 stage 6)', () => {
+  it('names its function and has cases', () => {
+    expect(bestsFixture.function).toBe('personal_bests');
+    expect(bestsFixture.cases.length).toBeGreaterThan(0);
+  });
+
+  it.each(bestsFixture.cases)('$name', ({ sessions, expected }) => {
+    // TypeScript infers each case's literal shape; the interface is the file's documented `set_defaults`.
+    const all: FixtureSet[] = sessions.flat();
+    for (const set of all) expectSetIsWellFormed(set);
+
+    // Read off the file rather than recomputed: a best can only come from a set INV-04 and INV-08 let count.
+    const eligible = all.filter(
+      (set) => COUNTED_TYPES.includes(set.set_type ?? 'working') && (set.is_completed ?? true) && !(set.is_deload ?? false),
+    );
+    if (eligible.length === 0) {
+      expect(expected.max_weight_kg).toBeNull();
+      expect(expected.best_e1rm).toBeNull();
+      expect(expected.best_session_volume_kg).toBeNull();
+      expect(expected.best_reps_at_weight).toEqual([]);
+    }
+
+    // The e1RM best is a load and an effective rep count, never a float (INV-07), inside Epley's honest range.
+    if (expected.best_e1rm !== null) {
+      expect(Number.isInteger(expected.best_e1rm.effective_reps)).toBe(true);
+      expect(expected.best_e1rm.effective_reps).toBeLessThanOrEqual(MAX_EFFECTIVE_REPS);
+    }
+
+    // Lightest load first, and one entry per load: the order is part of the contract.
+    const loads = expected.best_reps_at_weight.map((best) => best.weight_kg);
+    expect(loads).toEqual([...loads].sort((left, right) => left - right));
+    expect(new Set(loads).size).toBe(loads.length);
   });
 });

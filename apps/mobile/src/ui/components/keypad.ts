@@ -55,6 +55,19 @@ export function timeDigitsToSeconds(digits: string): number | null {
   return minutes * 60 + seconds;
 }
 
+/**
+ * A time of day typed the same way, filling from the right — `1930` is 19:30, `730` is 7:30 — as minutes after
+ * midnight, or null while it is not one: minutes past 59, hours past 23, or nothing typed (task 004 stage 6).
+ */
+export function clockDigitsToMinutes(digits: string): number | null {
+  if (!/^\d{1,4}$/.test(digits)) {
+    return null;
+  }
+  const minutes = Number(digits.slice(-2));
+  const hours = digits.length > 2 ? Number(digits.slice(0, -2)) : 0;
+  return minutes > 59 || hours > 23 ? null : hours * 60 + minutes;
+}
+
 /** A stored time as the keypad should start from — the inverse of `timeDigitsToSeconds` for any time under 100 min. */
 export function secondsToTimeDigits(seconds: number): string {
   const whole = Math.max(0, Math.floor(seconds));

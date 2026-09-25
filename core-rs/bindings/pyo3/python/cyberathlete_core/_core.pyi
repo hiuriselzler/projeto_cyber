@@ -164,3 +164,6 @@ def counted_set_count(sets: list[LoggedSet]) -> int:
 
 def detect_prs(previous: PersonalBests, session: list[LoggedSet]) -> list[PrAchievement]:
     """Every record the session broke, in a fixed order (FR-2.15, INV-04, INV-08)."""
+
+def personal_bests(sessions: list[list[LoggedSet]]) -> PersonalBests:
+    """An exercise's bests after a history of sessions, one workout's sets per session."""

@@ -1,21 +1,31 @@
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 
 import { getSessionState, subscribeToSession } from '@/account';
 import { readExercise } from '@/db/catalog';
 import { moveItem } from '@/db/ordering';
-import { readSkippedRest, writeSkippedRest } from '@/db/preferences';
+import {
+  clearPastWorkoutEnd,
+  readPastWorkoutEnd,
+  readSkippedRest,
+  writePastWorkoutEnd,
+  writeSkippedRest,
+} from '@/db/preferences';
 import {
   addExercise,
   addSet,
+  discardWorkout,
   endWorkout,
   readOpenWorkout,
   removeSessionExercise,
   removeSet,
   reorderSessionExercises,
+  setExerciseNotes,
   setExerciseRest,
   setSetCompleted,
   setSetField,
   setSetType,
+  setWorkoutFatigue,
+  setWorkoutNotes,
   startWorkout,
   toggleSessionSuperset,
   type LiveWorkout,
@@ -44,7 +54,14 @@ export interface LiveWorkoutController {
   readonly workout: LiveWorkout | null;
   /** The set whose rest the user skipped, from the device's own store (task 004 § Stages, decision 2). */
   readonly skippedRest: string | null;
+  /**
+   * The chosen end of a workout being logged after the fact, or null for one happening now (FR-2.13, stage 6 decision
+   * 4). While it is set, a ✓ is dated to it and no rest timer runs.
+   */
+  readonly pastEnd: number | null;
   readonly start: (title: string) => void;
+  /** Open a workout that already happened, from `startsAt` to `endsAt` (stage 6, decision 4). */
+  readonly startPast: (title: string, startsAt: number, endsAt: number) => void;
   readonly addExercise: (exerciseId: string) => void;
   readonly addSet: (workoutExerciseId: string) => void;
   /** Tick or un-tick, and hand back the workout as SQLite now holds it — what the screen computes focus from. */
@@ -59,7 +76,14 @@ export interface LiveWorkoutController {
   readonly moveExercise: (index: number, delta: -1 | 1) => void;
   readonly toggleSuperset: (index: number) => void;
   readonly removeExercise: (workoutExerciseId: string) => void;
-  readonly finish: () => void;
+  /** 1–10 or null, written on the tap (INV-09). The user's own note of how they felt — never an input (INV-03). */
+  readonly setFatigue: (value: number | null) => void;
+  readonly setNotes: (text: string) => void;
+  readonly setExerciseNotes: (workoutExerciseId: string, text: string) => void;
+  /** Finish, and hand back the finished workout's id — the summary is about it. Null if there was nothing open. */
+  readonly finish: () => string | null;
+  /** Put away a workout in which nothing was ticked (stage 6, decision 7). */
+  readonly discard: () => void;
 }
 
 /**
@@ -88,12 +112,20 @@ export function useLiveWorkout(userId: string | null): LiveWorkoutController {
     setWorkout(userId === null ? null : readOpenWorkout(userId));
   }
 
+  /**
+   * A past workout's chosen end, read from the device's store for the workout that is open. Keyed by its id, so it is
+   * re-read only when a different workout opens — `startPast` writes it before the workout's row is read back.
+   */
+  const workoutId = workout?.id ?? null;
+  const pastEnd = useMemo(() => (workoutId === null ? null : readPastWorkoutEnd(workoutId)), [workoutId]);
+
   /** What the rest notification was last scheduled for, so an edit that changes nothing does not reschedule it. */
   const scheduled = useRef<string | null>(null);
 
   const syncRestAlert = useCallback(
-    (fresh: LiveWorkout | null, skipped: string | null) => {
-      const rest = fresh === null ? null : runningRest(fresh, Date.now(), skipped);
+    (fresh: LiveWorkout | null, skipped: string | null, past: number | null) => {
+      // Nobody is resting for a set done yesterday: a past workout runs no timer and schedules nothing (decision 4).
+      const rest = fresh === null || past !== null ? null : runningRest(fresh, Date.now(), skipped);
       const key = rest === null ? null : `${rest.setLogId}:${String(rest.endsAt)}`;
       if (key === scheduled.current) return;
       scheduled.current = key;
@@ -124,8 +156,8 @@ export function useLiveWorkout(userId: string | null): LiveWorkoutController {
    * ✓'s path: the write and the re-read are the tap, and this runs after the paint.
    */
   useEffect(() => {
-    syncRestAlert(workout, skippedRest);
-  }, [workout, skippedRest, syncRestAlert]);
+    syncRestAlert(workout, skippedRest, pastEnd);
+  }, [workout, skippedRest, pastEnd, syncRestAlert]);
 
   const refresh = useCallback((): LiveWorkout | null => {
     const fresh = userId === null ? null : readOpenWorkout(userId);
@@ -140,6 +172,22 @@ export function useLiveWorkout(userId: string | null): LiveWorkoutController {
       // refusing to log because a device would not name its zone is the wrong trade at the door of a gym.
       const tz = readDeviceTimeZone() ?? 'UTC';
       void startWorkout({ userId, title, now: Date.now(), tz }).then(refresh);
+    },
+    [refresh, userId],
+  );
+
+  const startPast = useCallback(
+    (title: string, startsAt: number, endsAt: number) => {
+      if (userId === null) return;
+      // The zone the device is in as the workout is recorded (INV-17) — the only one it can know.
+      const tz = readDeviceTimeZone() ?? 'UTC';
+      void startWorkout({ userId, title, now: Date.now(), tz, startedAt: startsAt }).then((id) => {
+        // Written before the row is read back, so the screen never renders this workout as one happening now. A process
+        // killed between the insert and this line leaves a past-dated workout that finishes now — the one gap, and it
+        // loses no set.
+        writePastWorkoutEnd(id, endsAt);
+        refresh();
+      });
     },
     [refresh, userId],
   );
@@ -168,12 +216,14 @@ export function useLiveWorkout(userId: string | null): LiveWorkoutController {
    */
   const setCompleted = useCallback(
     (setLogId: string, isCompleted: boolean) => {
-      setSetCompleted(setLogId, isCompleted, Date.now());
+      const now = Date.now();
+      // In a past workout the set was done by its chosen end; the row is still written now (03 §4, decision 4).
+      setSetCompleted(setLogId, isCompleted, now, pastEnd ?? now);
       const fresh = refresh();
       if (isCompleted) confirmTap();
       return fresh;
     },
-    [refresh],
+    [pastEnd, refresh],
   );
 
   const writeField = useCallback(
@@ -255,16 +305,55 @@ export function useLiveWorkout(userId: string | null): LiveWorkoutController {
     [refresh, workout],
   );
 
-  const finish = useCallback(() => {
-    if (workout === null) return;
-    endWorkout(workout.id, Date.now());
+  const setFatigue = useCallback(
+    (value: number | null) => {
+      if (workout === null) return;
+      setWorkoutFatigue(workout.id, value, Date.now());
+      refresh();
+    },
+    [refresh, workout],
+  );
+
+  const setNotes = useCallback(
+    (text: string) => {
+      if (workout === null) return;
+      setWorkoutNotes(workout.id, text, Date.now());
+      refresh();
+    },
+    [refresh, workout],
+  );
+
+  const writeExerciseNotes = useCallback(
+    (workoutExerciseId: string, text: string) => {
+      setExerciseNotes(workoutExerciseId, text, Date.now());
+      refresh();
+    },
+    [refresh],
+  );
+
+  const finish = useCallback((): string | null => {
+    if (workout === null) return null;
+    const now = Date.now();
+    endWorkout(workout.id, now, pastEnd ?? now);
+    // Forgotten only once `ended_at` holds it — the column that exists for it.
+    if (pastEnd !== null) clearPastWorkoutEnd();
     refresh();
-  }, [refresh, workout]);
+    return workout.id;
+  }, [pastEnd, refresh, workout]);
+
+  const discard = useCallback(() => {
+    if (workout === null) return;
+    discardWorkout(workout.id, Date.now());
+    if (pastEnd !== null) clearPastWorkoutEnd();
+    refresh();
+  }, [pastEnd, refresh, workout]);
 
   return {
     workout,
     skippedRest,
+    pastEnd,
     start,
+    startPast,
     addExercise: add,
     addSet: appendSet,
     setCompleted,
@@ -277,6 +366,10 @@ export function useLiveWorkout(userId: string | null): LiveWorkoutController {
     moveExercise,
     toggleSuperset,
     removeExercise,
+    setFatigue,
+    setNotes,
+    setExerciseNotes: writeExerciseNotes,
     finish,
+    discard,
   };
 }

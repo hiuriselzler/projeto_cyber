@@ -354,6 +354,12 @@ INDEX (planned_set_id) WHERE planned_set_id IS NOT NULL
 plan) before it is performed. `is_completed = true` requires the fields its `tracking` mode needs
 — enforced in the service layer, not the DB, because the requirement depends on the exercise.
 
+**`completed_at` is when the set was done, and `updated_at` is when the row was written.** They usually
+coincide, and they diverge on a workout logged retroactively (FR-2.13): its sets carry the workout's
+chosen end as `completed_at`, the honest upper bound on when they were done, while `updated_at` stays
+the real time of the write, because last-write-wins sync compares `updated_at` (NFR-4) and a backdated
+one would lose to any stale copy ([task 004](tasks/004-exercise-catalog-and-logging.md) stage 6).
+
 ```sql
 personal_records (                 -- derived, rebuildable from set_logs; cached for speed
   id uuid PK, user_id uuid NOT NULL → users, exercise_id uuid NOT NULL → exercises,

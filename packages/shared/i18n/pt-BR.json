@@ -468,7 +468,58 @@
     "close": "Fechar",
     "resume_title": "Há um treino em andamento",
     "edit_duration": "Tempo",
-    "edit_distance": "Distância"
+    "edit_distance": "Distância",
+    "log_past": "Registrar um treino passado",
+    "notes": "Notas",
+    "notes_hint": "Só para este treino."
+  },
+  "finish": {
+    "title": "Finalizar o treino",
+    "ticked": "{count, plural, one {# série marcada} other {# séries marcadas}}",
+    "unticked": "{count, plural, one {# série não marcada. Ela fica como está e não conta para nada.} other {# séries não marcadas. Elas ficam como estão e não contam para nada.}}",
+    "fatigue": "Qual é o seu cansaço?",
+    "fatigue_hint": "Opcional, de 1 a 10. Para o seu histórico. Nunca muda um plano.",
+    "fatigue_label": "Cansaço {value} de 10",
+    "notes": "Notas sobre este treino",
+    "confirm": "Finalizar",
+    "nothing_ticked": "Nenhuma série foi marcada, então não há o que finalizar.",
+    "discard": "Descartar este treino",
+    "keep_going": "Voltar ao treino"
+  },
+  "summary": {
+    "title": "Treino finalizado",
+    "subtitle": "{title} · {day}",
+    "sets_label": "Séries contadas",
+    "volume_label": "Volume",
+    "unticked": "{count, plural, one {# série não marcada} other {# séries não marcadas}}",
+    "records_title": "{count, plural, one {Novo recorde pessoal} other {Novos recordes pessoais}}",
+    "no_records": "Nenhum recorde novo desta vez.",
+    "record": {
+      "max_weight": "Maior carga",
+      "best_e1rm": "Melhor 1RM estimado",
+      "max_reps_at_weight": "Mais repetições com {weight}",
+      "best_session_volume": "Maior volume em uma sessão"
+    },
+    "reps": "{count, plural, one {# repetição} other {# repetições}}",
+    "quantity": "{value} {unit}",
+    "done": "Concluir"
+  },
+  "past": {
+    "title": "Registrar um treino passado",
+    "note": "Para um treino que você fez e não registrou. As séries ficam com a data do fim do treino, e nenhum cronômetro de descanso roda.",
+    "day": "Dia",
+    "earlier": "Dia anterior",
+    "later": "Dia seguinte",
+    "start": "Começou às",
+    "end": "Terminou às",
+    "time_placeholder": "–:–",
+    "time_label": "{edge}, {time}",
+    "time_blank": "não definido",
+    "time_invalid": "Digite um horário como 19:30.",
+    "end_before_start": "O fim precisa ser depois do início.",
+    "in_future": "Isso ainda não aconteceu.",
+    "confirm": "Registrar",
+    "cancel": "Cancelar"
   },
   "modality": {
     "barbell": "Barra",

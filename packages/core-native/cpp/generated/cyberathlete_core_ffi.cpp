@@ -156,6 +156,10 @@ extern "C" {
         RustBuffer set, 
         RustCallStatus *uniffi_out_err
     );
+    RustBuffer uniffi_cyberathlete_core_ffi_fn_func_personal_bests(
+        RustBuffer sessions, 
+        RustCallStatus *uniffi_out_err
+    );
     double uniffi_cyberathlete_core_ffi_fn_func_round_to_increment(
         double weight_kg, 
         double increment_kg, 
@@ -376,6 +380,8 @@ extern "C" {
     uint16_t uniffi_cyberathlete_core_ffi_checksum_func_is_counted_set(
     );
     uint16_t uniffi_cyberathlete_core_ffi_checksum_func_load_kg(
+    );
+    uint16_t uniffi_cyberathlete_core_ffi_checksum_func_personal_bests(
     );
     uint16_t uniffi_cyberathlete_core_ffi_checksum_func_round_to_increment(
     );
@@ -1937,6 +1943,14 @@ NativeCyberathleteCoreFfi::NativeCyberathleteCoreFfi(
             return this->cpp_uniffi_cyberathlete_core_ffi_fn_func_load_kg(rt, thisVal, args, count);
         }
     );
+    props["ubrn_uniffi_cyberathlete_core_ffi_fn_func_personal_bests"] = jsi::Function::createFromHostFunction(
+        rt,
+        jsi::PropNameID::forAscii(rt, "ubrn_uniffi_cyberathlete_core_ffi_fn_func_personal_bests"),
+        1,
+        [this](jsi::Runtime &rt, const jsi::Value &thisVal, const jsi::Value *args, size_t count) -> jsi::Value {
+            return this->cpp_uniffi_cyberathlete_core_ffi_fn_func_personal_bests(rt, thisVal, args, count);
+        }
+    );
     props["ubrn_uniffi_cyberathlete_core_ffi_fn_func_round_to_increment"] = jsi::Function::createFromHostFunction(
         rt,
         jsi::PropNameID::forAscii(rt, "ubrn_uniffi_cyberathlete_core_ffi_fn_func_round_to_increment"),
@@ -2007,6 +2021,14 @@ NativeCyberathleteCoreFfi::NativeCyberathleteCoreFfi(
         0,
         [this](jsi::Runtime &rt, const jsi::Value &thisVal, const jsi::Value *args, size_t count) -> jsi::Value {
             return this->cpp_uniffi_cyberathlete_core_ffi_checksum_func_load_kg(rt, thisVal, args, count);
+        }
+    );
+    props["ubrn_uniffi_cyberathlete_core_ffi_checksum_func_personal_bests"] = jsi::Function::createFromHostFunction(
+        rt,
+        jsi::PropNameID::forAscii(rt, "ubrn_uniffi_cyberathlete_core_ffi_checksum_func_personal_bests"),
+        0,
+        [this](jsi::Runtime &rt, const jsi::Value &thisVal, const jsi::Value *args, size_t count) -> jsi::Value {
+            return this->cpp_uniffi_cyberathlete_core_ffi_checksum_func_personal_bests(rt, thisVal, args, count);
         }
     );
     props["ubrn_uniffi_cyberathlete_core_ffi_checksum_func_round_to_increment"] = jsi::Function::createFromHostFunction(
@@ -2258,6 +2280,16 @@ jsi::Value NativeCyberathleteCoreFfi::cpp_uniffi_cyberathlete_core_ffi_fn_func_l
         
         return uniffi::cyberathlete_core_ffi::Bridging<RustBuffer>::toJs(rt, callInvoker, value);
 }
+jsi::Value NativeCyberathleteCoreFfi::cpp_uniffi_cyberathlete_core_ffi_fn_func_personal_bests(jsi::Runtime& rt, const jsi::Value& thisVal, const jsi::Value* args, size_t count) {
+        RustCallStatus status = uniffi::cyberathlete_core_ffi::Bridging<RustCallStatus>::rustSuccess(rt);
+        auto value = uniffi_cyberathlete_core_ffi_fn_func_personal_bests(uniffi::cyberathlete_core_ffi::Bridging<RustBuffer>::fromJs(rt, callInvoker, args[0]), 
+            &status
+        );
+        uniffi::cyberathlete_core_ffi::Bridging<RustCallStatus>::copyIntoJs(rt, callInvoker, status, args[count - 1]);
+
+        
+        return uniffi::cyberathlete_core_ffi::Bridging<RustBuffer>::toJs(rt, callInvoker, value);
+}
 jsi::Value NativeCyberathleteCoreFfi::cpp_uniffi_cyberathlete_core_ffi_fn_func_round_to_increment(jsi::Runtime& rt, const jsi::Value& thisVal, const jsi::Value* args, size_t count) {
         RustCallStatus status = uniffi::cyberathlete_core_ffi::Bridging<RustCallStatus>::rustSuccess(rt);
         auto value = uniffi_cyberathlete_core_ffi_fn_func_round_to_increment(uniffi_jsi::Bridging<double>::fromJs(rt, callInvoker, args[0]), uniffi_jsi::Bridging<double>::fromJs(rt, callInvoker, args[1]), uniffi::cyberathlete_core_ffi::Bridging<RustBuffer>::fromJs(rt, callInvoker, args[2]), 
@@ -2322,6 +2354,13 @@ jsi::Value NativeCyberathleteCoreFfi::cpp_uniffi_cyberathlete_core_ffi_checksum_
 }
 jsi::Value NativeCyberathleteCoreFfi::cpp_uniffi_cyberathlete_core_ffi_checksum_func_load_kg(jsi::Runtime& rt, const jsi::Value& thisVal, const jsi::Value* args, size_t count) {
         auto value = uniffi_cyberathlete_core_ffi_checksum_func_load_kg(
+        );
+
+        
+        return uniffi_jsi::Bridging<uint16_t>::toJs(rt, callInvoker, value);
+}
+jsi::Value NativeCyberathleteCoreFfi::cpp_uniffi_cyberathlete_core_ffi_checksum_func_personal_bests(jsi::Runtime& rt, const jsi::Value& thisVal, const jsi::Value* args, size_t count) {
+        auto value = uniffi_cyberathlete_core_ffi_checksum_func_personal_bests(
         );
 
         

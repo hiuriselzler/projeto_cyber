@@ -14,6 +14,7 @@ import {
   e1rmSeries as nativeE1rmSeries,
   isCountedSet as nativeIsCountedSet,
   loadKg as nativeLoadKg,
+  personalBests as nativePersonalBests,
   PrKind as NativePrKind,
   RoundingMode as NativeRoundingMode,
   roundToIncrement,
@@ -138,6 +139,15 @@ function toNativeBests(bests: PersonalBests): NativePersonalBests {
   };
 }
 
+function fromNativeBests(bests: NativePersonalBests): PersonalBests {
+  return {
+    maxWeightKg: present(bests.maxWeightKg),
+    bestE1rmKg: present(bests.bestE1rmKg),
+    bestSessionVolumeKg: present(bests.bestSessionVolumeKg),
+    bestRepsAtWeight: bests.bestRepsAtWeight.map((best) => ({ weightKg: best.weightKg, reps: best.reps })),
+  };
+}
+
 function fromNativePr(pr: NativePrAchievement): PrAchievement {
   const kind = PR_KIND_NAME.get(pr.kind);
   // Unreachable while the binding and this map agree; throwing names the drift rather than letting
@@ -193,8 +203,20 @@ export function countedSetCount(sets: readonly LoggedSet[]): number {
  *
  * Per exercise: the caller runs it once for each exercise in the finished workout. The device keeps
  * no `personal_records` table — it is a server-side cache and the phone recomputes (03 §4, §8) — so
- * `previous` is folded from local `set_logs` by the caller.
+ * `previous` comes from {@link personalBests} over the exercise's other sessions.
  */
 export function detectPrs(previous: PersonalBests, session: readonly LoggedSet[]): PrAchievement[] {
   return nativeDetectPrs(toNativeBests(previous), session.map(toNative)).map(fromNativePr);
+}
+
+/**
+ * An exercise's bests after a history of sessions — one workout's sets per session — which is the
+ * `previous` {@link detectPrs} judges against (task 004 stage 6).
+ *
+ * The fold is the core's, not this file's: working out a best applies INV-04 and INV-08 exactly as
+ * detection does, and a loop here would be the second copy of both. The whole history crosses the
+ * boundary in one call.
+ */
+export function personalBests(sessions: readonly (readonly LoggedSet[])[]): PersonalBests {
+  return fromNativeBests(nativePersonalBests(sessions.map((session) => session.map(toNative))));
 }

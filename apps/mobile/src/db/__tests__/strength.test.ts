@@ -7,9 +7,14 @@
  */
 import {
   completionPatch,
+  discardPatch,
   fieldPatch,
+  finishPatch,
+  isPerceivedFatigue,
   localDayOf,
   missingForCompletion,
+  noteValue,
+  pastWorkoutProblem,
   setLogRow,
   workoutExerciseRow,
   workoutRow,
@@ -79,6 +84,79 @@ describe('completing a set', () => {
 
   it('clears the stamp when it is un-ticked, rather than keeping a tick the user took back', () => {
     expect(completionPatch(false, NOW)).toEqual({ isCompleted: false, completedAt: null, updatedAt: NOW });
+  });
+
+  it('in a past workout, stamps when the set was done — and always writes the row at the real time (03 §4)', () => {
+    const yesterdayEnd = NOW - 20 * 60 * 60 * 1000;
+    // `updatedAt` is what last-write-wins sync compares (NFR-4): backdated, this write would lose to any stale copy.
+    expect(completionPatch(true, NOW, yesterdayEnd)).toEqual({
+      isCompleted: true,
+      completedAt: yesterdayEnd,
+      updatedAt: NOW,
+    });
+    expect(completionPatch(false, NOW, yesterdayEnd)).toEqual({ isCompleted: false, completedAt: null, updatedAt: NOW });
+  });
+});
+
+describe('a workout logged after the fact (FR-2.13, task 004 stage 6)', () => {
+  const HOUR = 60 * 60 * 1000;
+  const startsAt = NOW - 30 * HOUR;
+  const row = workoutRow({ id: 'w1', userId: USER, title: 'Treino A', startedAt: startsAt, tz: 'America/Sao_Paulo', now: NOW });
+
+  it('belongs to the day it started, not the day it was typed in (INV-17)', () => {
+    expect(row.startedAt).toBe(startsAt);
+    expect(row.localDate).toBe(localDayOf(startsAt));
+  });
+
+  it('is still written at the real time, so sync orders it correctly (NFR-4)', () => {
+    expect(row.createdAt).toBe(NOW);
+    expect(row.updatedAt).toBe(NOW);
+  });
+
+  it('is open until it is finished, like any other', () => {
+    expect(row.endedAt).toBeNull();
+  });
+
+  it('refuses an end that is not after the start, and an end still to come', () => {
+    expect(pastWorkoutProblem({ startsAt, endsAt: startsAt + HOUR, now: NOW })).toBeNull();
+    expect(pastWorkoutProblem({ startsAt, endsAt: startsAt, now: NOW })).toBe('end_before_start');
+    expect(pastWorkoutProblem({ startsAt, endsAt: startsAt - HOUR, now: NOW })).toBe('end_before_start');
+    expect(pastWorkoutProblem({ startsAt: NOW - HOUR, endsAt: NOW + HOUR, now: NOW })).toBe('in_future');
+  });
+
+  it('finishes at its chosen end, while the write itself is stamped now', () => {
+    expect(finishPatch(startsAt + HOUR, NOW)).toEqual({ endedAt: startsAt + HOUR, updatedAt: NOW });
+  });
+});
+
+describe('finishing, and putting away a workout with nothing ticked (task 004 stage 6)', () => {
+  it('finishes now for a workout happening now', () => {
+    expect(finishPatch(NOW, NOW)).toEqual({ endedAt: NOW, updatedAt: NOW });
+  });
+
+  it('discards with a tombstone, never a delete, and ends it so it cannot be reopened (INV-11)', () => {
+    expect(discardPatch(NOW)).toEqual({ endedAt: NOW, deletedAt: NOW, updatedAt: NOW });
+  });
+});
+
+describe('notes and perceived fatigue (task 004 stage 6)', () => {
+  it('keeps a note exactly as typed — never trimmed, never translated (INV-27)', () => {
+    expect(noteValue('  pegada fechada, ombro ok ')).toBe('  pegada fechada, ombro ok ');
+    expect(noteValue('Leg day do João')).toBe('Leg day do João');
+  });
+
+  it('stores a note of nothing but whitespace as no note at all', () => {
+    expect(noteValue('')).toBeNull();
+    expect(noteValue('   \n ')).toBeNull();
+  });
+
+  it('takes fatigue as 1 to 10 or not recorded — never 0, which the column would refuse', () => {
+    expect(isPerceivedFatigue(null)).toBe(true);
+    expect(isPerceivedFatigue(1)).toBe(true);
+    expect(isPerceivedFatigue(10)).toBe(true);
+    expect(isPerceivedFatigue(0)).toBe(false);
+    expect(isPerceivedFatigue(11)).toBe(false);
+    expect(isPerceivedFatigue(6.5)).toBe(false);
   });
 });
 

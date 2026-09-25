@@ -468,7 +468,58 @@
     "close": "Close",
     "resume_title": "A workout is in progress",
     "edit_duration": "Time",
-    "edit_distance": "Distance"
+    "edit_distance": "Distance",
+    "log_past": "Log a past workout",
+    "notes": "Notes",
+    "notes_hint": "For this workout only."
+  },
+  "finish": {
+    "title": "Finish the workout",
+    "ticked": "{count, plural, one {# set ticked} other {# sets ticked}}",
+    "unticked": "{count, plural, one {# set not ticked. It stays as it is and counts for nothing.} other {# sets not ticked. They stay as they are and count for nothing.}}",
+    "fatigue": "How tired are you?",
+    "fatigue_hint": "Optional, 1 to 10. For your own history. It never changes a plan.",
+    "fatigue_label": "Fatigue {value} of 10",
+    "notes": "Notes on this workout",
+    "confirm": "Finish",
+    "nothing_ticked": "Nothing was ticked, so there is nothing to finish.",
+    "discard": "Discard this workout",
+    "keep_going": "Back to the workout"
+  },
+  "summary": {
+    "title": "Workout finished",
+    "subtitle": "{title} · {day}",
+    "sets_label": "Counted sets",
+    "volume_label": "Volume",
+    "unticked": "{count, plural, one {# set not ticked} other {# sets not ticked}}",
+    "records_title": "{count, plural, one {New personal record} other {New personal records}}",
+    "no_records": "No new records this time.",
+    "record": {
+      "max_weight": "Heaviest weight",
+      "best_e1rm": "Best estimated 1RM",
+      "max_reps_at_weight": "Most reps at {weight}",
+      "best_session_volume": "Most volume in one session"
+    },
+    "reps": "{count, plural, one {# rep} other {# reps}}",
+    "quantity": "{value} {unit}",
+    "done": "Done"
+  },
+  "past": {
+    "title": "Log a past workout",
+    "note": "For a workout you did but did not log. Its sets are dated to when it ended, and no rest timer runs.",
+    "day": "Day",
+    "earlier": "Earlier day",
+    "later": "Later day",
+    "start": "Started at",
+    "end": "Ended at",
+    "time_placeholder": "–:–",
+    "time_label": "{edge}, {time}",
+    "time_blank": "not set",
+    "time_invalid": "Type a time like 19:30.",
+    "end_before_start": "The end must be after the start.",
+    "in_future": "That has not happened yet.",
+    "confirm": "Log it",
+    "cancel": "Cancel"
   },
   "modality": {
     "barbell": "Barbell",

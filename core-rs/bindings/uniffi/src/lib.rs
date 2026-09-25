@@ -141,6 +141,15 @@ impl From<RepsAtWeight> for cyberathlete_core::RepsAtWeight {
     }
 }
 
+impl From<cyberathlete_core::RepsAtWeight> for RepsAtWeight {
+    fn from(best: cyberathlete_core::RepsAtWeight) -> Self {
+        Self {
+            weight_kg: best.weight_kg,
+            reps: best.reps,
+        }
+    }
+}
+
 /// What an exercise's records stood at before the session being judged.
 #[derive(Debug, Clone, PartialEq, uniffi::Record)]
 pub struct PersonalBests {
@@ -152,6 +161,21 @@ pub struct PersonalBests {
 
 impl From<PersonalBests> for cyberathlete_core::PersonalBests {
     fn from(bests: PersonalBests) -> Self {
+        Self {
+            max_weight_kg: bests.max_weight_kg,
+            best_e1rm_kg: bests.best_e1rm_kg,
+            best_session_volume_kg: bests.best_session_volume_kg,
+            best_reps_at_weight: bests
+                .best_reps_at_weight
+                .into_iter()
+                .map(Into::into)
+                .collect(),
+        }
+    }
+}
+
+impl From<cyberathlete_core::PersonalBests> for PersonalBests {
+    fn from(bests: cyberathlete_core::PersonalBests) -> Self {
         Self {
             max_weight_kg: bests.max_weight_kg,
             best_e1rm_kg: bests.best_e1rm_kg,
@@ -232,4 +256,13 @@ pub fn detect_prs(previous: PersonalBests, session: Vec<LoggedSet>) -> Vec<PrAch
         .into_iter()
         .map(Into::into)
         .collect()
+}
+
+/// An exercise's bests after a history of sessions, one workout's sets per session — the
+/// `previous` for [`detect_prs`] (task 004 stage 6). The whole history crosses in one call.
+#[uniffi::export]
+pub fn personal_bests(sessions: Vec<Vec<LoggedSet>>) -> PersonalBests {
+    let sessions: Vec<Vec<cyberathlete_core::LoggedSet>> =
+        sessions.into_iter().map(to_core).collect();
+    cyberathlete_core::personal_bests(&sessions).into()
 }

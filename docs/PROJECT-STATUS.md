@@ -15,13 +15,13 @@ when its own criteria are ticked. Tick the box here only then.
 
 | | |
 |---|---|
-| **Phase** | **Tasks 001, 002, 011, 003, 019 and 017 complete; [task 004](tasks/004-exercise-catalog-and-logging.md) in progress.** The schema exists in Postgres and SQLite, seeded and enforcing itself; the design system exists in `src/ui/`, token-driven and tested in both languages, both unit systems and both themes; accounts, sessions and the privacy key exist on both sides, with row-level security proven under the API's own role; a user can delete their account, from the app or the web; and [ADR-004](decisions/ADR-004.md) has its answer — **option B, the single Rust core**, proven through both bindings on the device. Task 004 has stages 0–5c built — the core's first residents, the seeded catalog, the set row, the catalog screen, routines, the rest timer, set types, and every tracking mode — with stages 6–8 to go (*updated 2026-09-23; this row had still described task 017 as under way*) |
+| **Phase** | **Tasks 001, 002, 011, 003, 019 and 017 complete; [task 004](tasks/004-exercise-catalog-and-logging.md) in progress.** The schema exists in Postgres and SQLite, seeded and enforcing itself; the design system exists in `src/ui/`, token-driven and tested in both languages, both unit systems and both themes; accounts, sessions and the privacy key exist on both sides, with row-level security proven under the API's own role; a user can delete their account, from the app or the web; and [ADR-004](decisions/ADR-004.md) has its answer — **option B, the single Rust core**, proven through both bindings on the device. Task 004 has stages 0–6 built — the core's first residents, the seeded catalog, the set row, the catalog screen, routines, the rest timer, set types, every tracking mode, and the finish flow with its records — with stages 7–8 to go (*updated 2026-09-24*) |
 | **Repository** | Private GitHub repository `hiuriselzler/projeto_cyber`. `main` holds the documentation and tasks 001, 002, 011, 003, 019 and 017, each merged by pull request (#1; #5; #7 and #8; #9; #11; #16); each further piece arrives the same way, with CI green before merge. Task 004 is on `feat/task-004-catalog-and-logging`, pushed 2026-09-23, not yet merged |
 | **Docs** | 49 files, internally consistent, all cross-links resolving |
 | **Decisions** | 15 ADRs, **all now accepted**. [ADR-004](decisions/ADR-004.md)'s spike passed on 2026-09-18 and its outcome is recorded: **option B, the single Rust core**. Its four pre-launch conditions remain outstanding, in tasks 005 and 006 |
 | **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **6 complete** (001, 002, 011, 003, 019, 017) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) — the core loop, in progress since 2026-09-19. Stages 0–5c are built and green in CI; stages 6–8 remain** (the finish flow, history and charts, the API mirror and the closing device pass). **Next: a device pass over stages 5a–5c, then stage 6.** What that pass must cover is the task file's stage-5 device list: routines on the phone, supersets, the refused notification permission, TalkBack, ✓ latency on a routine session, and 5c's modes and migration `0003` — which need a fresh APK build. Already proven on the Galaxy S21 FE: the ✓ at p50 10.5 ms against NFR-2's 100 ms (stage 3), migration `0002` against real logged sets, every cold start reopening the workout in progress, and a force-quit mid-rest coming back to the same rest (2026-09-23). **Still open from earlier stages:** stage 4's own device pass (accessibility, font scale); from stage 3's, the imperial half of the 200 % font check, TalkBack actually switched on, and `Sheet`'s lost exit animation, which needs a `reanimated`-based fix. Whether the set row's numbers must hold one line at default scale is an open design question in [07 §6](07-brand-and-ui.md). Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
+| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) — the core loop, in progress since 2026-09-19. Stages 0–6 are built and green locally on every gate CI runs; stages 7–8 remain** (history and charts, the API mirror and the closing device pass). **Next: one device pass over stages 5a–6, on a fresh APK, then stage 7.** Stage 6 was built before the 5a–5c pass was run, so one build covers both lists in the task file: routines on the phone, supersets, the refused notification permission, TalkBack, ✓ latency on a routine session, 5c's modes and migration `0003`, and stage 6's finish flow, records, past workout and discard. The APK needs the `.so` files rebuilt on 2026-09-24 for `personal_bests`. Already proven on the Galaxy S21 FE: the ✓ at p50 10.5 ms against NFR-2's 100 ms (stage 3), migration `0002` against real logged sets, every cold start reopening the workout in progress, and a force-quit mid-rest coming back to the same rest (2026-09-23). **Still open from earlier stages:** stage 4's own device pass (accessibility, font scale); from stage 3's, the imperial half of the 200 % font check, TalkBack actually switched on, and `Sheet`'s lost exit animation, which needs a `reanimated`-based fix. Whether the set row's numbers must hold one line at default scale is an open design question in [07 §6](07-brand-and-ui.md). Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
 
 ### The decision that was open is closed — option B
 
@@ -494,6 +494,7 @@ None are blocking; each has a stated assumption that will be built unless correc
 | 15 | Personal records for time and distance — longest hold, farthest carry | Not built; such sets count as sets, with zero tonnage and no PR | Stages 6–7 of task 004 |
 | 16 | Short imperial distances in feet or yards (sleds are often yards in US gyms) | Feet, following ADR-008's m/ft pair | The imperial pass of task 004's device checks |
 | 17 | The Portuguese set-type letters — `Aq D B A` | As written, catalog content | The native-speaker review ([07 §9](07-brand-and-ui.md)) |
+| 18 | **Who builds body-weight entry?** `body_weight_log` exists on both sides and every bodyweight e1RM, tonnage and PR reads it (INV-07, FR-2.15a), but no task gives the user a way to write to it — task 010 only charts it. Until something does, a pull-up or dip has no load, no e1RM and no record | Not built in task 004; bodyweight sets count as sets and celebrate nothing | Before launch — likely task 010 or 012 |
 
 **Closed 2026-09-09** — target RIR granularity (now `rir_mode` on the progression rule);
 cardio intensity (both zones and pace ranges); bodyweight volume (summed); and the octopus
@@ -534,6 +535,7 @@ nothing itself ([task 004](tasks/004-exercise-catalog-and-logging.md) § Scope).
 | 2026-09-19 | [ADR-012](decisions/ADR-012.md) **amended** — `src/db/` mints row ids through `src/crypto/`'s identifier entry point, and nothing else in that folder. INV-16 had no legal path to a UUIDv7 from the folder that creates training rows |
 | 2026-09-19 | [ADR-014](decisions/ADR-014.md) **amended** — a design-system component with a state prop is tested by **moving** it, not by rendering each value. `Sheet` never opened for nine days and every gate stayed green |
 | 2026-09-23 | Task 004 stage 5 re-cut into 5a/5b/5c; the live session carries its own rest and targets; the rest timer is derived; a routine pre-fills weight and reps, never RIR — see the dated entry below |
+| 2026-09-24 | Task 004 stage 6 planned: the previous bests folded in the core; a record is the current best; a past workout's `completed_at` is its chosen end while `updated_at` stays real — see the dated entry below |
 
 ### 2026-09-08 — documentation reconciliation pass
 
@@ -1960,5 +1962,75 @@ boxes under a ☑ while its own file has all 23 criteria ticked. The **Next acti
 paragraph about 5a–5c. All corrected. Five open questions the stage-5 work raised were in the task file but not in the
 table above — rest-notification lateness, a target time or distance, records for time and distance, feet or yards, and
 the Portuguese set-type letters — now numbered 13–17 there, each with the assumption being built.
+
+- No invariant changed and no ADR was added. Counts unchanged: 49 documents, 15 ADRs.
+
+### 2026-09-24 — task 004 stage 6 planned: the finish flow, and the half of PR detection nobody owned
+
+Nine decisions, in [task 004](tasks/004-exercise-catalog-and-logging.md) § Stages where the code reads them. Three are
+worth stating here.
+
+- **The previous bests move into the core.** `detect_prs` has taken an exercise's standing bests as an argument since
+  stage 1, and `src/domain/`'s comment said the caller "folds them from local `set_logs`". But folding them *is* PR
+  logic: it applies INV-04 and INV-08 exactly as detection does, so a TypeScript fold would be the second copy INV-04
+  forbids. It becomes `personal_bests()`, beside `detect_prs`, through both bindings, with a shared fixture and a
+  property test that the two functions agree. The server's `personal_records` rebuild in stage 7 is the same function.
+- **A record is the current best**, judged against every other finished workout of any date. A retroactively logged
+  workout that beat what came before it, but not what came after, is not celebrated: it would be celebrating a number
+  that is not the best today. This matches the server cache, which keeps the current best only.
+- **A past workout's sets carry its chosen end as `completed_at`, while `updated_at` stays the real time**
+  ([03 §4](03-database-schema.md)). Until now `completionPatch` wrote both from one `now`, which was harmless while they
+  meant the same moment. Backdating `updated_at` would make a retroactive write lose to any stale copy under
+  last-write-wins (NFR-4). The chosen end lives on the device until the workout is finished, which is safe because an
+  open workout never syncs, so the schema does not change.
+
+**Open question 18 added:** no task builds body-weight entry, so every bodyweight exercise has no load, no e1RM and no
+record, however it is logged. Stage 6 does not build it; it is recorded rather than discovered at launch.
+
+- No invariant changed and no ADR was added: the decisions apply INV-03, INV-04, INV-07, INV-08, INV-09 and INV-17
+  rather than changing them. Counts unchanged: 49 documents, 15 ADRs.
+
+### 2026-09-24 — task 004 stage 6 built: the finish flow, and a record that means the current best
+
+**Built, green locally on every gate CI runs, and not yet on the phone.**
+- *Finish* opens a sheet instead of ending the workout. It counts ticked and unticked sets, takes perceived fatigue
+  as one tap (a second tap clears it), and takes the workout's note.
+- It then lands on a **summary**: counted sets and volume, and each new record stated as a fact, with one emphasis
+  and one haptic.
+- With nothing ticked, the sheet offers only *Discard*.
+- An exercise's note lives in its options sheet.
+- *Log a past workout* opens the ordinary live screen dated to a chosen day and time: no rest timer, sets stamped
+  with the chosen end, rows written at the real time.
+
+**The core gained `personal_bests()`, built as a fold of `detect_prs` itself**, so the bests and the records cannot
+disagree about what a record is. A property test checks it from both directions: what a session broke is exactly
+what it moved, and a session folded into the bests breaks nothing against them. The new shared fixture
+`personal_bests.json` runs in Rust and Python, and Jest checks its shape. **Watched failing**: folding the history
+as one lifetime session instead of one session per workout failed three unit tests and the fixture's
+session-volume case.
+
+**The UniFFI bindings were regenerated in WSL2** — 69 lines, all additions, in the four generated files — and the
+three `.so` files copied back beside them, which stage 3's entry says is the only way they match. The WSL2 clone
+was fast-forwarded to the branch head first; it now carries this stage's `core-rs` as uncommitted changes.
+
+**Found on the way:**
+- **"Last time" could come from a workout with nothing ticked.** `readPreviousPerformance` picked the latest workout
+  that *contained* the exercise. Finishing and discarding made that reachable, so it now picks the latest
+  **finished** workout with a **completed** set. Routine pre-fill uses the same function and inherits the fix. It
+  is a query, so only the device can prove it.
+- **`completionPatch` wrote `completed_at` and `updated_at` from one `now`.** They are split now; a test fails if a
+  past workout's `updated_at` is backdated (**watched failing**).
+- **The live screen must not load the core.** The first cut put the finish sheet's tick count beside the summary's
+  arithmetic, which imports `@/domain`, so the live workout would have loaded a native module to count ticks.
+  `finish.ts` is now the only module in the feature that reaches the core, and only the summary screen imports it.
+- **Typed routes**: the new `/summary/[id]` needed `.expo/types/router.d.ts` regenerated locally, which is the CI gap
+  already listed under *Gaps*.
+
+**Verified**:
+- Mobile: `tsc`, `eslint`, 49 lint fixtures, the platform-file check, catalogs at **673** messages, the seed-version
+  gate, `db:generate` with no drift, and **1105** Jest tests, up from 942.
+- Core: fmt, clippy `-D warnings`, 49 unit tests and 6 fixture tests.
+- API: `ruff`, `ruff format`, `mypy`, six import contracts, and 158 unit tests. The integration suite needs the
+  local Postgres and was not run, but nothing the API touches changed except `app/domain/strength.py`'s re-export.
 
 - No invariant changed and no ADR was added. Counts unchanged: 49 documents, 15 ADRs.

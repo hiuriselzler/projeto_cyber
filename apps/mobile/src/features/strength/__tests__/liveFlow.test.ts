@@ -34,6 +34,7 @@ function exercise(id: string, overrides: Partial<LiveExercise> & { sets: LiveSet
     orderIndex: 0,
     supersetGroup: null,
     tracking: 'weight_reps',
+    notes: null,
     restSeconds: null,
     targetMinReps: null,
     targetMaxReps: null,
@@ -43,7 +44,7 @@ function exercise(id: string, overrides: Partial<LiveExercise> & { sets: LiveSet
 }
 
 function workout(...exercises: LiveExercise[]): LiveWorkout {
-  return { id: 'w', title: 'Treino', startedAt: T0, localDate: '2026-09-23', tz: 'UTC', exercises };
+  return { id: 'w', title: 'Treino', startedAt: T0, localDate: '2026-09-23', tz: 'UTC', notes: null, perceivedFatigue: null, exercises };
 }
 
 describe('focus after a ✓ (07 §6)', () => {

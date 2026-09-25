@@ -1,8 +1,9 @@
 //! The shared fixtures, run against the Rust core.
 //!
 //! `packages/shared/fixtures/` holds the same files the Python and TypeScript suites read:
-//! `round_to_increment.json` (INV-02), `e1rm.json` (INV-07), `is_counted_set.json` (INV-04) and
-//! `pr_detection.json` (FR-2.15). Under ADR-004 option B all three runtimes reach one Rust
+//! `round_to_increment.json` (INV-02), `e1rm.json` (INV-07), `is_counted_set.json` (INV-04),
+//! `pr_detection.json` (FR-2.15) and `personal_bests.json` (FR-2.15, task 004 stage 6). Under
+//! ADR-004 option B all three runtimes reach one Rust
 //! implementation, so these prove **the bindings agree** rather than that two hand-written copies
 //! have not drifted — and they stay regression tests besides.
 //!
@@ -14,7 +15,7 @@
 
 use cyberathlete_core::{
     LoggedSet, PersonalBests, PrKind, RepsAtWeight, RoundingMode, SetType, detect_prs, e1rm,
-    is_counted_set, round_to_increment, volume_kg,
+    is_counted_set, personal_bests, round_to_increment, volume_kg,
 };
 use serde::Deserialize;
 
@@ -248,6 +249,71 @@ fn every_pr_detection_case_agrees() {
                 case.name, want.kind
             );
         }
+    }
+}
+
+#[derive(Deserialize)]
+struct BestsCase {
+    name: String,
+    sessions: Vec<Vec<FixtureSet>>,
+    expected: ExpectedBests,
+    #[allow(dead_code, reason = "prose for the reader; nothing to assert against")]
+    note: Option<String>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ExpectedBests {
+    max_weight_kg: Option<f64>,
+    best_e1rm: Option<E1rmExpectation>,
+    best_session_volume_kg: Option<f64>,
+    best_reps_at_weight: Vec<FixtureRepsAtWeight>,
+}
+
+#[test]
+fn every_personal_bests_case_agrees() {
+    let fixture: Fixture<BestsCase> = load("personal_bests.json");
+    assert!(!fixture.cases.is_empty(), "the fixture must hold cases");
+
+    for case in &fixture.cases {
+        let sessions: Vec<Vec<LoggedSet>> = case
+            .sessions
+            .iter()
+            .map(|session| session.iter().map(|set| set.build(&case.name)).collect())
+            .collect();
+        let actual = personal_bests(&sessions);
+
+        assert_eq!(
+            actual.max_weight_kg, case.expected.max_weight_kg,
+            "case {:?}, max weight",
+            case.name
+        );
+        // Epley applied here, from the load and effective reps the fixture states (INV-07).
+        let e1rm = case
+            .expected
+            .best_e1rm
+            .as_ref()
+            .map(|it| it.load_kg * (1.0 + f64::from(it.effective_reps) / 30.0));
+        assert_eq!(actual.best_e1rm_kg, e1rm, "case {:?}, best e1RM", case.name);
+        assert_eq!(
+            actual.best_session_volume_kg, case.expected.best_session_volume_kg,
+            "case {:?}, session volume",
+            case.name
+        );
+        let expected_reps: Vec<RepsAtWeight> = case
+            .expected
+            .best_reps_at_weight
+            .iter()
+            .map(|best| RepsAtWeight {
+                weight_kg: best.weight_kg,
+                reps: best.reps,
+            })
+            .collect();
+        assert_eq!(
+            actual.best_reps_at_weight, expected_reps,
+            "case {:?}, reps at weight",
+            case.name
+        );
     }
 }
 

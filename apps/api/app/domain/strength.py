@@ -29,6 +29,7 @@ from cyberathlete_core import (
     e1rm_series,
     is_counted_set,
     load_kg,
+    personal_bests,
     volume_kg,
 )
 
@@ -45,5 +46,6 @@ __all__ = [
     "e1rm_series",
     "is_counted_set",
     "load_kg",
+    "personal_bests",
     "volume_kg",
 ]

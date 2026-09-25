@@ -96,7 +96,7 @@ Jest tests, and none was findable without a device.
 | **5a** | Routines — build, edit, reorder, duplicate, folders, archive; supersets; start-from-routine pre-filling last-used weights and carrying the routine's targets and rest | ☑ 2026-09-23, device pass not yet run |
 | **5b** | The live session finished off — set types; the rest timer with haptics and its notification; ✓ advancing focus (superset-aware); removing and reordering exercises mid-session; reopening the workout in progress on relaunch | ☑ 2026-09-23, device pass part-run the same evening |
 | **5c** | The `duration` and `distance_duration` tracking modes — the set row that logs them, and the create form offering them | ☑ 2026-09-23, device pass not yet run |
-| **6** | The finish flow — PR detection and its celebration, perceived fatigue, notes, retroactive logging | ☐ |
+| **6** | The finish flow — PR detection and its celebration, perceived fatigue, notes, retroactive logging | ☑ 2026-09-24, device pass not yet run |
 | **7** | History and per-exercise charts; `personal_records` as a cache, with its rebuild command | ☐ |
 | **8** | The API mirror endpoints, and the closing device pass over the whole loop | ☐ |
 
@@ -206,6 +206,57 @@ the code reads this file:
 7. **Records and charts for time and distance are not 5c's.** A plank set counts as a set (INV-04's predicate is type
    and completion) with zero tonnage and no PR; "longest hold" or "farthest carry" would be new PR kinds, and that is an
    open question for stages 6–7.
+
+**Stage 6 carries nine decisions** *(2026-09-24, before the code)*, recorded in PROJECT-STATUS's decision log:
+
+1. **The previous bests are folded in the core.** `detect_prs` takes an exercise's standing bests as an argument, and
+   working them out from history is PR logic: it applies INV-04 and INV-08 exactly as detection does. Written in
+   TypeScript it would be the second copy INV-04 forbids, so it is `personal_bests(sessions)` in
+   `core-rs/src/strength/prs.rs`, beside `detect_prs`, through both bindings and a shared fixture. Each session is one
+   workout's sets of one exercise, because a session-volume best belongs to a session. The server's `personal_records`
+   rebuild (stage 7) is the same function.
+2. **A record is the current best.** A finished workout is judged against **every other finished workout** of that
+   exercise, whatever its date: not the open one, not an archived one, not itself. A past workout that beat everything
+   before it but not what came after is not celebrated. It *was* a record, but celebrating a number that is not the
+   best today would be telling the user something false. This is the same question `personal_records` answers on the
+   server, where only the current best is kept (03 §4).
+3. **Records are recomputed from the rows every time the summary opens, and never stored on the device** (03 §8). A
+   force-quit loses nothing, and reopening shows the same records, because a tie is not a record (INV-10). The two
+   resolved inputs are resolved per set by `src/db`: **body weight** is the latest `body_weight_log` entry on or before
+   the workout's `local_date` (INV-07, INV-17), and **`is_deload`** is the flag of the microcycle its
+   `planned_session_id` belongs to. It is always false until task 005, but it is a real query now, not a constant.
+4. **A past workout** (FR-2.13). The empty workout screen offers *Log a past workout* beside *Start a workout*, which
+   asks for a day and a start and end time. The times start blank and are required, the end must be after the start
+   and not in the future, and the day steps back from today. It opens the ordinary live screen, so every part of the
+   set row works unchanged. While it is open:
+   - `local_date` comes from the chosen start, and `tz` is the zone the device is in as it is recorded (INV-17).
+   - The chosen end is kept **on the device**, in the key-value store beside a skipped rest. That is safe because an
+     open workout is never synced (task 006), and it keeps the schema unchanged.
+   - A ✓ stamps `completed_at` with the chosen end, which is the honest upper bound on when the set was done. It stamps
+     `updated_at` with the **real** time, because last-write-wins sync compares `updated_at` (NFR-4). A backdated one
+     would lose to any stale copy.
+   - **No rest timer runs, and no notification is scheduled**: nobody is resting for a set done yesterday.
+   - Finishing writes the chosen end as `ended_at` and forgets the device-local record.
+   - It is refused while another workout is open, exactly as a routine start is.
+5. **Perceived fatigue** is a chip row `1`–`10` in the finish sheet. It is optional, tapping the chosen chip again
+   clears it, and blank stores NULL, never 0. Each tap is written as it happens (INV-09). The sheet says what it is for:
+   the user's own history. **It never reaches the core**: `LoggedSet` has no field for it, which is INV-03's structural
+   guard, and nothing in this stage widens it.
+6. **Notes**: the workout's in the finish sheet, each exercise's in its options sheet. They are written on every
+   change, not held in the field (INV-09), and stored exactly as typed. A note that is empty or only whitespace is
+   stored as NULL rather than as an empty string. They are never translated (INV-27).
+7. **Finishing never deletes or blocks on an unticked set.** The finish sheet counts them ("2 sets not ticked"), and
+   they stay as they are, counting for nothing (INV-04), because deleting a row the user did not ask to delete breaks
+   INV-11's spirit. **With nothing ticked at all**, the sheet offers *Discard this workout* instead of *Finish*:
+   discarding sets `deleted_at` and `ended_at`, so an empty session never becomes somebody's "last time".
+8. **The celebration is a summary screen**, reached by finishing. It shows the counted sets and the volume (through the
+   core, INV-04), then each record stated as a fact: "Heaviest weight · Bench press · 110 kg". There is **one** 600 ms
+   emphasis for the whole list and **one** haptic, a static state under reduce motion, and no confetti, fanfare or
+   count-up (07 §7, 08 §6). With no records it says so plainly and shows the totals. Time and distance records are still
+   open question 15.
+9. **"Last time" needs a completed set** (FR-2.12). `readPreviousPerformance` took the most recent workout that
+   *contained* the exercise, so a discarded or abandoned one hid the real last time behind an empty hint. It now takes
+   the most recent **finished** workout with at least one **completed** set of that exercise.
 
 ## Acceptance criteria
 - [ ] A full workout can be logged start to finish in airplane mode. *(Stage 3 logged one set start to finish with
@@ -324,6 +375,25 @@ metric, dark — a development build carrying commit `228069e`, installed **over
       and 5 `distance_duration` (farmer's walk, sled push…) — and the 31 `reps_only` globals show a weight field, because
       the set row ignored `tracking` entirely. **Fixed in stage 5c**: the row draws each mode's own fields. In CI, not yet
       on the phone
+
+**Stage 6 on the device** *(added 2026-09-24 with the stage; not yet run. It needs a fresh APK: the core gained
+`personal_bests`, and the `.so` files were rebuilt in WSL2 for it)*
+- [ ] **The e1RM and records fixtures agree on the phone.** `personal_bests` and `detect_prs` are proven in Rust and
+      Python; the client half of "identical results in Python and TypeScript" is settled here, as stage 1 said. A
+      workout with a known best (for example 100 kg × 5 @ 2 after 90 kg × 5 @ 2) must show exactly the records the
+      fixture predicts
+- [ ] Finishing: the sheet counts ticked and unticked sets; fatigue takes a tap and clears with a second; the note
+      survives a force-quit with the sheet open; *Finish* lands on the summary, and *Done* lands home
+- [ ] **A warm-up heavier than every working set celebrates nothing, and is not in the summary's counted sets** — the
+      PR and set-count half of the warm-up criterion above, on the device
+- [ ] Nothing ticked: the sheet offers only *Discard*, and a discarded workout never returns on a cold start nor
+      becomes the next session's "last time"
+- [ ] A past workout, logged for yesterday: no rest bar and no notification, and after finishing `local_date`,
+      `started_at` and `ended_at` read what was chosen, each set's `completed_at` is the chosen end, and each
+      `updated_at` is the real time
+- [ ] The summary with TalkBack on: the heading, each record as one element, *Done*; under reduce motion, no rise
+- [ ] *Stage 7's, recorded here so it is not lost:* nothing reopens an older summary until workout detail exists. Once
+      it does, an old workout must name the same records, and none that a later workout has since beaten (decision 2)
 
 **Found on the device, and not yet fixed**
 - [x] **The set row reflows at font scale 0.86** — *half answered 2026-09-21, and the half that was a defect is

@@ -1,6 +1,7 @@
-import { StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
-import { AppText, Button, Chip, formatDuration, Sheet, space, useT } from '@/ui';
+import { AppText, Button, Chip, formatDuration, Sheet, space, TextField, useT } from '@/ui';
 
 import { restChoices } from './targetsDraft';
 
@@ -13,6 +14,9 @@ interface ExerciseOptionsSheetProps {
   readonly isLast: boolean;
   /** Whether this exercise is already supersetted with the one below it. */
   readonly linkedBelow: boolean;
+  /** This exercise's note in this workout, as stored. */
+  readonly notes: string | null;
+  readonly onNotes: (text: string) => void;
   readonly onRest: (restSeconds: number | null) => void;
   readonly onMove: (delta: -1 | 1) => void;
   readonly onToggleSuperset: () => void;
@@ -27,7 +31,10 @@ interface ExerciseOptionsSheetProps {
  * them would push the next set off the screen. The sheet is one visible "Options" button away (07 §5).
  *
  * The rest set here lasts for the rest of this workout and touches no routine (03 §4): a session copies its targets
- * at the start precisely so that changing one never reaches back into the other.
+ * at the start precisely so that changing one never reaches back into the other. So does the note (FR-2.8, task 004
+ * stage 6): written as it is typed (INV-09), kept exactly as typed (INV-27), and about this workout alone.
+ *
+ * Mounted only while open, by its caller, so the note field starts from what is stored each time.
  */
 export function ExerciseOptionsSheet({
   visible,
@@ -36,6 +43,8 @@ export function ExerciseOptionsSheet({
   isFirst,
   isLast,
   linkedBelow,
+  notes,
+  onNotes,
   onRest,
   onMove,
   onToggleSuperset,
@@ -43,9 +52,21 @@ export function ExerciseOptionsSheet({
   onClose,
 }: ExerciseOptionsSheetProps) {
   const t = useT();
+  const [draft, setDraft] = useState(notes ?? '');
   return (
     <Sheet visible={visible} onClose={onClose} title={title}>
-      <View style={styles.body}>
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.body}>
+        <TextField
+          label={t('workout.notes')}
+          hint={t('workout.notes_hint')}
+          value={draft}
+          onChangeText={(text) => {
+            setDraft(text);
+            onNotes(text);
+          }}
+          autoCapitalize="sentences"
+        />
+
         <View style={styles.field}>
           <AppText variant="label" tone="textSecondary">
             {t('workout.rest')}
@@ -79,7 +100,7 @@ export function ExerciseOptionsSheet({
           />
         )}
         <Button variant="quiet" label={t('workout.remove_exercise')} onPress={onRemove} />
-      </View>
+      </ScrollView>
     </Sheet>
   );
 }

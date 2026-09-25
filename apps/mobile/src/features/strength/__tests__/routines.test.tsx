@@ -112,6 +112,7 @@ function liveExercise(overrides: Partial<LiveExercise> = {}): LiveExercise {
     orderIndex: 1,
     supersetGroup: null,
     tracking: 'weight_reps',
+    notes: null,
     restSeconds: null,
     targetMinReps: null,
     targetMaxReps: null,

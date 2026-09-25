@@ -9,6 +9,14 @@ function twoDigits(value: number): string {
   return String(value).padStart(2, '0');
 }
 
+/**
+ * A time of day, `19:30` — the 24-hour clock both languages read, so there is no AM/PM to translate (task 004 stage 6).
+ */
+export function formatClock(minutesAfterMidnight: number): string {
+  const whole = Math.max(0, Math.floor(minutesAfterMidnight));
+  return `${twoDigits(Math.floor(whole / 60) % 24)}:${twoDigits(whole % 60)}`;
+}
+
 /** The calendar day an instant falls on, where this device is. */
 export function formatCalendarDay(epochMs: number, locale: Locale): string {
   const moment = new Date(epochMs);

@@ -1,6 +1,6 @@
 /**
- * The sheet, segmented control, empty state, level-up state and mark, in both languages, both unit systems and both
- * themes (task 011).
+ * The sheet, segmented control, empty state, level-up state, record state and mark, in both languages, both unit
+ * systems and both themes (task 011; the record state, task 004 stage 6).
  */
 import { fireEvent, screen } from '@testing-library/react-native';
 import { useState } from 'react';
@@ -11,6 +11,7 @@ import { PLACEHOLDER_LEVELS } from '../../brand/marks.generated';
 import { EmptyState } from '../EmptyState';
 import { LevelUpState } from '../LevelUpState';
 import { Mark } from '../Mark';
+import { RecordState } from '../RecordState';
 import { Screen } from '../Screen';
 import { SegmentedControl } from '../SegmentedControl';
 import { Sheet } from '../Sheet';
@@ -118,6 +119,23 @@ describe.each(MATRIX)('$locale, $unitSystem, $preference', (setting) => {
 
     expect(screen.getByLabelText(words.levelUp)).toBeOnTheScreen();
     expect(screen.getByText(words.level)).toBeOnTheScreen();
+  });
+
+  it('states each personal record as a fact — its kind, whose, and the number (task 004 stage 6)', async () => {
+    const records = [
+      { key: 'a', kind: 'kind one', subject: 'Supino do João', value: '110 kg' },
+      { key: 'b', kind: 'kind two', subject: 'subject two', value: '7' },
+    ];
+    const heading = 'records';
+    await renderUi(<RecordState title={heading} records={records} />, setting);
+
+    expect(screen.getByRole('header', { name: heading })).toBeOnTheScreen();
+    for (const record of records) {
+      expect(screen.getByText(record.kind)).toBeOnTheScreen();
+      // The user's own exercise name reads back exactly as typed, never translated (INV-27).
+      expect(screen.getByText(record.subject)).toBeOnTheScreen();
+      expect(screen.getByText(record.value)).toBeOnTheScreen();
+    }
   });
 
   it('draws the mark as an image named for the brand', async () => {

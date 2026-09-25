@@ -59,7 +59,7 @@ function set(overrides: Partial<LiveSet> = {}): LiveSet {
 }
 
 function exercise(sets: readonly LiveSet[]): LiveExercise {
-  return { id: 'we1', exerciseId: 'e-bench', orderIndex: 1, supersetGroup: null, tracking: 'weight_reps', restSeconds: null, targetMinReps: null, targetMaxReps: null, targetRir: null, sets };
+  return { id: 'we1', exerciseId: 'e-bench', orderIndex: 1, supersetGroup: null, tracking: 'weight_reps', notes: null, restSeconds: null, targetMinReps: null, targetMaxReps: null, targetRir: null, sets };
 }
 
 function noop() {

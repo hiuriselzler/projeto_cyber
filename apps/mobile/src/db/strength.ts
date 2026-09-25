@@ -17,7 +17,7 @@
  * [ADR-012](../../../../docs/decisions/ADR-012.md) § Amendment 2026-09-19). That is why the row-creating calls are
  * async and the row-*editing* calls are not — see `setSetCompleted`.
  */
-import { and, asc, desc, eq, isNull, ne } from 'drizzle-orm';
+import { and, asc, desc, eq, exists, isNotNull, isNull, ne } from 'drizzle-orm';
 
 import { uuidV7 } from '@/crypto/identifiers';
 
@@ -75,6 +75,8 @@ export interface LiveExercise extends SessionTargets {
   readonly supersetGroup: number | null;
   /** What this exercise logs — which fields its row shows and which one completing a set needs (FR-2.3). */
   readonly tracking: Tracking;
+  /** The user's own words, exactly as typed (INV-27). */
+  readonly notes: string | null;
   readonly sets: readonly LiveSet[];
 }
 
@@ -84,6 +86,9 @@ export interface LiveWorkout {
   readonly startedAt: number;
   readonly localDate: string;
   readonly tz: string;
+  readonly notes: string | null;
+  /** 1–10, the user's own annotation — not RPE, and never an input to anything (INV-03). */
+  readonly perceivedFatigue: number | null;
   readonly exercises: readonly LiveExercise[];
 }
 
@@ -110,9 +115,16 @@ export interface NewWorkout {
   readonly title: string;
   readonly startedAt: number;
   readonly tz: string;
+  /**
+   * When the row is written, if that is not when the workout started — a workout logged after the fact (FR-2.13). The
+   * row's own timestamps are always the real moment of the write: sync compares `updated_at` (NFR-4), and a backdated
+   * one would lose to any stale copy (task 004 stage 6, decision 4).
+   */
+  readonly now?: number;
 }
 
 export function workoutRow(input: NewWorkout) {
+  const writtenAt = input.now ?? input.startedAt;
   return {
     id: input.id,
     userId: input.userId,
@@ -127,11 +139,57 @@ export function workoutRow(input: NewWorkout) {
     perceivedFatigue: null,
     // A routine start overrides this and `routineId` (src/db/routines.ts); 'plan' is task 005's (03 §4).
     source: 'manual' as 'manual' | 'routine' | 'plan',
-    createdAt: input.startedAt,
-    updatedAt: input.startedAt,
+    createdAt: writtenAt,
+    updatedAt: writtenAt,
     deletedAt: null,
     syncVersion: 1,
   };
+}
+
+/** Why a past workout's chosen times cannot be logged, or null if they can (FR-2.13, task 004 stage 6). */
+export type PastWorkoutProblem = 'end_before_start' | 'in_future';
+
+/**
+ * The end must be after the start, and neither may be in the future: a workout logged after the fact has happened.
+ * Equal times are refused too — a workout of no length is a mistyped one.
+ */
+export function pastWorkoutProblem(input: {
+  readonly startsAt: number;
+  readonly endsAt: number;
+  readonly now: number;
+}): PastWorkoutProblem | null {
+  if (input.endsAt > input.now) return 'in_future';
+  if (input.endsAt <= input.startsAt) return 'end_before_start';
+  return null;
+}
+
+/**
+ * A note as it is stored: exactly as typed, never trimmed or tidied (INV-27) — except that one holding nothing but
+ * whitespace is no note at all, and is NULL rather than an empty string some later reader has to tell apart from it.
+ */
+export function noteValue(text: string): string | null {
+  return text.trim() === '' ? null : text;
+}
+
+/** Perceived fatigue is 1–10 or not recorded — the column's own CHECK, answered before the write rather than by it. */
+export function isPerceivedFatigue(value: number | null): boolean {
+  return value === null || (Number.isInteger(value) && value >= 1 && value <= 10);
+}
+
+/**
+ * What finishing a workout writes: its end, and the real moment of the write. The two differ for a workout logged
+ * after the fact, whose end is the one the user chose (task 004 stage 6, decision 4).
+ */
+export function finishPatch(endedAt: number, now: number) {
+  return { endedAt, updatedAt: now };
+}
+
+/**
+ * What discarding a workout writes (decision 7) — offered only when nothing in it was ticked. A tombstone, never a
+ * delete (INV-11), and ended as well, so it can never again be the open workout a relaunch reopens.
+ */
+export function discardPatch(now: number) {
+  return { endedAt: now, deletedAt: now, updatedAt: now };
 }
 
 export interface NewWorkoutExercise {
@@ -212,9 +270,13 @@ export function setLogRow(input: NewSetLog) {
  * `completedAt` goes back to null when a set is un-ticked, rather than keeping the moment of a tick the user took
  * back. A set that is not complete was not completed at any time, and leaving a stale timestamp there would be a
  * small lie that some later aggregate would eventually read as truth.
+ *
+ * `doneAt` is when the set was done, and it is `now` except in a workout logged after the fact, where it is that
+ * workout's chosen end — the honest upper bound. `updatedAt` is **always** `now`, the real moment of the write, because
+ * sync decides by it (NFR-4, 03 §4, task 004 stage 6).
  */
-export function completionPatch(isCompleted: boolean, now: number) {
-  return { isCompleted, completedAt: isCompleted ? now : null, updatedAt: now };
+export function completionPatch(isCompleted: boolean, now: number, doneAt: number = now) {
+  return { isCompleted, completedAt: isCompleted ? doneAt : null, updatedAt: now };
 }
 
 /**
@@ -258,10 +320,24 @@ export async function startWorkout(input: {
   readonly title: string;
   readonly now: number;
   readonly tz: string;
+  /**
+   * A workout logged after the fact starts when the user says it did (FR-2.13); every other starts now. Its chosen end
+   * is the caller's to keep on the device before this runs (`./preferences`, task 004 stage 6).
+   */
+  readonly startedAt?: number;
 }): Promise<string> {
   const id = await uuidV7(input.now);
   db.insert(workouts)
-    .values(workoutRow({ id, userId: input.userId, title: input.title, startedAt: input.now, tz: input.tz }))
+    .values(
+      workoutRow({
+        id,
+        userId: input.userId,
+        title: input.title,
+        startedAt: input.startedAt ?? input.now,
+        tz: input.tz,
+        now: input.now,
+      }),
+    )
     .run();
   return id;
 }
@@ -347,8 +423,8 @@ export async function addSet(input: {
  * the caller re-reads committed state rather than rendering an optimistic guess. If this ever has to become async,
  * INV-09 is what the change is arguing with.
  */
-export function setSetCompleted(setLogId: string, isCompleted: boolean, now: number): void {
-  db.update(setLogs).set(completionPatch(isCompleted, now)).where(eq(setLogs.id, setLogId)).run();
+export function setSetCompleted(setLogId: string, isCompleted: boolean, now: number, doneAt: number = now): void {
+  db.update(setLogs).set(completionPatch(isCompleted, now, doneAt)).where(eq(setLogs.id, setLogId)).run();
 }
 
 /** Write one of the set row's three numbers. Synchronous, for the same reason as `setSetCompleted`. */
@@ -444,9 +520,37 @@ export function toggleSessionSuperset(workoutId: string, index: number, now: num
   db.transaction((tx) => writeSessionSupersets(tx, rows, groups, now));
 }
 
-/** Finish a workout. The finish flow proper — PRs, fatigue, the celebration — is a later stage. */
-export function endWorkout(workoutId: string, now: number): void {
-  db.update(workouts).set({ endedAt: now, updatedAt: now }).where(eq(workouts.id, workoutId)).run();
+/**
+ * Finish a workout — it ends `endedAt`, which is now, or a past workout's chosen end (task 004 stage 6). Its records
+ * are not written anywhere: the device has no `personal_records` table, and the summary recomputes them from the rows
+ * (03 §8, decision 3).
+ */
+export function endWorkout(workoutId: string, now: number, endedAt: number = now): void {
+  db.update(workouts).set(finishPatch(endedAt, now)).where(eq(workouts.id, workoutId)).run();
+}
+
+/** Put away a workout in which nothing was ticked (decision 7). Its rows stay, archived, as every removal here does. */
+export function discardWorkout(workoutId: string, now: number): void {
+  db.update(workouts).set(discardPatch(now)).where(eq(workouts.id, workoutId)).run();
+}
+
+/** Perceived fatigue, 1–10 or null — written on the tap, like everything else here (INV-09). Never RPE (INV-03). */
+export function setWorkoutFatigue(workoutId: string, perceivedFatigue: number | null, now: number): void {
+  if (!isPerceivedFatigue(perceivedFatigue)) return;
+  db.update(workouts).set({ perceivedFatigue, updatedAt: now }).where(eq(workouts.id, workoutId)).run();
+}
+
+/** The workout's note, on every change rather than on leaving the field (INV-09), exactly as typed (INV-27). */
+export function setWorkoutNotes(workoutId: string, text: string, now: number): void {
+  db.update(workouts).set({ notes: noteValue(text), updatedAt: now }).where(eq(workouts.id, workoutId)).run();
+}
+
+/** One exercise's note, for this workout alone — the same rules as the workout's own. */
+export function setExerciseNotes(workoutExerciseId: string, text: string, now: number): void {
+  db.update(workoutExercises)
+    .set({ notes: noteValue(text), updatedAt: now })
+    .where(eq(workoutExercises.id, workoutExerciseId))
+    .run();
 }
 
 /**
@@ -486,6 +590,7 @@ export function readOpenWorkout(userId: string): LiveWorkout | null {
     targetMaxReps: row.targetMaxReps,
     targetRir: row.targetRir,
     tracking,
+    notes: row.notes,
     sets: db
       .select()
       .from(setLogs)
@@ -501,6 +606,8 @@ export function readOpenWorkout(userId: string): LiveWorkout | null {
     startedAt: workout.startedAt,
     localDate: workout.localDate,
     tz: workout.tz,
+    notes: workout.notes,
+    perceivedFatigue: workout.perceivedFatigue,
     exercises: liveExercises,
   };
 }
@@ -508,9 +615,13 @@ export function readOpenWorkout(userId: string): LiveWorkout | null {
 /**
  * What this user did for this exercise last time, by set index — FR-2.12's "40 kg × 6 @2 last time".
  *
- * The most recent *other* workout that logged this exercise, completed sets only: an abandoned row the user never
- * ticked is not a performance to compare against. Keyed by set index, because the hint belongs to the row it sits
- * behind, and returned as a map so the screen makes one query rather than one per row.
+ * The most recent *other* **finished** workout that **completed** a set of this exercise, and its completed sets only:
+ * an abandoned row the user never ticked is not a performance to compare against. Keyed by set index, because the hint
+ * belongs to the row it sits behind, and returned as a map so the screen makes one query rather than one per row.
+ *
+ * Both conditions sit on the workout that is *chosen*, not only on the rows read from it (task 004 stage 6, decision
+ * 9): picking the latest workout that merely *contained* the exercise let an abandoned session, or one with nothing
+ * ticked, hide the real last time behind an empty hint.
  */
 export function readPreviousPerformance(input: {
   readonly userId: string;
@@ -528,6 +639,19 @@ export function readPreviousPerformance(input: {
         ne(workoutExercises.workoutId, input.exceptWorkoutId),
         isNull(workoutExercises.deletedAt),
         isNull(workouts.deletedAt),
+        isNotNull(workouts.endedAt),
+        exists(
+          db
+            .select({ id: setLogs.id })
+            .from(setLogs)
+            .where(
+              and(
+                eq(setLogs.workoutExerciseId, workoutExercises.id),
+                eq(setLogs.isCompleted, true),
+                isNull(setLogs.deletedAt),
+              ),
+            ),
+        ),
       ),
     )
     .orderBy(desc(workouts.startedAt))

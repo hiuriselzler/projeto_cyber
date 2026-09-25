@@ -22,5 +22,5 @@ pub use progression::{RoundingMode, round_to_increment};
 pub use strength::{
     LoggedSet, MAX_EFFECTIVE_REPS, PersonalBests, PrAchievement, PrKind, RepsAtWeight, SetType,
     counted_set_count, detect_prs, e1rm, e1rm_series, is_counted_set, is_counted_type, load_kg,
-    volume_kg,
+    personal_bests, volume_kg,
 };

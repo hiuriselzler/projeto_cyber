@@ -1,0 +1,154 @@
+{
+  "function": "personal_bests",
+  "spec": "FR-2.15, task 004 stage 6. What an exercise's records stand at after a history of sessions — the `previous` detect_prs judges the next session against. One session is one workout's sets of one exercise; a session-volume best belongs to a session and is never a lifetime sum. A set that cannot be a record cannot be a best: warm-ups, drop and back-off sets and unfinished rows (INV-04) and deload sets (INV-08) move nothing. A set without RIR has no e1RM (INV-07) and moves the other three.",
+  "expectation_shape": "`expected` gives the four bests. `best_e1rm` is not a float: it is the load and effective rep count of the set that holds it, or null, so each consumer applies Epley in its own arithmetic, exactly as e1rm.json does. The other three are exact sums and products and are written out. `best_reps_at_weight` is ordered lightest load first; that order is part of the contract.",
+  "set_defaults": {
+    "set_type": "working",
+    "is_completed": true,
+    "weight_kg": null,
+    "reps": null,
+    "rir": null,
+    "uses_bodyweight": false,
+    "body_weight_kg": null,
+    "is_deload": false
+  },
+  "cases": [
+    {
+      "name": "no history has no bests",
+      "sessions": [],
+      "expected": {
+        "max_weight_kg": null,
+        "best_e1rm": null,
+        "best_session_volume_kg": null,
+        "best_reps_at_weight": []
+      }
+    },
+    {
+      "name": "one working set is every best it can be",
+      "sessions": [[{ "weight_kg": 100.0, "reps": 5, "rir": 2 }]],
+      "expected": {
+        "max_weight_kg": 100.0,
+        "best_e1rm": { "load_kg": 100.0, "effective_reps": 7 },
+        "best_session_volume_kg": 500.0,
+        "best_reps_at_weight": [{ "weight_kg": 100.0, "reps": 5 }]
+      }
+    },
+    {
+      "name": "a warm-up, an unfinished row and a deload set move no best, however heavy",
+      "sessions": [
+        [
+          { "set_type": "warmup", "weight_kg": 200.0, "reps": 10, "rir": 0 },
+          { "is_completed": false, "weight_kg": 200.0, "reps": 10, "rir": 0 },
+          { "is_deload": true, "weight_kg": 200.0, "reps": 10, "rir": 0 },
+          { "set_type": "drop", "weight_kg": 200.0, "reps": 10, "rir": 0 },
+          { "weight_kg": 100.0, "reps": 5, "rir": null }
+        ]
+      ],
+      "expected": {
+        "max_weight_kg": 100.0,
+        "best_e1rm": null,
+        "best_session_volume_kg": 500.0,
+        "best_reps_at_weight": [{ "weight_kg": 100.0, "reps": 5 }]
+      }
+    },
+    {
+      "name": "session volume is the best single session, never the sum of them",
+      "sessions": [
+        [
+          { "weight_kg": 100.0, "reps": 5 },
+          { "weight_kg": 100.0, "reps": 5 }
+        ],
+        [{ "weight_kg": 120.0, "reps": 3 }]
+      ],
+      "expected": {
+        "max_weight_kg": 120.0,
+        "best_e1rm": null,
+        "best_session_volume_kg": 1000.0,
+        "best_reps_at_weight": [
+          { "weight_kg": 100.0, "reps": 5 },
+          { "weight_kg": 120.0, "reps": 3 }
+        ]
+      }
+    },
+    {
+      "name": "the best e1RM is the best across sessions, not the latest",
+      "sessions": [
+        [{ "weight_kg": 110.0, "reps": 3, "rir": 1 }],
+        [{ "weight_kg": 100.0, "reps": 5, "rir": 2 }]
+      ],
+      "expected": {
+        "max_weight_kg": 110.0,
+        "best_e1rm": { "load_kg": 110.0, "effective_reps": 4 },
+        "best_session_volume_kg": 500.0,
+        "best_reps_at_weight": [
+          { "weight_kg": 100.0, "reps": 5 },
+          { "weight_kg": 110.0, "reps": 3 }
+        ]
+      },
+      "note": "110 x (1 + 4/30) is about 124.7 and 100 x (1 + 7/30) about 123.3, so the earlier session holds it."
+    },
+    {
+      "name": "reps at a weight keeps the most at each load, lightest first",
+      "sessions": [
+        [
+          { "weight_kg": 100.0, "reps": 6 },
+          { "weight_kg": 80.0, "reps": 10 }
+        ],
+        [
+          { "weight_kg": 100.0, "reps": 8 },
+          { "weight_kg": 80.0, "reps": 9 }
+        ]
+      ],
+      "expected": {
+        "max_weight_kg": 100.0,
+        "best_e1rm": null,
+        "best_session_volume_kg": 1520.0,
+        "best_reps_at_weight": [
+          { "weight_kg": 80.0, "reps": 10 },
+          { "weight_kg": 100.0, "reps": 8 }
+        ]
+      },
+      "note": "Session one is 600 + 800 = 1400 kg and session two 800 + 720 = 1520 kg."
+    },
+    {
+      "name": "a bodyweight best is measured on total load, lifter included (FR-2.15a)",
+      "sessions": [
+        [
+          {
+            "weight_kg": 20.0,
+            "reps": 5,
+            "rir": 2,
+            "uses_bodyweight": true,
+            "body_weight_kg": 80.0
+          }
+        ]
+      ],
+      "expected": {
+        "max_weight_kg": 100.0,
+        "best_e1rm": { "load_kg": 100.0, "effective_reps": 7 },
+        "best_session_volume_kg": 500.0,
+        "best_reps_at_weight": [{ "weight_kg": 100.0, "reps": 5 }]
+      }
+    },
+    {
+      "name": "a bodyweight set with no body weight logged by its date has no load, so no best (INV-07)",
+      "sessions": [
+        [
+          {
+            "weight_kg": 20.0,
+            "reps": 5,
+            "rir": 2,
+            "uses_bodyweight": true,
+            "body_weight_kg": null
+          }
+        ]
+      ],
+      "expected": {
+        "max_weight_kg": null,
+        "best_e1rm": null,
+        "best_session_volume_kg": null,
+        "best_reps_at_weight": []
+      }
+    }
+  ]
+}

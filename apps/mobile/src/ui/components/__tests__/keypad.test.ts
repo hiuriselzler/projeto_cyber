@@ -1,5 +1,6 @@
 import {
   applyKey,
+  clockDigitsToMinutes,
   normalizeKeypadValue,
   offsetToReveal,
   secondsToTimeDigits,
@@ -97,5 +98,21 @@ describe('a time typed on the keypad (task 004 stage 5c)', () => {
     for (let seconds = 0; seconds < 6_000; seconds += 1) {
       expect(timeDigitsToSeconds(secondsToTimeDigits(seconds))).toBe(seconds);
     }
+  });
+});
+
+describe('a time of day, typed from the right (task 004 stage 6)', () => {
+  it('reads the last two digits as minutes and the rest as hours', () => {
+    expect(clockDigitsToMinutes('1930')).toBe(19 * 60 + 30);
+    expect(clockDigitsToMinutes('730')).toBe(7 * 60 + 30);
+    expect(clockDigitsToMinutes('5')).toBe(5);
+    expect(clockDigitsToMinutes('0000')).toBe(0);
+  });
+
+  it('is not a time while it is not one — never rounded into one', () => {
+    expect(clockDigitsToMinutes('')).toBeNull();
+    expect(clockDigitsToMinutes('1975')).toBeNull();
+    expect(clockDigitsToMinutes('2400')).toBeNull();
+    expect(clockDigitsToMinutes('12345')).toBeNull();
   });
 });

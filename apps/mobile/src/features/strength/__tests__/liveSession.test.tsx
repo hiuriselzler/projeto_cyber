@@ -45,13 +45,14 @@ function resting(restSeconds: number | null, completedAt = T0): LiveWorkout {
     orderIndex: 1,
     supersetGroup: null,
     tracking: 'weight_reps',
+    notes: null,
     restSeconds,
     targetMinReps: null,
     targetMaxReps: null,
     targetRir: null,
     sets: [done(completedAt), { ...done(completedAt), id: 'A2', setIndex: 2, isCompleted: false, completedAt: null }],
   };
-  return { id: 'w', title: 'Treino', startedAt: T0, localDate: '2026-09-23', tz: 'UTC', exercises: [exercise] };
+  return { id: 'w', title: 'Treino', startedAt: T0, localDate: '2026-09-23', tz: 'UTC', notes: null, perceivedFatigue: null, exercises: [exercise] };
 }
 
 /** Two completed sets, the second at `secondAt`, so the rest after it is the one running. */
@@ -177,6 +178,8 @@ describe.each(MATRIX)('$locale, $unitSystem, $preference', (setting) => {
       isFirst: true,
       isLast: false,
       linkedBelow: false,
+      notes: null,
+      onNotes: noop,
       onRest: noop,
       onMove: noop,
       onToggleSuperset: noop,

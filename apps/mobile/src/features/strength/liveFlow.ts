@@ -140,6 +140,22 @@ export function secondsLeft(endsAt: number, now: number): number {
   return Math.max(0, Math.ceil((endsAt - now) / 1000));
 }
 
+/**
+ * How many sets of the workout are ticked, and how many are not — what the finish sheet says before finishing (task
+ * 004 stage 6). A count of completion, not of what *counts*: that is INV-04's and the core's, and the summary asks it.
+ */
+export function tickCounts(workout: LiveWorkout): { ticked: number; unticked: number } {
+  let ticked = 0;
+  let unticked = 0;
+  for (const exercise of workout.exercises) {
+    for (const set of exercise.sets) {
+      if (set.isCompleted) ticked += 1;
+      else unticked += 1;
+    }
+  }
+  return { ticked, unticked };
+}
+
 /** A rest lengthened or shortened by `delta` seconds, never below zero. */
 export function adjustedRest(current: number, delta: number): number {
   return Math.max(0, current + delta);

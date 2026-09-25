@@ -28,6 +28,7 @@ export { EmptyState } from './components/EmptyState';
 export { Icon, type IconName } from './components/Icon';
 export {
   applyKey,
+  clockDigitsToMinutes,
   normalizeKeypadValue,
   offsetToReveal,
   secondsToTimeDigits,
@@ -40,6 +41,7 @@ export { LevelUpState } from './components/LevelUpState';
 export { Mark, type MarkLevel } from './components/Mark';
 export { MetricTile } from './components/MetricTile';
 export { NumericKeypad } from './components/NumericKeypad';
+export { RecordState, type RecordLine } from './components/RecordState';
 export { RirChips } from './components/RirChips';
 export { Screen } from './components/Screen';
 export { SegmentedControl, type SegmentedOption } from './components/SegmentedControl';

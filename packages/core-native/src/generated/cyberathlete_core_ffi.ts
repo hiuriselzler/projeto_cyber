@@ -144,6 +144,26 @@ export function loadKg(set: LoggedSet): number | undefined {
     }
 
 /**
+ * An exercise's bests after a history of sessions, one workout's sets per session — the
+ * `previous` for [`detect_prs`] (task 004 stage 6). The whole history crosses in one call.
+ */
+export function personalBests(sessions: Array<Array<LoggedSet>>): PersonalBests {
+    const __rb: Uint8Array = uniffiCaller.rustCall(
+            /*caller:*/ (callStatus) => {
+                return nativeModule().ubrn_uniffi_cyberathlete_core_ffi_fn_func_personal_bests(
+        FfiConverterSequenceSequenceTypeLoggedSet.lower(sessions, nativeModule().rustbuffer_alloc),
+                callStatus);
+            },
+            /*liftString:*/ FfiConverterString.lift.bind(FfiConverterString),
+    );
+    try {
+        return FfiConverterTypePersonalBests.lift(__rb);
+    } finally {
+        nativeModule().rustbuffer_free(__rb);
+    }
+    }
+
+/**
  * Round a load to a multiple of an increment (INV-02).
  */
 export function roundToIncrement(weightKg: number, incrementKg: number, mode: RoundingMode): number {
@@ -589,6 +609,9 @@ const FfiConverterSequenceTypePrAchievement = new FfiConverterArray(FfiConverter
 // FfiConverter for Array<number | undefined>
 const FfiConverterSequenceOptionalFloat64 = new FfiConverterArray(FfiConverterOptionalFloat64);
 
+// FfiConverter for Array<Array<LoggedSet>>
+const FfiConverterSequenceSequenceTypeLoggedSet = new FfiConverterArray(FfiConverterSequenceTypeLoggedSet);
+
 
 /**
  * This should be called before anything else.
@@ -628,6 +651,9 @@ function uniffiEnsureInitialized() {
     }
     if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_load_kg() !== 3428) {
         throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_load_kg");
+    }
+    if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_personal_bests() !== 22176) {
+        throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_personal_bests");
     }
     if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_round_to_increment() !== 62903) {
         throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_round_to_increment");

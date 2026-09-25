@@ -17,7 +17,7 @@ mod sets;
 mod volume;
 
 pub use e1rm::{MAX_EFFECTIVE_REPS, e1rm, e1rm_series, load_kg};
-pub use prs::{PersonalBests, PrAchievement, PrKind, RepsAtWeight, detect_prs};
+pub use prs::{PersonalBests, PrAchievement, PrKind, RepsAtWeight, detect_prs, personal_bests};
 pub use sets::{SetType, is_counted_set, is_counted_type};
 pub use volume::{counted_set_count, volume_kg};
 

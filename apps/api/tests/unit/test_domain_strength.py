@@ -21,6 +21,7 @@ from app.domain.strength import (
     e1rm_series,
     is_counted_set,
     load_kg,
+    personal_bests,
     volume_kg,
 )
 from tests.fixtures.loader import load_fixture
@@ -127,6 +128,38 @@ def test_every_shared_pr_detection_case_agrees():
             if want.get("weight_kg") is not None:
                 assert got.weight_kg == want["weight_kg"], f"{case['name']}: {want['kind']} weight"
             assert got.set_index == want.get("set_index"), f"{case['name']}: {want['kind']} index"
+
+
+def test_every_shared_personal_bests_case_agrees():
+    """The fold of a history into the bests `detect_prs` judges against (task 004 stage 6)."""
+    for case in load_fixture("personal_bests")["cases"]:
+        sessions = [[_build(spec) for spec in session] for session in case["sessions"]]
+        bests = personal_bests(sessions)
+        expected = case["expected"]
+
+        assert bests.max_weight_kg == expected["max_weight_kg"], case["name"]
+        # Epley applied here, from the load and effective reps the fixture states (INV-07).
+        e1rm_spec = expected["best_e1rm"]
+        want_e1rm = (
+            None
+            if e1rm_spec is None
+            else e1rm_spec["load_kg"] * (1 + e1rm_spec["effective_reps"] / EPLEY_DIVISOR)
+        )
+        assert bests.best_e1rm_kg == want_e1rm, case["name"]
+        assert bests.best_session_volume_kg == expected["best_session_volume_kg"], case["name"]
+        assert [(best.weight_kg, best.reps) for best in bests.best_reps_at_weight] == [
+            (best["weight_kg"], best["reps"]) for best in expected["best_reps_at_weight"]
+        ], case["name"]
+
+
+def test_a_session_breaks_nothing_against_bests_that_already_hold_it():
+    """The fold and detection agree across the boundary: what was folded in is no record again."""
+    session = [
+        LoggedSet(set_type=SetType.Working, is_completed=True, weight_kg=100.0, reps=5, rir=2),
+        LoggedSet(set_type=SetType.Working, is_completed=True, weight_kg=80.0, reps=10),
+    ]
+    assert detect_prs(personal_bests([session]), session) == []
+    assert detect_prs(personal_bests([]), session) != []
 
 
 def test_rir_left_blank_is_never_read_as_zero():

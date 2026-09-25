@@ -11,8 +11,8 @@ use cyberathlete_core::{
     LoggedSet, PersonalBests, PrAchievement, PrKind, RepsAtWeight, RoundingMode, SetType,
     counted_set_count as core_counted_set_count, detect_prs as core_detect_prs, e1rm as core_e1rm,
     e1rm_series as core_e1rm_series, is_counted_set as core_is_counted_set,
-    load_kg as core_load_kg, round_to_increment as core_round_to_increment,
-    volume_kg as core_volume_kg,
+    load_kg as core_load_kg, personal_bests as core_personal_bests,
+    round_to_increment as core_round_to_increment, volume_kg as core_volume_kg,
 };
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -297,6 +297,15 @@ impl From<PyRepsAtWeight> for RepsAtWeight {
     }
 }
 
+impl From<RepsAtWeight> for PyRepsAtWeight {
+    fn from(best: RepsAtWeight) -> Self {
+        Self {
+            weight_kg: best.weight_kg,
+            reps: best.reps,
+        }
+    }
+}
+
 /// What an exercise's records stood at before the session being judged.
 #[pyclass(
     name = "PersonalBests",
@@ -339,6 +348,21 @@ impl PyPersonalBests {
 
 impl From<PyPersonalBests> for PersonalBests {
     fn from(bests: PyPersonalBests) -> Self {
+        Self {
+            max_weight_kg: bests.max_weight_kg,
+            best_e1rm_kg: bests.best_e1rm_kg,
+            best_session_volume_kg: bests.best_session_volume_kg,
+            best_reps_at_weight: bests
+                .best_reps_at_weight
+                .into_iter()
+                .map(Into::into)
+                .collect(),
+        }
+    }
+}
+
+impl From<PersonalBests> for PyPersonalBests {
+    fn from(bests: PersonalBests) -> Self {
         Self {
             max_weight_kg: bests.max_weight_kg,
             best_e1rm_kg: bests.best_e1rm_kg,
@@ -430,6 +454,14 @@ fn detect_prs(previous: PyPersonalBests, session: Vec<PyLoggedSet>) -> Vec<PyPrA
         .collect()
 }
 
+/// An exercise's bests after a history of sessions, one workout's sets per session — the
+/// `previous` for [`detect_prs`], and what the server's `personal_records` rebuild stores.
+#[pyfunction]
+fn personal_bests(sessions: Vec<Vec<PyLoggedSet>>) -> PyPersonalBests {
+    let sessions: Vec<Vec<LoggedSet>> = sessions.into_iter().map(to_core).collect();
+    core_personal_bests(&sessions).into()
+}
+
 #[pymodule]
 fn _core(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<PyRoundingMode>()?;
@@ -449,5 +481,6 @@ fn _core(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_function(wrap_pyfunction!(volume_kg, module)?)?;
     module.add_function(wrap_pyfunction!(counted_set_count, module)?)?;
     module.add_function(wrap_pyfunction!(detect_prs, module)?)?;
+    module.add_function(wrap_pyfunction!(personal_bests, module)?)?;
     Ok(())
 }
