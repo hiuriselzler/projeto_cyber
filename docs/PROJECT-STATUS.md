@@ -21,7 +21,7 @@ when its own criteria are ticked. Tick the box here only then.
 | **Decisions** | 15 ADRs, **all now accepted**. [ADR-004](decisions/ADR-004.md)'s spike passed on 2026-09-18 and its outcome is recorded: **option B, the single Rust core**. Its four pre-launch conditions remain outstanding, in tasks 005 and 006 |
 | **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **6 complete** (001, 002, 011, 003, 019, 017) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) — the core loop, in progress since 2026-09-19. Stages 0–6 are built and green locally on every gate CI runs; stages 7–8 remain** (history and charts, the API mirror and the closing device pass). **Stage 6 has been on the phone (2026-09-24)** — records matched the fixture's predictions three times out of three, and the pass found and fixed a sheet that ran off the screen. **Next: the rest of the stage 5 device list, on the build already installed, then stage 7.** What remains there: routines on the phone, supersets, the refused notification permission, TalkBack (stage 5's and stage 6's), ✓ latency on a routine session, and 5c's modes on the device (migration `0003` is already applied there). Already proven on the Galaxy S21 FE: the ✓ at p50 10.5 ms against NFR-2's 100 ms (stage 3), migration `0002` against real logged sets, every cold start reopening the workout in progress, and a force-quit mid-rest coming back to the same rest (2026-09-23). **Still open from earlier stages:** stage 4's own device pass (accessibility, font scale); from stage 3's, the imperial half of the 200 % font check, TalkBack actually switched on, and `Sheet`'s lost exit animation, which needs a `reanimated`-based fix. Whether the set row's numbers must hold one line at default scale is an open design question in [07 §6](07-brand-and-ui.md). Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
+| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) — the core loop, in progress since 2026-09-19. Stages 0–6 are built and green locally on every gate CI runs; stages 7–8 remain** (history and charts, the API mirror and the closing device pass). **Stages 5 and 6 have been on the phone (2026-09-24)** — records matched the fixture's predictions every time; routines, supersets, the refused permission and 5c's modes pass; and the passes found and fixed a sheet that ran off the screen, three screens that never showed their own writes, and a routine count that was always 0. **Next: stage 7** (history and charts). Still open on the device: TalkBack (stages 3, 5 and 6), ✓ latency under a ticking rest bar, stage 4's own accessibility and font-scale pass, and the imperial half of the 200 % font check. **Task 004 has never been through CI**: CI runs on pull requests and `main`, and no PR is open for this branch. Already proven on the Galaxy S21 FE: the ✓ at p50 10.5 ms against NFR-2's 100 ms (stage 3), migration `0002` against real logged sets, every cold start reopening the workout in progress, and a force-quit mid-rest coming back to the same rest (2026-09-23). **Still open from earlier stages:** stage 4's own device pass (accessibility, font scale); from stage 3's, the imperial half of the 200 % font check, TalkBack actually switched on, and `Sheet`'s lost exit animation, which needs a `reanimated`-based fix. Whether the set row's numbers must hold one line at default scale is an open design question in [07 §6](07-brand-and-ui.md). Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
 
 ### The decision that was open is closed — option B
 
@@ -454,7 +454,10 @@ These are real blockers scattered across the docs. Nothing will surface them at 
 - [ ] **No gate runs the React Compiler the shipped app runs with.** `Sheet` was broken for nine days with `tsc`,
       `eslint`, 597 Jest tests and every lint fixture green, because the compiler is applied by the Metro bundle and
       not by the test environment. Either run the suite under it, or ban render-phase `setState` by lint
-      ([ADR-014 § Amendment](decisions/ADR-014.md)). Until then a phone is the only gate
+      ([ADR-014 § Amendment](decisions/ADR-014.md)). Until then a phone is the only gate. **Second instance, 2026-09-24:**
+      three screens memoized their reads on `void revision;`, which the compiler drops, so none showed its own writes —
+      stages 4 and 5a, green throughout. That one pattern is now a lint fence (`void-dependency`); the class is not
+      closed, and running the suite under the compiler is still the real fix
 - [ ] **A module can be written, tested, CI-gated and never called.** `seedReferenceData()` was all four for a
       stage, and the device ran with 0 exercises. Worth a check that every exported entry point of `src/db/` has a
       caller, or a smoke test that boots the app's startup path rather than its pieces
@@ -491,7 +494,7 @@ None are blocking; each has a stated assumption that will be built unless correc
 | 12 | Which address the per-IP rate limits count ([04 §5](04-security-and-auth.md)). The API reads the socket's peer, `request.client.host`; behind a hosting platform's proxy that is the proxy for everyone, so registration would allow 5 an hour across all users | The client address comes from the platform's forwarded header, trusted only when the request arrives from the platform's own proxy — configured once the host is chosen ([05 §5](05-integrations.md)) | Before the first deploy |
 | 13 | Is a rest notification ~22–40 s late with the screen off acceptable, or does the app ask for `SCHEDULE_EXACT_ALARM`? One clean sample on the S21 FE: ~39 s on a 2:00 rest | Inexact alarms; the on-screen timer and its haptic are exact | Before launch, with more samples ([task 004](tasks/004-exercise-catalog-and-logging.md)) |
 | 14 | A target time or distance on a routine exercise — a schema addition | None: holds and carries get sets and rest, and pre-fill from last time | Task 005, where prescriptions live |
-| 15 | Personal records for time and distance — longest hold, farthest carry | Not built; such sets count as sets, with zero tonnage and no PR | Stages 6–7 of task 004 |
+| 15 | Personal records for time and distance — longest hold, farthest carry | Not built; such sets count as sets, with zero tonnage. **Correction, found on the phone 2026-09-24:** "no PR" was not true of a *loaded* carry — the core's heaviest-weight rule asks only for a load, so a farmer's walk at 24 kg takes *Maior carga*. A hold takes nothing. Kept as it is unless decided otherwise: the heaviest carry is a real record, and the doc was the one that was wrong | Stage 7 of task 004 |
 | 16 | Short imperial distances in feet or yards (sleds are often yards in US gyms) | Feet, following ADR-008's m/ft pair | The imperial pass of task 004's device checks |
 | 17 | The Portuguese set-type letters — `Aq D B A` | As written, catalog content | The native-speaker review ([07 §9](07-brand-and-ui.md)) |
 | 18 | **Who builds body-weight entry?** `body_weight_log` exists on both sides and every bodyweight e1RM, tonnage and PR reads it (INV-07, FR-2.15a), but no task gives the user a way to write to it — task 010 only charts it. Until something does, a pull-up or dip has no load, no e1RM and no record | Not built in task 004; bodyweight sets count as sets and celebrate nothing | Before launch — likely task 010 or 012 |
@@ -2081,5 +2084,41 @@ Two tests pin the geometry, one watched failing; the phone confirmed both.
   - the dev client's floating *Tools* button covers *Encerrar* (development builds only);
   - the ✓ has no accessible name of its own, which is for the TalkBack criterion;
   - a fork reads identically to its global in the picker, which is a design question.
+
+- No invariant changed and no ADR was added. Counts unchanged: 49 documents, 15 ADRs.
+
+### 2026-09-24 — task 004 stage 5's device list: three screens that never showed a write
+
+The rest of stage 5's device list ran the same evening, on the same build, after stage 6's pass.
+
+**Passed on the phone:**
+- A routine built, reordered, supersetted, given targets, duplicated, archived and restored. Started, it pre-filled
+  exactly as 5a's rules predict, with every RIR NULL.
+- The superset alternated and rested once per round, and the ✓ with the keypad open carried the keypad to the next
+  set's weight.
+- The refused permission: asked at the first rest and not at launch, the bar still counting after "Não permitir",
+  and no second ask. The permission was restored afterwards.
+- 5c's plank and carry, each empty ✓ opening the keypad on the field its mode requires, each value stored exactly.
+
+The task file has the details. TalkBack and ✓ latency under a ticking bar were not run.
+
+**⚠ Three screens never showed their own writes: the routines list, the routine editor and the catalog.** A routine
+created, three exercises added, a row hidden: all in SQLite, none on screen until a remount. Each re-read with
+`useMemo(() => { void revision; return read(); }, [revision])`. **Compiling that pattern with the app's own
+`babel-plugin-react-compiler` showed the cause directly**: the compiler memoizes by what a computation uses, a `void`
+read uses nothing, and the output cached `read(userId)` on `userId` alone. Stages 4 and 5a shipped it with every gate
+green. It is the second defect of the class the *Gaps* list already names, after stage 3's `Sheet`:
+- Fixed with `useDatabaseRead`, which holds the read in state and puts it back into state after each write and on
+  focus.
+- The pattern is refused by a new lint fence, `void-dependency`, with a known-bad fixture (50 fixtures).
+- The class stays open until the suite runs under the compiler.
+
+**Every routine read "0 exercícios".** Drizzle writes a column bare inside a raw `sql` fragment when the query around
+it has no join, so the correlated count compared `routine_id` with its own `id`. `src/db/qualified.ts` now writes
+`"table"."column"` explicitly. Stage 6's body-weight subquery was correct only because its query joins, and uses the
+helper too. A test renders both in a join-less query, and was watched failing against the original fragment.
+
+**A correction to open question 15, found by the summary:** a loaded carry *does* take a heaviest-weight record,
+contrary to "no PR". I think the doc was wrong, not the code; recorded there, the decision is the owner's.
 
 - No invariant changed and no ADR was added. Counts unchanged: 49 documents, 15 ADRs.

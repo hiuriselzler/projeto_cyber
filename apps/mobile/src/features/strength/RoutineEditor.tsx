@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { readExercise } from '@/db/catalog';
@@ -20,6 +20,7 @@ import { ExercisePicker } from './ExercisePicker';
 import { RoutineForm } from './RoutineForm';
 import { TargetsSheet } from './TargetsSheet';
 import { targetSummary } from './targetText';
+import { useDatabaseRead } from './useDatabaseRead';
 import { useSignedInUserId } from './useLiveWorkout';
 
 /**
@@ -40,14 +41,13 @@ export function RoutineEditor({ routineId }: { readonly routineId: string }) {
   const [picking, setPicking] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const [editingTargets, setEditingTargets] = useState<RoutineExercise | null>(null);
-  /** Bumped after every write, so the routine re-reads from SQLite rather than being patched in memory. */
-  const [revision, setRevision] = useState(0);
-  const refresh = () => setRevision((current) => current + 1);
-
-  const routine = useMemo(() => {
-    void revision;
-    return userId === null ? null : readRoutine(userId, routineId);
-  }, [userId, routineId, revision]);
+  // Re-read from SQLite after every write rather than patched in memory — through state, not a memo keyed on a
+  // counter, which the React Compiler reduced to "read once": exercises were added and never shown (`useDatabaseRead`).
+  const readThis = useCallback(
+    () => (userId === null ? null : readRoutine(userId, routineId)),
+    [userId, routineId],
+  );
+  const [routine, refresh] = useDatabaseRead(readThis);
 
   // `readExercise` rather than the live catalog list: an exercise hidden since it was added must still be named here,
   // or the routine shows a blank row for something that is plainly still in it (INV-11).

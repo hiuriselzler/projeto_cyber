@@ -18,6 +18,7 @@ import { and, asc, eq, isNotNull, isNull, ne, sql } from 'drizzle-orm';
 import type { LoggedSet } from '@/domain';
 
 import { db } from './client';
+import { qualified } from './qualified';
 import { bodyWeightLog, exercises, microcycles, plannedSessions, setLogs, workoutExercises, workouts } from './schema';
 import type { SetType } from './strength';
 
@@ -85,13 +86,16 @@ export function exercisesOf(rows: readonly HistoryRow[]): { exerciseId: string; 
 /**
  * The latest body weight on or before the workout's own day (INV-07, INV-17). Compared as ISO dates, which order
  * correctly as text; a tombstoned entry is not a weigh-in.
+ *
+ * Every column written out in full (`./qualified`). Bare, `user_id = user_id` would compare `body_weight_log` with
+ * itself — any account's weigh-in on the device — and the query only rendered it qualified because it happens to join.
  */
-const bodyWeightOnTheDay = sql<number | null>`(
-  SELECT ${bodyWeightLog.weightKg} FROM ${bodyWeightLog}
-  WHERE ${bodyWeightLog.userId} = ${workouts.userId}
-    AND ${bodyWeightLog.measuredOn} <= ${workouts.localDate}
-    AND ${bodyWeightLog.deletedAt} IS NULL
-  ORDER BY ${bodyWeightLog.measuredOn} DESC
+export const bodyWeightOnTheDay = sql<number | null>`(
+  SELECT ${qualified(bodyWeightLog, bodyWeightLog.weightKg)} FROM ${bodyWeightLog}
+  WHERE ${qualified(bodyWeightLog, bodyWeightLog.userId)} = ${qualified(workouts, workouts.userId)}
+    AND ${qualified(bodyWeightLog, bodyWeightLog.measuredOn)} <= ${qualified(workouts, workouts.localDate)}
+    AND ${qualified(bodyWeightLog, bodyWeightLog.deletedAt)} IS NULL
+  ORDER BY ${qualified(bodyWeightLog, bodyWeightLog.measuredOn)} DESC
   LIMIT 1
 )`;
 

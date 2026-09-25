@@ -157,6 +157,22 @@ const fences = [
     ],
     syntax: [{ selector: "CallExpression[callee.property.name='springify']", what: 'springify()' }],
   },
+  {
+    // Task 004 stage 6 device pass: `useMemo(() => { void revision; return read(); }, [revision])` compiled, under the
+    // React Compiler the app ships with and Jest does not run, to a cache that ignored `revision` — a read of a value
+    // that uses nothing is a dependency on nothing. Three screens never showed their own writes, with every suite green.
+    // `void someCall()` (a promise not awaited) is untouched: only a bare name is refused.
+    id: 'void-dependency',
+    allowedIn: [],
+    reason:
+      'a `void name;` read is not a dependency to the React Compiler, which memoizes on what is used — put the re-read in state (features/strength/useDatabaseRead.ts)',
+    syntax: [
+      {
+        selector: "ExpressionStatement > UnaryExpression[operator='void'][argument.type='Identifier']",
+        what: 'void <name>;',
+      },
+    ],
+  },
 ];
 
 /** Rules that apply inside the named folders only, on top of the fences. */

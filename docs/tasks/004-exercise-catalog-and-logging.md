@@ -341,24 +341,52 @@ metric, dark — a development build carrying commit `228069e`, installed **over
       two completed sets. Rehearsed first against a copy of that database pulled off the phone, then run by the app
       itself: **3 migrations applied, both sets intact, `foreign_key_check` empty, `integrity_check` ok**, and the CHECK
       on `target_rir` present on the column ([06 §4](../06-operations.md))
-- [ ] A routine is built, reordered (the two-pass renumber clearing SQLite's row-by-row unique check), supersetted,
-      duplicated, archived and restored — and started, with weights and reps pre-filled and every RIR blank
+- [x] A routine is built, reordered (the two-pass renumber clearing SQLite's row-by-row unique check), supersetted,
+      duplicated, archived and restored — and started, with weights and reps pre-filled and every RIR blank. *(2026-09-24,
+      after two fixes found by this very check — below. Started, "Treino A" wrote exactly what 5a's rules predict: the bench's
+      set 1 a warm-up 100 × 5 because last time's set 1 was one, set 3 falling back to set 2's 62,5 × 8 as a working set, the
+      row's 8 reps from `target_min_reps` with no history, the rest and targets copied — and every RIR NULL)*
 - [ ] **The rest notification arrives with the screen off**, on time. **Arrives: yes, after a fix (below). On time: not
       settled.** One clean screen-off delivery was **~39 s late** on a 2:00 rest, and the first alarm fired ~22 s late —
       Android deferring a non-exact alarm. The timing runs after that were disturbed by hand on the phone and are not
       evidence either way, so they were abandoned at the owner's request; whether `SCHEDULE_EXACT_ALARM` is worth asking
       for is still open
-- [ ] Notification permission is asked at the first rest timer and not at launch; refused, the timer still runs with
-      its haptic and the app never asks again. *Half: nothing was asked at launch; at the first rest the permission was
-      granted by hand on the phone (`USER_SET`) and the channel was created, named "Cronômetro de descanso". The refused
-      path was not run*
+- [x] Notification permission is asked at the first rest timer and not at launch; refused, the timer still runs with
+      its haptic and the app never asks again. *(2026-09-24: the permission reset to unasked with `pm revoke` and its flags
+      cleared; a cold start asked nothing; the first rest asked; "Não permitir" left the bar counting; the next round's rest
+      asked nothing — one refusal is final on Android 16, as `canAskAgain` reports it. Permission restored afterwards. The
+      haptic itself cannot be observed over adb)*
 - [x] **Force-quit mid-rest**: the cold start reopens the workout, and the bar is counting the same rest — set ticked at
       21:00:37 with a 2:00 rest, force-stopped five seconds later, cold-started, and the bar read **1:43** at 21:00:54:
       the same rest, where it should be. **Every cold start of the pass landed in the open workout by itself**, and every
       set ticked before a force-stop was there afterwards
-- [ ] A superset alternates on the ✓ and rests once per round; ✓ with the keypad open moves it to the next set's weight
+- [x] A superset alternates on the ✓ and rests once per round; ✓ with the keypad open moves it to the next set's weight.
+      *(2026-09-24: bench set 1 moved focus to the row's set 1 with no bar; the row's set 1 started one 1:30 rest and sent
+      focus back to the bench's set 2; with the keypad open on the bench's set 2, its ✓ moved the keypad to the row's set 2
+      weight, revealed above it, with no bar — mid-round)*
 - [ ] TalkBack reaches the set type through the row's "Change set type" action, and the timer bar reads its time left
-- [ ] ✓ latency re-measured on a routine-started session, with the timer bar ticking beside the rows
+- [ ] ✓ latency re-measured on a routine-started session, with the timer bar ticking beside the rows. *Not run: the
+      stage-3 number came from `measureTickLatency()` on a synthetic session; measuring under a ticking bar needs the same
+      instrument pointed at a real one*
+- [x] **5c on the phone** (2026-09-24): a plank's row is a time alone; its ✓ on an empty time opened the keypad on *Tempo*
+      instead of completing it; `130` read "1 minuto e 30 segundos" and stored 90 s with no weight, reps or RIR. A farmer's
+      walk's empty ✓ opened the keypad on *Distância* — its required field — and 24 kg · 30 m · 40 s stored exactly, RIR NULL.
+      Migration `0003` was already applied on this phone (the development build takes its JavaScript from Metro)
+
+**Found by the stage 5 device list, run 2026-09-24** *(after stage 6's pass, the same evening; both fixed and verified)*
+- [x] **⚠ Three screens never showed their own writes: the routines list, the routine editor and the catalog.** Each
+      re-read through `useMemo(() => { void revision; return read(); }, [revision])`. The React Compiler — applied by the
+      bundle, not by Jest — memoizes by what a computation *uses*, and a `void` read uses nothing: **compiled, the cache was
+      keyed on `userId` alone** (checked by compiling the pattern with the app's own `babel-plugin-react-compiler`). A routine
+      created, three exercises added, a catalog row hidden: all in SQLite, none on screen until a remount. Stages 4 and 5a
+      shipped it; stage 3's `Sheet` was the same class. Fixed with `useDatabaseRead` — the read held in state and put back
+      into state after each write and on focus — and **a lint fence, `void-dependency`, refusing `void <name>;`**, with a
+      known-bad fixture. The ADR-014 gap stands: the suite still does not run under the compiler; this closes one pattern
+- [x] **Every routine read "0 exercícios".** The count was a correlated subquery in a raw `sql` fragment, and Drizzle writes
+      a bare column there when the query around it has no join — `"routine_id" = "id"`, with `id` bound to
+      `routine_exercises` itself. Fixed with `src/db/qualified.ts`, which writes `"table"."column"` whatever the query; stage
+      6's body-weight subquery rendered correctly only because its query joins, and now uses it too. A test renders both in a
+      query with no join, and was watched failing against the original fragment
 
 **Found by the stage 5 device pass** *(2026-09-23 — two fixed the same evening, two carried into stage 5c)*
 - [x] **⚠ The rest notification was silently dropped with the screen off.** The alarm fired, `expo-notifications` handed

@@ -14,6 +14,7 @@ import { AppText, Button, Chip, EmptyState, Screen, sizes, space, TextField, use
 import { filterCatalog, isFiltered, NO_FILTER, sortForDisplay, type CatalogFilter } from './catalogFilter';
 import { exerciseLabel, type Translate } from './exerciseName';
 import { ExerciseForm, type FormTarget } from './ExerciseForm';
+import { useDatabaseRead } from './useDatabaseRead';
 import { useSignedInUserId } from './useLiveWorkout';
 
 /**
@@ -36,40 +37,38 @@ export function CatalogScreen() {
   const [target, setTarget] = useState<FormTarget | null>(null);
   /** Which of the two lists this screen shows — the active catalog, or what has been hidden from it. */
   const [showHidden, setShowHidden] = useState(false);
-  /** Bumped after every write, so the list re-reads from SQLite rather than being patched in memory. */
-  const [revision, setRevision] = useState(0);
 
   /** `t` with the language made explicit, so a global can be matched against its name in both catalogs. */
   const translate = useCallback<Translate>((key, options) => t(key, options), [t]);
 
-  const all = useMemo(() => {
-    // `revision` is read so the dependency is real to the linter as well as to us: it is what re-runs this read
-    // after a write, and the whole point is that the list comes back from SQLite rather than being patched in place.
-    void revision;
-    return userId === null ? [] : listExercises(userId);
-  }, [userId, revision]);
-  // Reference data, seeded once and never written by this screen, so it is not tied to `revision`.
+  // Both lists come back from SQLite after every write rather than being patched in place — through state, not a
+  // memo keyed on a counter, which the React Compiler reduced to "read once" (`useDatabaseRead`, stage 6 device pass).
+  const readAll = useCallback(() => (userId === null ? [] : listExercises(userId)), [userId]);
+  const [all, rereadAll] = useDatabaseRead(readAll);
+  const readHidden = useCallback(() => (userId === null ? [] : listArchivedExercises(userId)), [userId]);
+  const [hidden, rereadHidden] = useDatabaseRead(readHidden);
+  const refresh = useCallback(() => {
+    rereadAll();
+    rereadHidden();
+  }, [rereadAll, rereadHidden]);
+
+  // Reference data, seeded once and never written by this screen, so it is read once.
   const muscles = useMemo(() => (userId === null ? [] : listMuscleGroups()), [userId]);
   const shown = useMemo(() => filterCatalog(all, filter, translate, locale), [all, filter, translate, locale]);
-
-  const hidden = useMemo(() => {
-    void revision;
-    return userId === null ? [] : listArchivedExercises(userId);
-  }, [userId, revision]);
   const shownHidden = useMemo(() => sortForDisplay(hidden, translate, locale), [hidden, translate, locale]);
 
   const onSaved = useCallback(() => {
     setTarget(null);
-    setRevision((current) => current + 1);
-  }, []);
+    refresh();
+  }, [refresh]);
 
   const unhide = useCallback(
     (exerciseId: string) => {
       if (userId === null) return;
       setExerciseArchived({ userId, exerciseId, archived: false, now: Date.now() });
-      setRevision((current) => current + 1);
+      refresh();
     },
-    [userId],
+    [refresh, userId],
   );
 
   if (userId === null) {
@@ -192,7 +191,7 @@ export function CatalogScreen() {
                   onEdit={() => setTarget({ kind: item.ownerUserId === null ? 'fork' : 'edit', exercise: item })}
                   onHide={() => {
                     setExerciseArchived({ userId, exerciseId: item.id, archived: true, now: Date.now() });
-                    setRevision((current) => current + 1);
+                    refresh();
                   }}
                 />
               )}

@@ -1,4 +1,4 @@
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
@@ -15,6 +15,7 @@ import { AppText, Button, Chip, EmptyState, readDeviceTimeZone, Screen, sizes, s
 
 import { RoutineForm, type RoutineFormTarget } from './RoutineForm';
 import { groupByFolder } from './routineList';
+import { useDatabaseRead } from './useDatabaseRead';
 import { useSignedInUserId } from './useLiveWorkout';
 
 /**
@@ -33,25 +34,17 @@ export function RoutinesScreen() {
 
   const [showArchived, setShowArchived] = useState(false);
   const [form, setForm] = useState<RoutineFormTarget | null>(null);
-  /** Bumped after every write, so the lists re-read from SQLite rather than being patched in memory. */
-  const [revision, setRevision] = useState(0);
-  const refresh = () => setRevision((current) => current + 1);
-  // Re-read on every return to this screen: a workout finished on the workout screen, or a routine edited in its
-  // editor, changed the database while this one stayed mounted underneath.
-  useFocusEffect(useCallback(() => setRevision((current) => current + 1), []));
-
-  const active = useMemo(() => {
-    void revision;
-    return userId === null ? [] : listRoutines(userId);
-  }, [userId, revision]);
-  const archived = useMemo(() => {
-    void revision;
-    return userId === null ? [] : listArchivedRoutines(userId);
-  }, [userId, revision]);
-  const openWorkout = useMemo(() => {
-    void revision;
-    return userId === null ? null : readOpenWorkout(userId);
-  }, [userId, revision]);
+  // Re-read after every write, and on every return to this screen — a workout finished on the workout screen, or a
+  // routine edited in its editor, changed the database while this one stayed mounted underneath. Held in state rather
+  // than a memo keyed on a counter, which the React Compiler reduced to "read once" (`useDatabaseRead`, stage 6 pass).
+  const readLists = useCallback(
+    () =>
+      userId === null
+        ? { active: [], archived: [], openWorkout: null }
+        : { active: listRoutines(userId), archived: listArchivedRoutines(userId), openWorkout: readOpenWorkout(userId) },
+    [userId],
+  );
+  const [{ active, archived, openWorkout }, refresh] = useDatabaseRead(readLists);
   const groups = useMemo(() => groupByFolder(active), [active]);
 
   const start = useCallback(
@@ -60,11 +53,11 @@ export function RoutinesScreen() {
       const tz = readDeviceTimeZone() ?? 'UTC';
       void startWorkoutFromRoutine({ userId, routineId, now: Date.now(), tz }).then((workoutId) => {
         // Null means a workout was already open and nothing was started; the banner says so after the re-read.
-        setRevision((current) => current + 1);
+        refresh();
         if (workoutId !== null) router.push('/workout');
       });
     },
-    [router, userId],
+    [refresh, router, userId],
   );
 
   if (userId === null) {

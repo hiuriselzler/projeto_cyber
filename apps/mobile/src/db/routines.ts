@@ -18,6 +18,7 @@ import { uuidV7 } from '@/crypto/identifiers';
 
 import { db } from './client';
 import { moveItem, normaliseSupersets, toggleSupersetWithNext } from './ordering';
+import { qualified } from './qualified';
 import { exercises, routineExercises, routines, setLogs, workoutExercises, workouts, type Tracking } from './schema';
 import {
   readOpenWorkout,
@@ -364,9 +365,15 @@ const exerciseColumns = {
   tracking: exercises.tracking,
 } as const;
 
-const liveExerciseCount = sql<number>`(
+/**
+ * How many live exercises a routine holds. Every column written out in full (`./qualified`): bare, as Drizzle writes
+ * them in a query with no join, `routine_id = id` bound `id` to `routine_exercises` itself and counted 0 for every
+ * routine (task 004 stage 6 device pass).
+ */
+export const liveExerciseCount = sql<number>`(
   SELECT count(*) FROM ${routineExercises}
-  WHERE ${routineExercises.routineId} = ${routines.id} AND ${routineExercises.deletedAt} IS NULL
+  WHERE ${qualified(routineExercises, routineExercises.routineId)} = ${qualified(routines, routines.id)}
+    AND ${qualified(routineExercises, routineExercises.deletedAt)} IS NULL
 )`;
 
 function summaries(userId: string, archived: boolean): RoutineSummary[] {
