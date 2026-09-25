@@ -98,7 +98,7 @@ Jest tests, and none was findable without a device.
 | **5c** | The `duration` and `distance_duration` tracking modes — the set row that logs them, and the create form offering them | ☑ 2026-09-23, device pass not yet run |
 | **6** | The finish flow — PR detection and its celebration, perceived fatigue, notes, retroactive logging | ☑ 2026-09-24, device pass run the same evening (TalkBack not) |
 | **7** | History and per-exercise charts; `personal_records` as a cache, with its rebuild command | ☑ 2026-09-25, device pass run the same evening (imperial and TalkBack not) |
-| **8** | The API mirror endpoints, and the closing device pass over the whole loop | ☐ |
+| **8** | The API mirror endpoints, and the closing device pass over the whole loop | ☐ proposed 2026-09-25 — **five decisions open**, below |
 
 **Stage 4 carries three decisions the catalog screen forces**, recorded in PROJECT-STATUS's decision
 log on 2026-09-21 and repeated here because the code reads this file:
@@ -306,6 +306,46 @@ PROJECT-STATUS's decision log:
 **The core also gains `session_metrics(sessions)`**: per session, the top load, the best e1RM, the volume and the counted
 sets — each over what counts (INV-04) and in one crossing of the boundary per exercise. Deload sets are charted normally
 (INV-08 excludes them from records only).
+
+**Stage 8 — proposed 2026-09-25, not started. Five decisions are the owner's before any code**, each with the
+recommendation made at the time. Written at the end of stage 7's session so the next one starts from here.
+
+- *What exists.* `/api/v1/workouts` has `POST` (idempotent by the client's id) and `GET /{id}` for the workout row only,
+  from task 003. There is no `exercises/` or `routines/` route. The models, RLS policies and the scoped repository base
+  exist for every table (task 002–003); the records rebuild exists (stage 7).
+- *What it should build.* The mirror endpoints [02 §5](../02-architecture.md) lists for `exercises/`, `routines/` and
+  `workouts/`, so task 006 has something to sync against. 02 §5 says sync is the primary write path and these exist for
+  correctness and future clients, so they stay small. Every write is idempotent by the client's id (INV-16), scoped
+  (INV-15) and answers 404 for someone else's row. The OpenAPI export and `packages/shared` types are regenerated, which
+  CI's *Shared types are current* job checks.
+- *The acceptance criteria it should close:* **a full workout in airplane mode**, **the 5-exercise, 20-set workout in
+  under 30 taps beyond the weights**, **the imperial round trip**, **archiving leaves history displayable** (the device
+  half), and the open device items: TalkBack (stages 3, 5, 6 and 7), ✓ latency under a ticking rest bar, stage 4's
+  accessibility and font-scale pass.
+
+1. **The shape of the workout write.** Recommended: **`PUT /workouts/{id}` takes the whole aggregate** — the workout, its
+   exercise entries and their sets — as one document, applied in one transaction. A set cannot be valid apart from its
+   exercise's tracking mode, a finished workout is the unit task 006 syncs ("never sync a workout while `ended_at IS
+   NULL`"), and one document is one idempotent retry. The alternative, per-row `POST`/`PATCH` for sets, triples the
+   routes for a path the app will not use.
+2. **Where "a completed set has its mode's fields" lives.** Stage 5c decision 4 put `missingForCompletion` in `src/db`
+   and promised "the API's in stage 8". A second copy in Python is the drift ADR-004 exists to prevent. Recommended:
+   **move the predicate into `core-rs/src/strength/`**, with a shared fixture, and call it from both sides; the bindings
+   are regenerated in WSL2 as in stages 6 and 7. The alternative is two copies policed by one fixture.
+3. **Globals on the server.** Stage 4 decided hiding a global is device-local, and a fork is a user row. Recommended: the
+   API **lists globals and the user's own rows, and refuses any write to a global** as a 404, as if it were someone
+   else's. A fork arrives as an ordinary create with `forked_from_id`.
+4. **When the records cache is rebuilt.** Recommended: **in the same transaction as a workout write that finishes or
+   changes a finished workout**, rebuilding that user (stage 7's service), so the cache is never stale by construction.
+   The command stays as the repair. The alternative, rebuilding only by hand, leaves a table that is wrong until someone
+   notices.
+5. **How the imperial pass runs without touching the phone's database.** `updateAccount` in `src/account/flows.ts`
+   `PATCH`es `unit_system` and is tested, but **no screen calls it** — the "written, tested, never called" trap again,
+   and the reason stage 7's imperial pass was skipped. Recommended: **a unit-system and language switch on the
+   development build's diagnostics screen**, calling `updateAccount` against the local API (Docker up, `adb reverse
+   tcp:8000`). The product's own settings screen is not in any task yet — worth an open question in PROJECT-STATUS.
+
+The closing device pass needs the local stack up, which stage 7 showed takes Docker Desktop started first (06 §1).
 
 ## Acceptance criteria
 - [ ] A full workout can be logged start to finish in airplane mode. *(Stage 3 logged one set start to finish with

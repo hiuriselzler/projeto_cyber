@@ -109,6 +109,23 @@ What it cost to learn, each once:
   action; tap the left edge of *Encerrar*.
 - **A draft PR's CI may not start**: PR #17's `pull_request` event was never delivered. Closing and reopening the PR
   re-sends it (and the late original then cancels the first run, which is harmless).
+- **After step 2 the clone holds the generated files as local changes** (task 004 stage 7, 2026-09-25), so step 1's
+  fast-forward refuses next time. They are the files you committed: `git checkout -- core-rs
+  packages/core-native/cpp/generated packages/core-native/src/generated` and `git clean -fd core-rs` first. The `.so`
+  files are gitignored and stay.
+- **Launching the development build at Metro from adb**: `adb shell am start -a android.intent.action.VIEW -d
+  "exp+cyberathlete://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081" com.cyberathlete.app`, and then any
+  route by deep link — `cyberathlete://history`, `cyberathlete://workouts/<id>`, `cyberathlete://exercise/<id>` — with the
+  ids read from the pulled database. Faster and steadier than tapping through the diagnostics screen.
+- **Fast refresh does not re-fire `onLayout`.** A fix that depends on measured layout — the chart's label gutter — looked
+  unfixed after a refresh. Force-stop and relaunch before judging a layout change.
+- **Predict before you look.** Stage 7's pass read the pulled database first and wrote down every number a screen should
+  show; each screen was then a yes or a no, not an impression.
+- **Typed routes go stale** whenever a route is added: `tsc` fails on the new `href` until `.expo/types/router.d.ts` is
+  regenerated, which `npx expo start` does within seconds — start it, wait for the file to change, stop it (the CI gap
+  is listed in PROJECT-STATUS § Gaps).
+- **The integration suite needs Docker Desktop running** before `docker compose up -d` at the repository root; it does
+  not start with Windows. Without it the integration tests skip locally, and CI is the only run.
 
 **Reaching the API from the phone:** over USB with `adb reverse`, so the device's `localhost` is this
 machine's. Debug builds may use `http://` to `localhost` and nothing else; release builds allow no
