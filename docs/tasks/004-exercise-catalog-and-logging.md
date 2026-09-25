@@ -97,7 +97,7 @@ Jest tests, and none was findable without a device.
 | **5b** | The live session finished off — set types; the rest timer with haptics and its notification; ✓ advancing focus (superset-aware); removing and reordering exercises mid-session; reopening the workout in progress on relaunch | ☑ 2026-09-23, device pass part-run the same evening |
 | **5c** | The `duration` and `distance_duration` tracking modes — the set row that logs them, and the create form offering them | ☑ 2026-09-23, device pass not yet run |
 | **6** | The finish flow — PR detection and its celebration, perceived fatigue, notes, retroactive logging | ☑ 2026-09-24, device pass run the same evening (TalkBack not) |
-| **7** | History and per-exercise charts; `personal_records` as a cache, with its rebuild command | ☐ |
+| **7** | History and per-exercise charts; `personal_records` as a cache, with its rebuild command | ☐ proposed 2026-09-24 — **three decisions open**, below |
 | **8** | The API mirror endpoints, and the closing device pass over the whole loop | ☐ |
 
 **Stage 4 carries three decisions the catalog screen forces**, recorded in PROJECT-STATUS's decision
@@ -260,15 +260,43 @@ the code reads this file:
    *contained* the exercise, so a discarded or abandoned one hid the real last time behind an empty hint. It now takes
    the most recent **finished** workout with at least one **completed** set of that exercise.
 
+**Stage 7 — proposed 2026-09-24, not started. Three decisions are the owner's before any code**, each with the
+recommendation made at the time:
+
+- *What it builds.* A workout list (finished workouts, newest first, with date, counted sets and volume); a workout
+  detail (every set as logged — warm-ups included and marked — with notes, fatigue and the records it still holds under
+  stage 6's decision 2); a per-exercise history (its sessions, and three charts: top-set weight, e1RM, volume, by date).
+  On the server, a user-scoped `personal_records` repository and a rebuild service folding `personal_bests()` per
+  exercise, tested against real Postgres.
+- *The core gains `session_metrics()`* in `core-rs/src/strength/` — per session: top load, best e1RM, volume, counted
+  sets. "Top set" and "best e1RM of a session" are aggregations over what counts (INV-04, INV-07), so they are the core's,
+  through both bindings and a shared fixture, and the bindings are regenerated in WSL2 again (06 §1). A blank RIR is a
+  gap in the e1RM chart, never a zero.
+- *The acceptance criteria it should close:* warm-ups appear in the log; RIR blank never read as 0 by a chart; an
+  exercise archived after use still displays its history; the imperial round trip end to end.
+- *Every screen reads through `useDatabaseRead`* — the compiler-proof pattern — and reads per exercise and per page.
+
+1. **Charts: `react-native-svg` or `victory-native`?** Recommended: three small line charts drawn with `react-native-svg`,
+   already a dependency. `victory-native` (02 §4) means two native dependencies (it runs on Skia), a fresh APK and a larger
+   bundle for three charts; choosing svg changes 02 §4's table, recorded in the decision log.
+2. **The rebuild's scope.** Recommended: rebuild one user, as a service and a command taking a user id. Rebuilding every
+   user needs a new unscoped function on ADR-011's allowlist — an ADR amendment — and buys nothing yet: the server holds no
+   sets until stage 8's endpoints and task 006.
+3. **Where history is reached.** The release home is blank until task 010. Recommended: a "Histórico" entry on the
+   development build's diagnostics screen, a link from the finish summary to that workout, and one from each exercise to
+   its history.
+
 ## Acceptance criteria
 - [ ] A full workout can be logged start to finish in airplane mode. *(Stage 3 logged one set start to finish with
       no network involved, but airplane mode itself was not switched on, and "full" means routines, set types and
       the finish flow, which are stages 5–6 in the table above.)*
-- [ ] Force-quitting mid-workout and reopening restores the exact state, including the set in
+- [x] Force-quitting mid-workout and reopening restores the exact state, including the set in
       progress and the running rest timer (INV-09). *(Stage 3: the **state** survives a force-stop and comes back
       exactly — see the device list. **Stage 5b built the rest of it** (2026-09-23): a cold start with a workout open
-      lands in it, and the rest timer is derived from the rows, so there is nothing of it to lose — proven by
-      `liveFlow.test.ts` against the rows, **not yet on the phone**, so this stays open.)*
+      lands in it, and the rest timer is derived from the rows, so there is nothing of it to lose. **On the phone the same
+      evening**: ticked at 21:00:37 with a 2:00 rest, force-stopped, cold-started, and the bar read 1:43 at 21:00:54 — the
+      stage 5 device list. Stage 6's pass added a note surviving a force-stop with the finish sheet open. Ticked
+      2026-09-24, when this note was found still saying "not yet on the phone")*
 - [x] Tapping ✓ renders in < 100 ms on a mid-range Android device (measure, do not assume) —
       **p50 10.5 ms, p95 12.4 ms, worst 20.1 ms** on a Galaxy S21 FE, 2026-09-19, for the write and the re-read
 - [ ] RIR left blank stores NULL; a chart or total never treats it as 0. *(Storage half proven on the device — a

@@ -83,6 +83,33 @@ guessable from an error message. Written down so the next rebuild is minutes ins
 - **Reinstalling over a build from another machine fails** with `INSTALL_FAILED_UPDATE_INCOMPATIBLE` — different debug
   keystores. `adb uninstall com.cyberathlete.app` first, and know that it takes the local database with it.
 
+**The loop that worked for a core change** (task 004 stage 6, 2026-09-24). The WSL2 clone is `~/projeto_cyber` in the
+`Ubuntu` distribution, with `origin` pointing at this Windows checkout (`/mnt/c/...`), so it takes commits by `git fetch`:
+1. Bring the clone to the branch head (`git merge --ff-only origin/<branch>`); to try uncommitted core changes, `rsync`
+   `core-rs/` over it — then normalise the copies to LF and back to mode 644, or every file shows as modified.
+2. `pnpm ubrn:android` in `packages/core-native` regenerates the bindings and the three `.so` files — a few minutes.
+   Copy the four generated files and the `.so` files back to Windows, and check the diff is only what the change adds.
+3. `./gradlew :app:assembleDebug -PreactNativeArchitectures=arm64-v8a` under JDK 17: **under two minutes** incremental,
+   against ~30 cold. Check the packaged `.so` carries the new symbol (`unzip`, then `grep` the function name) before
+   installing. `adb install -r` keeps the phone's data.
+
+What it cost to learn, each once:
+- **From Git Bash, `wsl.exe` arguments are mangled**: `$vars` in the command string arrive empty and `/mnt/c/...` becomes
+  `C:/Program Files/Git/mnt/c/...`. Put multi-step work in a script and run it with `MSYS_NO_PATHCONV=1 wsl.exe -d
+  Ubuntu -- bash -lc "bash /mnt/c/.../script.sh"`.
+- **Run it as a login shell** (`bash -lc`): `node`, `cargo` and the SDK are on the login PATH only. And **stop the
+  Gradle daemon first** (`./gradlew --stop`): a daemon started from a shell without `node` keeps that PATH, and every
+  later build fails on *"A problem occurred starting process 'command 'node''"* however the shell is fixed.
+- **A development build takes its JavaScript from Metro**, so a JS-only change (a migration included) reaches the phone
+  without a rebuild; only a native change — the core, a native dependency — needs the APK. `adb reverse tcp:8081
+  tcp:8081` for Metro as well as the API's port, and again after the phone reconnects: the forward silently disappears.
+- **Driving the phone over adb**: `uiautomator dump` returns a *stale* tree while anything animates — the rest bar
+  ticks every 250 ms — so read state from the database copy (`run-as … cat files/SQLite/cyberathlete.db`), not from
+  the dump, while a rest runs. And the development client's floating *Tools* button sits over every header's right-hand
+  action; tap the left edge of *Encerrar*.
+- **A draft PR's CI may not start**: PR #17's `pull_request` event was never delivered. Closing and reopening the PR
+  re-sends it (and the late original then cancels the first run, which is harmless).
+
 **Reaching the API from the phone:** over USB with `adb reverse`, so the device's `localhost` is this
 machine's. Debug builds may use `http://` to `localhost` and nothing else; release builds allow no
 cleartext at all ([04 §5](04-security-and-auth.md)). uvicorn stays bound to `127.0.0.1` — never
