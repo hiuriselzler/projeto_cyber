@@ -15,7 +15,9 @@ from ._core import (
     PrKind,
     RepsAtWeight,
     RoundingMode,
+    SessionMetrics,
     SetType,
+    StandingRecord,
     core_version,
     counted_set_count,
     detect_prs,
@@ -25,6 +27,8 @@ from ._core import (
     load_kg,
     personal_bests,
     round_to_increment,
+    session_metrics,
+    standing_records,
     volume_kg,
 )
 
@@ -35,7 +39,9 @@ __all__ = [
     "PrKind",
     "RepsAtWeight",
     "RoundingMode",
+    "SessionMetrics",
     "SetType",
+    "StandingRecord",
     "core_version",
     "counted_set_count",
     "detect_prs",
@@ -45,5 +51,7 @@ __all__ = [
     "load_kg",
     "personal_bests",
     "round_to_increment",
+    "session_metrics",
+    "standing_records",
     "volume_kg",
 ]

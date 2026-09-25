@@ -8,10 +8,12 @@ from typing import Any
 from sqlalchemy import (
     ForeignKey,
     ForeignKeyConstraint,
+    Index,
     Integer,
     Numeric,
     SmallInteger,
     UniqueConstraint,
+    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -195,11 +197,30 @@ class SetLog(OwnedByUser, SyncColumns, Base):
 
 
 class PersonalRecord(OwnedByUser, Base):
-    """Derived: a rebuildable fold over set_logs, never synced (03 §11)."""
+    """Derived: a rebuildable fold over set_logs, never synced (03 §11).
+
+    One row per kind, except `max_reps_at_weight`, which is one per load (migration 0007, task 004
+    stage 7).
+    """
 
     __tablename__ = "personal_records"
     __table_args__ = (
-        UniqueConstraint("user_id", "exercise_id", "kind"),
+        Index(
+            "personal_records_one_per_kind",
+            "user_id",
+            "exercise_id",
+            "kind",
+            unique=True,
+            postgresql_where=text("kind <> 'max_reps_at_weight'"),
+        ),
+        Index(
+            "personal_records_one_per_load",
+            "user_id",
+            "exercise_id",
+            "weight_kg",
+            unique=True,
+            postgresql_where=text("kind = 'max_reps_at_weight'"),
+        ),
         owned_reference("set_log_id", "set_logs", ondelete="CASCADE"),
         owned_reference("workout_id", "workouts", ondelete="CASCADE"),
     )

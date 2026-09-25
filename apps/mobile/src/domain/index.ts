@@ -18,6 +18,7 @@ import {
   PrKind as NativePrKind,
   RoundingMode as NativeRoundingMode,
   roundToIncrement,
+  sessionMetrics as nativeSessionMetrics,
   SetType as NativeSetType,
   volumeKg as nativeVolumeKg,
   type LoggedSet as NativeLoggedSet,
@@ -219,4 +220,28 @@ export function detectPrs(previous: PersonalBests, session: readonly LoggedSet[]
  */
 export function personalBests(sessions: readonly (readonly LoggedSet[])[]): PersonalBests {
   return fromNativeBests(nativePersonalBests(sessions.map((session) => session.map(toNative))));
+}
+
+/** One session of one exercise, reduced to what its history charts (task 004 stage 7). */
+export interface SessionMetrics {
+  /** The heaviest load of any counted set, lifter included. Null when none has a known load. */
+  readonly topLoadKg: number | null;
+  /** The highest e1RM of any counted set. Null is a gap in the chart, never a zero (INV-03, INV-07). */
+  readonly bestE1rmKg: number | null;
+  /** Tonnage of the counted sets. Null when no counted set has a load and reps — nothing to plot. */
+  readonly volumeKg: number | null;
+  readonly countedSets: number;
+}
+
+/**
+ * {@link SessionMetrics} for each session, in the order given — a whole history in one crossing. The top set and the
+ * best e1RM are aggregations over what counts (INV-04, INV-07), so they are the core's, not a chart's.
+ */
+export function sessionMetrics(sessions: readonly (readonly LoggedSet[])[]): SessionMetrics[] {
+  return nativeSessionMetrics(sessions.map((session) => session.map(toNative))).map((metrics) => ({
+    topLoadKg: present(metrics.topLoadKg),
+    bestE1rmKg: present(metrics.bestE1rmKg),
+    volumeKg: present(metrics.volumeKg),
+    countedSets: metrics.countedSets,
+  }));
 }

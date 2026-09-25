@@ -167,3 +167,36 @@ def detect_prs(previous: PersonalBests, session: list[LoggedSet]) -> list[PrAchi
 
 def personal_bests(sessions: list[list[LoggedSet]]) -> PersonalBests:
     """An exercise's bests after a history of sessions, one workout's sets per session."""
+
+class StandingRecord:
+    """A record still standing after a history, and the session that set it (task 004 stage 7).
+
+    `record.set_index` is a position within the session at `session_index` — the earliest session to
+    reach the value, since a later tie is not a record.
+    """
+
+    @property
+    def record(self) -> PrAchievement: ...
+    @property
+    def session_index(self) -> int: ...
+
+def standing_records(sessions: list[list[LoggedSet]]) -> list[StandingRecord]:
+    """Every record standing after a history passed oldest first, with where each was set."""
+
+class SessionMetrics:
+    """One session of one exercise, reduced to what its history charts (task 004 stage 7).
+
+    Each value is over the counted sets only (INV-04); `None` is "nothing to plot", never zero.
+    """
+
+    @property
+    def top_load_kg(self) -> float | None: ...
+    @property
+    def best_e1rm_kg(self) -> float | None: ...
+    @property
+    def volume_kg(self) -> float | None: ...
+    @property
+    def counted_sets(self) -> int: ...
+
+def session_metrics(sessions: list[list[LoggedSet]]) -> list[SessionMetrics]:
+    """Per-session metrics over a whole history, in the order given."""

@@ -97,7 +97,7 @@ Jest tests, and none was findable without a device.
 | **5b** | The live session finished off — set types; the rest timer with haptics and its notification; ✓ advancing focus (superset-aware); removing and reordering exercises mid-session; reopening the workout in progress on relaunch | ☑ 2026-09-23, device pass part-run the same evening |
 | **5c** | The `duration` and `distance_duration` tracking modes — the set row that logs them, and the create form offering them | ☑ 2026-09-23, device pass not yet run |
 | **6** | The finish flow — PR detection and its celebration, perceived fatigue, notes, retroactive logging | ☑ 2026-09-24, device pass run the same evening (TalkBack not) |
-| **7** | History and per-exercise charts; `personal_records` as a cache, with its rebuild command | ☐ proposed 2026-09-24 — **three decisions open**, below |
+| **7** | History and per-exercise charts; `personal_records` as a cache, with its rebuild command | ☑ 2026-09-25, device pass pending |
 | **8** | The API mirror endpoints, and the closing device pass over the whole loop | ☐ |
 
 **Stage 4 carries three decisions the catalog screen forces**, recorded in PROJECT-STATUS's decision
@@ -260,10 +260,9 @@ the code reads this file:
    *contained* the exercise, so a discarded or abandoned one hid the real last time behind an empty hint. It now takes
    the most recent **finished** workout with at least one **completed** set of that exercise.
 
-**Stage 7 — proposed 2026-09-24, not started. Three decisions are the owner's before any code**, each with the
-recommendation made at the time:
+**Stage 7 — proposed 2026-09-24, planned 2026-09-25.** What it builds:
 
-- *What it builds.* A workout list (finished workouts, newest first, with date, counted sets and volume); a workout
+- *The screens.* A workout list (finished workouts, newest first, with date, counted sets and volume); a workout
   detail (every set as logged — warm-ups included and marked — with notes, fatigue and the records it still holds under
   stage 6's decision 2); a per-exercise history (its sessions, and three charts: top-set weight, e1RM, volume, by date).
   On the server, a user-scoped `personal_records` repository and a rebuild service folding `personal_bests()` per
@@ -276,15 +275,37 @@ recommendation made at the time:
   exercise archived after use still displays its history; the imperial round trip end to end.
 - *Every screen reads through `useDatabaseRead`* — the compiler-proof pattern — and reads per exercise and per page.
 
-1. **Charts: `react-native-svg` or `victory-native`?** Recommended: three small line charts drawn with `react-native-svg`,
-   already a dependency. `victory-native` (02 §4) means two native dependencies (it runs on Skia), a fresh APK and a larger
-   bundle for three charts; choosing svg changes 02 §4's table, recorded in the decision log.
-2. **The rebuild's scope.** Recommended: rebuild one user, as a service and a command taking a user id. Rebuilding every
-   user needs a new unscoped function on ADR-011's allowlist — an ADR amendment — and buys nothing yet: the server holds no
-   sets until stage 8's endpoints and task 006.
-3. **Where history is reached.** The release home is blank until task 010. Recommended: a "Histórico" entry on the
-   development build's diagnostics screen, a link from the finish summary to that workout, and one from each exercise to
-   its history.
+**Stage 7 carries six decisions** *(2026-09-25, before the code — the owner took each recommendation)*, recorded in
+PROJECT-STATUS's decision log:
+
+1. **Charts are drawn with `react-native-svg`**, already a dependency, by one `LineChart` in `src/ui/`. `victory-native`
+   (02 §4 until now) meant two native dependencies on Skia, a fresh APK and a larger bundle for three charts. A chart plots
+   by `local_date` (INV-17, INV-25 — no week buckets), a missing value is a gap and never a zero (INV-03, INV-07), and
+   every chart carries a text summary so it is never the only way to read its numbers (INV-24).
+2. **The rebuild is one user at a time** — a service, and `python -m app.jobs.rebuild_records <user-id>` (06 §5).
+   Rebuilding every user needs a new unscoped function on ADR-011's allowlist, and buys nothing until the server holds
+   sets (stage 8, task 006).
+3. **Where history is reached.** The release home is blank until task 010, so: a history entry on the development
+   build's diagnostics screen, a link from the finish summary to that workout's detail, and from each exercise in a
+   workout's detail to that exercise's history.
+4. **`personal_records` keeps one reps record per load.** Its key was `UNIQUE (user_id, exercise_id, kind)`, which can
+   hold `max_reps_at_weight` for one load only, while the core keeps one per load. Now two partial unique indexes — one row
+   per kind for the other three, one per load for reps — and a CHECK that a reps record names its load (03 §4, migration
+   `0007`). The device has no such table and is unaffected.
+5. **The core says where a standing record came from.** The table needs `achieved_at`, `set_log_id` and `workout_id`, and
+   `personal_bests()` returns values only. `standing_records(sessions)` is the same fold returning each standing best with
+   the session and set that set it, and `personal_bests` becomes its projection, so the two cannot disagree. Sessions go in
+   oldest first and a tie keeps the earliest, so the server credits whoever got there first. **The workout detail does not
+   use it**: it names the records a workout holds the way the summary does — against every other finished workout,
+   strictly — so reopening an old workout says what its summary would say today, and a record since tied or beaten is not
+   named (stage 6, decision 2).
+6. **Open question 15 stays open, moved to task 010.** Longest hold and farthest carry would be new record kinds — an enum
+   migration, core kinds, the summary. Here a `duration` or `distance_duration` exercise's history lists each session's
+   time and distance, with no chart and no record.
+
+**The core also gains `session_metrics(sessions)`**: per session, the top load, the best e1RM, the volume and the counted
+sets — each over what counts (INV-04) and in one crossing of the boundary per exercise. Deload sets are charted normally
+(INV-08 excludes them from records only).
 
 ## Acceptance criteria
 - [ ] A full workout can be logged start to finish in airplane mode. *(Stage 3 logged one set start to finish with

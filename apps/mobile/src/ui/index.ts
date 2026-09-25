@@ -38,6 +38,7 @@ export {
   type RevealGeometry,
 } from './components/keypad';
 export { LevelUpState } from './components/LevelUpState';
+export { LineChart, type LineChartPoint } from './components/LineChart';
 export { Mark, type MarkLevel } from './components/Mark';
 export { MetricTile } from './components/MetricTile';
 export { NumericKeypad } from './components/NumericKeypad';

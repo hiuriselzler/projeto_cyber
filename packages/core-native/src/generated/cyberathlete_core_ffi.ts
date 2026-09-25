@@ -180,6 +180,45 @@ export function roundToIncrement(weightKg: number, incrementKg: number, mode: Ro
     }
 
 /**
+ * Per-session metrics over a whole history in one crossing (task 004 stage 7).
+ */
+export function sessionMetrics(sessions: Array<Array<LoggedSet>>): Array<SessionMetrics> {
+    const __rb: Uint8Array = uniffiCaller.rustCall(
+            /*caller:*/ (callStatus) => {
+                return nativeModule().ubrn_uniffi_cyberathlete_core_ffi_fn_func_session_metrics(
+        FfiConverterSequenceSequenceTypeLoggedSet.lower(sessions, nativeModule().rustbuffer_alloc),
+                callStatus);
+            },
+            /*liftString:*/ FfiConverterString.lift.bind(FfiConverterString),
+    );
+    try {
+        return FfiConverterSequenceTypeSessionMetrics.lift(__rb);
+    } finally {
+        nativeModule().rustbuffer_free(__rb);
+    }
+    }
+
+/**
+ * Every record standing after a history, oldest session first, with where each was set (task 004
+ * stage 7).
+ */
+export function standingRecords(sessions: Array<Array<LoggedSet>>): Array<StandingRecord> {
+    const __rb: Uint8Array = uniffiCaller.rustCall(
+            /*caller:*/ (callStatus) => {
+                return nativeModule().ubrn_uniffi_cyberathlete_core_ffi_fn_func_standing_records(
+        FfiConverterSequenceSequenceTypeLoggedSet.lower(sessions, nativeModule().rustbuffer_alloc),
+                callStatus);
+            },
+            /*liftString:*/ FfiConverterString.lift.bind(FfiConverterString),
+    );
+    try {
+        return FfiConverterSequenceTypeStandingRecord.lift(__rb);
+    } finally {
+        nativeModule().rustbuffer_free(__rb);
+    }
+    }
+
+/**
  * Total tonnage of the counted sets, in kilograms (INV-04).
  */
 export function volumeKg(sets: Array<LoggedSet>): number {
@@ -506,6 +545,108 @@ const FfiConverterTypePrAchievement = (() => {
 })();
 
 /**
+ * One session of one exercise, reduced to what its history charts. Mirrors
+ * [`cyberathlete_core::SessionMetrics`].
+ */
+export type SessionMetrics = {
+    topLoadKg?: number,
+    bestE1rmKg?: number,
+    volumeKg?: number,
+    countedSets: number
+}
+
+/**
+ * Generated factory for {@link SessionMetrics} record objects.
+ */
+export const SessionMetrics = (() => {
+    const defaults = () => ({
+    });
+    const create = (() => {
+        return uniffiCreateRecord<SessionMetrics, ReturnType<typeof defaults>>(defaults);
+    })();
+    return Object.freeze({
+        create,
+        new: create,
+        defaults: () => Object.freeze(defaults()) as Partial<SessionMetrics>,
+    });
+})();
+
+const FfiConverterTypeSessionMetrics = (() => {
+    type TypeName = SessionMetrics;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            return {
+                topLoadKg: FfiConverterOptionalFloat64.readFromCursor(c), 
+                bestE1rmKg: FfiConverterOptionalFloat64.readFromCursor(c), 
+                volumeKg: FfiConverterOptionalFloat64.readFromCursor(c), 
+                countedSets: FfiConverterUInt32.readFromCursor(c)
+            };
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            FfiConverterOptionalFloat64.writeIntoCursor(value.topLoadKg, c);
+            FfiConverterOptionalFloat64.writeIntoCursor(value.bestE1rmKg, c);
+            FfiConverterOptionalFloat64.writeIntoCursor(value.volumeKg, c);
+            FfiConverterUInt32.writeIntoCursor(value.countedSets, c);
+        }
+        allocationSize(value: TypeName): number {
+            return FfiConverterOptionalFloat64.allocationSize(value.topLoadKg) +
+             FfiConverterOptionalFloat64.allocationSize(value.bestE1rmKg) +
+             FfiConverterOptionalFloat64.allocationSize(value.volumeKg) +
+             FfiConverterUInt32.allocationSize(value.countedSets);
+            
+        }
+    };
+    return new FFIConverter();
+})();
+
+/**
+ * A record still standing after a history, and the session that set it. Mirrors
+ * [`cyberathlete_core::StandingRecord`].
+ */
+export type StandingRecord = {
+    record: PrAchievement,
+    sessionIndex: number
+}
+
+/**
+ * Generated factory for {@link StandingRecord} record objects.
+ */
+export const StandingRecord = (() => {
+    const defaults = () => ({
+    });
+    const create = (() => {
+        return uniffiCreateRecord<StandingRecord, ReturnType<typeof defaults>>(defaults);
+    })();
+    return Object.freeze({
+        create,
+        new: create,
+        defaults: () => Object.freeze(defaults()) as Partial<StandingRecord>,
+    });
+})();
+
+const FfiConverterTypeStandingRecord = (() => {
+    type TypeName = StandingRecord;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            return {
+                record: FfiConverterTypePrAchievement.readFromCursor(c), 
+                sessionIndex: FfiConverterUInt32.readFromCursor(c)
+            };
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            FfiConverterTypePrAchievement.writeIntoCursor(value.record, c);
+            FfiConverterUInt32.writeIntoCursor(value.sessionIndex, c);
+        }
+        allocationSize(value: TypeName): number {
+            return FfiConverterTypePrAchievement.allocationSize(value.record) +
+             FfiConverterUInt32.allocationSize(value.sessionIndex);
+            
+        }
+    };
+    return new FFIConverter();
+})();
+
+/**
  * Which way a load between two steps is moved. Mirrors [`cyberathlete_core::RoundingMode`].
  */
 export enum RoundingMode {
@@ -612,6 +753,12 @@ const FfiConverterSequenceOptionalFloat64 = new FfiConverterArray(FfiConverterOp
 // FfiConverter for Array<Array<LoggedSet>>
 const FfiConverterSequenceSequenceTypeLoggedSet = new FfiConverterArray(FfiConverterSequenceTypeLoggedSet);
 
+// FfiConverter for Array<SessionMetrics>
+const FfiConverterSequenceTypeSessionMetrics = new FfiConverterArray(FfiConverterTypeSessionMetrics);
+
+// FfiConverter for Array<StandingRecord>
+const FfiConverterSequenceTypeStandingRecord = new FfiConverterArray(FfiConverterTypeStandingRecord);
+
 
 /**
  * This should be called before anything else.
@@ -658,6 +805,12 @@ function uniffiEnsureInitialized() {
     if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_round_to_increment() !== 62903) {
         throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_round_to_increment");
     }
+    if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_session_metrics() !== 52849) {
+        throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_session_metrics");
+    }
+    if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_standing_records() !== 58322) {
+        throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_standing_records");
+    }
     if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_volume_kg() !== 54613) {
         throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_volume_kg");
     }
@@ -673,6 +826,8 @@ export default Object.freeze({
     FfiConverterTypePrKind,
     FfiConverterTypeRepsAtWeight,
     FfiConverterTypeRoundingMode,
+    FfiConverterTypeSessionMetrics,
     FfiConverterTypeSetType,
+    FfiConverterTypeStandingRecord,
   }
 });

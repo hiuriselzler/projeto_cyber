@@ -31,6 +31,8 @@ class NativeCyberathleteCoreFfi : public jsi::HostObject {
     jsi::Value cpp_uniffi_cyberathlete_core_ffi_fn_func_load_kg(jsi::Runtime& rt, const jsi::Value& thisVal, const jsi::Value* args, size_t count);
     jsi::Value cpp_uniffi_cyberathlete_core_ffi_fn_func_personal_bests(jsi::Runtime& rt, const jsi::Value& thisVal, const jsi::Value* args, size_t count);
     jsi::Value cpp_uniffi_cyberathlete_core_ffi_fn_func_round_to_increment(jsi::Runtime& rt, const jsi::Value& thisVal, const jsi::Value* args, size_t count);
+    jsi::Value cpp_uniffi_cyberathlete_core_ffi_fn_func_session_metrics(jsi::Runtime& rt, const jsi::Value& thisVal, const jsi::Value* args, size_t count);
+    jsi::Value cpp_uniffi_cyberathlete_core_ffi_fn_func_standing_records(jsi::Runtime& rt, const jsi::Value& thisVal, const jsi::Value* args, size_t count);
     jsi::Value cpp_uniffi_cyberathlete_core_ffi_fn_func_volume_kg(jsi::Runtime& rt, const jsi::Value& thisVal, const jsi::Value* args, size_t count);
     jsi::Value cpp_uniffi_cyberathlete_core_ffi_checksum_func_core_version(jsi::Runtime& rt, const jsi::Value& thisVal, const jsi::Value* args, size_t count);
     jsi::Value cpp_uniffi_cyberathlete_core_ffi_checksum_func_counted_set_count(jsi::Runtime& rt, const jsi::Value& thisVal, const jsi::Value* args, size_t count);
@@ -41,6 +43,8 @@ class NativeCyberathleteCoreFfi : public jsi::HostObject {
     jsi::Value cpp_uniffi_cyberathlete_core_ffi_checksum_func_load_kg(jsi::Runtime& rt, const jsi::Value& thisVal, const jsi::Value* args, size_t count);
     jsi::Value cpp_uniffi_cyberathlete_core_ffi_checksum_func_personal_bests(jsi::Runtime& rt, const jsi::Value& thisVal, const jsi::Value* args, size_t count);
     jsi::Value cpp_uniffi_cyberathlete_core_ffi_checksum_func_round_to_increment(jsi::Runtime& rt, const jsi::Value& thisVal, const jsi::Value* args, size_t count);
+    jsi::Value cpp_uniffi_cyberathlete_core_ffi_checksum_func_session_metrics(jsi::Runtime& rt, const jsi::Value& thisVal, const jsi::Value* args, size_t count);
+    jsi::Value cpp_uniffi_cyberathlete_core_ffi_checksum_func_standing_records(jsi::Runtime& rt, const jsi::Value& thisVal, const jsi::Value* args, size_t count);
     jsi::Value cpp_uniffi_cyberathlete_core_ffi_checksum_func_volume_kg(jsi::Runtime& rt, const jsi::Value& thisVal, const jsi::Value* args, size_t count);
     jsi::Value cpp_ffi_cyberathlete_core_ffi_uniffi_contract_version(jsi::Runtime& rt, const jsi::Value& thisVal, const jsi::Value* args, size_t count);
 

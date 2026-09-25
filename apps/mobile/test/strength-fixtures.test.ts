@@ -12,6 +12,8 @@ import e1rmFixture from '@cyberathlete/shared/fixtures/e1rm.json';
 import countedFixture from '@cyberathlete/shared/fixtures/is_counted_set.json';
 import bestsFixture from '@cyberathlete/shared/fixtures/personal_bests.json';
 import prFixture from '@cyberathlete/shared/fixtures/pr_detection.json';
+import metricsFixture from '@cyberathlete/shared/fixtures/session_metrics.json';
+import standingFixture from '@cyberathlete/shared/fixtures/standing_records.json';
 
 const SET_TYPES = ['warmup', 'working', 'drop', 'backoff', 'amrap'];
 const COUNTED_TYPES = ['working', 'amrap'];
@@ -183,5 +185,75 @@ describe('the personal_bests fixture (task 004 stage 6)', () => {
     const loads = expected.best_reps_at_weight.map((best) => best.weight_kg);
     expect(loads).toEqual([...loads].sort((left, right) => left - right));
     expect(new Set(loads).size).toBe(loads.length);
+  });
+});
+
+/** Whether a set counts under INV-04, read off the fixture's documented defaults. */
+function counts(set: FixtureSet): boolean {
+  return COUNTED_TYPES.includes(set.set_type ?? 'working') && (set.is_completed ?? true);
+}
+
+describe('the session_metrics fixture (task 004 stage 7)', () => {
+  it('names its function and has cases', () => {
+    expect(metricsFixture.function).toBe('session_metrics');
+    expect(metricsFixture.cases.length).toBeGreaterThan(0);
+  });
+
+  it.each(metricsFixture.cases)('$name', ({ sessions, expected }) => {
+    // One metric per session, in order.
+    expect(expected).toHaveLength(sessions.length);
+    sessions.forEach((raw, at) => {
+      const session: FixtureSet[] = raw;
+      for (const set of session) expectSetIsWellFormed(set);
+      const want = expected[at];
+      if (want === undefined) return;
+
+      // Counted sets restated from INV-04 — deloads are charted normally, so they count here (INV-08 is records only).
+      expect(want.counted_sets).toBe(session.filter(counts).length);
+      // Nothing measurable is null, never 0: a session that counted nothing has no numbers at all.
+      if (want.counted_sets === 0) {
+        expect([want.top_load_kg, want.best_e1rm, want.volume_kg]).toEqual([null, null, null]);
+      }
+      expect(want.volume_kg).not.toBe(0);
+      if (want.best_e1rm !== null) {
+        expect(Number.isInteger(want.best_e1rm.effective_reps)).toBe(true);
+        expect(want.best_e1rm.effective_reps).toBeLessThanOrEqual(MAX_EFFECTIVE_REPS);
+      }
+    });
+  });
+});
+
+describe('the standing_records fixture (task 004 stage 7)', () => {
+  it('names its function and has cases', () => {
+    expect(standingFixture.function).toBe('standing_records');
+    expect(standingFixture.cases.length).toBeGreaterThan(0);
+  });
+
+  it.each(standingFixture.cases)('$name', ({ sessions, expected }) => {
+    for (const set of sessions.flat() as FixtureSet[]) expectSetIsWellFormed(set);
+
+    // Detection's order: max weight, e1RM, reps at weight lightest first, session volume.
+    const positions = expected.map((record) => PR_KINDS.indexOf(record.kind));
+    expect(positions).toEqual([...positions].sort((left, right) => left - right));
+    const repsLoads = expected.filter((record) => record.kind === 'max_reps_at_weight').map((record) => record.weight_kg ?? 0);
+    expect(repsLoads).toEqual([...repsLoads].sort((left, right) => left - right));
+    // One row per kind, and one per load for reps — the key 03 §4 now declares.
+    const keys = expected.map((record) => (record.kind === 'max_reps_at_weight' ? `reps:${String(record.weight_kg)}` : record.kind));
+    expect(new Set(keys).size).toBe(keys.length);
+
+    for (const record of expected) {
+      const session = sessions[record.session_index] as FixtureSet[] | undefined;
+      expect(session).toBeDefined();
+      if (record.kind === 'best_session_volume') {
+        // A session total belongs to no one set.
+        expect(record.set_index).toBeNull();
+        continue;
+      }
+      // Every other record names a set INV-04 and INV-08 let count.
+      const set = record.set_index === null ? undefined : session?.[record.set_index];
+      expect(set).toBeDefined();
+      if (set === undefined) continue;
+      expect(counts(set) && !(set.is_deload ?? false)).toBe(true);
+    }
   });
 });

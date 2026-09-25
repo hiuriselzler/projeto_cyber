@@ -2,26 +2,12 @@ import { useRouter } from 'expo-router';
 import { useEffect, useMemo } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
-import { readExercise } from '@/db/catalog';
 import { readExerciseHistory, readFinishedWorkout, readWorkoutSets } from '@/db/history';
 import { recordTap } from '@/platform';
-import {
-  AppText,
-  Button,
-  formatCalendarDay,
-  formatWeight,
-  MetricTile,
-  RecordState,
-  Screen,
-  space,
-  useLocale,
-  useT,
-  type RecordGroup,
-  type RecordLine,
-} from '@/ui';
+import { AppText, Button, formatCalendarDay, formatWeight, MetricTile, RecordState, Screen, space, useLocale, useT } from '@/ui';
 
-import { exerciseLabel } from './exerciseName';
-import { isWeightRecord, RECORD_KIND_KEY, recordsOf, totalsOf, type ExerciseRecord } from './finish';
+import { recordsOf, totalsOf } from './finish';
+import { recordGroups } from './recordGroups';
 import { useSignedInUserId } from './useLiveWorkout';
 
 /**
@@ -95,41 +81,14 @@ export function WorkoutSummaryScreen({ workoutId }: { readonly workoutId: string
         )}
 
         <Button label={t('summary.done')} onPress={() => router.replace('/')} />
+        <Button
+          variant="secondary"
+          label={t('summary.open_detail')}
+          onPress={() => router.push({ pathname: '/workouts/[id]', params: { id: workoutId } })}
+        />
       </ScrollView>
     </Screen>
   );
-}
-
-/**
- * The records in words, one group per exercise in workout order, each group's records in the core's order — in the
- * user's unit system and locale (INV-01), each exercise named as INV-27 says.
- */
-function recordGroups(
-  records: readonly ExerciseRecord[],
-  userId: string,
-  t: ReturnType<typeof useT>,
-  unitSystem: ReturnType<typeof useLocale>['unitSystem'],
-  locale: ReturnType<typeof useLocale>['locale'],
-): RecordGroup[] {
-  const weight = (kilograms: number) => {
-    const quantity = formatWeight(kilograms, unitSystem, locale);
-    return t('summary.quantity', { value: quantity.text, unit: t(`unit.${quantity.unit}`) });
-  };
-  const groups = new Map<string, RecordLine[]>();
-  records.forEach(({ exerciseId, record }, at) => {
-    const line: RecordLine = {
-      key: `${record.kind}:${String(at)}`,
-      kind: t(RECORD_KIND_KEY[record.kind], { weight: record.weightKg === null ? '' : weight(record.weightKg) }),
-      value: isWeightRecord(record.kind) ? weight(record.value) : t('summary.reps', { count: record.value }),
-    };
-    const lines = groups.get(exerciseId);
-    if (lines === undefined) groups.set(exerciseId, [line]);
-    else lines.push(line);
-  });
-  return [...groups.entries()].map(([exerciseId, lines]) => {
-    const catalog = readExercise(userId, exerciseId);
-    return { key: exerciseId, subject: catalog === null ? '' : exerciseLabel(catalog, t), records: lines };
-  });
 }
 
 const styles = StyleSheet.create({

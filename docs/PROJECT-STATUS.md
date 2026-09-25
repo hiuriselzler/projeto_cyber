@@ -494,7 +494,7 @@ None are blocking; each has a stated assumption that will be built unless correc
 | 12 | Which address the per-IP rate limits count ([04 §5](04-security-and-auth.md)). The API reads the socket's peer, `request.client.host`; behind a hosting platform's proxy that is the proxy for everyone, so registration would allow 5 an hour across all users | The client address comes from the platform's forwarded header, trusted only when the request arrives from the platform's own proxy — configured once the host is chosen ([05 §5](05-integrations.md)) | Before the first deploy |
 | 13 | Is a rest notification ~22–40 s late with the screen off acceptable, or does the app ask for `SCHEDULE_EXACT_ALARM`? One clean sample on the S21 FE: ~39 s on a 2:00 rest | Inexact alarms; the on-screen timer and its haptic are exact | Before launch, with more samples ([task 004](tasks/004-exercise-catalog-and-logging.md)) |
 | 14 | A target time or distance on a routine exercise — a schema addition | None: holds and carries get sets and rest, and pre-fill from last time | Task 005, where prescriptions live |
-| 15 | Personal records for time and distance — longest hold, farthest carry | Not built; such sets count as sets, with zero tonnage. **Half settled 2026-09-24:** a *loaded* carry takes a heaviest-weight record from its load — found on the phone, and **kept by the owner's decision**, since the heaviest carry is a real record and the earlier "no PR" was the doc's error. A hold takes nothing. Longest hold and farthest carry remain unbuilt | Stage 7 of task 004 |
+| 15 | Personal records for time and distance — longest hold, farthest carry | Not built; such sets count as sets, with zero tonnage. **Half settled 2026-09-24:** a *loaded* carry takes a heaviest-weight record from its load — found on the phone, and **kept by the owner's decision**, since the heaviest carry is a real record and the earlier "no PR" was the doc's error. A hold takes nothing. Longest hold and farthest carry remain unbuilt. **Deferred 2026-09-25** (task 004 stage 7, decision 6): new record kinds are an enum migration, core kinds and a summary change; history lists each session's time and distance meanwhile | [Task 010](tasks/010-unified-calendar-and-analytics.md) |
 | 16 | Short imperial distances in feet or yards (sleds are often yards in US gyms) | Feet, following ADR-008's m/ft pair | The imperial pass of task 004's device checks |
 | 17 | The Portuguese set-type letters — `Aq D B A` | As written, catalog content | The native-speaker review ([07 §9](07-brand-and-ui.md)) |
 | 18 | **Who builds body-weight entry?** `body_weight_log` exists on both sides and every bodyweight e1RM, tonnage and PR reads it (INV-07, FR-2.15a), but no task gives the user a way to write to it — task 010 only charts it. Until something does, a pull-up or dip has no load, no e1RM and no record | Not built in task 004; bodyweight sets count as sets and celebrate nothing | Before launch — likely task 010 or 012 |
@@ -540,6 +540,7 @@ nothing itself ([task 004](tasks/004-exercise-catalog-and-logging.md) § Scope).
 | 2026-09-23 | Task 004 stage 5 re-cut into 5a/5b/5c; the live session carries its own rest and targets; the rest timer is derived; a routine pre-fills weight and reps, never RIR — see the dated entry below |
 | 2026-09-24 | Task 004 stage 6 planned: the previous bests folded in the core; a record is the current best; a past workout's `completed_at` is its chosen end while `updated_at` stays real — see the dated entry below |
 | 2026-09-24 | Four decisions after the device passes: a loaded carry keeps its heaviest-weight record (OQ 15, half settled); the user's own exercises are marked "Seu"/"Yours"; the summary groups records by exercise; the set row reflows, and on a short screen the keypad reveals the field being edited (07 §6's open question closed) |
+| 2026-09-25 | Task 004 stage 7 planned: charts on `react-native-svg` (02 §4 changed); the records rebuild one user at a time; `personal_records` keyed per load for reps; the core's `standing_records()` says where a record came from; open question 15 moved to task 010 — see the dated entry below |
 
 ### 2026-09-08 — documentation reconciliation pass
 
@@ -2121,5 +2122,62 @@ helper too. A test renders both in a join-less query, and was watched failing ag
 
 **A correction to open question 15, found by the summary:** a loaded carry *does* take a heaviest-weight record,
 contrary to "no PR". I think the doc was wrong, not the code; recorded there, the decision is the owner's.
+
+- No invariant changed and no ADR was added. Counts unchanged: 49 documents, 15 ADRs.
+
+### 2026-09-25 — task 004 stage 7 planned: history, charts, and a cache that could not hold its own records
+
+Six decisions, in [task 004](tasks/004-exercise-catalog-and-logging.md) § Stages where the code reads them. The owner
+took each recommendation. Three were already written into the task file; reading the server half against its schema
+found two more, and one was due.
+
+- **Charts on `react-native-svg`**, already a dependency, instead of `victory-native` on Skia. [02 §4](02-architecture.md)
+  changes to match.
+- **The rebuild is one user at a time**, as a service and a command ([06 §5](06-operations.md)). All users would need
+  an unscoped function on ADR-011's allowlist, for a server that holds no sets yet.
+- **History is reached** from the diagnostics screen, the finish summary, and each exercise in a workout's detail.
+- **`personal_records` could not hold its own records.** Its key, `UNIQUE (user_id, exercise_id, kind)`, allows one
+  `max_reps_at_weight` row, while that kind is one record per load. Now two partial unique indexes and a CHECK
+  ([03 §4](03-database-schema.md), migration `0007`). Nothing had ever written the table, so nothing had found it.
+- **`personal_bests()` could not fill the table either.** Its rows need `achieved_at`, `set_log_id` and `workout_id`,
+  and the fold returns values only. The core gains `standing_records()`, the same fold keeping where each best came
+  from; `personal_bests()` becomes its projection. A Python loop over `detect_prs` would have been the second copy of
+  the fold INV-04 forbids.
+- **Open question 15 moves to task 010.** Time and distance records are new kinds, not a stage 7 detail.
+
+- No invariant changed and no ADR was added: 03 §4's key is a schema change to a derived table, and the rest applies
+  INV-04, INV-07, INV-08 and INV-17. Counts unchanged: 49 documents, 15 ADRs.
+
+### 2026-09-25 — task 004 stage 7 built: history, three charts, and the records cache
+
+**Built and green on every gate CI runs, locally; the device pass follows.**
+- **The history**: a list of finished workouts, newest first, each with its counted sets and volume; a workout's
+  detail, every set as logged, with warm-ups, drops and unticked rows marked rather than dropped, its notes and
+  fatigue, and the records it still holds; and an exercise's history, three charts over its sessions, newest first.
+  Reached from the diagnostics screen, the finish summary, and each exercise in a detail.
+- **The charts** are one `LineChart` in `src/ui/` on `react-native-svg`: a 2 dp line in the strength hue, validated
+  against both surfaces with the dataviz script; hairline gridlines at round values in the user's unit; a missing
+  value breaks the line; a tap or TalkBack's adjustable actions move a readout through the sessions.
+- **The core gained `session_metrics()` and `standing_records()`**, through both bindings and two new shared fixtures.
+  `personal_bests()` is now `standing_records()` without the positions. The UniFFI bindings were regenerated in WSL2
+  (241 lines, all additions).
+- **The server**: migration `0007`, a scoped read of a user's finished sets, the rebuild service and
+  `python -m app.jobs.rebuild_records <user-id>` (06 §5).
+
+**Found on the way:**
+- **The chart drew a lone point twice** when it was also the selected one: a duplicate React key, and two dots on top
+  of each other. Fixed; a test counts the dots.
+- **Typed routes were stale again** — `.expo/types/router.d.ts` carried a route to `useDatabaseRead` from some earlier
+  state. Regenerated by starting Expo; it is still the CI gap under *Gaps*.
+- **Watched failing**: the metrics tests with the counted-set filter removed (three failed), and the rebuild's
+  integration test with the body-weight subquery's "on or before the day" dropped, which weighed a pull-up at today's
+  body weight.
+
+**Verified**:
+- Core: fmt, clippy `-D warnings`, 62 unit tests and 8 fixture tests.
+- API: `ruff`, `ruff format`, `mypy`, six import contracts, and **363 tests with the Postgres integration suite run
+  locally** (Docker started for it).
+- Mobile: `tsc`, `eslint`, 50 lint fixtures, the platform-file check, catalogs at **709** messages, the seed-version
+  gate, `db:generate` with no drift, and **1272** Jest tests, up from 1105.
 
 - No invariant changed and no ADR was added. Counts unchanged: 49 documents, 15 ADRs.

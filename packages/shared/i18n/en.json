@@ -436,6 +436,11 @@
     },
     "level_up": {
       "title": "Level {level}"
+    },
+    "line_chart": {
+      "summary": "{title}, {count, plural, one {# session} other {# sessions}}, {first} to {last}. {has_values, select, yes {Highest {highest}.} other {Nothing to plot yet.}}",
+      "readout": "{day} · {value}",
+      "no_value": "nothing to plot"
     }
   },
   "workout": {
@@ -502,7 +507,40 @@
     },
     "reps": "{count, plural, one {# rep} other {# reps}}",
     "quantity": "{value} {unit}",
-    "done": "Done"
+    "done": "Done",
+    "open_detail": "See every set"
+  },
+  "history": {
+    "title": "History",
+    "open": "History",
+    "empty_title": "No finished workouts yet",
+    "empty_body": "Finish a workout and it appears here, with every set as you logged it.",
+    "more": "Show older workouts",
+    "counted_sets": "{count, plural, one {# counted set} other {# counted sets}}",
+    "row": "{title}, {day}, {sets}",
+    "row_volume": "{title}, {day}, {sets}, {volume}",
+    "fatigue": "Fatigue {value} of 10",
+    "notes": "Notes",
+    "records_title": "{count, plural, one {Record this workout still holds} other {Records this workout still holds}}",
+    "records_none": "This workout holds no record today.",
+    "records_note": "Judged against every other workout you finished, whatever its date.",
+    "record_line": "{kind}: {value}",
+    "exercise_link": "History of this exercise",
+    "not_ticked": "not ticked",
+    "no_sets": "No sets logged.",
+    "blank": "–",
+    "set_line": "{tracking, select, weight_reps {{weight} × {reps}} reps_only {{reps}} duration {{duration}} other {{weight} · {distance} · {duration}}}",
+    "set_rir": "{line} · RIR {rir}",
+    "set_rir_none": "{line} · RIR not recorded",
+    "chart_top": "Top set",
+    "chart_e1rm": "Best estimated 1RM",
+    "chart_volume": "Volume",
+    "charts_empty": "Nothing to chart yet: no counted set here has a load.",
+    "charts_time_distance": "Time and distance are listed session by session. They are not charted yet.",
+    "sessions_title": "Sessions",
+    "sessions_empty": "No finished workout has this exercise yet.",
+    "archived_note": "Hidden from the exercise picker. Its history stays as it was.",
+    "e1rm_note": "A set logged without RIR has no estimated 1RM, so it leaves a gap rather than a zero."
   },
   "past": {
     "title": "Log a past workout",

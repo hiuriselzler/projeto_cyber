@@ -105,6 +105,7 @@ export function DiagnosticsScreen() {
       <Button title="Open the live workout screen" onPress={() => router.push('/workout')} />
       <Button title="Open the exercise catalog" onPress={() => router.push('/exercises')} />
       <Button title="Open the routines" onPress={() => router.push('/routines')} />
+      <Button title="Open the history" onPress={() => router.push('/history')} />
 
       <Check title="Secure storage (restart the app: the previous value must survive)">
         {storage.isPending

@@ -22,6 +22,8 @@ from app.domain.strength import (
     is_counted_set,
     load_kg,
     personal_bests,
+    session_metrics,
+    standing_records,
     volume_kg,
 )
 from tests.fixtures.loader import load_fixture
@@ -150,6 +152,71 @@ def test_every_shared_personal_bests_case_agrees():
         assert [(best.weight_kg, best.reps) for best in bests.best_reps_at_weight] == [
             (best["weight_kg"], best["reps"]) for best in expected["best_reps_at_weight"]
         ], case["name"]
+
+
+def _epley(spec: dict[str, Any] | None) -> float | None:
+    """A fixture's e1RM, from the load and effective reps it states (INV-07)."""
+    if spec is None:
+        return None
+    return float(spec["load_kg"]) * (1 + int(spec["effective_reps"]) / EPLEY_DIVISOR)
+
+
+def test_every_shared_session_metrics_case_agrees():
+    """What a history chart plots, per session (task 004 stage 7)."""
+    for case in load_fixture("session_metrics")["cases"]:
+        sessions = [[_build(spec) for spec in session] for session in case["sessions"]]
+        metrics = session_metrics(sessions)
+        assert len(metrics) == len(case["expected"]), case["name"]
+        for got, want in zip(metrics, case["expected"], strict=True):
+            assert got.top_load_kg == want["top_load_kg"], case["name"]
+            assert got.best_e1rm_kg == _epley(want["best_e1rm"]), case["name"]
+            assert got.volume_kg == want["volume_kg"], case["name"]
+            assert got.counted_sets == want["counted_sets"], case["name"]
+
+
+def test_every_shared_standing_records_case_agrees():
+    """Where each standing record came from — what `personal_records` stores (stage 7)."""
+    for case in load_fixture("standing_records")["cases"]:
+        sessions = [[_build(spec) for spec in session] for session in case["sessions"]]
+        standing = standing_records(sessions)
+
+        assert [held.record.kind.name for held in standing] == [
+            want["kind"] for want in case["expected"]
+        ], case["name"]
+        for held, want in zip(standing, case["expected"], strict=True):
+            label = f"{case['name']}: {want['kind']}"
+            assert held.session_index == want["session_index"], label
+            assert held.record.set_index == want["set_index"], label
+            assert held.record.weight_kg == want["weight_kg"], label
+            if want.get("value") is not None:
+                assert held.record.value == want["value"], label
+            if want["kind"] == "best_e1rm":
+                named = sessions[want["session_index"]][want["set_index"]]
+                assert held.record.value == e1rm(named), label
+
+
+def test_personal_bests_are_the_standing_records_values():
+    """One fold, two views: the bests a celebration is judged against and what the cache stores."""
+    for case in load_fixture("standing_records")["cases"]:
+        sessions = [[_build(spec) for spec in session] for session in case["sessions"]]
+        bests = personal_bests(sessions)
+        standing = standing_records(sessions)
+        single = {
+            held.record.kind.name: held.record.value
+            for held in standing
+            if held.record.kind.name != "max_reps_at_weight"
+        }
+        assert single.get("max_weight") == bests.max_weight_kg, case["name"]
+        assert single.get("best_e1rm") == bests.best_e1rm_kg, case["name"]
+        assert single.get("best_session_volume") == bests.best_session_volume_kg, case["name"]
+        reps = [
+            (held.record.weight_kg, held.record.value)
+            for held in standing
+            if held.record.kind.name == "max_reps_at_weight"
+        ]
+        assert reps == [(best.weight_kg, best.reps) for best in bests.best_reps_at_weight], case[
+            "name"
+        ]
 
 
 def test_a_session_breaks_nothing_against_bests_that_already_hold_it():

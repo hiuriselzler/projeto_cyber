@@ -110,7 +110,7 @@ Rejected outright: **server-only projection** (breaks offline planning, [ADR-001
 | Active workout | **SQLite, not a store** | INV-09 |
 | Background GPS | `expo-location` + `expo-task-manager` | §6 |
 | Maps | `react-native-maps` | Native provider — Google Maps on Android, Apple Maps when iOS ships; no tile bill |
-| Charts | `victory-native` (Skia) | Smooth on large series |
+| Charts | `react-native-svg`, drawn by `src/ui/` | Already a dependency. Chosen over `victory-native` in task 004 stage 7 (2026-09-25): three small line charts did not justify Skia's two native dependencies and a larger bundle. Revisit if a chart ever needs thousands of points or gestures |
 | Forms | `react-hook-form` + `zod` | Zod schemas shared with API types |
 | Language | `expo-localization` + `i18next`, ICU MessageFormat | Catalogs in `packages/shared/i18n/`, read by the API too (INV-27, [ADR-008](decisions/ADR-008.md)) |
 | Units and numbers | `Intl`, behind one formatting module in `src/ui/` | SI in, unit system and locale out — the only place a unit is converted (INV-01) |

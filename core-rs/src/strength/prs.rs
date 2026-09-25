@@ -146,26 +146,90 @@ pub fn detect_prs(previous: &PersonalBests, session: &[LoggedSet]) -> Vec<PrAchi
     achievements
 }
 
-/// What an exercise's records stand at after every session in `sessions` — the `previous` that
-/// [`detect_prs`] judges the next session against.
+/// A record that still stands after a history, and where it was set.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct StandingRecord {
+    /// The record, exactly as [`detect_prs`] reported it when it was set. Its `set_index` is a
+    /// position within the session named below.
+    pub record: PrAchievement,
+    /// Which session in the input set it, by position — the **earliest** to reach this value, since a
+    /// later tie is not a record.
+    pub session_index: u32,
+}
+
+/// Every record standing after the sessions in `sessions`, each with the session and set that set
+/// it, in [`detect_prs`]'s order: heaviest weight, best e1RM, reps at a weight (lightest load first),
+/// session volume. What the server's `personal_records` cache stores (03 §4, task 004 stage 7).
 ///
 /// **One session is one workout's sets of this exercise.** The grouping matters for one kind only:
 /// a session-volume best belongs to a session, and flattening the history into one list would make
 /// a lifetime's tonnage look like a single afternoon.
 ///
+/// **Pass the sessions oldest first** when *where* matters: ties are not records, so the first
+/// session to reach a value keeps it. The values themselves do not depend on the order.
+///
 /// Built as a fold of [`detect_prs`] itself: each session is judged against the bests so far, and
 /// whatever it broke becomes the new best. So a set that could not be a record cannot be a best
 /// either — a warm-up, an unfinished row, a deload (INV-04, INV-08) — with no second statement of
-/// either rule, and `detect_prs(&personal_bests(history), session)` means exactly "what this session
-/// broke". The order of `sessions` changes nothing but which of two equal values is kept, and equal
-/// values are the same number.
+/// either rule.
+#[must_use]
+pub fn standing_records(sessions: &[Vec<LoggedSet>]) -> Vec<StandingRecord> {
+    let mut bests = PersonalBests::default();
+    let mut max_weight: Option<StandingRecord> = None;
+    let mut best_e1rm: Option<StandingRecord> = None;
+    let mut reps_at_weight: Vec<StandingRecord> = Vec::new();
+    let mut session_volume: Option<StandingRecord> = None;
+
+    for (session_index, session) in sessions.iter().enumerate() {
+        let session_index = u32::try_from(session_index).unwrap_or(u32::MAX);
+        for record in detect_prs(&bests, session) {
+            apply(&mut bests, &record);
+            let standing = StandingRecord {
+                record,
+                session_index,
+            };
+            match record.kind {
+                PrKind::MaxWeight => max_weight = Some(standing),
+                PrKind::BestE1rm => best_e1rm = Some(standing),
+                PrKind::BestSessionVolume => session_volume = Some(standing),
+                PrKind::MaxRepsAtWeight => {
+                    match reps_at_weight
+                        .iter_mut()
+                        .find(|held| held.record.weight_kg == record.weight_kg)
+                    {
+                        Some(held) => *held = standing,
+                        None => reps_at_weight.push(standing),
+                    }
+                    reps_at_weight.sort_by(|left, right| {
+                        left.record
+                            .weight_kg
+                            .partial_cmp(&right.record.weight_kg)
+                            .unwrap_or(core::cmp::Ordering::Equal)
+                    });
+                }
+            }
+        }
+    }
+
+    max_weight
+        .into_iter()
+        .chain(best_e1rm)
+        .chain(reps_at_weight)
+        .chain(session_volume)
+        .collect()
+}
+
+/// What an exercise's records stand at after every session in `sessions` — the `previous` that
+/// [`detect_prs`] judges the next session against.
+///
+/// The values of [`standing_records`], without where they came from, so the bests a celebration is
+/// judged against and the records the server stores cannot disagree.
+/// `detect_prs(&personal_bests(history), session)` means exactly "what this session broke".
 #[must_use]
 pub fn personal_bests(sessions: &[Vec<LoggedSet>]) -> PersonalBests {
     let mut bests = PersonalBests::default();
-    for session in sessions {
-        for record in detect_prs(&bests, session) {
-            apply(&mut bests, &record);
-        }
+    for standing in standing_records(sessions) {
+        apply(&mut bests, &standing.record);
     }
     bests
 }
@@ -655,6 +719,124 @@ mod tests {
         let mut reversed = sessions.clone();
         reversed.reverse();
         assert_eq!(personal_bests(&sessions), personal_bests(&reversed));
+    }
+
+    // ── standing_records (task 004 stage 7) ──────────────────────────────────────────────────────
+
+    #[test]
+    fn a_standing_record_points_at_the_set_that_set_it() {
+        let sessions = vec![
+            vec![LoggedSet::working(100.0, 5, Some(2))],
+            vec![
+                LoggedSet {
+                    set_type: SetType::Warmup,
+                    ..LoggedSet::working(60.0, 10, None)
+                },
+                LoggedSet::working(110.0, 3, None),
+            ],
+        ];
+        let standing = standing_records(&sessions);
+        let max_weight = standing
+            .iter()
+            .find(|held| held.record.kind == PrKind::MaxWeight)
+            .expect("there is a heaviest weight");
+        assert_eq!(max_weight.record.value, 110.0);
+        assert_eq!(max_weight.session_index, 1);
+        assert_eq!(
+            max_weight.record.set_index,
+            Some(1),
+            "the warm-up is position 0"
+        );
+
+        let e1rm_record = standing
+            .iter()
+            .find(|held| held.record.kind == PrKind::BestE1rm)
+            .expect("the first session has one");
+        assert_eq!(e1rm_record.session_index, 0, "110 x 3 has no RIR");
+    }
+
+    #[test]
+    fn a_later_tie_leaves_the_record_with_whoever_got_there_first() {
+        let sessions = vec![
+            vec![LoggedSet::working(100.0, 5, Some(2))],
+            vec![LoggedSet::working(100.0, 5, Some(2))],
+        ];
+        for held in standing_records(&sessions) {
+            assert_eq!(held.session_index, 0, "{:?}", held.record.kind);
+        }
+    }
+
+    #[test]
+    fn standing_records_come_in_detection_s_order() {
+        let sessions = vec![
+            vec![
+                LoggedSet::working(100.0, 5, Some(2)),
+                LoggedSet::working(80.0, 10, Some(1)),
+            ],
+            vec![LoggedSet::working(90.0, 9, None)],
+        ];
+        let kinds: Vec<(PrKind, Option<f64>)> = standing_records(&sessions)
+            .iter()
+            .map(|held| (held.record.kind, held.record.weight_kg))
+            .collect();
+        assert_eq!(
+            kinds,
+            vec![
+                (PrKind::MaxWeight, Some(100.0)),
+                (PrKind::BestE1rm, Some(100.0)),
+                (PrKind::MaxRepsAtWeight, Some(80.0)),
+                (PrKind::MaxRepsAtWeight, Some(90.0)),
+                (PrKind::MaxRepsAtWeight, Some(100.0)),
+                (PrKind::BestSessionVolume, None),
+            ]
+        );
+    }
+
+    #[test]
+    fn every_standing_record_is_its_own_set_s_value_and_a_set_that_counts() {
+        // Checked against the input rather than the fold: the position names a real, eligible set,
+        // and that set's own measure is the recorded value.
+        let sessions = spread();
+        for held in standing_records(&sessions) {
+            let session = &sessions[held.session_index as usize];
+            let Some(position) = held.record.set_index else {
+                assert_eq!(held.record.kind, PrKind::BestSessionVolume);
+                continue;
+            };
+            let set = &session[position as usize];
+            assert!(is_counted_set(set) && !set.is_deload, "{:?}", held.record);
+            let measured = match held.record.kind {
+                PrKind::MaxWeight => load_kg(set),
+                PrKind::BestE1rm => e1rm(set),
+                PrKind::MaxRepsAtWeight => set.reps.map(f64::from),
+                PrKind::BestSessionVolume => unreachable!("a session total has no set"),
+            };
+            assert_eq!(measured, Some(held.record.value), "{:?}", held.record);
+        }
+    }
+
+    #[test]
+    fn no_earlier_session_reached_a_standing_value() {
+        // "Earliest" stated directly: the history before the crediting session had not reached it.
+        let sessions = spread();
+        for held in standing_records(&sessions) {
+            let before = personal_bests(&sessions[..held.session_index as usize]);
+            let reached = match held.record.kind {
+                PrKind::MaxWeight => before.max_weight_kg,
+                PrKind::BestE1rm => before.best_e1rm_kg,
+                PrKind::BestSessionVolume => before.best_session_volume_kg,
+                PrKind::MaxRepsAtWeight => before
+                    .best_reps_at_weight
+                    .iter()
+                    .find(|best| Some(best.weight_kg) == held.record.weight_kg)
+                    .map(|best| f64::from(best.reps)),
+            };
+            assert!(
+                reached.is_none_or(|value| value < held.record.value),
+                "{:?}",
+                held.record
+            );
+        }
     }
 
     #[test]

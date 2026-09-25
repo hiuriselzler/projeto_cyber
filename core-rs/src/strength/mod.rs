@@ -12,12 +12,17 @@
 //! [task 005](../../../docs/tasks/005-strength-progression-planner.md); it arrives with them.
 
 mod e1rm;
+mod metrics;
 mod prs;
 mod sets;
 mod volume;
 
 pub use e1rm::{MAX_EFFECTIVE_REPS, e1rm, e1rm_series, load_kg};
-pub use prs::{PersonalBests, PrAchievement, PrKind, RepsAtWeight, detect_prs, personal_bests};
+pub use metrics::{SessionMetrics, session_metrics};
+pub use prs::{
+    PersonalBests, PrAchievement, PrKind, RepsAtWeight, StandingRecord, detect_prs, personal_bests,
+    standing_records,
+};
 pub use sets::{SetType, is_counted_set, is_counted_type};
 pub use volume::{counted_set_count, volume_kg};
 

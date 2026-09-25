@@ -8,11 +8,13 @@
 //! pleasant rather than painful, and is the rule ADR-004 sets for keeping it that way.
 
 use cyberathlete_core::{
-    LoggedSet, PersonalBests, PrAchievement, PrKind, RepsAtWeight, RoundingMode, SetType,
-    counted_set_count as core_counted_set_count, detect_prs as core_detect_prs, e1rm as core_e1rm,
-    e1rm_series as core_e1rm_series, is_counted_set as core_is_counted_set,
-    load_kg as core_load_kg, personal_bests as core_personal_bests,
-    round_to_increment as core_round_to_increment, volume_kg as core_volume_kg,
+    LoggedSet, PersonalBests, PrAchievement, PrKind, RepsAtWeight, RoundingMode, SessionMetrics,
+    SetType, StandingRecord, counted_set_count as core_counted_set_count,
+    detect_prs as core_detect_prs, e1rm as core_e1rm, e1rm_series as core_e1rm_series,
+    is_counted_set as core_is_counted_set, load_kg as core_load_kg,
+    personal_bests as core_personal_bests, round_to_increment as core_round_to_increment,
+    session_metrics as core_session_metrics, standing_records as core_standing_records,
+    volume_kg as core_volume_kg,
 };
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -454,12 +456,85 @@ fn detect_prs(previous: PyPersonalBests, session: Vec<PyLoggedSet>) -> Vec<PyPrA
         .collect()
 }
 
+fn sessions_to_core(sessions: Vec<Vec<PyLoggedSet>>) -> Vec<Vec<LoggedSet>> {
+    sessions.into_iter().map(to_core).collect()
+}
+
 /// An exercise's bests after a history of sessions, one workout's sets per session — the
-/// `previous` for [`detect_prs`], and what the server's `personal_records` rebuild stores.
+/// `previous` for [`detect_prs`].
 #[pyfunction]
 fn personal_bests(sessions: Vec<Vec<PyLoggedSet>>) -> PyPersonalBests {
-    let sessions: Vec<Vec<LoggedSet>> = sessions.into_iter().map(to_core).collect();
-    core_personal_bests(&sessions).into()
+    core_personal_bests(&sessions_to_core(sessions)).into()
+}
+
+/// A record still standing after a history, and the session that set it. Mirrors
+/// [`StandingRecord`].
+#[pyclass(
+    name = "StandingRecord",
+    frozen,
+    get_all,
+    skip_from_py_object,
+    module = "cyberathlete_core"
+)]
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PyStandingRecord {
+    pub record: PyPrAchievement,
+    pub session_index: u32,
+}
+
+impl From<StandingRecord> for PyStandingRecord {
+    fn from(standing: StandingRecord) -> Self {
+        Self {
+            record: standing.record.into(),
+            session_index: standing.session_index,
+        }
+    }
+}
+
+/// Every record standing after a history, oldest session first, with where each was set — what the
+/// server's `personal_records` rebuild stores (task 004 stage 7).
+#[pyfunction]
+fn standing_records(sessions: Vec<Vec<PyLoggedSet>>) -> Vec<PyStandingRecord> {
+    core_standing_records(&sessions_to_core(sessions))
+        .into_iter()
+        .map(Into::into)
+        .collect()
+}
+
+/// One session of one exercise, reduced to what its history charts. Mirrors [`SessionMetrics`].
+#[pyclass(
+    name = "SessionMetrics",
+    frozen,
+    get_all,
+    skip_from_py_object,
+    module = "cyberathlete_core"
+)]
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PySessionMetrics {
+    pub top_load_kg: Option<f64>,
+    pub best_e1rm_kg: Option<f64>,
+    pub volume_kg: Option<f64>,
+    pub counted_sets: u32,
+}
+
+impl From<SessionMetrics> for PySessionMetrics {
+    fn from(metrics: SessionMetrics) -> Self {
+        Self {
+            top_load_kg: metrics.top_load_kg,
+            best_e1rm_kg: metrics.best_e1rm_kg,
+            volume_kg: metrics.volume_kg,
+            counted_sets: metrics.counted_sets,
+        }
+    }
+}
+
+/// Per-session metrics over a whole history (task 004 stage 7).
+#[pyfunction]
+fn session_metrics(sessions: Vec<Vec<PyLoggedSet>>) -> Vec<PySessionMetrics> {
+    core_session_metrics(&sessions_to_core(sessions))
+        .into_iter()
+        .map(Into::into)
+        .collect()
 }
 
 #[pymodule]
@@ -482,5 +557,9 @@ fn _core(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_function(wrap_pyfunction!(counted_set_count, module)?)?;
     module.add_function(wrap_pyfunction!(detect_prs, module)?)?;
     module.add_function(wrap_pyfunction!(personal_bests, module)?)?;
+    module.add_class::<PyStandingRecord>()?;
+    module.add_function(wrap_pyfunction!(standing_records, module)?)?;
+    module.add_class::<PySessionMetrics>()?;
+    module.add_function(wrap_pyfunction!(session_metrics, module)?)?;
     Ok(())
 }

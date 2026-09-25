@@ -2,7 +2,8 @@
 //!
 //! `packages/shared/fixtures/` holds the same files the Python and TypeScript suites read:
 //! `round_to_increment.json` (INV-02), `e1rm.json` (INV-07), `is_counted_set.json` (INV-04),
-//! `pr_detection.json` (FR-2.15) and `personal_bests.json` (FR-2.15, task 004 stage 6). Under
+//! `pr_detection.json` (FR-2.15), `personal_bests.json` (FR-2.15, task 004 stage 6), and
+//! `session_metrics.json` and `standing_records.json` (FR-2.14–2.15, stage 7). Under
 //! ADR-004 option B all three runtimes reach one Rust
 //! implementation, so these prove **the bindings agree** rather than that two hand-written copies
 //! have not drifted — and they stay regression tests besides.
@@ -15,7 +16,8 @@
 
 use cyberathlete_core::{
     LoggedSet, PersonalBests, PrKind, RepsAtWeight, RoundingMode, SetType, detect_prs, e1rm,
-    is_counted_set, personal_bests, round_to_increment, volume_kg,
+    is_counted_set, personal_bests, round_to_increment, session_metrics, standing_records,
+    volume_kg,
 };
 use serde::Deserialize;
 
@@ -314,6 +316,121 @@ fn every_personal_bests_case_agrees() {
             "case {:?}, reps at weight",
             case.name
         );
+    }
+}
+
+fn build_sessions(sessions: &[Vec<FixtureSet>], case: &str) -> Vec<Vec<LoggedSet>> {
+    sessions
+        .iter()
+        .map(|session| session.iter().map(|set| set.build(case)).collect())
+        .collect()
+}
+
+#[derive(Deserialize)]
+struct MetricsCase {
+    name: String,
+    sessions: Vec<Vec<FixtureSet>>,
+    expected: Vec<ExpectedMetrics>,
+    #[allow(dead_code, reason = "prose for the reader; nothing to assert against")]
+    note: Option<String>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ExpectedMetrics {
+    top_load_kg: Option<f64>,
+    best_e1rm: Option<E1rmExpectation>,
+    volume_kg: Option<f64>,
+    counted_sets: u32,
+}
+
+#[test]
+fn every_session_metrics_case_agrees() {
+    let fixture: Fixture<MetricsCase> = load("session_metrics.json");
+    assert!(!fixture.cases.is_empty(), "the fixture must hold cases");
+
+    for case in &fixture.cases {
+        let actual = session_metrics(&build_sessions(&case.sessions, &case.name));
+        assert_eq!(actual.len(), case.expected.len(), "case {:?}", case.name);
+
+        for (at, (got, want)) in actual.iter().zip(&case.expected).enumerate() {
+            let label = format!("case {:?}, session {at}", case.name);
+            assert_eq!(got.top_load_kg, want.top_load_kg, "{label}, top load");
+            // Epley applied here, from the load and effective reps the fixture states (INV-07).
+            let e1rm = want
+                .best_e1rm
+                .as_ref()
+                .map(|it| it.load_kg * (1.0 + f64::from(it.effective_reps) / 30.0));
+            assert_eq!(got.best_e1rm_kg, e1rm, "{label}, best e1RM");
+            assert_eq!(got.volume_kg, want.volume_kg, "{label}, volume");
+            assert_eq!(got.counted_sets, want.counted_sets, "{label}, counted sets");
+        }
+    }
+}
+
+#[derive(Deserialize)]
+struct StandingCase {
+    name: String,
+    sessions: Vec<Vec<FixtureSet>>,
+    expected: Vec<ExpectedStanding>,
+    #[allow(dead_code, reason = "prose for the reader; nothing to assert against")]
+    note: Option<String>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ExpectedStanding {
+    kind: String,
+    value: Option<f64>,
+    weight_kg: Option<f64>,
+    session_index: u32,
+    set_index: Option<u32>,
+}
+
+#[test]
+fn every_standing_records_case_agrees() {
+    let fixture: Fixture<StandingCase> = load("standing_records.json");
+    assert!(!fixture.cases.is_empty(), "the fixture must hold cases");
+
+    for case in &fixture.cases {
+        let sessions = build_sessions(&case.sessions, &case.name);
+        let actual = standing_records(&sessions);
+
+        let actual_kinds: Vec<&str> = actual.iter().map(|held| held.record.kind.name()).collect();
+        let expected_kinds: Vec<&str> = case.expected.iter().map(|it| it.kind.as_str()).collect();
+        assert_eq!(actual_kinds, expected_kinds, "case {:?}", case.name);
+
+        for (got, want) in actual.iter().zip(&case.expected) {
+            let label = format!("case {:?}, {}", case.name, want.kind);
+            assert_eq!(got.session_index, want.session_index, "{label}, session");
+            assert_eq!(got.record.set_index, want.set_index, "{label}, set");
+            assert_eq!(got.record.weight_kg, want.weight_kg, "{label}, weight");
+            if let Some(value) = want.value {
+                assert_eq!(got.record.value, value, "{label}, value");
+            }
+            // An e1RM is not written as a float; it must be the e1RM of the set the record names.
+            if want.kind == "best_e1rm" {
+                let index = want.set_index.expect("an e1RM belongs to a set") as usize;
+                let set = &sessions[want.session_index as usize][index];
+                assert_eq!(Some(got.record.value), e1rm(set), "{label}, value");
+            }
+        }
+
+        // The values are personal_bests' — one fold, two views of it.
+        let bests = personal_bests(&sessions);
+        for held in &actual {
+            let best = match held.record.kind {
+                PrKind::MaxWeight => bests.max_weight_kg,
+                PrKind::BestE1rm => bests.best_e1rm_kg,
+                PrKind::BestSessionVolume => bests.best_session_volume_kg,
+                PrKind::MaxRepsAtWeight => bests
+                    .best_reps_at_weight
+                    .iter()
+                    .find(|it| Some(it.weight_kg) == held.record.weight_kg)
+                    .map(|it| f64::from(it.reps)),
+            };
+            assert_eq!(best, Some(held.record.value), "case {:?}", case.name);
+        }
     }
 }
 

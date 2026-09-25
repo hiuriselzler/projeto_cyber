@@ -239,6 +239,19 @@ step is safe to repeat: a missed day is caught up by the next run, and two runs 
 nothing twice. **Which scheduler runs it is chosen with the host** (Fly.io or Railway,
 [05 §5](05-integrations.md)); until then it runs by hand.
 
+**Rebuilding a user's records** — by hand, not scheduled ([task 004](tasks/004-exercise-catalog-and-logging.md)
+stage 7):
+
+```
+uv run python -m app.jobs.rebuild_records <user-id>        # in apps/api
+```
+
+`personal_records` is a derived cache ([03 §4](03-database-schema.md)), so this is its repair: it folds the user's
+finished sets through the core's `standing_records()` and replaces that user's rows in one transaction, inside the
+user's own scope — same role, same refusal as the daily command. It is safe to repeat: a second run writes the same
+rows. **One user at a time, deliberately**: rebuilding everyone would need an unscoped function on
+[ADR-011](decisions/ADR-011.md)'s allowlist, and nothing needs that until the server holds sets (task 006).
+
 ## 6. Backups and recovery
 
 - Managed Postgres with **PITR**, 7-day window minimum.

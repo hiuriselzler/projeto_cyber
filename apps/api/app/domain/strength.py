@@ -22,7 +22,9 @@ from cyberathlete_core import (
     PrAchievement,
     PrKind,
     RepsAtWeight,
+    SessionMetrics,
     SetType,
+    StandingRecord,
     counted_set_count,
     detect_prs,
     e1rm,
@@ -30,6 +32,8 @@ from cyberathlete_core import (
     is_counted_set,
     load_kg,
     personal_bests,
+    session_metrics,
+    standing_records,
     volume_kg,
 )
 
@@ -39,7 +43,9 @@ __all__ = [
     "PrAchievement",
     "PrKind",
     "RepsAtWeight",
+    "SessionMetrics",
     "SetType",
+    "StandingRecord",
     "counted_set_count",
     "detect_prs",
     "e1rm",
@@ -47,5 +53,7 @@ __all__ = [
     "is_counted_set",
     "load_kg",
     "personal_bests",
+    "session_metrics",
+    "standing_records",
     "volume_kg",
 ]

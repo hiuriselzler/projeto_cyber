@@ -1,0 +1,85 @@
+{
+  "function": "standing_records",
+  "spec": "FR-2.15, 03 §4, task 004 stage 7. Every record standing after a history passed oldest first, with the session and set that set it — what the server's personal_records cache stores. The fold is personal_bests', so the values always match it; this file is about *where*. A later tie is not a record, so the earliest session to reach a value keeps it. A session total belongs to no one set.",
+  "expectation_shape": "`expected` lists the standing records in detect_prs' order: max_weight, best_e1rm, max_reps_at_weight (lightest load first), best_session_volume. Each gives its kind, `session_index` and `set_index` (a position within that session; null for a session total), and `weight_kg` where it tells two reps records apart. `value` is written only where it is an exact sum or product; the e1RM case is fixed by its set, from which each consumer computes Epley itself.",
+  "set_defaults": {
+    "set_type": "working",
+    "is_completed": true,
+    "weight_kg": null,
+    "reps": null,
+    "rir": null,
+    "uses_bodyweight": false,
+    "body_weight_kg": null,
+    "is_deload": false
+  },
+  "cases": [
+    {
+      "name": "no history has no records",
+      "sessions": [],
+      "expected": []
+    },
+    {
+      "name": "each record points at the session and set that set it, a warm-up taking a position and nothing else",
+      "sessions": [
+        [{ "weight_kg": 100.0, "reps": 5, "rir": 2 }],
+        [
+          { "set_type": "warmup", "weight_kg": 150.0, "reps": 3, "rir": 0 },
+          { "weight_kg": 110.0, "reps": 3, "rir": null }
+        ]
+      ],
+      "expected": [
+        { "kind": "max_weight", "value": 110.0, "weight_kg": 110.0, "session_index": 1, "set_index": 1 },
+        { "kind": "best_e1rm", "weight_kg": 100.0, "session_index": 0, "set_index": 0 },
+        { "kind": "max_reps_at_weight", "value": 5.0, "weight_kg": 100.0, "session_index": 0, "set_index": 0 },
+        { "kind": "max_reps_at_weight", "value": 3.0, "weight_kg": 110.0, "session_index": 1, "set_index": 1 },
+        { "kind": "best_session_volume", "value": 500.0, "weight_kg": null, "session_index": 0, "set_index": null }
+      ],
+      "note": "Session two's volume is 330 kg; its 110 x 3 has no RIR, so the e1RM stays with session one."
+    },
+    {
+      "name": "a later tie leaves every record with whoever got there first",
+      "sessions": [
+        [{ "weight_kg": 100.0, "reps": 5, "rir": 2 }],
+        [{ "weight_kg": 100.0, "reps": 5, "rir": 2 }]
+      ],
+      "expected": [
+        { "kind": "max_weight", "value": 100.0, "weight_kg": 100.0, "session_index": 0, "set_index": 0 },
+        { "kind": "best_e1rm", "weight_kg": 100.0, "session_index": 0, "set_index": 0 },
+        { "kind": "max_reps_at_weight", "value": 5.0, "weight_kg": 100.0, "session_index": 0, "set_index": 0 },
+        { "kind": "best_session_volume", "value": 500.0, "weight_kg": null, "session_index": 0, "set_index": null }
+      ]
+    },
+    {
+      "name": "a record beaten later moves to the session that beat it, and one reps record stands per load",
+      "sessions": [
+        [
+          { "weight_kg": 100.0, "reps": 6 },
+          { "weight_kg": 80.0, "reps": 10 }
+        ],
+        [
+          { "weight_kg": 100.0, "reps": 8 },
+          { "weight_kg": 80.0, "reps": 9 }
+        ]
+      ],
+      "expected": [
+        { "kind": "max_weight", "value": 100.0, "weight_kg": 100.0, "session_index": 0, "set_index": 0 },
+        { "kind": "max_reps_at_weight", "value": 10.0, "weight_kg": 80.0, "session_index": 0, "set_index": 1 },
+        { "kind": "max_reps_at_weight", "value": 8.0, "weight_kg": 100.0, "session_index": 1, "set_index": 0 },
+        { "kind": "best_session_volume", "value": 1520.0, "weight_kg": null, "session_index": 1, "set_index": null }
+      ],
+      "note": "No set has a RIR, so there is no e1RM record. Session one is 1400 kg and session two 1520 kg."
+    },
+    {
+      "name": "a deload session sets nothing, however heavy (INV-08)",
+      "sessions": [
+        [{ "weight_kg": 100.0, "reps": 5 }],
+        [{ "weight_kg": 200.0, "reps": 10, "rir": 0, "is_deload": true }]
+      ],
+      "expected": [
+        { "kind": "max_weight", "value": 100.0, "weight_kg": 100.0, "session_index": 0, "set_index": 0 },
+        { "kind": "max_reps_at_weight", "value": 5.0, "weight_kg": 100.0, "session_index": 0, "set_index": 0 },
+        { "kind": "best_session_volume", "value": 500.0, "weight_kg": null, "session_index": 0, "set_index": null }
+      ]
+    }
+  ]
+}

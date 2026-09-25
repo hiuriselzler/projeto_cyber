@@ -166,6 +166,14 @@ extern "C" {
         RustBuffer mode, 
         RustCallStatus *uniffi_out_err
     );
+    RustBuffer uniffi_cyberathlete_core_ffi_fn_func_session_metrics(
+        RustBuffer sessions, 
+        RustCallStatus *uniffi_out_err
+    );
+    RustBuffer uniffi_cyberathlete_core_ffi_fn_func_standing_records(
+        RustBuffer sessions, 
+        RustCallStatus *uniffi_out_err
+    );
     double uniffi_cyberathlete_core_ffi_fn_func_volume_kg(
         RustBuffer sets, 
         RustCallStatus *uniffi_out_err
@@ -384,6 +392,10 @@ extern "C" {
     uint16_t uniffi_cyberathlete_core_ffi_checksum_func_personal_bests(
     );
     uint16_t uniffi_cyberathlete_core_ffi_checksum_func_round_to_increment(
+    );
+    uint16_t uniffi_cyberathlete_core_ffi_checksum_func_session_metrics(
+    );
+    uint16_t uniffi_cyberathlete_core_ffi_checksum_func_standing_records(
     );
     uint16_t uniffi_cyberathlete_core_ffi_checksum_func_volume_kg(
     );
@@ -1959,6 +1971,22 @@ NativeCyberathleteCoreFfi::NativeCyberathleteCoreFfi(
             return this->cpp_uniffi_cyberathlete_core_ffi_fn_func_round_to_increment(rt, thisVal, args, count);
         }
     );
+    props["ubrn_uniffi_cyberathlete_core_ffi_fn_func_session_metrics"] = jsi::Function::createFromHostFunction(
+        rt,
+        jsi::PropNameID::forAscii(rt, "ubrn_uniffi_cyberathlete_core_ffi_fn_func_session_metrics"),
+        1,
+        [this](jsi::Runtime &rt, const jsi::Value &thisVal, const jsi::Value *args, size_t count) -> jsi::Value {
+            return this->cpp_uniffi_cyberathlete_core_ffi_fn_func_session_metrics(rt, thisVal, args, count);
+        }
+    );
+    props["ubrn_uniffi_cyberathlete_core_ffi_fn_func_standing_records"] = jsi::Function::createFromHostFunction(
+        rt,
+        jsi::PropNameID::forAscii(rt, "ubrn_uniffi_cyberathlete_core_ffi_fn_func_standing_records"),
+        1,
+        [this](jsi::Runtime &rt, const jsi::Value &thisVal, const jsi::Value *args, size_t count) -> jsi::Value {
+            return this->cpp_uniffi_cyberathlete_core_ffi_fn_func_standing_records(rt, thisVal, args, count);
+        }
+    );
     props["ubrn_uniffi_cyberathlete_core_ffi_fn_func_volume_kg"] = jsi::Function::createFromHostFunction(
         rt,
         jsi::PropNameID::forAscii(rt, "ubrn_uniffi_cyberathlete_core_ffi_fn_func_volume_kg"),
@@ -2037,6 +2065,22 @@ NativeCyberathleteCoreFfi::NativeCyberathleteCoreFfi(
         0,
         [this](jsi::Runtime &rt, const jsi::Value &thisVal, const jsi::Value *args, size_t count) -> jsi::Value {
             return this->cpp_uniffi_cyberathlete_core_ffi_checksum_func_round_to_increment(rt, thisVal, args, count);
+        }
+    );
+    props["ubrn_uniffi_cyberathlete_core_ffi_checksum_func_session_metrics"] = jsi::Function::createFromHostFunction(
+        rt,
+        jsi::PropNameID::forAscii(rt, "ubrn_uniffi_cyberathlete_core_ffi_checksum_func_session_metrics"),
+        0,
+        [this](jsi::Runtime &rt, const jsi::Value &thisVal, const jsi::Value *args, size_t count) -> jsi::Value {
+            return this->cpp_uniffi_cyberathlete_core_ffi_checksum_func_session_metrics(rt, thisVal, args, count);
+        }
+    );
+    props["ubrn_uniffi_cyberathlete_core_ffi_checksum_func_standing_records"] = jsi::Function::createFromHostFunction(
+        rt,
+        jsi::PropNameID::forAscii(rt, "ubrn_uniffi_cyberathlete_core_ffi_checksum_func_standing_records"),
+        0,
+        [this](jsi::Runtime &rt, const jsi::Value &thisVal, const jsi::Value *args, size_t count) -> jsi::Value {
+            return this->cpp_uniffi_cyberathlete_core_ffi_checksum_func_standing_records(rt, thisVal, args, count);
         }
     );
     props["ubrn_uniffi_cyberathlete_core_ffi_checksum_func_volume_kg"] = jsi::Function::createFromHostFunction(
@@ -2300,6 +2344,26 @@ jsi::Value NativeCyberathleteCoreFfi::cpp_uniffi_cyberathlete_core_ffi_fn_func_r
         
         return uniffi_jsi::Bridging<double>::toJs(rt, callInvoker, value);
 }
+jsi::Value NativeCyberathleteCoreFfi::cpp_uniffi_cyberathlete_core_ffi_fn_func_session_metrics(jsi::Runtime& rt, const jsi::Value& thisVal, const jsi::Value* args, size_t count) {
+        RustCallStatus status = uniffi::cyberathlete_core_ffi::Bridging<RustCallStatus>::rustSuccess(rt);
+        auto value = uniffi_cyberathlete_core_ffi_fn_func_session_metrics(uniffi::cyberathlete_core_ffi::Bridging<RustBuffer>::fromJs(rt, callInvoker, args[0]), 
+            &status
+        );
+        uniffi::cyberathlete_core_ffi::Bridging<RustCallStatus>::copyIntoJs(rt, callInvoker, status, args[count - 1]);
+
+        
+        return uniffi::cyberathlete_core_ffi::Bridging<RustBuffer>::toJs(rt, callInvoker, value);
+}
+jsi::Value NativeCyberathleteCoreFfi::cpp_uniffi_cyberathlete_core_ffi_fn_func_standing_records(jsi::Runtime& rt, const jsi::Value& thisVal, const jsi::Value* args, size_t count) {
+        RustCallStatus status = uniffi::cyberathlete_core_ffi::Bridging<RustCallStatus>::rustSuccess(rt);
+        auto value = uniffi_cyberathlete_core_ffi_fn_func_standing_records(uniffi::cyberathlete_core_ffi::Bridging<RustBuffer>::fromJs(rt, callInvoker, args[0]), 
+            &status
+        );
+        uniffi::cyberathlete_core_ffi::Bridging<RustCallStatus>::copyIntoJs(rt, callInvoker, status, args[count - 1]);
+
+        
+        return uniffi::cyberathlete_core_ffi::Bridging<RustBuffer>::toJs(rt, callInvoker, value);
+}
 jsi::Value NativeCyberathleteCoreFfi::cpp_uniffi_cyberathlete_core_ffi_fn_func_volume_kg(jsi::Runtime& rt, const jsi::Value& thisVal, const jsi::Value* args, size_t count) {
         RustCallStatus status = uniffi::cyberathlete_core_ffi::Bridging<RustCallStatus>::rustSuccess(rt);
         auto value = uniffi_cyberathlete_core_ffi_fn_func_volume_kg(uniffi::cyberathlete_core_ffi::Bridging<RustBuffer>::fromJs(rt, callInvoker, args[0]), 
@@ -2368,6 +2432,20 @@ jsi::Value NativeCyberathleteCoreFfi::cpp_uniffi_cyberathlete_core_ffi_checksum_
 }
 jsi::Value NativeCyberathleteCoreFfi::cpp_uniffi_cyberathlete_core_ffi_checksum_func_round_to_increment(jsi::Runtime& rt, const jsi::Value& thisVal, const jsi::Value* args, size_t count) {
         auto value = uniffi_cyberathlete_core_ffi_checksum_func_round_to_increment(
+        );
+
+        
+        return uniffi_jsi::Bridging<uint16_t>::toJs(rt, callInvoker, value);
+}
+jsi::Value NativeCyberathleteCoreFfi::cpp_uniffi_cyberathlete_core_ffi_checksum_func_session_metrics(jsi::Runtime& rt, const jsi::Value& thisVal, const jsi::Value* args, size_t count) {
+        auto value = uniffi_cyberathlete_core_ffi_checksum_func_session_metrics(
+        );
+
+        
+        return uniffi_jsi::Bridging<uint16_t>::toJs(rt, callInvoker, value);
+}
+jsi::Value NativeCyberathleteCoreFfi::cpp_uniffi_cyberathlete_core_ffi_checksum_func_standing_records(jsi::Runtime& rt, const jsi::Value& thisVal, const jsi::Value* args, size_t count) {
+        auto value = uniffi_cyberathlete_core_ffi_checksum_func_standing_records(
         );
 
         

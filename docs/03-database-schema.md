@@ -372,8 +372,20 @@ personal_records (                 -- derived, rebuildable from set_logs; cached
   achieved_at  timestamptz NOT NULL,
   computed_at  timestamptz NOT NULL     -- when this cache row was last rebuilt
 )
-UNIQUE (user_id, exercise_id, kind)   -- current best only; history lives in set_logs
+CHECK (kind <> 'max_reps_at_weight' OR (weight_kg IS NOT NULL AND reps IS NOT NULL))
+UNIQUE (user_id, exercise_id, kind) WHERE kind <> 'max_reps_at_weight'
+UNIQUE (user_id, exercise_id, weight_kg) WHERE kind = 'max_reps_at_weight'
+    -- current best only; history lives in set_logs. max_reps_at_weight is one record per
+    -- load, every other kind one row per exercise (task 004 stage 7: the single key
+    -- (user_id, exercise_id, kind) could hold the reps record of one load only)
 ```
+**Which row a record points at.** The rebuild folds each exercise's finished sessions oldest first through the
+core's `standing_records()`, so `set_log_id`, `workout_id` and `achieved_at` name the **earliest** set that reached
+the standing value — a later tie is not a record (INV-10). `achieved_at` is that set's `completed_at`; a session
+volume belongs to no one set, so it takes the workout's `ended_at` and a NULL `set_log_id`. For `max_weight` and
+`max_reps_at_weight` the `weight_kg` is the total load, body weight included (below). For the other two kinds it is
+the load of the set that set it, or NULL for a session volume.
+
 Deload sets are excluded when computing these (INV-08). For bodyweight exercises, `max_weight` and
 `best_e1rm` compare **total** load — body weight on the set's date plus added load — displayed as
 "BW + 20 kg" (ADR-010).

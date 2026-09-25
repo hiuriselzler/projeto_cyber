@@ -76,6 +76,8 @@ interface NativeModuleInterface {
     ubrn_uniffi_cyberathlete_core_ffi_fn_func_load_kg(set: Uint8Array, uniffi_out_err: UniffiRustCallStatus): Uint8Array;
     ubrn_uniffi_cyberathlete_core_ffi_fn_func_personal_bests(sessions: Uint8Array, uniffi_out_err: UniffiRustCallStatus): Uint8Array;
     ubrn_uniffi_cyberathlete_core_ffi_fn_func_round_to_increment(weightKg: number, incrementKg: number, mode: Uint8Array, uniffi_out_err: UniffiRustCallStatus): number;
+    ubrn_uniffi_cyberathlete_core_ffi_fn_func_session_metrics(sessions: Uint8Array, uniffi_out_err: UniffiRustCallStatus): Uint8Array;
+    ubrn_uniffi_cyberathlete_core_ffi_fn_func_standing_records(sessions: Uint8Array, uniffi_out_err: UniffiRustCallStatus): Uint8Array;
     ubrn_uniffi_cyberathlete_core_ffi_fn_func_volume_kg(sets: Uint8Array, uniffi_out_err: UniffiRustCallStatus): number;
     ubrn_ffi_cyberathlete_core_ffi_uniffi_contract_version(): number;
     ubrn_uniffi_cyberathlete_core_ffi_checksum_func_core_version(): number;
@@ -87,6 +89,8 @@ interface NativeModuleInterface {
     ubrn_uniffi_cyberathlete_core_ffi_checksum_func_load_kg(): number;
     ubrn_uniffi_cyberathlete_core_ffi_checksum_func_personal_bests(): number;
     ubrn_uniffi_cyberathlete_core_ffi_checksum_func_round_to_increment(): number;
+    ubrn_uniffi_cyberathlete_core_ffi_checksum_func_session_metrics(): number;
+    ubrn_uniffi_cyberathlete_core_ffi_checksum_func_standing_records(): number;
     ubrn_uniffi_cyberathlete_core_ffi_checksum_func_volume_kg(): number;
     // Codegen call sites use these via `nativeModule().rustbuffer_alloc(...)`
     // and `nativeModule().rustbuffer_free(...)`. The JSI host object exposes

@@ -42,6 +42,20 @@ export function formatWeight(kilograms: number, unitSystem: UnitSystem, locale: 
     : quantity(kilograms, WEIGHT_FRACTION_DIGITS, 'kg', locale);
 }
 
+/**
+ * A weight as a plain number in the user's unit — what a chart plots, so its axis steps are round in pounds as well as
+ * in kilograms (task 004 stage 7). Converted, never rounded: the chart's labels go through {@link formatWeight}'s
+ * rounding when they are written.
+ */
+export function weightInUnits(kilograms: number, unitSystem: UnitSystem): number {
+  return unitSystem === 'imperial' ? kilograms / KILOGRAMS_PER_POUND : kilograms;
+}
+
+/** The unit {@link weightInUnits} speaks. */
+export function weightUnitOf(unitSystem: UnitSystem): UnitKey {
+  return unitSystem === 'imperial' ? 'lb' : 'kg';
+}
+
 /** A stored weight as the keypad should start from: the user's unit and separator, without grouping. */
 export function weightForKeypad(kilograms: number, unitSystem: UnitSystem, locale: Locale): string {
   const amount = unitSystem === 'imperial' ? kilograms / KILOGRAMS_PER_POUND : kilograms;

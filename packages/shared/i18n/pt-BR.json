@@ -436,6 +436,11 @@
     },
     "level_up": {
       "title": "Nível {level}"
+    },
+    "line_chart": {
+      "summary": "{title}, {count, plural, one {# sessão} other {# sessões}}, de {first} a {last}. {has_values, select, yes {Máximo de {highest}.} other {Nada para mostrar ainda.}}",
+      "readout": "{day} · {value}",
+      "no_value": "nada para mostrar"
     }
   },
   "workout": {
@@ -502,7 +507,40 @@
     },
     "reps": "{count, plural, one {# repetição} other {# repetições}}",
     "quantity": "{value} {unit}",
-    "done": "Concluir"
+    "done": "Concluir",
+    "open_detail": "Ver todas as séries"
+  },
+  "history": {
+    "title": "Histórico",
+    "open": "Histórico",
+    "empty_title": "Nenhum treino finalizado ainda",
+    "empty_body": "Finalize um treino e ele aparece aqui, com cada série como você registrou.",
+    "more": "Mostrar treinos mais antigos",
+    "counted_sets": "{count, plural, one {# série contada} other {# séries contadas}}",
+    "row": "{title}, {day}, {sets}",
+    "row_volume": "{title}, {day}, {sets}, {volume}",
+    "fatigue": "Cansaço {value} de 10",
+    "notes": "Notas",
+    "records_title": "{count, plural, one {Recorde que este treino ainda detém} other {Recordes que este treino ainda detém}}",
+    "records_none": "Este treino não detém nenhum recorde hoje.",
+    "records_note": "Comparado com todos os outros treinos que você finalizou, qualquer que seja a data.",
+    "record_line": "{kind}: {value}",
+    "exercise_link": "Histórico deste exercício",
+    "not_ticked": "não marcada",
+    "no_sets": "Nenhuma série registrada.",
+    "blank": "–",
+    "set_line": "{tracking, select, weight_reps {{weight} × {reps}} reps_only {{reps}} duration {{duration}} other {{weight} · {distance} · {duration}}}",
+    "set_rir": "{line} · RIR {rir}",
+    "set_rir_none": "{line} · RIR não registrado",
+    "chart_top": "Série mais pesada",
+    "chart_e1rm": "Melhor 1RM estimado",
+    "chart_volume": "Volume",
+    "charts_empty": "Nada para mostrar em gráfico ainda: nenhuma série contada aqui tem carga.",
+    "charts_time_distance": "Tempo e distância aparecem sessão por sessão. Ainda não há gráfico para eles.",
+    "sessions_title": "Sessões",
+    "sessions_empty": "Nenhum treino finalizado tem este exercício ainda.",
+    "archived_note": "Oculto do seletor de exercícios. O histórico dele continua como estava.",
+    "e1rm_note": "Uma série registrada sem RIR não tem 1RM estimado, então deixa uma lacuna em vez de um zero."
   },
   "past": {
     "title": "Registrar um treino passado",

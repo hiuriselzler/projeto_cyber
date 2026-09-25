@@ -258,11 +258,70 @@ pub fn detect_prs(previous: PersonalBests, session: Vec<LoggedSet>) -> Vec<PrAch
         .collect()
 }
 
+fn sessions_to_core(sessions: Vec<Vec<LoggedSet>>) -> Vec<Vec<cyberathlete_core::LoggedSet>> {
+    sessions.into_iter().map(to_core).collect()
+}
+
 /// An exercise's bests after a history of sessions, one workout's sets per session — the
 /// `previous` for [`detect_prs`] (task 004 stage 6). The whole history crosses in one call.
 #[uniffi::export]
 pub fn personal_bests(sessions: Vec<Vec<LoggedSet>>) -> PersonalBests {
-    let sessions: Vec<Vec<cyberathlete_core::LoggedSet>> =
-        sessions.into_iter().map(to_core).collect();
-    cyberathlete_core::personal_bests(&sessions).into()
+    cyberathlete_core::personal_bests(&sessions_to_core(sessions)).into()
+}
+
+/// A record still standing after a history, and the session that set it. Mirrors
+/// [`cyberathlete_core::StandingRecord`].
+#[derive(Debug, Clone, Copy, PartialEq, uniffi::Record)]
+pub struct StandingRecord {
+    pub record: PrAchievement,
+    pub session_index: u32,
+}
+
+impl From<cyberathlete_core::StandingRecord> for StandingRecord {
+    fn from(standing: cyberathlete_core::StandingRecord) -> Self {
+        Self {
+            record: standing.record.into(),
+            session_index: standing.session_index,
+        }
+    }
+}
+
+/// Every record standing after a history, oldest session first, with where each was set (task 004
+/// stage 7).
+#[uniffi::export]
+pub fn standing_records(sessions: Vec<Vec<LoggedSet>>) -> Vec<StandingRecord> {
+    cyberathlete_core::standing_records(&sessions_to_core(sessions))
+        .into_iter()
+        .map(Into::into)
+        .collect()
+}
+
+/// One session of one exercise, reduced to what its history charts. Mirrors
+/// [`cyberathlete_core::SessionMetrics`].
+#[derive(Debug, Clone, Copy, PartialEq, uniffi::Record)]
+pub struct SessionMetrics {
+    pub top_load_kg: Option<f64>,
+    pub best_e1rm_kg: Option<f64>,
+    pub volume_kg: Option<f64>,
+    pub counted_sets: u32,
+}
+
+impl From<cyberathlete_core::SessionMetrics> for SessionMetrics {
+    fn from(metrics: cyberathlete_core::SessionMetrics) -> Self {
+        Self {
+            top_load_kg: metrics.top_load_kg,
+            best_e1rm_kg: metrics.best_e1rm_kg,
+            volume_kg: metrics.volume_kg,
+            counted_sets: metrics.counted_sets,
+        }
+    }
+}
+
+/// Per-session metrics over a whole history in one crossing (task 004 stage 7).
+#[uniffi::export]
+pub fn session_metrics(sessions: Vec<Vec<LoggedSet>>) -> Vec<SessionMetrics> {
+    cyberathlete_core::session_metrics(&sessions_to_core(sessions))
+        .into_iter()
+        .map(Into::into)
+        .collect()
 }
