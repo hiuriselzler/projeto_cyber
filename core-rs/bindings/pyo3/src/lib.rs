@@ -7,7 +7,16 @@
 //! The boundary carries plain data — floats and a C-like enum — which is where PyO3 interop is
 //! pleasant rather than painful, and is the rule ADR-004 sets for keeping it that way.
 
-use cyberathlete_core::{RoundingMode, round_to_increment as core_round_to_increment};
+use cyberathlete_core::{
+    LoggedSet, PersonalBests, PrAchievement, PrKind, RepsAtWeight, RoundingMode, SessionMetrics,
+    SetEntry, SetField, SetType, StandingRecord, Tracking,
+    counted_set_count as core_counted_set_count, detect_prs as core_detect_prs, e1rm as core_e1rm,
+    e1rm_series as core_e1rm_series, is_counted_set as core_is_counted_set,
+    load_kg as core_load_kg, missing_for_completion as core_missing_for_completion,
+    personal_bests as core_personal_bests, round_to_increment as core_round_to_increment,
+    session_metrics as core_session_metrics, standing_records as core_standing_records,
+    volume_kg as core_volume_kg,
+};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
@@ -78,10 +87,578 @@ fn core_version() -> &'static str {
     env!("CARGO_PKG_VERSION")
 }
 
+// ── Strength (task 004) ───────────────────────────────────────────────────────────────────────────
+//
+// Marshalling, as above. The server reaches these through `app/domain/`, never by importing
+// `cyberathlete_core` directly — the same import-linter fence that guards `round_to_increment`.
+
+/// How a set was performed. Mirrors [`SetType`] on the Python side.
+#[pyclass(
+    name = "SetType",
+    eq,
+    eq_int,
+    frozen,
+    from_py_object,
+    module = "cyberathlete_core"
+)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PySetType {
+    Warmup,
+    Working,
+    Drop,
+    Backoff,
+    Amrap,
+}
+
+impl From<PySetType> for SetType {
+    fn from(set_type: PySetType) -> Self {
+        match set_type {
+            PySetType::Warmup => Self::Warmup,
+            PySetType::Working => Self::Working,
+            PySetType::Drop => Self::Drop,
+            PySetType::Backoff => Self::Backoff,
+            PySetType::Amrap => Self::Amrap,
+        }
+    }
+}
+
+#[pymethods]
+impl PySetType {
+    /// The name this type carries in the database and the shared fixtures.
+    #[staticmethod]
+    fn from_name(name: &str) -> PyResult<Self> {
+        match SetType::from_name(name) {
+            Some(SetType::Warmup) => Ok(Self::Warmup),
+            Some(SetType::Working) => Ok(Self::Working),
+            Some(SetType::Drop) => Ok(Self::Drop),
+            Some(SetType::Backoff) => Ok(Self::Backoff),
+            Some(SetType::Amrap) => Ok(Self::Amrap),
+            None => Err(PyValueError::new_err(format!(
+                "unknown set type {name:?}; expected warmup, working, drop, backoff or amrap"
+            ))),
+        }
+    }
+
+    #[getter]
+    fn name(&self) -> &'static str {
+        SetType::from(*self).name()
+    }
+}
+
+/// One logged set. Mirrors [`LoggedSet`].
+///
+/// `body_weight_kg` and `is_deload` are resolved by the caller: both are queries, and the core does
+/// no I/O (INV-10). `rir` is nullable and a null is never a zero (INV-03).
+#[pyclass(
+    name = "LoggedSet",
+    frozen,
+    get_all,
+    from_py_object,
+    module = "cyberathlete_core"
+)]
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PyLoggedSet {
+    pub set_type: PySetType,
+    pub is_completed: bool,
+    pub weight_kg: Option<f64>,
+    pub reps: Option<u32>,
+    pub rir: Option<u32>,
+    pub uses_bodyweight: bool,
+    pub body_weight_kg: Option<f64>,
+    pub is_deload: bool,
+}
+
+#[pymethods]
+impl PyLoggedSet {
+    #[new]
+    #[pyo3(signature = (
+        set_type,
+        is_completed,
+        weight_kg = None,
+        reps = None,
+        rir = None,
+        uses_bodyweight = false,
+        body_weight_kg = None,
+        is_deload = false,
+    ))]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "a record mirroring the core's own fields one for one, not a call to remember the order of; Python names them at the call site"
+    )]
+    const fn new(
+        set_type: PySetType,
+        is_completed: bool,
+        weight_kg: Option<f64>,
+        reps: Option<u32>,
+        rir: Option<u32>,
+        uses_bodyweight: bool,
+        body_weight_kg: Option<f64>,
+        is_deload: bool,
+    ) -> Self {
+        Self {
+            set_type,
+            is_completed,
+            weight_kg,
+            reps,
+            rir,
+            uses_bodyweight,
+            body_weight_kg,
+            is_deload,
+        }
+    }
+}
+
+impl From<PyLoggedSet> for LoggedSet {
+    fn from(set: PyLoggedSet) -> Self {
+        Self {
+            set_type: set.set_type.into(),
+            is_completed: set.is_completed,
+            weight_kg: set.weight_kg,
+            reps: set.reps,
+            rir: set.rir,
+            uses_bodyweight: set.uses_bodyweight,
+            body_weight_kg: set.body_weight_kg,
+            is_deload: set.is_deload,
+        }
+    }
+}
+
+fn to_core(sets: Vec<PyLoggedSet>) -> Vec<LoggedSet> {
+    sets.into_iter().map(Into::into).collect()
+}
+
+/// Which record was broken. Mirrors [`PrKind`].
+#[pyclass(
+    name = "PrKind",
+    eq,
+    eq_int,
+    frozen,
+    from_py_object,
+    module = "cyberathlete_core"
+)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PyPrKind {
+    MaxWeight,
+    BestE1rm,
+    MaxRepsAtWeight,
+    BestSessionVolume,
+}
+
+impl From<PrKind> for PyPrKind {
+    fn from(kind: PrKind) -> Self {
+        match kind {
+            PrKind::MaxWeight => Self::MaxWeight,
+            PrKind::BestE1rm => Self::BestE1rm,
+            PrKind::MaxRepsAtWeight => Self::MaxRepsAtWeight,
+            PrKind::BestSessionVolume => Self::BestSessionVolume,
+        }
+    }
+}
+
+#[pymethods]
+impl PyPrKind {
+    /// The name this kind carries in `pr_kind_enum` and the shared fixtures.
+    #[getter]
+    fn name(&self) -> &'static str {
+        match self {
+            Self::MaxWeight => PrKind::MaxWeight.name(),
+            Self::BestE1rm => PrKind::BestE1rm.name(),
+            Self::MaxRepsAtWeight => PrKind::MaxRepsAtWeight.name(),
+            Self::BestSessionVolume => PrKind::BestSessionVolume.name(),
+        }
+    }
+}
+
+/// The most reps ever done at one exact load.
+#[pyclass(
+    name = "RepsAtWeight",
+    frozen,
+    get_all,
+    from_py_object,
+    module = "cyberathlete_core"
+)]
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PyRepsAtWeight {
+    pub weight_kg: f64,
+    pub reps: u32,
+}
+
+#[pymethods]
+impl PyRepsAtWeight {
+    #[new]
+    const fn new(weight_kg: f64, reps: u32) -> Self {
+        Self { weight_kg, reps }
+    }
+}
+
+impl From<PyRepsAtWeight> for RepsAtWeight {
+    fn from(best: PyRepsAtWeight) -> Self {
+        Self {
+            weight_kg: best.weight_kg,
+            reps: best.reps,
+        }
+    }
+}
+
+impl From<RepsAtWeight> for PyRepsAtWeight {
+    fn from(best: RepsAtWeight) -> Self {
+        Self {
+            weight_kg: best.weight_kg,
+            reps: best.reps,
+        }
+    }
+}
+
+/// What an exercise's records stood at before the session being judged.
+#[pyclass(
+    name = "PersonalBests",
+    frozen,
+    get_all,
+    from_py_object,
+    module = "cyberathlete_core"
+)]
+#[derive(Debug, Clone, PartialEq)]
+pub struct PyPersonalBests {
+    pub max_weight_kg: Option<f64>,
+    pub best_e1rm_kg: Option<f64>,
+    pub best_session_volume_kg: Option<f64>,
+    pub best_reps_at_weight: Vec<PyRepsAtWeight>,
+}
+
+#[pymethods]
+impl PyPersonalBests {
+    #[new]
+    #[pyo3(signature = (
+        max_weight_kg = None,
+        best_e1rm_kg = None,
+        best_session_volume_kg = None,
+        best_reps_at_weight = Vec::new(),
+    ))]
+    const fn new(
+        max_weight_kg: Option<f64>,
+        best_e1rm_kg: Option<f64>,
+        best_session_volume_kg: Option<f64>,
+        best_reps_at_weight: Vec<PyRepsAtWeight>,
+    ) -> Self {
+        Self {
+            max_weight_kg,
+            best_e1rm_kg,
+            best_session_volume_kg,
+            best_reps_at_weight,
+        }
+    }
+}
+
+impl From<PyPersonalBests> for PersonalBests {
+    fn from(bests: PyPersonalBests) -> Self {
+        Self {
+            max_weight_kg: bests.max_weight_kg,
+            best_e1rm_kg: bests.best_e1rm_kg,
+            best_session_volume_kg: bests.best_session_volume_kg,
+            best_reps_at_weight: bests
+                .best_reps_at_weight
+                .into_iter()
+                .map(Into::into)
+                .collect(),
+        }
+    }
+}
+
+impl From<PersonalBests> for PyPersonalBests {
+    fn from(bests: PersonalBests) -> Self {
+        Self {
+            max_weight_kg: bests.max_weight_kg,
+            best_e1rm_kg: bests.best_e1rm_kg,
+            best_session_volume_kg: bests.best_session_volume_kg,
+            best_reps_at_weight: bests
+                .best_reps_at_weight
+                .into_iter()
+                .map(Into::into)
+                .collect(),
+        }
+    }
+}
+
+/// One record broken in the session just finished.
+// `skip_from_py_object`: an achievement only ever leaves the core. Nothing hands one back in, and
+// declaring the conversion we do not need would be a boundary wider than the surface.
+#[pyclass(
+    name = "PrAchievement",
+    frozen,
+    get_all,
+    skip_from_py_object,
+    module = "cyberathlete_core"
+)]
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PyPrAchievement {
+    pub kind: PyPrKind,
+    pub value: f64,
+    pub weight_kg: Option<f64>,
+    pub reps: Option<u32>,
+    pub rir: Option<u32>,
+    pub set_index: Option<u32>,
+}
+
+impl From<PrAchievement> for PyPrAchievement {
+    fn from(pr: PrAchievement) -> Self {
+        Self {
+            kind: pr.kind.into(),
+            value: pr.value,
+            weight_kg: pr.weight_kg,
+            reps: pr.reps,
+            rir: pr.rir,
+            set_index: pr.set_index,
+        }
+    }
+}
+
+/// Whether a set counts toward volume, PRs and set counts (INV-04).
+#[pyfunction]
+fn is_counted_set(set: PyLoggedSet) -> bool {
+    core_is_counted_set(&set.into())
+}
+
+/// The load a set actually moved, including the lifter for a bodyweight exercise (INV-07).
+#[pyfunction]
+fn load_kg(set: PyLoggedSet) -> Option<f64> {
+    core_load_kg(&set.into())
+}
+
+/// The estimated one-rep max for one set, or `None` where INV-07 refuses to guess.
+#[pyfunction]
+fn e1rm(set: PyLoggedSet) -> Option<f64> {
+    core_e1rm(&set.into())
+}
+
+/// [`e1rm`] over many sets at once, order and length preserved.
+#[pyfunction]
+fn e1rm_series(sets: Vec<PyLoggedSet>) -> Vec<Option<f64>> {
+    core_e1rm_series(&to_core(sets))
+}
+
+/// Total tonnage of the counted sets, in kilograms (INV-04).
+#[pyfunction]
+fn volume_kg(sets: Vec<PyLoggedSet>) -> f64 {
+    core_volume_kg(&to_core(sets))
+}
+
+/// How many of these sets counted (INV-04).
+#[pyfunction]
+fn counted_set_count(sets: Vec<PyLoggedSet>) -> u32 {
+    core_counted_set_count(&to_core(sets))
+}
+
+/// Every record the session broke, in the core's fixed order (FR-2.15, INV-08).
+#[pyfunction]
+fn detect_prs(previous: PyPersonalBests, session: Vec<PyLoggedSet>) -> Vec<PyPrAchievement> {
+    core_detect_prs(&previous.into(), &to_core(session))
+        .into_iter()
+        .map(Into::into)
+        .collect()
+}
+
+fn sessions_to_core(sessions: Vec<Vec<PyLoggedSet>>) -> Vec<Vec<LoggedSet>> {
+    sessions.into_iter().map(to_core).collect()
+}
+
+/// An exercise's bests after a history of sessions, one workout's sets per session — the
+/// `previous` for [`detect_prs`].
+#[pyfunction]
+fn personal_bests(sessions: Vec<Vec<PyLoggedSet>>) -> PyPersonalBests {
+    core_personal_bests(&sessions_to_core(sessions)).into()
+}
+
+/// A record still standing after a history, and the session that set it. Mirrors
+/// [`StandingRecord`].
+#[pyclass(
+    name = "StandingRecord",
+    frozen,
+    get_all,
+    skip_from_py_object,
+    module = "cyberathlete_core"
+)]
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PyStandingRecord {
+    pub record: PyPrAchievement,
+    pub session_index: u32,
+}
+
+impl From<StandingRecord> for PyStandingRecord {
+    fn from(standing: StandingRecord) -> Self {
+        Self {
+            record: standing.record.into(),
+            session_index: standing.session_index,
+        }
+    }
+}
+
+/// Every record standing after a history, oldest session first, with where each was set — what the
+/// server's `personal_records` rebuild stores (task 004 stage 7).
+#[pyfunction]
+fn standing_records(sessions: Vec<Vec<PyLoggedSet>>) -> Vec<PyStandingRecord> {
+    core_standing_records(&sessions_to_core(sessions))
+        .into_iter()
+        .map(Into::into)
+        .collect()
+}
+
+/// One session of one exercise, reduced to what its history charts. Mirrors [`SessionMetrics`].
+#[pyclass(
+    name = "SessionMetrics",
+    frozen,
+    get_all,
+    skip_from_py_object,
+    module = "cyberathlete_core"
+)]
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PySessionMetrics {
+    pub top_load_kg: Option<f64>,
+    pub best_e1rm_kg: Option<f64>,
+    pub volume_kg: Option<f64>,
+    pub counted_sets: u32,
+}
+
+impl From<SessionMetrics> for PySessionMetrics {
+    fn from(metrics: SessionMetrics) -> Self {
+        Self {
+            top_load_kg: metrics.top_load_kg,
+            best_e1rm_kg: metrics.best_e1rm_kg,
+            volume_kg: metrics.volume_kg,
+            counted_sets: metrics.counted_sets,
+        }
+    }
+}
+
+/// Per-session metrics over a whole history (task 004 stage 7).
+#[pyfunction]
+fn session_metrics(sessions: Vec<Vec<PyLoggedSet>>) -> Vec<PySessionMetrics> {
+    core_session_metrics(&sessions_to_core(sessions))
+        .into_iter()
+        .map(Into::into)
+        .collect()
+}
+
+/// How an exercise is logged — the schema's `tracking_enum`. Mirrors [`Tracking`].
+#[pyclass(
+    name = "Tracking",
+    eq,
+    eq_int,
+    frozen,
+    from_py_object,
+    module = "cyberathlete_core"
+)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PyTracking {
+    WeightReps,
+    RepsOnly,
+    Duration,
+    DistanceDuration,
+}
+
+impl From<PyTracking> for Tracking {
+    fn from(tracking: PyTracking) -> Self {
+        match tracking {
+            PyTracking::WeightReps => Self::WeightReps,
+            PyTracking::RepsOnly => Self::RepsOnly,
+            PyTracking::Duration => Self::Duration,
+            PyTracking::DistanceDuration => Self::DistanceDuration,
+        }
+    }
+}
+
+#[pymethods]
+impl PyTracking {
+    /// The name this mode carries in the database and the shared fixtures.
+    #[staticmethod]
+    fn from_name(name: &str) -> PyResult<Self> {
+        match Tracking::from_name(name) {
+            Some(Tracking::WeightReps) => Ok(Self::WeightReps),
+            Some(Tracking::RepsOnly) => Ok(Self::RepsOnly),
+            Some(Tracking::Duration) => Ok(Self::Duration),
+            Some(Tracking::DistanceDuration) => Ok(Self::DistanceDuration),
+            None => Err(PyValueError::new_err(format!(
+                "unknown tracking mode {name:?}; expected weight_reps, reps_only, duration or distance_duration"
+            ))),
+        }
+    }
+
+    #[getter]
+    fn name(&self) -> &'static str {
+        Tracking::from(*self).name()
+    }
+}
+
+/// The measures a set row holds, as typed. Mirrors [`SetEntry`].
+#[pyclass(
+    name = "SetEntry",
+    frozen,
+    get_all,
+    from_py_object,
+    module = "cyberathlete_core"
+)]
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PySetEntry {
+    pub reps: Option<u32>,
+    pub duration_s: Option<u32>,
+    pub distance_m: Option<f64>,
+}
+
+#[pymethods]
+impl PySetEntry {
+    #[new]
+    #[pyo3(signature = (reps = None, duration_s = None, distance_m = None))]
+    const fn new(reps: Option<u32>, duration_s: Option<u32>, distance_m: Option<f64>) -> Self {
+        Self {
+            reps,
+            duration_s,
+            distance_m,
+        }
+    }
+}
+
+impl From<PySetEntry> for SetEntry {
+    fn from(entry: PySetEntry) -> Self {
+        Self {
+            reps: entry.reps,
+            duration_s: entry.duration_s,
+            distance_m: entry.distance_m,
+        }
+    }
+}
+
+/// The `set_logs` column a set is missing before it can be completed, or `None` (03 §4, task 004
+/// stage 8). Returned as the column's name, which is what an API error points at.
+#[pyfunction]
+fn missing_for_completion(tracking: PyTracking, entry: PySetEntry) -> Option<&'static str> {
+    core_missing_for_completion(tracking.into(), &entry.into()).map(SetField::name)
+}
+
 #[pymodule]
 fn _core(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<PyRoundingMode>()?;
     module.add_function(wrap_pyfunction!(round_to_increment, module)?)?;
     module.add_function(wrap_pyfunction!(core_version, module)?)?;
+
+    module.add_class::<PySetType>()?;
+    module.add_class::<PyLoggedSet>()?;
+    module.add_class::<PyPrKind>()?;
+    module.add_class::<PyRepsAtWeight>()?;
+    module.add_class::<PyPersonalBests>()?;
+    module.add_class::<PyPrAchievement>()?;
+    module.add_function(wrap_pyfunction!(is_counted_set, module)?)?;
+    module.add_function(wrap_pyfunction!(load_kg, module)?)?;
+    module.add_function(wrap_pyfunction!(e1rm, module)?)?;
+    module.add_function(wrap_pyfunction!(e1rm_series, module)?)?;
+    module.add_function(wrap_pyfunction!(volume_kg, module)?)?;
+    module.add_function(wrap_pyfunction!(counted_set_count, module)?)?;
+    module.add_function(wrap_pyfunction!(detect_prs, module)?)?;
+    module.add_function(wrap_pyfunction!(personal_bests, module)?)?;
+    module.add_class::<PyStandingRecord>()?;
+    module.add_function(wrap_pyfunction!(standing_records, module)?)?;
+    module.add_class::<PySessionMetrics>()?;
+    module.add_function(wrap_pyfunction!(session_metrics, module)?)?;
+    module.add_class::<PyTracking>()?;
+    module.add_class::<PySetEntry>()?;
+    module.add_function(wrap_pyfunction!(missing_for_completion, module)?)?;
     Ok(())
 }

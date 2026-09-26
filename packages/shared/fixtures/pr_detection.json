@@ -1,0 +1,179 @@
+{
+  "function": "detect_prs",
+  "spec": "FR-2.15, under INV-04 and INV-08. Four kinds, matching pr_kind_enum: max_weight, best_e1rm, max_reps_at_weight, best_session_volume. A set must count (INV-04) and must not belong to a deload microcycle (INV-08) before it can break anything. Every comparison is strict: equalling a best is not beating it, which is what makes running the detector twice over one session produce one celebration rather than two.",
+  "expectation_shape": "`expected` is the achievements in the order the core returns them: max_weight, best_e1rm, max_reps_at_weight (lightest load first), best_session_volume. The order is part of the contract, because two devices showing a celebration must show the same one first. Each entry gives `kind` and `set_index` (the position in `session`, null for a session total). `value` is given only where it is an exact sum or product; best_e1rm's value is the Epley result and is covered by e1rm.json rather than written as a rounded float here.",
+  "set_defaults": {
+    "set_type": "working",
+    "is_completed": true,
+    "weight_kg": null,
+    "reps": null,
+    "rir": null,
+    "uses_bodyweight": false,
+    "body_weight_kg": null,
+    "is_deload": false
+  },
+  "bests_defaults": {
+    "max_weight_kg": null,
+    "best_e1rm_kg": null,
+    "best_session_volume_kg": null,
+    "best_reps_at_weight": []
+  },
+  "cases": [
+    {
+      "name": "a first-ever session sets every record it can",
+      "previous": {},
+      "session": [{ "weight_kg": 100.0, "reps": 5, "rir": 2 }],
+      "expected": [
+        { "kind": "max_weight", "value": 100.0, "set_index": 0 },
+        { "kind": "best_e1rm", "set_index": 0 },
+        { "kind": "max_reps_at_weight", "value": 5.0, "weight_kg": 100.0, "set_index": 0 },
+        { "kind": "best_session_volume", "value": 500.0, "set_index": null }
+      ]
+    },
+    {
+      "name": "equalling a standing best breaks none of them: a tie is not a record",
+      "previous": {
+        "max_weight_kg": 100.0,
+        "best_session_volume_kg": 500.0,
+        "best_reps_at_weight": [{ "weight_kg": 100.0, "reps": 5 }],
+        "best_e1rm_kg": 200.0
+      },
+      "session": [{ "weight_kg": 100.0, "reps": 5, "rir": 2 }],
+      "expected": [],
+      "note": "The three exact bests are set to precisely what this session produces — 100 kg, 5 reps at 100 kg, 500 kg of tonnage — so each is a genuine tie. best_e1rm_kg is set comfortably clear instead of to the Epley result, because 100 x 37/30 has no exact decimal form and writing it here would test whether this file reproduces a float rather than whether a tie loses."
+    },
+    {
+      "name": "a warm-up never celebrates, however heavy (INV-04)",
+      "previous": {},
+      "session": [
+        { "set_type": "warmup", "weight_kg": 200.0, "reps": 10, "rir": 0 }
+      ],
+      "expected": []
+    },
+    {
+      "name": "a deload set never celebrates, however heavy (INV-08)",
+      "previous": {},
+      "session": [
+        { "weight_kg": 200.0, "reps": 10, "rir": 0, "is_deload": true }
+      ],
+      "expected": []
+    },
+    {
+      "name": "an unfinished set never celebrates",
+      "previous": {},
+      "session": [
+        { "is_completed": false, "weight_kg": 200.0, "reps": 10, "rir": 0 }
+      ],
+      "expected": []
+    },
+    {
+      "name": "a set without RIR can take a weight record but never an e1RM one (INV-07)",
+      "previous": { "max_weight_kg": 100.0, "best_e1rm_kg": 50.0, "best_session_volume_kg": 100000.0 },
+      "session": [{ "weight_kg": 120.0, "reps": 3, "rir": null }],
+      "expected": [
+        { "kind": "max_weight", "value": 120.0, "set_index": 0 },
+        { "kind": "max_reps_at_weight", "value": 3.0, "weight_kg": 120.0, "set_index": 0 }
+      ]
+    },
+    {
+      "name": "reps at a weight is per load, and the lighter load is reported first",
+      "previous": {
+        "max_weight_kg": 1000.0,
+        "best_e1rm_kg": 1000.0,
+        "best_session_volume_kg": 1000000.0,
+        "best_reps_at_weight": [{ "weight_kg": 100.0, "reps": 8 }]
+      },
+      "session": [
+        { "weight_kg": 100.0, "reps": 6, "rir": 2 },
+        { "weight_kg": 80.0, "reps": 10, "rir": 1 }
+      ],
+      "expected": [
+        { "kind": "max_reps_at_weight", "value": 10.0, "weight_kg": 80.0, "set_index": 1 }
+      ]
+    },
+    {
+      "name": "the best set at one load is the one reported, whatever order it was performed in",
+      "previous": {
+        "max_weight_kg": 1000.0,
+        "best_e1rm_kg": 1000.0,
+        "best_session_volume_kg": 1000000.0
+      },
+      "session": [
+        { "weight_kg": 100.0, "reps": 3, "rir": 4 },
+        { "weight_kg": 100.0, "reps": 7, "rir": 1 },
+        { "weight_kg": 100.0, "reps": 5, "rir": 2 }
+      ],
+      "expected": [
+        { "kind": "max_reps_at_weight", "value": 7.0, "weight_kg": 100.0, "set_index": 1 }
+      ]
+    },
+    {
+      "name": "a bodyweight record is measured on total load, lifter included (FR-2.15a)",
+      "previous": {
+        "max_weight_kg": 95.0,
+        "best_e1rm_kg": 1000.0,
+        "best_session_volume_kg": 1000000.0,
+        "best_reps_at_weight": [{ "weight_kg": 100.0, "reps": 8 }]
+      },
+      "session": [
+        {
+          "weight_kg": 20.0,
+          "reps": 5,
+          "rir": 2,
+          "uses_bodyweight": true,
+          "body_weight_kg": 80.0
+        }
+      ],
+      "expected": [{ "kind": "max_weight", "value": 100.0, "set_index": 0 }]
+    },
+    {
+      "name": "session volume counts the eligible sets alone, so a warm-up cannot pad it",
+      "previous": {
+        "max_weight_kg": 1000.0,
+        "best_e1rm_kg": 1000.0,
+        "best_session_volume_kg": 499.0,
+        "best_reps_at_weight": [{ "weight_kg": 100.0, "reps": 8 }]
+      },
+      "session": [
+        { "set_type": "warmup", "weight_kg": 200.0, "reps": 10, "rir": null },
+        { "weight_kg": 100.0, "reps": 5, "rir": 2 }
+      ],
+      "expected": [
+        { "kind": "best_session_volume", "value": 500.0, "set_index": null }
+      ]
+    },
+    {
+      "name": "the heaviest set of several is the one that takes the weight record",
+      "previous": {
+        "max_weight_kg": 100.0,
+        "best_e1rm_kg": 1000.0,
+        "best_session_volume_kg": 1000000.0,
+        "best_reps_at_weight": [
+          { "weight_kg": 100.0, "reps": 8 },
+          { "weight_kg": 110.0, "reps": 8 },
+          { "weight_kg": 105.0, "reps": 8 }
+        ]
+      },
+      "session": [
+        { "weight_kg": 100.0, "reps": 5, "rir": 2 },
+        { "weight_kg": 110.0, "reps": 3, "rir": 1 },
+        { "weight_kg": 105.0, "reps": 4, "rir": 1 }
+      ],
+      "expected": [{ "kind": "max_weight", "value": 110.0, "set_index": 1 }]
+    },
+    {
+      "name": "an empty session breaks nothing",
+      "previous": {},
+      "session": [],
+      "expected": []
+    },
+    {
+      "name": "a session of nothing but warm-ups sets no volume record either",
+      "previous": {},
+      "session": [
+        { "set_type": "warmup", "weight_kg": 60.0, "reps": 10, "rir": null }
+      ],
+      "expected": []
+    }
+  ]
+}

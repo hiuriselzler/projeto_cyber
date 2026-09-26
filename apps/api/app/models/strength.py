@@ -8,10 +8,12 @@ from typing import Any
 from sqlalchemy import (
     ForeignKey,
     ForeignKeyConstraint,
+    Index,
     Integer,
     Numeric,
     SmallInteger,
     UniqueConstraint,
+    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -164,6 +166,11 @@ class WorkoutExercise(OwnedByUser, SyncColumns, Base):
     superset_group: Mapped[int | None] = mapped_column(SmallInteger)
     notes: Mapped[str | None]
     planned_exercise_id: Mapped[uuid.UUID | None]
+    # Copied from the routine at start, editable during the session (task 004 stage 5, 03 §4).
+    rest_seconds: Mapped[int | None] = mapped_column(SmallInteger)
+    target_min_reps: Mapped[int | None] = mapped_column(SmallInteger)
+    target_max_reps: Mapped[int | None] = mapped_column(SmallInteger)
+    target_rir: Mapped[int | None] = mapped_column(SmallInteger)
 
 
 class SetLog(OwnedByUser, SyncColumns, Base):
@@ -181,7 +188,8 @@ class SetLog(OwnedByUser, SyncColumns, Base):
     weight_kg: Mapped[Decimal | None] = mapped_column(Numeric(9, 4))
     reps: Mapped[int | None] = mapped_column(SmallInteger)
     rir: Mapped[int | None] = mapped_column(SmallInteger)
-    distance_m: Mapped[int | None] = mapped_column(Integer)
+    # Decimals, so a distance typed in feet reads back as typed (task 004 stage 5c, 03 §4).
+    distance_m: Mapped[Decimal | None] = mapped_column(Numeric(9, 3))
     duration_s: Mapped[int | None] = mapped_column(Integer)
     is_completed: Mapped[bool] = mapped_column(server_default="false")
     completed_at: Mapped[datetime | None]
@@ -189,11 +197,30 @@ class SetLog(OwnedByUser, SyncColumns, Base):
 
 
 class PersonalRecord(OwnedByUser, Base):
-    """Derived: a rebuildable fold over set_logs, never synced (03 §11)."""
+    """Derived: a rebuildable fold over set_logs, never synced (03 §11).
+
+    One row per kind, except `max_reps_at_weight`, which is one per load (migration 0007, task 004
+    stage 7).
+    """
 
     __tablename__ = "personal_records"
     __table_args__ = (
-        UniqueConstraint("user_id", "exercise_id", "kind"),
+        Index(
+            "personal_records_one_per_kind",
+            "user_id",
+            "exercise_id",
+            "kind",
+            unique=True,
+            postgresql_where=text("kind <> 'max_reps_at_weight'"),
+        ),
+        Index(
+            "personal_records_one_per_load",
+            "user_id",
+            "exercise_id",
+            "weight_kg",
+            unique=True,
+            postgresql_where=text("kind = 'max_reps_at_weight'"),
+        ),
         owned_reference("set_log_id", "set_logs", ondelete="CASCADE"),
         owned_reference("workout_id", "workouts", ondelete="CASCADE"),
     )

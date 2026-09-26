@@ -406,16 +406,85 @@ Nothing is fully round except a status dot. A pill-shaped control reads as frien
 ### The set row — the single most important component
 ```
 ┌──────────────────────────────────────────────────┐
-│  3    40 kg   ×   6      RIR 2            ✓      │   ← 56 dp tall
+│  3    40 kg   ×   6                              │
+│       RIR 2                               ✓      │   ← ✓ a fixed 56 dp column, centred
 │       40 × 6 @2 last time                        │   ← caption, text-muted
 └──────────────────────────────────────────────────┘
 ```
-- Custom numeric keypad that **never covers the row being edited**. The OS keyboard is not used
+*(Redrawn 2026-09-24: the row reflows, and RIR takes its own line whenever the numbers do not fit one — which on a
+360 dp phone at default scale is most of the time. The one-line picture was an aim the measurements never met; see the
+decision below.)*
+- Custom numeric keypad that **never covers the field being edited** — on a tall screen the whole row; on a short
+  one, a wrapped row's second line may sit under it (decided 2026-09-24, below). The OS keyboard is not used
   for weights — it is slow, it fights the decimal separator (a Brazilian locale uses `,`), and it
   eats the screen.
+  - **Reserving the keypad's height as list padding is part of the rule, not an implementation detail.** The scroll
+    geometry may compute a perfect offset and a `ScrollView` will still clamp it to `content − viewport`: with one
+    exercise logged the content is barely taller than the viewport, the clamp is about zero, and the row does not
+    move at all. On a 2340 px phone that is invisible; on a 1600 px screen the keypad covered the edited row
+    completely. *(Found and fixed 2026-09-21, task 004 stage 3 device pass.)*
+  - **So is aiming again when the list's height changes.** A reveal is aimed before the commit it causes, and anything
+    that commit adds above the list — the rest bar, on the ✓ that starts a rest — shrinks the viewport after the aim:
+    the row lands under the fold or the keypad by exactly that height. The row last revealed is revealed again from the
+    new height, until a finger scrolls the list. *(Found in task 004's closing pass, fixed 2026-09-26.)*
 - RIR is a chip row `0 1 2 3 4 5+` — **one tap, never typed** (FR-2.10).
 - ✓ advances focus to the next set. Haptic on completion.
 - Previous performance is always visible, never a tap away.
+- **The ✓ never wraps.** It is a fixed column beside the numbers, not a word in their sentence, and it stays a full
+  56 dp target vertically centred however the numbers reflow. *(Changed 2026-09-21: it used to take part in the wrap
+  and, on a Galaxy S21 FE at font scale 0.86, lost by about three dp — breaking to a second line with a third of the
+  row empty beside it. Task 004 stage 3 device pass.)*
+
+- **The set number is also the set's type** *(task 004 stage 5, 2026-09-23)*. A working set shows its number; a
+  warm-up, drop, back-off or AMRAP set shows `W`, `D`, `B` or `A` in its place, and the spoken sentence names the type.
+  A letter, not a colour, carries it (INV-24). The number is a button that opens a set-type sheet, with long-press as a
+  shortcut to the same sheet — never a swipe, and never a gesture with no visible alternative (§5).
+- **The row follows what the exercise tracks** *(task 004 stage 5c)*: weight × reps with RIR; reps with RIR; a time
+  alone; or weight · distance · time for a carry. A hold and a carry have no RIR chip — there are no reps to hold in
+  reserve. A time is typed on the same keypad, filling from the right (`130` → 1:30), and shown in tabular figures.
+  A ✓ on a row missing what its mode needs opens the keypad on that field instead of completing it.
+- **The rest timer** counts down in tabular figures in a bar pinned above the list — reachable by the thumb, never over
+  the row being edited — with `−15 s`, `+15 s` and *skip*. It ends with a haptic, and with a local notification when
+  the app is not in front. It is derived from the last completed set rather than held in memory, so a force-quit
+  mid-rest brings it back still running.
+  - **While the keypad is open, the rest is the countdown alone on the keypad's heading line** — `Carga · Descanso
+    1:28`, at that line's height — and the bar is not drawn; *OK* brings the bar back with `−15 s`, `+15 s` and *skip*.
+    The bar is ~79 dp, and on a 533 dp screen the bar and the keypad together left the list no visible height at all;
+    at 640 dp, ~86 dp. A ✓ from the keypad keeps it open and starts the rest, so that was the ordinary state, not an edge.
+    *(Decided 2026-09-26, task 004's closing pass.)*
+
+> **Decided 2026-09-24 — the row reflows (option 1 below).** The set number stays, because the set-type letter lives
+> there (`Aq`, `D`, `B`, `A`) and INV-24 wants the type shown, not only spoken; the unit stays, because an imperial user
+> needs it at a glance. The consequence for the keypad rule below is accepted with it: on a short screen the keypad
+> reveals **the field being edited**, and the second line of a wrapped row may sit under the keypad while it is open —
+> the value being typed is always in view, which is what the rule is for. The question as it was argued is kept below.
+>
+> **Open question, as it stood — must the numbers hold one line at default font scale, and what pays for it?**
+>
+> The picture above shows one line, and on a 360 dp phone the numbers do not fit one at default scale. Measured on a
+> Galaxy S21 FE, scale 1.0: 312 dp of row, 64 for the ✓ and its gap, ~250 needed by `40 kg × 6 RIR 7` against the 248
+> left — it loses by about two dp. And that is the *easy* case: the realistic heavy set, **`100 kg × 12 RIR 10`, wraps
+> at every scale**, so no amount of gap-shaving reaches "always one line" while the numerals stay the size INV-24
+> wants them mid-effort.
+>
+> Tightening the inter-number gap from `space[2]` to `space[1]` was tried on the device: it wins the line at 0.86 and
+> **still loses at 1.0**, so it was reverted rather than kept — cramping the most important component in the app for a
+> case it does not win is the wrong trade.
+>
+> Three ways out, none of them taken yet, because this is a design call and not an implementation detail:
+> 1. **Accept the reflow.** `RIR n` drops beneath the weight and reps, the ✓ stays anchored, and the picture above is
+>    redrawn as two lines. Costs nothing but the drawing; the row grows to ~96 dp for long values.
+> 2. **Drop the leading set number** from the visual row, keeping it in the spoken sentence. It is not in the picture
+>    above in the first place, and it buys ~32 dp — enough for one line at default scale for ordinary values.
+> 3. **Shrink the unit label** (`kg` / `lb`) or drop it once the header states the unit. Buys ~20 dp, and costs the
+>    at-a-glance unit an imperial user arguably needs most.
+>
+> Until this is answered the row reflows, which is correct behaviour against the criterion that matters — *reflowed,
+> never truncated, every target still 56 dp* — and wrong against the picture.
+>
+> **This is not only a drawing question: it decides the short-screen keypad rule below.** A wrapped row is ~124 dp
+> tall, and on a 1600 px screen the list has ~78 dp of clear space above the keypad — so a wrapped row *cannot* be
+> fully revealed, while a one-line 56 dp row fits with room over. Answering this answers both.
 
 ### Live cardio
 One dominant metric in `display` size, chosen by the sport profile (INV-19), with three or four

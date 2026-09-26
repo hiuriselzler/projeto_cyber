@@ -41,6 +41,41 @@ export function applyKey(value: string, key: KeypadKey, rules: KeypadRules): str
   return current.length >= rules.maxIntegerDigits ? current : current + key;
 }
 
+/**
+ * A time typed on the keypad, filling from the right like a microwave: `1`, `3`, `0` is 1:30 (task 004 stage 5c).
+ * The last two digits are seconds and the rest minutes, so `90` is ninety seconds — a lifter who types it meant it.
+ * Empty is "not recorded" — null, never zero (INV-03's rule, applied to a time).
+ */
+export function timeDigitsToSeconds(digits: string): number | null {
+  if (!/^\d+$/.test(digits)) {
+    return null;
+  }
+  const seconds = Number(digits.slice(-2));
+  const minutes = digits.length > 2 ? Number(digits.slice(0, -2)) : 0;
+  return minutes * 60 + seconds;
+}
+
+/**
+ * A time of day typed the same way, filling from the right — `1930` is 19:30, `730` is 7:30 — as minutes after
+ * midnight, or null while it is not one: minutes past 59, hours past 23, or nothing typed (task 004 stage 6).
+ */
+export function clockDigitsToMinutes(digits: string): number | null {
+  if (!/^\d{1,4}$/.test(digits)) {
+    return null;
+  }
+  const minutes = Number(digits.slice(-2));
+  const hours = digits.length > 2 ? Number(digits.slice(0, -2)) : 0;
+  return minutes > 59 || hours > 23 ? null : hours * 60 + minutes;
+}
+
+/** A stored time as the keypad should start from — the inverse of `timeDigitsToSeconds` for any time under 100 min. */
+export function secondsToTimeDigits(seconds: number): string {
+  const whole = Math.max(0, Math.floor(seconds));
+  const minutes = Math.floor(whole / 60);
+  const rest = whole % 60;
+  return minutes === 0 ? String(rest) : `${String(minutes)}${String(rest).padStart(2, '0')}`;
+}
+
 export interface RevealGeometry {
   /** The edited row's top and bottom, in the list's content coordinates. */
   readonly rowTop: number;

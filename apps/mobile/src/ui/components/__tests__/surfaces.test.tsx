@@ -1,15 +1,19 @@
 /**
- * The sheet, segmented control, empty state, level-up state and mark, in both languages, both unit systems and both
- * themes (task 011).
+ * The sheet, segmented control, empty state, level-up state, record state and mark, in both languages, both unit
+ * systems and both themes (task 011; the record state, task 004 stage 6).
  */
 import { fireEvent, screen } from '@testing-library/react-native';
-import { StyleSheet } from 'react-native';
+import { useState } from 'react';
+import { Pressable, StyleSheet } from 'react-native';
+
+import { space } from '../../tokens';
 
 import { MATRIX, renderUi, TEST_METRICS } from '../../../../test/render';
 import { PLACEHOLDER_LEVELS } from '../../brand/marks.generated';
 import { EmptyState } from '../EmptyState';
 import { LevelUpState } from '../LevelUpState';
 import { Mark } from '../Mark';
+import { RecordState } from '../RecordState';
 import { Screen } from '../Screen';
 import { SegmentedControl } from '../SegmentedControl';
 import { Sheet } from '../Sheet';
@@ -18,6 +22,21 @@ const WORDS = {
   en: { close: 'Close', levelUp: 'track reached level 12. reason', level: 'Level 12' },
   'pt-BR': { close: 'Fechar', levelUp: 'track chegou ao nível 12. reason', level: 'Nível 12' },
 } as const;
+
+const OPEN = 'open';
+
+/** A caller that toggles `visible`, the way every real one does — see the transition tests below. */
+function SheetHarness({ title }: { readonly title: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Pressable accessibilityRole="button" accessibilityLabel={OPEN} onPress={() => setOpen(true)} />
+      <Sheet visible={open} title={title} onClose={() => setOpen(false)}>
+        <EmptyState title="" />
+      </Sheet>
+    </>
+  );
+}
 
 describe.each(MATRIX)('$locale, $unitSystem, $preference', (setting) => {
   const words = WORDS[setting.locale];
@@ -46,6 +65,30 @@ describe.each(MATRIX)('$locale, $unitSystem, $preference', (setting) => {
     );
 
     expect(screen.queryByRole('button', { name: words.close })).toBeNull();
+  });
+
+  /**
+   * [ADR-014 § Amendment](../../../../../docs/decisions/ADR-014.md): a component with a state prop is tested by
+   * **moving** it. The two tests above pass `visible` as a constant, and between them they left the `false → true`
+   * path untested — which is the path that was broken. `Sheet` never opened at all for nine days, on every build,
+   * and no gate in the project could see it.
+   */
+  it('opens when its caller moves visible from false to true', async () => {
+    const title = 'title';
+    await renderUi(<SheetHarness title={title} />, setting);
+
+    expect(screen.queryByText(title)).toBeNull();
+    await fireEvent.press(screen.getByRole('button', { name: OPEN }));
+    expect(screen.getByText(title)).toBeOnTheScreen();
+  });
+
+  it('closes again when its caller moves visible back to false', async () => {
+    const title = 'title';
+    await renderUi(<SheetHarness title={title} />, setting);
+
+    await fireEvent.press(screen.getByRole('button', { name: OPEN }));
+    await fireEvent.press(screen.getByRole('button', { name: words.close }));
+    expect(screen.queryByText(title)).toBeNull();
   });
 
   it('chooses one segment, marked as checked', async () => {
@@ -80,6 +123,32 @@ describe.each(MATRIX)('$locale, $unitSystem, $preference', (setting) => {
     expect(screen.getByText(words.level)).toBeOnTheScreen();
   });
 
+  it('states each personal record as a fact — whose, its kind and the number (task 004 stage 6)', async () => {
+    const groups = [
+      {
+        key: 'mine',
+        subject: 'Supino do João',
+        records: [
+          { key: 'a', kind: 'kind one', value: '110 kg' },
+          { key: 'b', kind: 'kind two', value: '7' },
+        ],
+      },
+      { key: 'other', subject: 'subject two', records: [{ key: 'c', kind: 'kind three', value: '500 kg' }] },
+    ];
+    const heading = 'records';
+    await renderUi(<RecordState title={heading} groups={groups} />, setting);
+
+    expect(screen.getByRole('header', { name: heading })).toBeOnTheScreen();
+    for (const group of groups) {
+      // The exercise is named once for its group, and the user's own name reads back exactly as typed (INV-27).
+      expect(screen.getAllByText(group.subject)).toHaveLength(1);
+      for (const record of group.records) {
+        expect(screen.getByText(record.kind)).toBeOnTheScreen();
+        expect(screen.getByText(record.value)).toBeOnTheScreen();
+      }
+    }
+  });
+
   it('draws the mark as an image named for the brand', async () => {
     await renderUi(<Mark level="glyph" size={32} />, setting);
 
@@ -99,6 +168,33 @@ describe('the mark’s slots', () => {
  * Jest could not have caught it, because the harness had no insets at all. It has them now
  * (`TEST_METRICS`), and this is the guard.
  */
+/**
+ * The task 004 stage 6 device pass found the exercise picker's sheet taller than the screen — its title, close button
+ * and search field above the top edge — because the sheet neither kept out of the insets nor shrank. These pin both.
+ */
+describe('a sheet', () => {
+  it('keeps below the status bar, with backdrop left above it to tap', async () => {
+    await renderUi(
+      <Sheet visible onClose={jest.fn()}>
+        <EmptyState title="" />
+      </Sheet>,
+    );
+
+    const style = StyleSheet.flatten(screen.getByTestId('sheet-frame').props.style);
+    expect(style.paddingTop).toBe(TEST_METRICS.insets.top + space[12]);
+  });
+
+  it('shrinks to the room it has, so a long list inside scrolls instead of pushing its header off screen', async () => {
+    await renderUi(
+      <Sheet visible onClose={jest.fn()}>
+        <EmptyState title="" />
+      </Sheet>,
+    );
+
+    expect(StyleSheet.flatten(screen.getByTestId('sheet').props.style).flexShrink).toBe(1);
+  });
+});
+
 describe('a screen', () => {
   it('keeps its content out of the system insets', async () => {
     await renderUi(<Screen />);

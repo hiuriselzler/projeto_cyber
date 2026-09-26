@@ -101,6 +101,15 @@ const fences = [
     imports: [{ name: 'expo-location' }, { name: 'expo-task-manager' }],
   },
   {
+    // Haptics and notifications differ between Android and iOS (channels, permission models), so they are platform
+    // code (responsibility map). expo-haptics was confined by convention alone from task 004 stage 3; stage 5 made it
+    // a rule, when the rest timer brought expo-notifications with it.
+    id: 'device-feedback',
+    allowedIn: ['platform'],
+    reason: 'haptics and notifications live behind src/platform (INV-28, task 004 stage 5)',
+    imports: [{ name: 'expo-haptics' }, { name: 'expo-notifications' }],
+  },
+  {
     id: 'core-binding',
     allowedIn: ['domain'],
     reason: 'only src/domain imports the core-rs binding (ADR-012)',
@@ -147,6 +156,39 @@ const fences = [
       { object: 'LayoutAnimation', property: 'spring' },
     ],
     syntax: [{ selector: "CallExpression[callee.property.name='springify']", what: 'springify()' }],
+  },
+  {
+    // Task 004 stage 6 device pass: `useMemo(() => { void revision; return read(); }, [revision])` compiled, under the
+    // React Compiler the app ships with and Jest does not run, to a cache that ignored `revision` — a read of a value
+    // that uses nothing is a dependency on nothing. Three screens never showed their own writes, with every suite green.
+    // `void someCall()` (a promise not awaited) is untouched: only a bare name is refused.
+    id: 'void-dependency',
+    allowedIn: [],
+    reason:
+      'a `void name;` read is not a dependency to the React Compiler, which memoizes on what is used — put the re-read in state (features/strength/useDatabaseRead.ts)',
+    syntax: [
+      {
+        selector: "ExpressionStatement > UnaryExpression[operator='void'][argument.type='Identifier']",
+        what: 'void <name>;',
+      },
+    ],
+  },
+  {
+    // Task 004 stage 8 device pass: a refresh the server refused ended the session, the session's end deleted the
+    // account's `users` row, and `ON DELETE CASCADE` took every workout and set on the phone with it — the only copy,
+    // until task 006 syncs. The account flows' tests fake the store and cannot see a cascade; this fence can.
+    id: 'account-row-deletion',
+    allowedIn: [],
+    reason:
+      "the account's users row anchors every workout and set on the device by ON DELETE CASCADE, and nothing may delete it (task 004 stage 8)",
+    syntax: [
+      {
+        selector: "CallExpression[callee.property.name='delete'] > Identifier.arguments[name='users']",
+        what: 'delete(users)',
+      },
+      { selector: 'Literal[value=/\\bdelete\\s+from\\s+["`]?users\\b/i]', what: 'an SQL delete on users' },
+      { selector: 'TemplateElement[value.raw=/\\bdelete\\s+from\\s+["`]?users\\b/i]', what: 'an SQL delete on users' },
+    ],
   },
 ];
 

@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.core.db import get_session_factory, transaction, user_transaction
 from app.core.scope import UserId
-from app.models.strength import Workout
+from app.models.strength import Exercise, Workout
 from app.repositories.workouts import WorkoutRepository
 from tests.integration.api_support import API, bearer
 
@@ -86,6 +86,34 @@ async def test_with_rls_a_query_that_forgets_its_owner_returns_nothing_of_anyone
 
     async with transaction(sessions) as session:
         assert await ForgetfulWorkoutRepository(session).everything() == []
+
+
+async def test_with_rls_an_exercise_query_that_forgets_its_owner_sees_the_catalog_and_no_more(
+    api_factory, seeded
+):
+    """The exercise table's mixed policy (task 004 stage 8): with the owner filter removed, a user
+    still reads the globals and their own, and never a stranger's."""
+    api = await api_factory()
+    _, owner, owner_body = await api.register()
+    _, stranger, _ = await api.register()
+    mine, theirs = uuid.uuid4(), uuid.uuid4()
+    body = {
+        "name": "Private press",
+        "modality": "machine",
+        "primary_muscle_id": 1,
+        "created_at": api.clock.now.isoformat(),
+        "updated_at": api.clock.now.isoformat(),
+    }
+    assert (await api.put(owner, "exercises", str(mine), body)).status_code == 201
+    assert (await api.put(stranger, "exercises", str(theirs), body)).status_code == 201
+    owner_id = UserId(uuid.UUID(owner_body["account"]["id"]))
+
+    async with user_transaction(get_session_factory(), owner_id) as session:
+        everything = list((await session.scalars(select(Exercise))).all())
+
+    owned = {exercise.id for exercise in everything if exercise.owner_user_id is not None}
+    assert owned == {mine}
+    assert sum(exercise.owner_user_id is None for exercise in everything) > 200
 
 
 async def test_the_user_scope_ends_with_its_transaction_on_a_reused_connection(migrated):

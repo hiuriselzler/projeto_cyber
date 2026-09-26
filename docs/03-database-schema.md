@@ -317,6 +317,13 @@ workout_exercises (
   exercise_id uuid NOT NULL → exercises,        -- NO ACTION: never orphan history (INV-11, ADR-013)
   order_index int NOT NULL, superset_group smallint NULL, notes text NULL,
   planned_exercise_id uuid NULL → planned_exercises,   -- ON DELETE SET NULL (INV-18)
+  rest_seconds    smallint NULL,        -- NULL = no rest timer; never an invented default
+  target_min_reps smallint NULL,
+  target_max_reps smallint NULL,
+  target_rir      smallint NULL CHECK (target_rir IS NULL OR target_rir BETWEEN 0 AND 10),
+      -- the four above are COPIED from the routine (or plan) when the workout starts, and editable during it:
+      -- editing the routine afterwards must never move a timer that is already running (task 004 stage 5).
+      -- target_rir is shown beside a set as a target and is never written into set_logs.rir (INV-03).
   ‹sync›
 )
 INDEX (workout_id, order_index)
@@ -331,7 +338,8 @@ set_logs (
   weight_kg    numeric(9,4) NULL CHECK (weight_kg IS NULL OR weight_kg >= 0),   -- INV-02 precision
   reps         smallint NULL CHECK (reps IS NULL OR reps BETWEEN 0 AND 1000),
   rir          smallint NULL CHECK (rir IS NULL OR rir BETWEEN 0 AND 10),   -- INV-03
-  distance_m   int NULL,                        -- tracking = distance_duration
+  distance_m   numeric(9,3) NULL,               -- tracking = distance_duration. Not int: 100 ft typed is 30.48 m,
+                                                -- and an integer read it back as 98 ft (task 004 stage 5c, INV-01)
   duration_s   int NULL,                        -- tracking = duration
   is_completed boolean NOT NULL DEFAULT false,
   completed_at timestamptz NULL,
@@ -344,7 +352,15 @@ INDEX (planned_set_id) WHERE planned_set_id IS NOT NULL
 
 **Note:** `weight_kg`/`reps`/`rir` are all nullable because a set exists (pre-filled from the
 plan) before it is performed. `is_completed = true` requires the fields its `tracking` mode needs
-— enforced in the service layer, not the DB, because the requirement depends on the exercise.
+— enforced in the service layer, not the DB, because the requirement depends on the exercise. The rule itself is
+the core's `missing_for_completion()`, called by the phone's ✓ and by the API's workout write alike
+([task 004](tasks/004-exercise-catalog-and-logging.md) stage 8).
+
+**`completed_at` is when the set was done, and `updated_at` is when the row was written.** They usually
+coincide, and they diverge on a workout logged retroactively (FR-2.13): its sets carry the workout's
+chosen end as `completed_at`, the honest upper bound on when they were done, while `updated_at` stays
+the real time of the write, because last-write-wins sync compares `updated_at` (NFR-4) and a backdated
+one would lose to any stale copy ([task 004](tasks/004-exercise-catalog-and-logging.md) stage 6).
 
 ```sql
 personal_records (                 -- derived, rebuildable from set_logs; cached for speed
@@ -358,8 +374,20 @@ personal_records (                 -- derived, rebuildable from set_logs; cached
   achieved_at  timestamptz NOT NULL,
   computed_at  timestamptz NOT NULL     -- when this cache row was last rebuilt
 )
-UNIQUE (user_id, exercise_id, kind)   -- current best only; history lives in set_logs
+CHECK (kind <> 'max_reps_at_weight' OR (weight_kg IS NOT NULL AND reps IS NOT NULL))
+UNIQUE (user_id, exercise_id, kind) WHERE kind <> 'max_reps_at_weight'
+UNIQUE (user_id, exercise_id, weight_kg) WHERE kind = 'max_reps_at_weight'
+    -- current best only; history lives in set_logs. max_reps_at_weight is one record per
+    -- load, every other kind one row per exercise (task 004 stage 7: the single key
+    -- (user_id, exercise_id, kind) could hold the reps record of one load only)
 ```
+**Which row a record points at.** The rebuild folds each exercise's finished sessions oldest first through the
+core's `standing_records()`, so `set_log_id`, `workout_id` and `achieved_at` name the **earliest** set that reached
+the standing value — a later tie is not a record (INV-10). `achieved_at` is that set's `completed_at`; a session
+volume belongs to no one set, so it takes the workout's `ended_at` and a NULL `set_log_id`. For `max_weight` and
+`max_reps_at_weight` the `weight_kg` is the total load, body weight included (below). For the other two kinds it is
+the load of the set that set it, or NULL for a session volume.
+
 Deload sets are excluded when computing these (INV-08). For bodyweight exercises, `max_weight` and
 `best_e1rm` compare **total** load — body weight on the set's date plus added load — displayed as
 "BW + 20 kg" (ADR-010).

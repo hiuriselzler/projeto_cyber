@@ -166,6 +166,10 @@ jobs:
       - run: pnpm check:platform-files
       - name: Both catalogs hold the same messages with the same arguments (INV-27)
         run: pnpm check:catalogs
+      # Task 004: the local seed runs only when its fingerprint changes, so data changed without bumping the
+      # constant would reach no existing install — a bug invisible on a fresh device and in every test.
+      - name: The reference seed's fingerprint matches its data
+        run: pnpm check:seed-version
       - run: pnpm test --ci
       # Task 011: every slot the mark fills holds exactly what the render step makes of its SVG source.
       - name: The committed brand assets match their render

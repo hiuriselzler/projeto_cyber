@@ -65,10 +65,11 @@ export function readLocalAccount(id: string): LocalAccount | null {
   };
 }
 
-/**
- * The account's row leaves the device with the session (task 019). What a device keeps of training data once its
- * session ends is task 006's to settle; there is none on a device before then.
+/*
+ * **There is deliberately no way to delete the account's row from here** (task 004 stage 8). Every training table
+ * references `users` with `ON DELETE CASCADE`, which bites since `PRAGMA foreign_keys` was turned on (stage 3), so
+ * deleting the row deleted every workout and set on the device — and until task 006 syncs them, the device holds the
+ * only copy. The stage 8 device pass lost a phone's whole history that way, to a refresh the server refused. A session
+ * ending takes the tokens and the privacy key; the row, and the training it anchors, stay. What a device keeps for good
+ * once an account is gone is task 006's to settle. The `account-row-deletion` lint fence keeps this true.
  */
-export function forgetLocalAccount(id: string): void {
-  db.delete(users).where(eq(users.id, id)).run();
-}

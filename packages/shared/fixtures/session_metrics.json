@@ -1,0 +1,105 @@
+{
+  "function": "session_metrics",
+  "spec": "FR-2.14, task 004 stage 7. What an exercise's history charts plot, per session: the top load, the best e1RM, the volume and the counted sets — each over the counted sets only (INV-04). Deload sets are charted normally (INV-08 keeps them out of records, not out of history). A value with nothing to measure is null, never 0: a blank RIR leaves the e1RM null (INV-03, INV-07), and a session with no counted set carrying a load and reps has no volume.",
+  "expectation_shape": "`expected` holds one entry per session, in order. `best_e1rm` is not a float: it is the load and effective rep count of the set that holds it, or null, so each consumer applies Epley in its own arithmetic, exactly as e1rm.json does. `top_load_kg` and `volume_kg` are exact sums and products and are written out.",
+  "set_defaults": {
+    "set_type": "working",
+    "is_completed": true,
+    "weight_kg": null,
+    "reps": null,
+    "rir": null,
+    "uses_bodyweight": false,
+    "body_weight_kg": null,
+    "is_deload": false
+  },
+  "cases": [
+    {
+      "name": "no history has no metrics",
+      "sessions": [],
+      "expected": []
+    },
+    {
+      "name": "a warm-up is in the log and out of every metric, however heavy",
+      "sessions": [
+        [
+          { "set_type": "warmup", "weight_kg": 140.0, "reps": 3, "rir": 5 },
+          { "weight_kg": 100.0, "reps": 5, "rir": 2 },
+          { "weight_kg": 100.0, "reps": 4, "rir": null }
+        ]
+      ],
+      "expected": [
+        {
+          "top_load_kg": 100.0,
+          "best_e1rm": { "load_kg": 100.0, "effective_reps": 7 },
+          "volume_kg": 900.0,
+          "counted_sets": 2
+        }
+      ]
+    },
+    {
+      "name": "a blank RIR is a gap in the e1RM, never a zero, and costs nothing else",
+      "sessions": [[{ "weight_kg": 80.0, "reps": 8, "rir": null }]],
+      "expected": [{ "top_load_kg": 80.0, "best_e1rm": null, "volume_kg": 640.0, "counted_sets": 1 }]
+    },
+    {
+      "name": "the best e1RM is the best set's, not the heaviest set's",
+      "sessions": [
+        [
+          { "weight_kg": 110.0, "reps": 1, "rir": 0 },
+          { "weight_kg": 100.0, "reps": 6, "rir": 2 }
+        ]
+      ],
+      "expected": [
+        {
+          "top_load_kg": 110.0,
+          "best_e1rm": { "load_kg": 100.0, "effective_reps": 8 },
+          "volume_kg": 710.0,
+          "counted_sets": 2
+        }
+      ],
+      "note": "110 x (1 + 1/30) is about 113.7 and 100 x (1 + 8/30) about 126.7."
+    },
+    {
+      "name": "a deload session is charted normally",
+      "sessions": [[{ "weight_kg": 60.0, "reps": 5, "rir": 4, "is_deload": true }]],
+      "expected": [
+        {
+          "top_load_kg": 60.0,
+          "best_e1rm": { "load_kg": 60.0, "effective_reps": 9 },
+          "volume_kg": 300.0,
+          "counted_sets": 1
+        }
+      ]
+    },
+    {
+      "name": "a session with nothing measurable has no numbers, one per session all the same",
+      "sessions": [
+        [{ "set_type": "warmup", "weight_kg": 40.0, "reps": 10 }],
+        [{ "weight_kg": null, "reps": 12 }],
+        [{ "is_completed": false, "weight_kg": 100.0, "reps": 5, "rir": 2 }]
+      ],
+      "expected": [
+        { "top_load_kg": null, "best_e1rm": null, "volume_kg": null, "counted_sets": 0 },
+        { "top_load_kg": null, "best_e1rm": null, "volume_kg": null, "counted_sets": 1 },
+        { "top_load_kg": null, "best_e1rm": null, "volume_kg": null, "counted_sets": 0 }
+      ]
+    },
+    {
+      "name": "a bodyweight session is measured on total load, lifter included (FR-2.15a)",
+      "sessions": [
+        [{ "weight_kg": 20.0, "reps": 5, "rir": 2, "uses_bodyweight": true, "body_weight_kg": 80.0 }],
+        [{ "weight_kg": 20.0, "reps": 5, "rir": 2, "uses_bodyweight": true, "body_weight_kg": null }]
+      ],
+      "expected": [
+        {
+          "top_load_kg": 100.0,
+          "best_e1rm": { "load_kg": 100.0, "effective_reps": 7 },
+          "volume_kg": 500.0,
+          "counted_sets": 1
+        },
+        { "top_load_kg": null, "best_e1rm": null, "volume_kg": null, "counted_sets": 1 }
+      ],
+      "note": "The second session has no body weight logged by its date, so it has no load at all (INV-07) — and still counted."
+    }
+  ]
+}

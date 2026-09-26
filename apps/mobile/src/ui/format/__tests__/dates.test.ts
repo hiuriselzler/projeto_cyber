@@ -1,4 +1,4 @@
-import { formatCalendarDay } from '../dates';
+import { formatCalendarDay, formatClock } from '../dates';
 
 describe('calendar days', () => {
   // Built in the device's own time zone, so the day is the same wherever the test runs.
@@ -13,5 +13,14 @@ describe('calendar days', () => {
     const lateEvening = new Date(2026, 11, 31, 23, 59).getTime();
 
     expect(formatCalendarDay(lateEvening, 'en')).toBe('2026-12-31');
+  });
+});
+
+describe('a time of day (task 004 stage 6)', () => {
+  it('is the 24-hour clock, zero-padded, the same in both languages', () => {
+    expect(formatClock(0)).toBe('00:00');
+    expect(formatClock(7 * 60 + 5)).toBe('07:05');
+    expect(formatClock(19 * 60 + 30)).toBe('19:30');
+    expect(formatClock(23 * 60 + 59)).toBe('23:59');
   });
 });

@@ -1,0 +1,87 @@
+{
+  "function": "is_counted_set",
+  "spec": "INV-04. `working` and `amrap` count toward volume, PR detection, per-microcycle set counts and every progression decision; `warmup`, `drop` and `backoff` are recorded and excluded. A set also has to have been completed: a set_logs row exists from the moment a set is pre-filled from a routine, long before anyone lifts it, and counting an untouched row would inflate every total on the screen the user is reading mid-workout.",
+  "expectation_shape": "`expected` is a boolean. The cases enumerate all five set types against both completion states, so adding a sixth type to the enum without deciding whether it counts fails here rather than in a chart.",
+  "set_defaults": {
+    "set_type": "working",
+    "is_completed": true,
+    "weight_kg": 100.0,
+    "reps": 5,
+    "rir": 2,
+    "uses_bodyweight": false,
+    "body_weight_kg": null,
+    "is_deload": false
+  },
+  "cases": [
+    {
+      "name": "a completed working set counts",
+      "set": { "set_type": "working", "is_completed": true },
+      "expected": true
+    },
+    {
+      "name": "a completed amrap counts: taken to as many reps as possible is work by any reading",
+      "set": { "set_type": "amrap", "is_completed": true },
+      "expected": true
+    },
+    {
+      "name": "a completed warm-up does not: it is preparation, not work",
+      "set": { "set_type": "warmup", "is_completed": true },
+      "expected": false
+    },
+    {
+      "name": "a completed drop set does not",
+      "set": { "set_type": "drop", "is_completed": true },
+      "expected": false
+    },
+    {
+      "name": "a completed back-off set does not",
+      "set": { "set_type": "backoff", "is_completed": true },
+      "expected": false
+    },
+    {
+      "name": "an unfinished working set does not count yet",
+      "set": { "set_type": "working", "is_completed": false },
+      "expected": false
+    },
+    {
+      "name": "an unfinished amrap does not count yet",
+      "set": { "set_type": "amrap", "is_completed": false },
+      "expected": false
+    },
+    {
+      "name": "an unfinished warm-up is doubly uncounted",
+      "set": { "set_type": "warmup", "is_completed": false },
+      "expected": false
+    },
+    {
+      "name": "an unfinished drop set is doubly uncounted",
+      "set": { "set_type": "drop", "is_completed": false },
+      "expected": false
+    },
+    {
+      "name": "an unfinished back-off set is doubly uncounted",
+      "set": { "set_type": "backoff", "is_completed": false },
+      "expected": false
+    },
+    {
+      "name": "a deload working set still counts: INV-08 excludes deloads from PRs, not from totals",
+      "set": { "set_type": "working", "is_completed": true, "is_deload": true },
+      "expected": true
+    },
+    {
+      "name": "RIR left blank changes nothing here: tonnage is load times reps (INV-03)",
+      "set": { "set_type": "working", "is_completed": true, "rir": null },
+      "expected": true
+    },
+    {
+      "name": "a counted set may be missing its numbers and still be a set that was performed",
+      "set": {
+        "set_type": "working",
+        "is_completed": true,
+        "weight_kg": null,
+        "reps": null
+      },
+      "expected": true
+    }
+  ]
+}

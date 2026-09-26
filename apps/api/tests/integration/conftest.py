@@ -12,6 +12,7 @@ import uuid
 from collections.abc import AsyncIterator, Awaitable, Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
+from pathlib import Path
 
 import httpx
 import pytest
@@ -55,6 +56,56 @@ def alembic_config(migrator_url: str) -> Config:
     return config
 
 
+ROLES_SQL = Path(__file__).resolve().parents[4] / "infra" / "postgres" / "roles.sql"
+
+
+def _per_database_grants(database: str) -> list[str]:
+    """The half of `infra/postgres/roles.sql` that is per database, for `database` — read from the
+    script itself, so the test database is granted exactly what every environment is (ADR-011)."""
+    script = ROLES_SQL.read_text(encoding="utf-8")
+    per_database = script.split('\\connect :"dbname"', 1)[1]
+    per_database = per_database.replace(':"dbname"', '"' + database.replace('"', '""') + '"')
+    lines = [line for line in per_database.splitlines() if not line.lstrip().startswith("--")]
+    return [statement.strip() for statement in "\n".join(lines).split(";") if statement.strip()]
+
+
+def _test_database(urls: DatabaseUrls) -> DatabaseUrls:
+    """The same server and roles, in a database of the suite's own (task 004 stage 8).
+
+    The suite used to run in the development database, and the readiness test migrates it down and
+    back up — so every run emptied it, and the phone's account on the local API with it: the stage 8
+    device pass met a refused refresh token for that reason. `<name>_test` is created on first use,
+    granted as `roles.sql` grants, and every URL is pointed at it. CI's service container gets one
+    too, which keeps the two runs the same.
+    """
+    name = f"{make_url(urls.app).database}_test"
+    admin = create_engine(urls.admin, isolation_level="AUTOCOMMIT", poolclass=NullPool)
+    try:
+        with admin.connect() as connection:
+            exists = connection.execute(
+                text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": name}
+            ).scalar()
+            if not exists:
+                connection.execute(text(f'CREATE DATABASE "{name}"'))
+    finally:
+        admin.dispose()
+
+    moved = DatabaseUrls(
+        **{
+            role: make_url(url).set(database=name).render_as_string(hide_password=False)
+            for role, url in (("app", urls.app), ("migrator", urls.migrator), ("admin", urls.admin))
+        }
+    )
+    grants = create_engine(moved.admin, isolation_level="AUTOCOMMIT", poolclass=NullPool)
+    try:
+        with grants.connect() as connection:
+            for statement in _per_database_grants(name):
+                connection.execute(text(statement))
+    finally:
+        grants.dispose()
+    return moved
+
+
 @pytest.fixture(scope="session")
 def database_urls() -> DatabaseUrls:
     environment = _IntegrationEnvironment()
@@ -69,10 +120,12 @@ def database_urls() -> DatabaseUrls:
         if os.environ.get("CYBERATHLETE_REQUIRE_INTEGRATION") == "1":
             pytest.fail(message)
         pytest.skip(message)
-    return DatabaseUrls(
-        app=environment.database_url.get_secret_value(),  # type: ignore[union-attr]
-        migrator=environment.migration_database_url.get_secret_value(),  # type: ignore[union-attr]
-        admin=environment.test_admin_database_url.get_secret_value(),  # type: ignore[union-attr]
+    return _test_database(
+        DatabaseUrls(
+            app=environment.database_url.get_secret_value(),  # type: ignore[union-attr]
+            migrator=environment.migration_database_url.get_secret_value(),  # type: ignore[union-attr]
+            admin=environment.test_admin_database_url.get_secret_value(),  # type: ignore[union-attr]
+        )
     )
 
 

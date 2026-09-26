@@ -171,10 +171,17 @@ divergence the ADR exists to prevent.
 ## apps/mobile/src/db/ — local database
 
 **Responsible for:** the Drizzle schema, local migrations, typed queries, the pre-migration
-backup step ([06 §4](06-operations.md)), and device-only preferences — the theme override — in
-`expo-sqlite`'s key-value store, outside the schema and never synced ([07 §3](07-brand-and-ui.md)).
+backup step ([06 §4](06-operations.md)), device-only preferences — the theme override — in
+`expo-sqlite`'s key-value store, outside the schema and never synced ([07 §3](07-brand-and-ui.md)), and
+**minting the UUIDv7 a new row is born with** (INV-16), by calling `src/crypto/`'s identifier entry
+point and nothing else in that folder ([ADR-012](decisions/ADR-012.md) § Amendment 2026-09-19).
 
 **Must NOT contain:** network calls, or React components.
+
+**Rule:** a module here splits in two — **the rows, built purely, and the write that lands them.** Not a
+style preference: `expo-sqlite` cannot open under Node, so the half that is only reachable through
+`./client` is unreachable by the test suite, and every claim about it waits for a device. Keep the
+decisions in the pure half.
 
 ---
 
@@ -249,7 +256,9 @@ no KDF parameter below the login hash's cost ([04 §6](04-security-and-auth.md))
 
 **Rule:** the only folder that may import a crypto library, enforced by lint. `expo-secure-store` is
 importable only here and in `src/sync/` (for session tokens), and the privacy key's storage name is
-private to this folder. Not in `core-rs`: the core may not hold randomness (INV-10), and the server never
+private to this folder. `identifiers.ts` — the device id and UUIDv7 (INV-16) — is the one file outside
+`account/` that another folder may call: `src/db/` mints row ids through it
+([ADR-012](decisions/ADR-012.md) § Amendment 2026-09-19). Nothing else here is reachable from `db/`. Not in `core-rs`: the core may not hold randomness (INV-10), and the server never
 decrypts, so a shared implementation would buy nothing.
 
 ---

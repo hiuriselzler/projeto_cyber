@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
-import { useState, type ReactNode } from 'react';
-import { Button, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { Button, ScrollView, StyleSheet, TextInput } from 'react-native';
 
 import {
   checkLanAddressRefused,
@@ -11,11 +12,22 @@ import {
   type LanAddressCheck,
   type PrivacyKeyProbe,
 } from '@/account/diagnostics';
-import { checkSqliteRoundTrip, EXPECTED_TABLES, readLocalDatabaseState } from '@/db/diagnostics';
+import {
+  checkForeignKeysEnforced,
+  checkSqliteRoundTrip,
+  EXPECTED_TABLES,
+  measureCommitCost,
+  measureTickLatency,
+  readLocalDatabaseState,
+  type CommitCost,
+  type TickLatency,
+} from '@/db/diagnostics';
 import { roundLoadToIncrement } from '@/domain';
 import { describePlatform } from '@/platform';
 import { SegmentedControl, useTheme, type SegmentedOption, type ThemePreference } from '@/ui';
 
+import { AccountPreferences } from './AccountPreferences';
+import { Check } from './Check';
 import { useDiagnosticsStore } from './store';
 
 /** Developer-facing, so written out rather than translated (ADR-014). */
@@ -40,16 +52,20 @@ export function DiagnosticsScreen() {
   const held = useQuery({ queryKey: ['diagnostics', 'privacy-key-held'], queryFn: checkPrivacyKeyHeld });
   const [database] = useState(readLocalDatabaseState);
   const [roundTrip] = useState(checkSqliteRoundTrip);
+  const [foreignKeys] = useState(checkForeignKeysEnforced);
   const [lanBaseUrl, setLanBaseUrl] = useState('http://192.168.0.10:8000');
   const [lanCheck, setLanCheck] = useState<LanAddressCheck | null>(null);
   // Button-triggered: the probe pays for about eight argon2id derivations at 64 MiB, so running it
   // on mount would make the screen take seconds to open.
   const [privacyKey, setPrivacyKey] = useState<PrivacyKeyProbe | null>(null);
   const [privacyKeyRunning, setPrivacyKeyRunning] = useState(false);
+  const [tickLatency, setTickLatency] = useState<TickLatency | null>(null);
+  const [commitCost, setCommitCost] = useState<CommitCost | null | undefined>(undefined);
   const taps = useDiagnosticsStore((state) => state.taps);
   const tap = useDiagnosticsStore((state) => state.tap);
   const platform = describePlatform();
   const theme = useTheme();
+  const router = useRouter();
 
   return (
     <ScrollView contentContainerStyle={styles.screen}>
@@ -78,6 +94,34 @@ export function DiagnosticsScreen() {
       <Check title="SQLite round trip: a workout, an exercise and 3 sets (03 §8 types)">
         {`${roundTrip.ok ? 'ok' : 'FAILED'}: ${roundTrip.detail}`}
       </Check>
+
+      <Check title="Foreign keys bite on this device (03 §8, ADR-013): an orphan set_logs insert must be rejected">
+        {`${foreignKeys.ok ? 'ok' : 'FAILED'}: ${foreignKeys.detail}`}
+      </Check>
+
+      <Check title="Tapping ✓: the SQLite write plus the re-read the screen renders from (NFR-2 gives the whole tap 100 ms)">
+        {tickLatency === null
+          ? 'not run'
+          : `${tickLatency.taps} taps over ${tickLatency.sets} sets — ` +
+            `p50 ${tickLatency.p50Ms} ms · p95 ${tickLatency.p95Ms} ms · worst ${tickLatency.worstMs} ms\n` +
+            'React’s commit and the paint are on top of this; use the workout screen below to judge those.'}
+      </Check>
+      <Button title="Measure the ✓" onPress={() => setTickLatency(measureTickLatency())} />
+
+      <Check title="A ✓'s commit: one UPDATE autocommitted, as a real ✓ is, against the same UPDATE inside one transaction">
+        {commitCost === undefined
+          ? 'not run'
+          : commitCost === null
+            ? 'no set on this device to update'
+            : `journal_mode ${commitCost.journalMode} · synchronous ${commitCost.synchronous} · ${commitCost.writes} writes each\n` +
+              `committed: p50 ${commitCost.committed.p50Ms} ms · p95 ${commitCost.committed.p95Ms} ms · worst ${commitCost.committed.worstMs} ms\n` +
+              `in one transaction: p50 ${commitCost.uncommitted.p50Ms} ms · p95 ${commitCost.uncommitted.p95Ms} ms · worst ${commitCost.uncommitted.worstMs} ms`}
+      </Check>
+      <Button title="Measure a commit" onPress={() => setCommitCost(measureCommitCost())} />
+      <Button title="Open the live workout screen" onPress={() => router.push('/workout')} />
+      <Button title="Open the exercise catalog" onPress={() => router.push('/exercises')} />
+      <Button title="Open the routines" onPress={() => router.push('/routines')} />
+      <Button title="Open the history" onPress={() => router.push('/history')} />
 
       <Check title="Secure storage (restart the app: the previous value must survive)">
         {storage.isPending
@@ -144,22 +188,13 @@ export function DiagnosticsScreen() {
         value={theme.preference}
         onChange={theme.setPreference}
       />
-    </ScrollView>
-  );
-}
 
-function Check({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <View style={styles.check}>
-      <Text style={styles.title}>{title}</Text>
-      <Text selectable>{children}</Text>
-    </View>
+      <AccountPreferences />
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { padding: 16, gap: 12 },
-  check: { gap: 4 },
-  title: { fontWeight: 'bold' },
   input: { borderWidth: 1, padding: 8 },
 });

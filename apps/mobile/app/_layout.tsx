@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { bootstrapAccount, restoreAccountSession } from '@/account/bootstrap';
-import { useLocalMigrations } from '@/db/migrate';
+import { seedLocalReferenceData, useLocalMigrations } from '@/db/migrate';
 import { PreferencesProvider } from '@/features/settings';
 
 // The root layout calls exactly two entry points below it (ADR-012 § Amendment). The bootstrap runs
@@ -17,9 +17,14 @@ export default function RootLayout() {
   const migrations = useLocalMigrations();
 
   // The session is restored from the local database, so only once its migrations have run — and never over the
-  // network (NFR-1).
+  // network (NFR-1). The catalog is seeded first, in the same step: a schema with no exercises is a device that
+  // cannot log anything, and until the task 004 stage-3 device pass nothing called the seed at all.
+  //
+  // A seed that throws is left to throw. React surfaces an error raised in an effect, and a failed seed is a broken
+  // install rather than a state to render around — swallowing it is what made this invisible for a stage.
   useEffect(() => {
     if (migrations.success) {
+      seedLocalReferenceData();
       void restoreAccountSession();
     }
   }, [migrations.success]);

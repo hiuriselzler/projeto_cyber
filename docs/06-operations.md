@@ -58,6 +58,127 @@ holds `MIGRATION_DATABASE_URL`.
 build (`npx expo run:android`, or `eas build --profile development --platform android`). Build it
 once during [task 017](tasks/017-local-toolchain-device-spike.md); after that, JS changes hot-reload normally.
 
+### Building the Android development build — what actually works
+
+Three things cost hours in [task 004](tasks/004-exercise-catalog-and-logging.md) stage 3 and none of them were
+guessable from an error message. Written down so the next rebuild is minutes instead.
+
+- **⚠ Do not build with Android Studio's bundled JDK.** It now ships **JDK 25**, and JDK 24+ refuses the restricted
+  `System.load` calls AGP's CMake tasks make: every `configureCMakeDebug[<abi>]` task fails with the bare line
+  *"WARNING: A restricted method in java.lang.System has been called"*, which names neither the JDK nor the cause.
+  Build with **JDK 17** — `JAVA_HOME=".../Eclipse Adoptium/jdk-17.x-hotspot"`. This is new: the same machine built
+  fine on 2026-09-18, and the IDE moved the JDK underneath the project.
+- **The native build is done in WSL2, not on Windows** ([ADR-004](decisions/ADR-004.md) allows it). Even under
+  JDK 17, `react-native-libsodium`'s CMake configure fails on Windows inside pnpm's content-addressed store path.
+  The WSL2 clone builds it: `pnpm install --frozen-lockfile`, `pnpm prebuild`, `./gradlew :app:assembleDebug`, then
+  copy the APK out and `adb install` it from Windows. Expect roughly **30 minutes** cold — it compiles four ABIs
+  while the phone needs one, and `-PreactNativeArchitectures=arm64-v8a` is the lever if that matters.
+- **⚠ `packages/core-native`'s three `.so` files are gitignored, so they do not travel with a commit.** A second
+  checkout gets the generated C++ and TypeScript binding surface without the matching binary and fails at link time:
+  `ld.lld: error: undefined symbol: uniffi_cyberathlete_core_ffi_checksum_func_volume_kg`. The guarantee that the
+  surface and the library cannot drift holds **only on the machine that ran `ubrn build android --and-generate`**.
+  Either regenerate them in the new checkout, or copy `packages/core-native/android/src/main/jniLibs/*/…so` from a
+  machine whose binary matches the committed bindings. Task 006 or a CI step should close this properly; until then
+  it is a trap with a one-line symptom.
+- **Reinstalling over a build from another machine fails** with `INSTALL_FAILED_UPDATE_INCOMPATIBLE` — different debug
+  keystores. `adb uninstall com.cyberathlete.app` first, and know that it takes the local database with it.
+
+**The loop that worked for a core change** (task 004 stage 6, 2026-09-24). The WSL2 clone is `~/projeto_cyber` in the
+`Ubuntu` distribution, with `origin` pointing at this Windows checkout (`/mnt/c/...`), so it takes commits by `git fetch`:
+1. Bring the clone to the branch head (`git merge --ff-only origin/<branch>`); to try uncommitted core changes, `rsync`
+   `core-rs/` over it — then normalise the copies to LF and back to mode 644, or every file shows as modified.
+2. `pnpm ubrn:android` in `packages/core-native` regenerates the bindings and the three `.so` files — a few minutes.
+   Copy the four generated files and the `.so` files back to Windows, and check the diff is only what the change adds.
+3. `./gradlew :app:assembleDebug -PreactNativeArchitectures=arm64-v8a` under JDK 17: **under two minutes** incremental,
+   against ~30 cold. Check the packaged `.so` carries the new symbol (`unzip`, then `grep` the function name) before
+   installing. `adb install -r` keeps the phone's data.
+
+What it cost to learn, each once:
+- **From Git Bash, `wsl.exe` arguments are mangled**: `$vars` in the command string arrive empty and `/mnt/c/...` becomes
+  `C:/Program Files/Git/mnt/c/...`. Put multi-step work in a script and run it with `MSYS_NO_PATHCONV=1 wsl.exe -d
+  Ubuntu -- bash -lc "bash /mnt/c/.../script.sh"`.
+- **Run it as a login shell** (`bash -lc`): `node`, `cargo` and the SDK are on the login PATH only. And **stop the
+  Gradle daemon first** (`./gradlew --stop`): a daemon started from a shell without `node` keeps that PATH, and every
+  later build fails on *"A problem occurred starting process 'command 'node''"* however the shell is fixed.
+- **A development build takes its JavaScript from Metro**, so a JS-only change (a migration included) reaches the phone
+  without a rebuild; only a native change — the core, a native dependency — needs the APK. `adb reverse tcp:8081
+  tcp:8081` for Metro as well as the API's port, and again after the phone reconnects: the forward silently disappears.
+- **Driving the phone over adb**: `uiautomator dump` returns a *stale* tree while anything animates — the rest bar
+  ticks every 250 ms — so read state from the database copy (`run-as … cat files/SQLite/cyberathlete.db`), not from
+  the dump, while a rest runs. And the development client's floating *Tools* button sits over every header's right-hand
+  action; tap the left edge of *Encerrar*.
+- **A draft PR's CI may not start**: PR #17's `pull_request` event was never delivered. Closing and reopening the PR
+  re-sends it (and the late original then cancels the first run, which is harmless).
+- **After step 2 the clone holds the generated files as local changes** (task 004 stage 7, 2026-09-25), so step 1's
+  fast-forward refuses next time. They are the files you committed: `git checkout -- core-rs
+  packages/core-native/cpp/generated packages/core-native/src/generated` and `git clean -fd core-rs` first. The `.so`
+  files are gitignored and stay.
+- **Launching the development build at Metro from adb**: `adb shell am start -a android.intent.action.VIEW -d
+  "exp+cyberathlete://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081" com.cyberathlete.app`, and then any
+  route by deep link — `cyberathlete://history`, `cyberathlete://workouts/<id>`, `cyberathlete://exercise/<id>` — with the
+  ids read from the pulled database. Faster and steadier than tapping through the diagnostics screen.
+- **Fast refresh does not re-fire `onLayout`.** A fix that depends on measured layout — the chart's label gutter — looked
+  unfixed after a refresh. Force-stop and relaunch before judging a layout change.
+- **Predict before you look.** Stage 7's pass read the pulled database first and wrote down every number a screen should
+  show; each screen was then a yes or a no, not an impression.
+- **Typed routes go stale** whenever a route is added: `tsc` fails on the new `href` until `.expo/types/router.d.ts` is
+  regenerated, which `npx expo start` does within seconds — start it, wait for the file to change, stop it (the CI gap
+  is listed in PROJECT-STATUS § Gaps).
+- **The integration suite needs Docker Desktop running** before `docker compose up -d` at the repository root; it does
+  not start with Windows. Without it the integration tests skip locally, and CI is the only run.
+- **The integration suite runs in its own database**, `cyberathlete_test`, created beside the development one on first
+  use and granted from `infra/postgres/roles.sql` (task 004 stage 8). Until then it ran in the development database and
+  its readiness test migrated that down and back up — every run deleted the accounts a phone signs in with, and a phone
+  whose refresh is refused signs out.
+
+What task 004 stage 8's pass (2026-09-25) added:
+- **Pull the database with `adb exec-out`, never `adb shell`.** `adb shell run-as … cat` goes through a terminal that
+  rewrites line endings, and the copy reads as *"database disk image is malformed"* — which looks like corruption on the
+  phone and is not. `adb exec-out run-as com.cyberathlete.app cat files/SQLite/cyberathlete.db > copy.db` is byte-exact.
+- **`MSYS_NO_PATHCONV=1` cuts both ways.** It keeps `/sdcard/...` intact for `adb`, and it also stops `/tmp/...` being
+  translated for native Windows tools such as `sqlite3`, which then cannot open the file. Give Windows tools a
+  `C:/...` path.
+- **`npx expo start` exits at once if 8081 is taken.** Non-interactive, it cannot answer "use 8082 instead?". A Metro
+  left running from an earlier session is serving the same checkout; reuse it (`curl localhost:8081/status`).
+- **To exercise a refused refresh on purpose** (the path that ends a session): set `revoked_at` on the account's
+  `refresh_tokens` rows as `postgres`, wait out the 15-minute access token, then make the app send any request. The
+  server answers the refresh `401` and the app signs out.
+- **Registering over adb**: `adb shell input text` takes `%s` for a space. The account exists only in the local database.
+- **A sheet moves when the keyboard closes.** The exercise picker grows back to full height once the keyboard is
+  dismissed, so a tap aimed from a dump taken with the keyboard open lands on the wrong row. Dump again after
+  `KEYCODE_BACK`, then tap.
+
+What closing task 004 (2026-09-25) added:
+- **Judge speed on a production bundle, never on the development build.** A development build's React runs its checks
+  on unminified code: the same ✓ read ~200 ms there and ~82 ms in production. Serve one to the development client
+  without rebuilding: `EXPO_PUBLIC_TICK_TIMING=1 EXPO_PUBLIC_API_BASE_URL=https://localhost:8000 CI=1 npx expo start
+  --no-dev --minify --clear --port 8082`, `adb reverse tcp:8082 tcp:8082`, then launch the client at
+  `localhost%3A8082`. **The `https` URL is required**: `__DEV__` is false there, so 04 §5's guard refuses an `http` one
+  and the app fails to start on *"Cannot read property 'ErrorBoundary' of undefined"* — the root layout never
+  evaluated. Nothing listens on it; the app treats requests as offline. There is no diagnostics screen in that bundle,
+  so reach screens by deep link. Stop the Metro by its port afterwards (`Get-NetTCPConnection -LocalPort 8082`): the
+  node process outlives the shell that started it.
+- **A loop is not a tap.** Sixty writes back to back keep the CPU awake; a real ✓ arrives after a pause, and the same
+  write and re-read cost twice as much. Time spaced taps.
+- **In airplane mode `adb reverse` still reaches the API over USB.** Remove `tcp:8000` for an offline check, and put it
+  back afterwards.
+- **logcat pads a four-digit process id with a space** (`ReactNativeJS( 7977)`), so split its lines by pattern, not by
+  field number. And from Git Bash, `uiautomator dump /sdcard/…` needs `MSYS_NO_PATHCONV=1` like any other device path.
+
+What task 004's last step (2026-09-26) added:
+- **Screen sizes by `adb shell wm size`**, at the S21 FE's density 480 (3 px per dp): `1080x1600` is 533 dp, the short
+  screen of stage 3; `1080x1920` is 640 dp, the common small-phone floor. The app relays out live, no restart. `wm size
+  reset` afterwards, and read `wm size` back.
+- **Font scale by `adb shell settings put system font_scale`** — and read the owner's value first (`get`; it is 0.86 on
+  this phone) and put that back. A change **restarts the app onto the diagnostics screen**, and at 2.0 every label wraps:
+  a wait loop that greps a dumped label for a known line never matches. Deep-link back to the route instead.
+- **`CI=1 pnpm start` serves a Metro that does not watch files** — each edit needs Metro stopped by its port and started
+  again, then a force-stop and relaunch (which also re-fires `onLayout`, per the lesson above).
+- **The `python` on PATH is the Microsoft Store stub.** Parse `uiautomator` dumps with miniconda's
+  (`~/miniconda3/python.exe`) under `PYTHONIOENCODING=utf-8`, or the ✓ and accented labels fail to print.
+- **Measure the room before designing into it.** One screenshot at 1080×1600 with the keypad open and a rest running
+  showed the list had no visible height — which turned a scroll fix into a layout decision before any code was written.
+
 **Reaching the API from the phone:** over USB with `adb reverse`, so the device's `localhost` is this
 machine's. Debug builds may use `http://` to `localhost` and nothing else; release builds allow no
 cleartext at all ([04 §5](04-security-and-auth.md)). uvicorn stays bound to `127.0.0.1` — never
@@ -138,6 +259,14 @@ Rules:
 - Migrations must be forward-only and tolerate skipped versions — a user can jump from app
   version 3 to version 11 in one store update.
 - A local migration **never** ships over OTA ([05 §9](05-integrations.md)).
+- **Read every generated migration, and never ship a table rebuild over a table with children.** For anything SQLite
+  cannot `ALTER` in place — a table-level CHECK, a changed column — `drizzle-kit generate` writes a rebuild: create
+  `__new_x`, copy, `DROP TABLE x`, rename, bracketed by `PRAGMA foreign_keys=OFF/ON`. Under the expo migrator that
+  pragma is a **no-op**, because every pending migration runs inside one `BEGIN … COMMIT`, and with foreign keys on
+  (`src/db/client.ts`) the `DROP` is an implicit `DELETE` that cascades. Task 004 stage 5's first draft of
+  `0002` would have deleted every `set_logs` row on the device — and its copy step also selected columns the old
+  table did not have. Prefer `ALTER TABLE … ADD COLUMN`, which accepts a column-level CHECK; keep Drizzle's snapshot,
+  which describes the result; and prove the hand-written file against a database holding children before it ships.
 
 **Compatibility rule between the two streams:** the client schema may lag the server schema; the
 sync protocol ignores unknown fields on both sides and never treats a missing column as a
@@ -178,6 +307,23 @@ skip row-level security ([ADR-011](decisions/ADR-011.md)), and logs counts, neve
 step is safe to repeat: a missed day is caught up by the next run, and two runs at once delete
 nothing twice. **Which scheduler runs it is chosen with the host** (Fly.io or Railway,
 [05 §5](05-integrations.md)); until then it runs by hand.
+
+**Rebuilding a user's records** — by hand, not scheduled ([task 004](tasks/004-exercise-catalog-and-logging.md)
+stage 7):
+
+```
+uv run python -m app.jobs.rebuild_records <user-id>        # in apps/api
+```
+
+`personal_records` is a derived cache ([03 §4](03-database-schema.md)), so this is its repair: it folds the user's
+finished sets through the core's `standing_records()` and replaces that user's rows in one transaction, inside the
+user's own scope — same role, same refusal as the daily command. It is safe to repeat: a second run writes the same
+rows. **One user at a time, deliberately**: rebuilding everyone would need an unscoped function on
+[ADR-011](decisions/ADR-011.md)'s allowlist, and nothing needs that until the server holds sets (task 006).
+
+**Since stage 8 the cache is kept current without it**: a `PUT /workouts/{id}` that changes a finished workout rebuilds
+the exercises that workout touches, in the same transaction. The command is the repair for a cache that was damaged
+some other way, and it takes the same per-user write lock as the `PUT`, so running it while the user syncs is safe.
 
 ## 6. Backups and recovery
 

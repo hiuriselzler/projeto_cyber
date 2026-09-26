@@ -6,7 +6,7 @@
 import nativeModule from "./cyberathlete_core_ffi-ffi";
 import { type UniffiRustFutureContinuationCallback, type UniffiForeignFutureDroppedCallback, type UniffiForeignFutureDroppedCallbackStruct,
 } from "./cyberathlete_core_ffi-ffi";
-import { type UniffiByteArray, AbstractFfiConverterByteArray, Cursor, FfiConverterFloat64, FfiConverterUInt8, RustBuffer, UniffiEnum, UniffiInternalError, UniffiRustCaller, uniffiCreateFfiConverterString,
+import { type UniffiByteArray, AbstractFfiConverterByteArray, Cursor, FfiConverterArray, FfiConverterBool, FfiConverterFloat64, FfiConverterOptional, FfiConverterUInt32, FfiConverterUInt8, RustBuffer, UniffiEnum, UniffiInternalError, UniffiRustCaller, uniffiCreateFfiConverterString, uniffiCreateRecord,
 } from "@ubjs/core";
 const uniffiCaller = new UniffiRustCaller(() => ({ code: 0 }));
 
@@ -39,6 +39,151 @@ export function coreVersion(): string {
     }
 
 /**
+ * How many of these sets counted (INV-04).
+ */
+export function countedSetCount(sets: Array<LoggedSet>): number {
+    return FfiConverterUInt32.lift(uniffiCaller.rustCall(
+            /*caller:*/ (callStatus) => {
+                return nativeModule().ubrn_uniffi_cyberathlete_core_ffi_fn_func_counted_set_count(
+        FfiConverterSequenceTypeLoggedSet.lower(sets, nativeModule().rustbuffer_alloc),
+                callStatus);
+            },
+            /*liftString:*/ FfiConverterString.lift.bind(FfiConverterString),
+    ));
+    }
+
+/**
+ * Every record the session broke, in the core's fixed order (FR-2.15, INV-08).
+ */
+export function detectPrs(previous: PersonalBests, session: Array<LoggedSet>): Array<PrAchievement> {
+    const __rb: Uint8Array = uniffiCaller.rustCall(
+            /*caller:*/ (callStatus) => {
+                return nativeModule().ubrn_uniffi_cyberathlete_core_ffi_fn_func_detect_prs(
+        FfiConverterTypePersonalBests.lower(previous, nativeModule().rustbuffer_alloc),
+        FfiConverterSequenceTypeLoggedSet.lower(session, nativeModule().rustbuffer_alloc),
+                callStatus);
+            },
+            /*liftString:*/ FfiConverterString.lift.bind(FfiConverterString),
+    );
+    try {
+        return FfiConverterSequenceTypePrAchievement.lift(__rb);
+    } finally {
+        nativeModule().rustbuffer_free(__rb);
+    }
+    }
+
+/**
+ * The estimated one-rep max for one set, or null where INV-07 refuses to guess.
+ */
+export function e1rm(set: LoggedSet): number | undefined {
+    const __rb: Uint8Array = uniffiCaller.rustCall(
+            /*caller:*/ (callStatus) => {
+                return nativeModule().ubrn_uniffi_cyberathlete_core_ffi_fn_func_e1rm(
+        FfiConverterTypeLoggedSet.lower(set, nativeModule().rustbuffer_alloc),
+                callStatus);
+            },
+            /*liftString:*/ FfiConverterString.lift.bind(FfiConverterString),
+    );
+    try {
+        return FfiConverterOptionalFloat64.lift(__rb);
+    } finally {
+        nativeModule().rustbuffer_free(__rb);
+    }
+    }
+
+/**
+ * [`e1rm`] over many sets in one crossing of the boundary, order and length preserved.
+ */
+export function e1rmSeries(sets: Array<LoggedSet>): Array<number | undefined> {
+    const __rb: Uint8Array = uniffiCaller.rustCall(
+            /*caller:*/ (callStatus) => {
+                return nativeModule().ubrn_uniffi_cyberathlete_core_ffi_fn_func_e1rm_series(
+        FfiConverterSequenceTypeLoggedSet.lower(sets, nativeModule().rustbuffer_alloc),
+                callStatus);
+            },
+            /*liftString:*/ FfiConverterString.lift.bind(FfiConverterString),
+    );
+    try {
+        return FfiConverterSequenceOptionalFloat64.lift(__rb);
+    } finally {
+        nativeModule().rustbuffer_free(__rb);
+    }
+    }
+
+/**
+ * Whether a set counts toward volume, PRs and set counts (INV-04).
+ */
+export function isCountedSet(set: LoggedSet): boolean {
+    return FfiConverterBool.lift(uniffiCaller.rustCall(
+            /*caller:*/ (callStatus) => {
+                return nativeModule().ubrn_uniffi_cyberathlete_core_ffi_fn_func_is_counted_set(
+        FfiConverterTypeLoggedSet.lower(set, nativeModule().rustbuffer_alloc),
+                callStatus);
+            },
+            /*liftString:*/ FfiConverterString.lift.bind(FfiConverterString),
+    ));
+    }
+
+/**
+ * The load a set actually moved, including the lifter for a bodyweight exercise (INV-07).
+ */
+export function loadKg(set: LoggedSet): number | undefined {
+    const __rb: Uint8Array = uniffiCaller.rustCall(
+            /*caller:*/ (callStatus) => {
+                return nativeModule().ubrn_uniffi_cyberathlete_core_ffi_fn_func_load_kg(
+        FfiConverterTypeLoggedSet.lower(set, nativeModule().rustbuffer_alloc),
+                callStatus);
+            },
+            /*liftString:*/ FfiConverterString.lift.bind(FfiConverterString),
+    );
+    try {
+        return FfiConverterOptionalFloat64.lift(__rb);
+    } finally {
+        nativeModule().rustbuffer_free(__rb);
+    }
+    }
+
+/**
+ * The field a set is missing before it can be completed, or null (03 §4, task 004 stage 8).
+ */
+export function missingForCompletion(tracking: Tracking, entry: SetEntry): SetField | undefined {
+    const __rb: Uint8Array = uniffiCaller.rustCall(
+            /*caller:*/ (callStatus) => {
+                return nativeModule().ubrn_uniffi_cyberathlete_core_ffi_fn_func_missing_for_completion(
+        FfiConverterTypeTracking.lower(tracking, nativeModule().rustbuffer_alloc),
+        FfiConverterTypeSetEntry.lower(entry, nativeModule().rustbuffer_alloc),
+                callStatus);
+            },
+            /*liftString:*/ FfiConverterString.lift.bind(FfiConverterString),
+    );
+    try {
+        return FfiConverterOptionalTypeSetField.lift(__rb);
+    } finally {
+        nativeModule().rustbuffer_free(__rb);
+    }
+    }
+
+/**
+ * An exercise's bests after a history of sessions, one workout's sets per session — the
+ * `previous` for [`detect_prs`] (task 004 stage 6). The whole history crosses in one call.
+ */
+export function personalBests(sessions: Array<Array<LoggedSet>>): PersonalBests {
+    const __rb: Uint8Array = uniffiCaller.rustCall(
+            /*caller:*/ (callStatus) => {
+                return nativeModule().ubrn_uniffi_cyberathlete_core_ffi_fn_func_personal_bests(
+        FfiConverterSequenceSequenceTypeLoggedSet.lower(sessions, nativeModule().rustbuffer_alloc),
+                callStatus);
+            },
+            /*liftString:*/ FfiConverterString.lift.bind(FfiConverterString),
+    );
+    try {
+        return FfiConverterTypePersonalBests.lift(__rb);
+    } finally {
+        nativeModule().rustbuffer_free(__rb);
+    }
+    }
+
+/**
  * Round a load to a multiple of an increment (INV-02).
  */
 export function roundToIncrement(weightKg: number, incrementKg: number, mode: RoundingMode): number {
@@ -53,6 +198,523 @@ export function roundToIncrement(weightKg: number, incrementKg: number, mode: Ro
             /*liftString:*/ FfiConverterString.lift.bind(FfiConverterString),
     ));
     }
+
+/**
+ * Per-session metrics over a whole history in one crossing (task 004 stage 7).
+ */
+export function sessionMetrics(sessions: Array<Array<LoggedSet>>): Array<SessionMetrics> {
+    const __rb: Uint8Array = uniffiCaller.rustCall(
+            /*caller:*/ (callStatus) => {
+                return nativeModule().ubrn_uniffi_cyberathlete_core_ffi_fn_func_session_metrics(
+        FfiConverterSequenceSequenceTypeLoggedSet.lower(sessions, nativeModule().rustbuffer_alloc),
+                callStatus);
+            },
+            /*liftString:*/ FfiConverterString.lift.bind(FfiConverterString),
+    );
+    try {
+        return FfiConverterSequenceTypeSessionMetrics.lift(__rb);
+    } finally {
+        nativeModule().rustbuffer_free(__rb);
+    }
+    }
+
+/**
+ * Every record standing after a history, oldest session first, with where each was set (task 004
+ * stage 7).
+ */
+export function standingRecords(sessions: Array<Array<LoggedSet>>): Array<StandingRecord> {
+    const __rb: Uint8Array = uniffiCaller.rustCall(
+            /*caller:*/ (callStatus) => {
+                return nativeModule().ubrn_uniffi_cyberathlete_core_ffi_fn_func_standing_records(
+        FfiConverterSequenceSequenceTypeLoggedSet.lower(sessions, nativeModule().rustbuffer_alloc),
+                callStatus);
+            },
+            /*liftString:*/ FfiConverterString.lift.bind(FfiConverterString),
+    );
+    try {
+        return FfiConverterSequenceTypeStandingRecord.lift(__rb);
+    } finally {
+        nativeModule().rustbuffer_free(__rb);
+    }
+    }
+
+/**
+ * Total tonnage of the counted sets, in kilograms (INV-04).
+ */
+export function volumeKg(sets: Array<LoggedSet>): number {
+    return FfiConverterFloat64.lift(uniffiCaller.rustCall(
+            /*caller:*/ (callStatus) => {
+                return nativeModule().ubrn_uniffi_cyberathlete_core_ffi_fn_func_volume_kg(
+        FfiConverterSequenceTypeLoggedSet.lower(sets, nativeModule().rustbuffer_alloc),
+                callStatus);
+            },
+            /*liftString:*/ FfiConverterString.lift.bind(FfiConverterString),
+    ));
+    }
+
+/**
+ * How a set was performed. Mirrors [`cyberathlete_core::SetType`].
+ */
+export enum SetType {
+    Warmup,
+    Working,
+    Drop,
+    Backoff,
+    Amrap
+}
+
+const FfiConverterTypeSetType = (() => {
+    type TypeName = SetType;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            switch (c.readI32()) {
+                case 1: return SetType.Warmup;
+                case 2: return SetType.Working;
+                case 3: return SetType.Drop;
+                case 4: return SetType.Backoff;
+                case 5: return SetType.Amrap;
+                default: throw new UniffiInternalError.UnexpectedEnumCase();
+            }
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            switch (value) {
+                case SetType.Warmup: return c.writeI32(1);
+                case SetType.Working: return c.writeI32(2);
+                case SetType.Drop: return c.writeI32(3);
+                case SetType.Backoff: return c.writeI32(4);
+                case SetType.Amrap: return c.writeI32(5);
+            }
+        }
+        allocationSize(value: TypeName): number {
+            return 4;
+        }
+    }
+    return new FFIConverter();
+})();
+
+/**
+ * One logged set. Mirrors [`cyberathlete_core::LoggedSet`].
+ *
+ * `bodyWeightKg` and `isDeload` are resolved by the caller, because resolving them is a query and
+ * the core does no I/O (INV-10). `rir` is nullable and a null is never a zero (INV-03).
+ */
+export type LoggedSet = {
+    setType: SetType,
+    isCompleted: boolean,
+    weightKg?: number,
+    reps?: number,
+    rir?: number,
+    usesBodyweight: boolean,
+    bodyWeightKg?: number,
+    isDeload: boolean
+}
+
+/**
+ * Generated factory for {@link LoggedSet} record objects.
+ */
+export const LoggedSet = (() => {
+    const defaults = () => ({
+    });
+    const create = (() => {
+        return uniffiCreateRecord<LoggedSet, ReturnType<typeof defaults>>(defaults);
+    })();
+    return Object.freeze({
+        create,
+        new: create,
+        defaults: () => Object.freeze(defaults()) as Partial<LoggedSet>,
+    });
+})();
+
+const FfiConverterTypeLoggedSet = (() => {
+    type TypeName = LoggedSet;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            return {
+                setType: FfiConverterTypeSetType.readFromCursor(c), 
+                isCompleted: FfiConverterBool.readFromCursor(c), 
+                weightKg: FfiConverterOptionalFloat64.readFromCursor(c), 
+                reps: FfiConverterOptionalUInt32.readFromCursor(c), 
+                rir: FfiConverterOptionalUInt32.readFromCursor(c), 
+                usesBodyweight: FfiConverterBool.readFromCursor(c), 
+                bodyWeightKg: FfiConverterOptionalFloat64.readFromCursor(c), 
+                isDeload: FfiConverterBool.readFromCursor(c)
+            };
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            FfiConverterTypeSetType.writeIntoCursor(value.setType, c);
+            FfiConverterBool.writeIntoCursor(value.isCompleted, c);
+            FfiConverterOptionalFloat64.writeIntoCursor(value.weightKg, c);
+            FfiConverterOptionalUInt32.writeIntoCursor(value.reps, c);
+            FfiConverterOptionalUInt32.writeIntoCursor(value.rir, c);
+            FfiConverterBool.writeIntoCursor(value.usesBodyweight, c);
+            FfiConverterOptionalFloat64.writeIntoCursor(value.bodyWeightKg, c);
+            FfiConverterBool.writeIntoCursor(value.isDeload, c);
+        }
+        allocationSize(value: TypeName): number {
+            return FfiConverterTypeSetType.allocationSize(value.setType) +
+             FfiConverterBool.allocationSize(value.isCompleted) +
+             FfiConverterOptionalFloat64.allocationSize(value.weightKg) +
+             FfiConverterOptionalUInt32.allocationSize(value.reps) +
+             FfiConverterOptionalUInt32.allocationSize(value.rir) +
+             FfiConverterBool.allocationSize(value.usesBodyweight) +
+             FfiConverterOptionalFloat64.allocationSize(value.bodyWeightKg) +
+             FfiConverterBool.allocationSize(value.isDeload);
+            
+        }
+    };
+    return new FFIConverter();
+})();
+
+/**
+ * The most reps ever done at one exact load.
+ */
+export type RepsAtWeight = {
+    weightKg: number,
+    reps: number
+}
+
+/**
+ * Generated factory for {@link RepsAtWeight} record objects.
+ */
+export const RepsAtWeight = (() => {
+    const defaults = () => ({
+    });
+    const create = (() => {
+        return uniffiCreateRecord<RepsAtWeight, ReturnType<typeof defaults>>(defaults);
+    })();
+    return Object.freeze({
+        create,
+        new: create,
+        defaults: () => Object.freeze(defaults()) as Partial<RepsAtWeight>,
+    });
+})();
+
+const FfiConverterTypeRepsAtWeight = (() => {
+    type TypeName = RepsAtWeight;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            return {
+                weightKg: FfiConverterFloat64.readFromCursor(c), 
+                reps: FfiConverterUInt32.readFromCursor(c)
+            };
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            FfiConverterFloat64.writeIntoCursor(value.weightKg, c);
+            FfiConverterUInt32.writeIntoCursor(value.reps, c);
+        }
+        allocationSize(value: TypeName): number {
+            return FfiConverterFloat64.allocationSize(value.weightKg) +
+             FfiConverterUInt32.allocationSize(value.reps);
+            
+        }
+    };
+    return new FFIConverter();
+})();
+
+/**
+ * What an exercise's records stood at before the session being judged.
+ */
+export type PersonalBests = {
+    maxWeightKg?: number,
+    bestE1rmKg?: number,
+    bestSessionVolumeKg?: number,
+    bestRepsAtWeight: Array<RepsAtWeight>
+}
+
+/**
+ * Generated factory for {@link PersonalBests} record objects.
+ */
+export const PersonalBests = (() => {
+    const defaults = () => ({
+    });
+    const create = (() => {
+        return uniffiCreateRecord<PersonalBests, ReturnType<typeof defaults>>(defaults);
+    })();
+    return Object.freeze({
+        create,
+        new: create,
+        defaults: () => Object.freeze(defaults()) as Partial<PersonalBests>,
+    });
+})();
+
+const FfiConverterTypePersonalBests = (() => {
+    type TypeName = PersonalBests;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            return {
+                maxWeightKg: FfiConverterOptionalFloat64.readFromCursor(c), 
+                bestE1rmKg: FfiConverterOptionalFloat64.readFromCursor(c), 
+                bestSessionVolumeKg: FfiConverterOptionalFloat64.readFromCursor(c), 
+                bestRepsAtWeight: FfiConverterSequenceTypeRepsAtWeight.readFromCursor(c)
+            };
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            FfiConverterOptionalFloat64.writeIntoCursor(value.maxWeightKg, c);
+            FfiConverterOptionalFloat64.writeIntoCursor(value.bestE1rmKg, c);
+            FfiConverterOptionalFloat64.writeIntoCursor(value.bestSessionVolumeKg, c);
+            FfiConverterSequenceTypeRepsAtWeight.writeIntoCursor(value.bestRepsAtWeight, c);
+        }
+        allocationSize(value: TypeName): number {
+            return FfiConverterOptionalFloat64.allocationSize(value.maxWeightKg) +
+             FfiConverterOptionalFloat64.allocationSize(value.bestE1rmKg) +
+             FfiConverterOptionalFloat64.allocationSize(value.bestSessionVolumeKg) +
+             FfiConverterSequenceTypeRepsAtWeight.allocationSize(value.bestRepsAtWeight);
+            
+        }
+    };
+    return new FFIConverter();
+})();
+
+/**
+ * Which record was broken. Mirrors [`cyberathlete_core::PrKind`].
+ */
+export enum PrKind {
+    MaxWeight,
+    BestE1rm,
+    MaxRepsAtWeight,
+    BestSessionVolume
+}
+
+const FfiConverterTypePrKind = (() => {
+    type TypeName = PrKind;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            switch (c.readI32()) {
+                case 1: return PrKind.MaxWeight;
+                case 2: return PrKind.BestE1rm;
+                case 3: return PrKind.MaxRepsAtWeight;
+                case 4: return PrKind.BestSessionVolume;
+                default: throw new UniffiInternalError.UnexpectedEnumCase();
+            }
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            switch (value) {
+                case PrKind.MaxWeight: return c.writeI32(1);
+                case PrKind.BestE1rm: return c.writeI32(2);
+                case PrKind.MaxRepsAtWeight: return c.writeI32(3);
+                case PrKind.BestSessionVolume: return c.writeI32(4);
+            }
+        }
+        allocationSize(value: TypeName): number {
+            return 4;
+        }
+    }
+    return new FFIConverter();
+})();
+
+/**
+ * One record broken in the session just finished.
+ */
+export type PrAchievement = {
+    kind: PrKind,
+    value: number,
+    weightKg?: number,
+    reps?: number,
+    rir?: number,
+    setIndex?: number
+}
+
+/**
+ * Generated factory for {@link PrAchievement} record objects.
+ */
+export const PrAchievement = (() => {
+    const defaults = () => ({
+    });
+    const create = (() => {
+        return uniffiCreateRecord<PrAchievement, ReturnType<typeof defaults>>(defaults);
+    })();
+    return Object.freeze({
+        create,
+        new: create,
+        defaults: () => Object.freeze(defaults()) as Partial<PrAchievement>,
+    });
+})();
+
+const FfiConverterTypePrAchievement = (() => {
+    type TypeName = PrAchievement;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            return {
+                kind: FfiConverterTypePrKind.readFromCursor(c), 
+                value: FfiConverterFloat64.readFromCursor(c), 
+                weightKg: FfiConverterOptionalFloat64.readFromCursor(c), 
+                reps: FfiConverterOptionalUInt32.readFromCursor(c), 
+                rir: FfiConverterOptionalUInt32.readFromCursor(c), 
+                setIndex: FfiConverterOptionalUInt32.readFromCursor(c)
+            };
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            FfiConverterTypePrKind.writeIntoCursor(value.kind, c);
+            FfiConverterFloat64.writeIntoCursor(value.value, c);
+            FfiConverterOptionalFloat64.writeIntoCursor(value.weightKg, c);
+            FfiConverterOptionalUInt32.writeIntoCursor(value.reps, c);
+            FfiConverterOptionalUInt32.writeIntoCursor(value.rir, c);
+            FfiConverterOptionalUInt32.writeIntoCursor(value.setIndex, c);
+        }
+        allocationSize(value: TypeName): number {
+            return FfiConverterTypePrKind.allocationSize(value.kind) +
+             FfiConverterFloat64.allocationSize(value.value) +
+             FfiConverterOptionalFloat64.allocationSize(value.weightKg) +
+             FfiConverterOptionalUInt32.allocationSize(value.reps) +
+             FfiConverterOptionalUInt32.allocationSize(value.rir) +
+             FfiConverterOptionalUInt32.allocationSize(value.setIndex);
+            
+        }
+    };
+    return new FFIConverter();
+})();
+
+/**
+ * One session of one exercise, reduced to what its history charts. Mirrors
+ * [`cyberathlete_core::SessionMetrics`].
+ */
+export type SessionMetrics = {
+    topLoadKg?: number,
+    bestE1rmKg?: number,
+    volumeKg?: number,
+    countedSets: number
+}
+
+/**
+ * Generated factory for {@link SessionMetrics} record objects.
+ */
+export const SessionMetrics = (() => {
+    const defaults = () => ({
+    });
+    const create = (() => {
+        return uniffiCreateRecord<SessionMetrics, ReturnType<typeof defaults>>(defaults);
+    })();
+    return Object.freeze({
+        create,
+        new: create,
+        defaults: () => Object.freeze(defaults()) as Partial<SessionMetrics>,
+    });
+})();
+
+const FfiConverterTypeSessionMetrics = (() => {
+    type TypeName = SessionMetrics;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            return {
+                topLoadKg: FfiConverterOptionalFloat64.readFromCursor(c), 
+                bestE1rmKg: FfiConverterOptionalFloat64.readFromCursor(c), 
+                volumeKg: FfiConverterOptionalFloat64.readFromCursor(c), 
+                countedSets: FfiConverterUInt32.readFromCursor(c)
+            };
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            FfiConverterOptionalFloat64.writeIntoCursor(value.topLoadKg, c);
+            FfiConverterOptionalFloat64.writeIntoCursor(value.bestE1rmKg, c);
+            FfiConverterOptionalFloat64.writeIntoCursor(value.volumeKg, c);
+            FfiConverterUInt32.writeIntoCursor(value.countedSets, c);
+        }
+        allocationSize(value: TypeName): number {
+            return FfiConverterOptionalFloat64.allocationSize(value.topLoadKg) +
+             FfiConverterOptionalFloat64.allocationSize(value.bestE1rmKg) +
+             FfiConverterOptionalFloat64.allocationSize(value.volumeKg) +
+             FfiConverterUInt32.allocationSize(value.countedSets);
+            
+        }
+    };
+    return new FFIConverter();
+})();
+
+/**
+ * The measures a set row holds, as typed. Mirrors [`cyberathlete_core::SetEntry`].
+ */
+export type SetEntry = {
+    reps?: number,
+    durationS?: number,
+    distanceM?: number
+}
+
+/**
+ * Generated factory for {@link SetEntry} record objects.
+ */
+export const SetEntry = (() => {
+    const defaults = () => ({
+    });
+    const create = (() => {
+        return uniffiCreateRecord<SetEntry, ReturnType<typeof defaults>>(defaults);
+    })();
+    return Object.freeze({
+        create,
+        new: create,
+        defaults: () => Object.freeze(defaults()) as Partial<SetEntry>,
+    });
+})();
+
+const FfiConverterTypeSetEntry = (() => {
+    type TypeName = SetEntry;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            return {
+                reps: FfiConverterOptionalUInt32.readFromCursor(c), 
+                durationS: FfiConverterOptionalUInt32.readFromCursor(c), 
+                distanceM: FfiConverterOptionalFloat64.readFromCursor(c)
+            };
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            FfiConverterOptionalUInt32.writeIntoCursor(value.reps, c);
+            FfiConverterOptionalUInt32.writeIntoCursor(value.durationS, c);
+            FfiConverterOptionalFloat64.writeIntoCursor(value.distanceM, c);
+        }
+        allocationSize(value: TypeName): number {
+            return FfiConverterOptionalUInt32.allocationSize(value.reps) +
+             FfiConverterOptionalUInt32.allocationSize(value.durationS) +
+             FfiConverterOptionalFloat64.allocationSize(value.distanceM);
+            
+        }
+    };
+    return new FFIConverter();
+})();
+
+/**
+ * A record still standing after a history, and the session that set it. Mirrors
+ * [`cyberathlete_core::StandingRecord`].
+ */
+export type StandingRecord = {
+    record: PrAchievement,
+    sessionIndex: number
+}
+
+/**
+ * Generated factory for {@link StandingRecord} record objects.
+ */
+export const StandingRecord = (() => {
+    const defaults = () => ({
+    });
+    const create = (() => {
+        return uniffiCreateRecord<StandingRecord, ReturnType<typeof defaults>>(defaults);
+    })();
+    return Object.freeze({
+        create,
+        new: create,
+        defaults: () => Object.freeze(defaults()) as Partial<StandingRecord>,
+    });
+})();
+
+const FfiConverterTypeStandingRecord = (() => {
+    type TypeName = StandingRecord;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            return {
+                record: FfiConverterTypePrAchievement.readFromCursor(c), 
+                sessionIndex: FfiConverterUInt32.readFromCursor(c)
+            };
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            FfiConverterTypePrAchievement.writeIntoCursor(value.record, c);
+            FfiConverterUInt32.writeIntoCursor(value.sessionIndex, c);
+        }
+        allocationSize(value: TypeName): number {
+            return FfiConverterTypePrAchievement.allocationSize(value.record) +
+             FfiConverterUInt32.allocationSize(value.sessionIndex);
+            
+        }
+    };
+    return new FFIConverter();
+})();
 
 /**
  * Which way a load between two steps is moved. Mirrors [`cyberathlete_core::RoundingMode`].
@@ -79,6 +741,77 @@ const FfiConverterTypeRoundingMode = (() => {
                 case RoundingMode.Nearest: return c.writeI32(1);
                 case RoundingMode.Down: return c.writeI32(2);
                 case RoundingMode.Up: return c.writeI32(3);
+            }
+        }
+        allocationSize(value: TypeName): number {
+            return 4;
+        }
+    }
+    return new FFIConverter();
+})();
+
+/**
+ * A field a set can be missing. Mirrors [`cyberathlete_core::SetField`].
+ */
+export enum SetField {
+    Reps,
+    DurationS,
+    DistanceM
+}
+
+const FfiConverterTypeSetField = (() => {
+    type TypeName = SetField;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            switch (c.readI32()) {
+                case 1: return SetField.Reps;
+                case 2: return SetField.DurationS;
+                case 3: return SetField.DistanceM;
+                default: throw new UniffiInternalError.UnexpectedEnumCase();
+            }
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            switch (value) {
+                case SetField.Reps: return c.writeI32(1);
+                case SetField.DurationS: return c.writeI32(2);
+                case SetField.DistanceM: return c.writeI32(3);
+            }
+        }
+        allocationSize(value: TypeName): number {
+            return 4;
+        }
+    }
+    return new FFIConverter();
+})();
+
+/**
+ * How an exercise is logged. Mirrors [`cyberathlete_core::Tracking`].
+ */
+export enum Tracking {
+    WeightReps,
+    RepsOnly,
+    Duration,
+    DistanceDuration
+}
+
+const FfiConverterTypeTracking = (() => {
+    type TypeName = Tracking;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            switch (c.readI32()) {
+                case 1: return Tracking.WeightReps;
+                case 2: return Tracking.RepsOnly;
+                case 3: return Tracking.Duration;
+                case 4: return Tracking.DistanceDuration;
+                default: throw new UniffiInternalError.UnexpectedEnumCase();
+            }
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            switch (value) {
+                case Tracking.WeightReps: return c.writeI32(1);
+                case Tracking.RepsOnly: return c.writeI32(2);
+                case Tracking.Duration: return c.writeI32(3);
+                case Tracking.DistanceDuration: return c.writeI32(4);
             }
         }
         allocationSize(value: TypeName): number {
@@ -140,6 +873,36 @@ const stringConverter = (() => {
 })();
 const FfiConverterString = uniffiCreateFfiConverterString(stringConverter);
 
+// FfiConverter for number | undefined
+const FfiConverterOptionalFloat64 = new FfiConverterOptional(FfiConverterFloat64);
+
+// FfiConverter for number | undefined
+const FfiConverterOptionalUInt32 = new FfiConverterOptional(FfiConverterUInt32);
+
+// FfiConverter for Array<RepsAtWeight>
+const FfiConverterSequenceTypeRepsAtWeight = new FfiConverterArray(FfiConverterTypeRepsAtWeight);
+
+// FfiConverter for Array<LoggedSet>
+const FfiConverterSequenceTypeLoggedSet = new FfiConverterArray(FfiConverterTypeLoggedSet);
+
+// FfiConverter for Array<PrAchievement>
+const FfiConverterSequenceTypePrAchievement = new FfiConverterArray(FfiConverterTypePrAchievement);
+
+// FfiConverter for Array<number | undefined>
+const FfiConverterSequenceOptionalFloat64 = new FfiConverterArray(FfiConverterOptionalFloat64);
+
+// FfiConverter for SetField | undefined
+const FfiConverterOptionalTypeSetField = new FfiConverterOptional(FfiConverterTypeSetField);
+
+// FfiConverter for Array<Array<LoggedSet>>
+const FfiConverterSequenceSequenceTypeLoggedSet = new FfiConverterArray(FfiConverterSequenceTypeLoggedSet);
+
+// FfiConverter for Array<SessionMetrics>
+const FfiConverterSequenceTypeSessionMetrics = new FfiConverterArray(FfiConverterTypeSessionMetrics);
+
+// FfiConverter for Array<StandingRecord>
+const FfiConverterSequenceTypeStandingRecord = new FfiConverterArray(FfiConverterTypeStandingRecord);
+
 
 /**
  * This should be called before anything else.
@@ -162,8 +925,41 @@ function uniffiEnsureInitialized() {
     if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_core_version() !== 6041) {
         throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_core_version");
     }
+    if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_counted_set_count() !== 51670) {
+        throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_counted_set_count");
+    }
+    if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_detect_prs() !== 53698) {
+        throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_detect_prs");
+    }
+    if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_e1rm() !== 16706) {
+        throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_e1rm");
+    }
+    if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_e1rm_series() !== 51229) {
+        throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_e1rm_series");
+    }
+    if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_is_counted_set() !== 54819) {
+        throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_is_counted_set");
+    }
+    if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_load_kg() !== 3428) {
+        throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_load_kg");
+    }
+    if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_missing_for_completion() !== 29972) {
+        throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_missing_for_completion");
+    }
+    if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_personal_bests() !== 22176) {
+        throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_personal_bests");
+    }
     if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_round_to_increment() !== 62903) {
         throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_round_to_increment");
+    }
+    if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_session_metrics() !== 52849) {
+        throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_session_metrics");
+    }
+    if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_standing_records() !== 58322) {
+        throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_standing_records");
+    }
+    if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_volume_kg() !== 54613) {
+        throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_volume_kg");
     }
 
     }
@@ -171,6 +967,17 @@ function uniffiEnsureInitialized() {
 export default Object.freeze({
   initialize: uniffiEnsureInitialized,
   converters: {
+    FfiConverterTypeLoggedSet,
+    FfiConverterTypePersonalBests,
+    FfiConverterTypePrAchievement,
+    FfiConverterTypePrKind,
+    FfiConverterTypeRepsAtWeight,
     FfiConverterTypeRoundingMode,
+    FfiConverterTypeSessionMetrics,
+    FfiConverterTypeSetEntry,
+    FfiConverterTypeSetField,
+    FfiConverterTypeSetType,
+    FfiConverterTypeStandingRecord,
+    FfiConverterTypeTracking,
   }
 });

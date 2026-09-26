@@ -8,6 +8,56 @@ rounding rule eventually appears.
 Everything here is pure (INV-10): no I/O, no clock, no randomness, and `now` is always a parameter.
 """
 
-from ._core import RoundingMode, core_version, round_to_increment
+from ._core import (
+    LoggedSet,
+    PersonalBests,
+    PrAchievement,
+    PrKind,
+    RepsAtWeight,
+    RoundingMode,
+    SessionMetrics,
+    SetEntry,
+    SetType,
+    StandingRecord,
+    Tracking,
+    core_version,
+    counted_set_count,
+    detect_prs,
+    e1rm,
+    e1rm_series,
+    is_counted_set,
+    load_kg,
+    missing_for_completion,
+    personal_bests,
+    round_to_increment,
+    session_metrics,
+    standing_records,
+    volume_kg,
+)
 
-__all__ = ["RoundingMode", "core_version", "round_to_increment"]
+__all__ = [
+    "LoggedSet",
+    "PersonalBests",
+    "PrAchievement",
+    "PrKind",
+    "RepsAtWeight",
+    "RoundingMode",
+    "SessionMetrics",
+    "SetEntry",
+    "SetType",
+    "StandingRecord",
+    "Tracking",
+    "core_version",
+    "counted_set_count",
+    "detect_prs",
+    "e1rm",
+    "e1rm_series",
+    "is_counted_set",
+    "load_kg",
+    "missing_for_completion",
+    "personal_bests",
+    "round_to_increment",
+    "session_metrics",
+    "standing_records",
+    "volume_kg",
+]

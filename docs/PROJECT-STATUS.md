@@ -15,13 +15,13 @@ when its own criteria are ticked. Tick the box here only then.
 
 | | |
 |---|---|
-| **Phase** | **Tasks 001, 002, 011, 003 and 019 complete.** The schema exists in Postgres and SQLite, seeded and enforcing itself; the design system exists in `src/ui/`, token-driven and tested in both languages, both unit systems and both themes; accounts, sessions and the privacy key exist on both sides, with row-level security proven under the API's own role; and a user can delete their account, from the app or the web, with a 7-day grace period and one daily sweep. **Administrator rights arrived 2026-09-16**, so [task 017](tasks/017-local-toolchain-device-spike.md) — Docker, the device, the ADR-004 spike — is under way and must finish before task 004. **The spike is finished and [ADR-004](decisions/ADR-004.md) has its answer: option B, the single Rust core.** All four bar conditions are met — PyO3 from FastAPI, UniFFI from the physical device, and the Android artefacts built by CI on Linux *and* by EAS, the last verified by reading `libcyberathlete_core_ffi.so` for all three ABIs out of the built APK. **Task 004 is unblocked.** What is left in task 017 is not the spike: the README's Windows pass, and the device A-to-B privacy-key flow against a running API |
-| **Repository** | Private GitHub repository `hiuriselzler/projeto_cyber`. `main` holds the documentation and tasks 001, 002, 011, 003 and 019, each merged by pull request (#1; #5; #7 and #8; #9; #11); each further piece arrives the same way, with CI green before merge |
+| **Phase** | **Tasks 001, 002, 011, 003, 019, 017 and 004 complete.** The schema exists in Postgres and SQLite, seeded and enforcing itself; the design system exists in `src/ui/`, token-driven and tested in both languages, both unit systems and both themes; accounts, sessions and the privacy key exist on both sides, with row-level security proven under the API's own role; a user can delete their account, from the app or the web; and [ADR-004](decisions/ADR-004.md) has its answer — **option B, the single Rust core**, proven through both bindings on the device. **The core loop exists** ([task 004](tasks/004-exercise-catalog-and-logging.md)): the seeded catalog, the set row, routines, the rest timer, set types, every tracking mode, the finish flow with its records, history and charts, and the API's mirror endpoints — offline, on the phone (*updated 2026-09-26*) |
+| **Repository** | Private GitHub repository `hiuriselzler/projeto_cyber`. `main` holds the documentation and tasks 001, 002, 011, 003, 019 and 017, each merged by pull request (#1; #5; #7 and #8; #9; #11; #16); each further piece arrives the same way, with CI green before merge. Task 004 is on `feat/task-004-catalog-and-logging`, in **[PR #17](https://github.com/hiuriselzler/projeto_cyber/pull/17)** (opened 2026-09-24 as a draft; the last step pushed 2026-09-26 and the PR marked ready once CI is green), **waiting for the owner to merge** |
 | **Docs** | 49 files, internally consistent, all cross-links resolving |
 | **Decisions** | 15 ADRs, **all now accepted**. [ADR-004](decisions/ADR-004.md)'s spike passed on 2026-09-18 and its outcome is recorded: **option B, the single Rust core**. Its four pre-launch conditions remain outstanding, in tasks 005 and 006 |
-| **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **5 complete** (001, 002, 011, 003, 019) |
+| **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **7 complete** (001, 002, 011, 003, 019, 017, 004) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) — the core loop.** Task 017 is complete and ADR-004 is settled, so nothing blocks it. It is the largest task in the project and the one its own file says *deserves more care than any other UI*; the Rust core is adopted from here on, with e1RM (INV-07) and `is_counted_set()` (INV-04) its first real residents. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
+| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) is complete (2026-09-26)** — its last step re-aimed the live list's reveal when the list's height changes, and moved the rest onto the keypad's heading line while the keypad is open, after a short screen showed the two together left the list no room; proven on the phone at three screen heights and at 200 % font, which also found and fixed the header pushing *Encerrar* off the screen. **Next: the owner merges [PR #17](https://github.com/hiuriselzler/projeto_cyber/pull/17), then [task 005](tasks/005-strength-progression-planner.md), the progression planner — the reason the product exists.** Its nine stages are **proposed in the task file** (*Stages*): stage 0 updates the file for ADR-004's single Rust core, and **stage 1, the engine's foundation (`generate` for `linear_load` and `fixed`, deloads, dates, fixture #1), waits on five decisions**: property-testing under the `rand` ban, natural keys with ids minted outside the engine, what a deload prescribes, where the increment is resolved, and the input's shape. The next session starts with the plan-and-approval step on a branch cut from `main` after the merge. The phone is signed in to a throwaway local account, `stage8-device@example.com`, holding an open "Cinco por quatro" workout from the last step's pass. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done, and the zero-plural found on the phone is worth their attention — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
 
 ### The decision that was open is closed — option B
 
@@ -186,36 +186,43 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
 > **Task 004 is unblocked.**
 - [x] Administrator installs: Windows long paths, WSL2, Docker Desktop, Android Studio (SDK, NDK,
       platform tools), Visual Studio Build Tools and Rust with the Android targets and `cargo-ndk`
-- [ ] Local stack: `docker compose up`, roles created by the init hook, integration tests run locally,
+- [x] Local stack: `docker compose up`, roles created by the init hook, integration tests run locally,
       every README command verified on Windows
 - [x] **Development build on a physical Android device**, with hot reload; the API over `adb reverse`;
       a LAN address refused; the SQLite migration idempotent; secure storage surviving a restart
-- [ ] A release build refuses an `http://` API base URL, and its bundle carries no diagnostics code
-- [ ] Device checks moved from tasks 002, 011 and 003 — the Drizzle schema on a device, token changes,
+- [x] A release build refuses an `http://` API base URL, and its bundle carries no diagnostics code
+- [x] Device checks moved from tasks 002, 011 and 003 — the Drizzle schema on a device, token changes,
       live numerals and TalkBack, the libsodium binding, offline sign-in, the key-derivation timing
-- [ ] **⚠ ADR-004 spike — 2 days, hard timebox** (moved from task 001). `round_to_increment()` through
+- [x] **⚠ ADR-004 spike — 2 days, hard timebox** (moved from task 001). `round_to_increment()` through
       both bindings, called from FastAPI *and* from a physical Android device: `41.6 → 42.5`, and the tie
       `41.25 → 40`. Success defined in advance; WSL2 allowed locally; **the clock starts once a dev build
       runs on the device**. The iOS half is gate 1 of task 016
-- [ ] Rust CI job — `cargo deny`, clippy, fmt, Android cross-compilation — with `rand` and
+- [x] Rust CI job — `cargo deny`, clippy, fmt, Android cross-compilation — with `rand` and
       `SystemTime::now` each watched failing
-- [ ] **⚠ ADR-004 outcome written into the ADR.** Task 004 does not start while it is open
+- [x] **⚠ ADR-004 outcome written into the ADR.** Task 004 does not start while it is open
 
-#### ☐ 004 — Exercise catalog and workout logging · **XL** · depends: 002 · blocks: 005, 009
+#### ☑ 004 — Exercise catalog and workout logging · **XL** · depends: 002 · blocks: 005, 009
 > The core loop. Local-only, no sync. **This deserves more care than any other UI in the project.**
-- [ ] Catalog: seed locally, browse/search/filter, custom exercises, **fork-on-edit** of globals,
+> **Complete (2026-09-26).** Every acceptance criterion in the task file is ticked or deferred with a reason — the
+> weighted pull-up's device half to open question 18, the rest notification's timing to open question 13 — each proven
+> by a test, a lint fixture or the Galaxy S21 FE. The last step re-aimed the live list's reveal and moved the rest onto
+> the keypad's heading line while it is open. Built on `feat/task-004-catalog-and-logging`
+> ([PR #17](https://github.com/hiuriselzler/projeto_cyber/pull/17)).
+- [x] Catalog: seed locally, browse/search/filter, custom exercises, **fork-on-edit** of globals,
       archive that never orphans history (INV-11)
-- [ ] Routines with supersets; start-from-routine pre-fills targets and last-used weights
-- [ ] **The set row** — `[weight] [reps] [RIR] [✓]` with last time's performance behind it
-- [ ] **Custom numeric keypad** that never covers the row being edited, handling `,` and `.`
-- [ ] **RIR as a chip row, never a keyboard.** Blank stores NULL, never 0 (INV-03)
-- [ ] Set types, rest timer with haptics, notes, retroactive logging
-- [ ] **Every mutation writes to SQLite synchronously** (INV-09) — no React state is the only copy
-- [ ] History, charts, PR detection; `e1rm()` and `is_counted_set()` implemented **once**
-- [ ] Mirror API endpoints so task 006 has something to sync against
+- [x] Routines with supersets; start-from-routine pre-fills targets and last-used weights
+- [x] **The set row** — `[weight] [reps] [RIR] [✓]` with last time's performance behind it
+- [x] **Custom numeric keypad** that never covers the row being edited, handling `,` and `.`
+- [x] **RIR as a chip row, never a keyboard.** Blank stores NULL, never 0 (INV-03)
+- [x] Set types, rest timer with haptics, notes, retroactive logging
+- [x] **Every mutation writes to SQLite synchronously** (INV-09) — no React state is the only copy
+- [x] History, charts, PR detection; `e1rm()` and `is_counted_set()` implemented **once** — stages 1, 6 and 7
+- [x] Mirror API endpoints so task 006 has something to sync against — stage 8
 
 #### ☐ 005 — Strength progression planner · **XL** · depends: 004 · blocks: 009, 010, 013, 014
 > **The reason the product exists.**
+> **Not started.** Its stages are proposed in the task file (2026-09-26): stage 0 catches the file up with ADR-004's
+> option B, and stage 1, the engine's foundation, carries five decisions awaiting the owner.
 - [ ] Engine: five v1 strategies (`cycle_pattern` is v2 — leave the arm unimplemented, not half-done)
 - [ ] Generation + reconciliation as one **pure, deterministic, idempotent** function, `now` a parameter
 - [ ] **Every projection stamped with `engine_version`; an older engine never re-projects a newer
@@ -450,6 +457,30 @@ These are real blockers scattered across the docs. Nothing will surface them at 
 - [ ] Decide product analytics: **self-hosted PostHog with an allowlist, or none.** A hosted SDK is
       not the fallback ([05 §6](05-integrations.md))
 
+### Gaps the task 004 stage-3 device pass opened, owned by no single task
+- [ ] **No gate runs the React Compiler the shipped app runs with.** `Sheet` was broken for nine days with `tsc`,
+      `eslint`, 597 Jest tests and every lint fixture green, because the compiler is applied by the Metro bundle and
+      not by the test environment. Either run the suite under it, or ban render-phase `setState` by lint
+      ([ADR-014 § Amendment](decisions/ADR-014.md)). Until then a phone is the only gate. **Second instance, 2026-09-24:**
+      three screens memoized their reads on `void revision;`, which the compiler drops, so none showed its own writes —
+      stages 4 and 5a, green throughout. That one pattern is now a lint fence (`void-dependency`); the class is not
+      closed, and running the suite under the compiler is still the real fix
+- [ ] **A module can be written, tested, CI-gated and never called.** `seedReferenceData()` was all four for a
+      stage, and the device ran with 0 exercises. Worth a check that every exported entry point of `src/db/` has a
+      caller, or a smoke test that boots the app's startup path rather than its pieces
+- [ ] **`packages/core-native`'s `.so` files are gitignored and do not travel with a commit** — a second checkout
+      links a newer binding surface against an older binary and fails on `undefined symbol`. Commit them, or have
+      CI regenerate and compare ([06 §1](06-operations.md))
+- [ ] **Typed routes are not a CI gate.** `.expo/types/router.d.ts` is gitignored and generated only by `expo start`, so
+      CI's `tsc` accepts any `href` while a developer's `tsc` checks against whatever stale copy they last generated
+      (found in task 004 stage 5, 2026-09-23). Generate it in CI before `tsc`, or accept that routes are unchecked
+- [ ] **`Sheet` has no exit animation** — lost in task 004 stage 3's repair and moved here when task 004 closed
+      (2026-09-25). A fix needs one state write as `visible` turns false, which is either the original render-phase
+      defect or `react-hooks/set-state-in-effect`, rightly an error here. The way through is a different mechanism —
+      the caller driving the transition, or `react-native-reanimated`'s `exiting` animations, already a dependency —
+      never an `eslint-disable`. The attempt and why it was reverted: [task 004](tasks/004-exercise-catalog-and-logging.md)
+      § *Found on the device, and not yet fixed*
+
 ### Standing review checklist
 - [ ] Every PR touching entitlements is checked against INV-26
 - [ ] Every PR touching rewards is checked against the [08 §6](08-gamification.md) ban list — every
@@ -473,8 +504,14 @@ None are blocking; each has a stated assumption that will be built unless correc
 | 6 | How many users at once ([NFR-12](01-business-requirements.md)), and the load test that proves it | Design goal only: stateless API and pooling-safe database access from the first commit | Before launch |
 | 7 | The Android application id. **Permanent after the first Play Store upload** | `com.cyberathlete.app`, a placeholder in `apps/mobile/app.json` | Before the first Play upload |
 | 8 | Android backups: the generated manifest has `allowBackup="true"`, so local data — raw GPS points included — would reach device backups | Unchanged for now | Before [task 007](tasks/007-cardio-recording.md) |
-| 9 | What the RIR `5+` chip stores: 5, or a choice from 5 to 10 (the schema allows 0–10, INV-03) | Nothing yet — task 011's chips take their values as a prop and store nothing | [Task 004](tasks/004-exercise-catalog-and-logging.md) |
 | 12 | Which address the per-IP rate limits count ([04 §5](04-security-and-auth.md)). The API reads the socket's peer, `request.client.host`; behind a hosting platform's proxy that is the proxy for everyone, so registration would allow 5 an hour across all users | The client address comes from the platform's forwarded header, trusted only when the request arrives from the platform's own proxy — configured once the host is chosen ([05 §5](05-integrations.md)) | Before the first deploy |
+| 13 | Is a rest notification ~22–40 s late with the screen off acceptable, or does the app ask for `SCHEDULE_EXACT_ALARM`? One clean sample on the S21 FE: ~39 s on a 2:00 rest | Inexact alarms; the on-screen timer and its haptic are exact. **Task 004's "on time" criterion moved here** when it closed (2026-09-25): arrival with the screen off is proven there, timing is decided here | Before launch, with more samples ([task 004](tasks/004-exercise-catalog-and-logging.md)) |
+| 14 | A target time or distance on a routine exercise — a schema addition | None: holds and carries get sets and rest, and pre-fill from last time | Task 005, where prescriptions live |
+| 15 | Personal records for time and distance — longest hold, farthest carry | Not built; such sets count as sets, with zero tonnage. **Half settled 2026-09-24:** a *loaded* carry takes a heaviest-weight record from its load — found on the phone, and **kept by the owner's decision**, since the heaviest carry is a real record and the earlier "no PR" was the doc's error. A hold takes nothing. Longest hold and farthest carry remain unbuilt. **Deferred 2026-09-25** (task 004 stage 7, decision 6): new record kinds are an enum migration, core kinds and a summary change; history lists each session's time and distance meanwhile | [Task 010](tasks/010-unified-calendar-and-analytics.md) |
+| 16 | Short imperial distances in feet or yards (sleds are often yards in US gyms) | Feet, following ADR-008's m/ft pair | The imperial pass of task 004's device checks |
+| 17 | The Portuguese set-type letters — `Aq D B A` | As written, catalog content | The native-speaker review ([07 §9](07-brand-and-ui.md)) |
+| 19 | **Who builds the settings screen?** ADR-008 makes language and unit system one setting each, `PATCH /auth/me` accepts both, and `updateAccount` in `src/account/flows.ts` sends them — but no screen calls it, so a user cannot change units or language after registering. Found at the end of task 004 stage 7, when the imperial device pass had no way in | Not in task 004; stage 8 proposes a development-only switch on the diagnostics screen for the device pass | Before launch — likely [task 012](tasks/012-onboarding.md) |
+| 18 | **Who builds body-weight entry?** `body_weight_log` exists on both sides and every bodyweight e1RM, tonnage and PR reads it (INV-07, FR-2.15a), but no task gives the user a way to write to it — task 010 only charts it. Until something does, a pull-up or dip has no load, no e1RM and no record | Not built in task 004; bodyweight sets count as sets and celebrate nothing | Before launch — likely task 010 or 012 |
 
 **Closed 2026-09-09** — target RIR granularity (now `rir_mode` on the progression rule);
 cardio intensity (both zones and pace ranges); bodyweight volume (summed); and the octopus
@@ -486,6 +523,9 @@ dashboard (dropped — the mark is brand-only). See the decision log.
 reopen for iOS** ([09 §2](09-business-model.md)).
 
 **Closed 2026-09-14** — the email provider (Resend, for the prototype), and who builds FR-1.4 (tasks 019 and 020). See the decision log.
+
+**Closed 2026-09-19** — question 9, the RIR `5+` chip: it opens a second row of 5–10 and stores
+nothing itself ([task 004](tasks/004-exercise-catalog-and-logging.md) § Scope). See the decision log.
 
 ---
 
@@ -509,6 +549,16 @@ reopen for iOS** ([09 §2](09-business-model.md)).
 | 2026-09-12 | [ADR-014](decisions/ADR-014.md) The design system enforces itself — tokens, contrast, motion and strings by gate |
 | 2026-09-14 | [ADR-015](decisions/ADR-015.md) Account security in practice — rate limits in Postgres, a 60-second rotation grace window, a bundled breach list, registration's `409` |
 | 2026-09-18 | **[ADR-004](decisions/ADR-004.md) settled — option B, the single Rust core.** The spike's bar is met in full; task 004 is unblocked. The four pre-launch conditions are untouched and still required |
+| 2026-09-19 | [ADR-012](decisions/ADR-012.md) **amended** — `src/db/` mints row ids through `src/crypto/`'s identifier entry point, and nothing else in that folder. INV-16 had no legal path to a UUIDv7 from the folder that creates training rows |
+| 2026-09-19 | [ADR-014](decisions/ADR-014.md) **amended** — a design-system component with a state prop is tested by **moving** it, not by rendering each value. `Sheet` never opened for nine days and every gate stayed green |
+| 2026-09-23 | Task 004 stage 5 re-cut into 5a/5b/5c; the live session carries its own rest and targets; the rest timer is derived; a routine pre-fills weight and reps, never RIR — see the dated entry below |
+| 2026-09-24 | Task 004 stage 6 planned: the previous bests folded in the core; a record is the current best; a past workout's `completed_at` is its chosen end while `updated_at` stays real — see the dated entry below |
+| 2026-09-24 | Four decisions after the device passes: a loaded carry keeps its heaviest-weight record (OQ 15, half settled); the user's own exercises are marked "Seu"/"Yours"; the summary groups records by exercise; the set row reflows, and on a short screen the keypad reveals the field being edited (07 §6's open question closed) |
+| 2026-09-25 | Task 004 stage 7 planned: charts on `react-native-svg` (02 §4 changed); the records rebuild one user at a time; `personal_records` keyed per load for reps; the core's `standing_records()` says where a record came from; open question 15 moved to task 010 — see the dated entry below |
+| 2026-09-25 | Task 004 stage 8: every mirror write is a `PUT` of the aggregate resolved row by row, a row left out is kept (02 §5, §7); the completion rule moves into the core; a global answers a write as a stranger's row does; the records cache rebuilds per exercise inside the write, under a per-user lock. **Task 019 amended:** a session's end keeps the account's local row, which the device's training cascades from — see the dated entry below |
+| 2026-09-25 | Closing task 004 planned: the weighted pull-up ticked on its proofs (device half → OQ 18); the rest notification's timing moved to OQ 13; a development-only ✓ timer for latency under the rest bar; `Sheet`'s exit animation moved to § Gaps; the 30 taps counted on a 5 × 4 routine — see the dated entry below |
+| 2026-09-25 | ✓ latency judged on a **production bundle** with the rest bar running, not on the development build or a synthetic loop; the live workout's set rows **memoized** (the app's first `memo`) with stable handlers, after a profile showed every ✓ re-rendering all twenty — see the dated entry below |
+| 2026-09-26 | **Task 004 complete.** The live list's reveal aims again when its height changes; **with the keypad open the rest is a countdown on the keypad's heading line and the bar is not drawn** (07 §6) — on a 533 dp screen the two together left the list no height; the short screen judged by the field being edited — see the dated entry below |
 
 ### 2026-09-08 — documentation reconciliation pass
 
@@ -1417,3 +1467,899 @@ Committed as `2d14194`, merged as [PR #12](https://github.com/hiuriselzler/proje
 - **Task 019's criteria are now ticked**, per its own task file's rule. Its two open notes stay open, neither
   blocking: what a device keeps of training data once its account is gone, moved to [task 006](tasks/006-sync-layer.md); which scheduler runs the daily command, chosen with the host.
 - No invariant changed and no ADR was added: 49 documents, 15 ADRs.
+
+### 2026-09-19 — task 004 planning: three stale docs, two decisions, and the order the work goes in
+
+Reading the mandatory context before touching code found **three documents that ADR-004's outcome had
+left behind**. All three said the spike was still pending, five days after it closed.
+
+- **[02 §3](02-architecture.md) still offered the fallback as live** — "written twice, Python and
+  TypeScript, policed by fixtures" — as though the choice were open. Rewritten to record option B as
+  settled, with the fallback kept as rejected-and-explained rather than deleted: it is still why the
+  fixtures exist. Under the Rust core they prove **the two bindings agree**; they are no longer the
+  only thing standing between two copies.
+- **[Task 004](tasks/004-exercise-catalog-and-logging.md) named the wrong file for e1RM** —
+  `src/domain/e1rm.ts`, which is exactly the TypeScript implementation ADR-004 § Outcome exists to
+  prevent, and which the responsibility map forbids (`src/domain/` is marshalling and *no domain logic
+  at all*). Corrected to `core-rs/src/strength/`, reached through both bindings. `is_counted_set()`
+  said only "in domain" and now names the same crate.
+- **[00 § Chosen stack](00-project-context.md) still called the core "accepted conditionally"** and
+  described the spike in the future tense. Rewritten to record the outcome, and to name the four
+  pre-launch conditions that genuinely *are* still outstanding — which is the part of "conditional"
+  that survived.
+- The task file was the stale one against the ADR, not the reverse: ADR-004 § Outcome names e1RM and
+  `is_counted_set()` as **the core's first real residents**, and that sentence postdates the task file.
+
+**Open question 9 is closed: `5+` opens a second row, `5 6 7 8 9 10`.** The chip stores nothing by
+itself; what is stored is whichever chip the user then taps. The alternatives were storing a flat 5,
+which silently discards a distinction the schema carries, and a keyboard, which FR-2.10 forbids
+outright. A second row keeps the common case at one tap, keeps INV-03's full `0..10` reachable in two,
+and — the reason it wins — **writes no number the user did not choose**, which is the same rule that
+makes a blank chip store NULL rather than 0. [Task 011](tasks/011-design-system.md)'s `RirChips` carried
+the question as a prop comment; it is now answerable.
+
+**Fork-on-edit naming, decided rather than discovered later.** [ADR-008](decisions/ADR-008.md) says a
+forked global's translated name is copied into the fork, which leaves two things open that a unique
+index will otherwise settle by crashing:
+
+- **Which translation:** the UI language at the moment of forking — what the user was looking at when
+  they chose to edit. After that it is user content, shown exactly as stored and never re-translated
+  (INV-27).
+- **A second fork of the same global** reuses the first rather than creating another; `forked_from_id`
+  already makes that lookup free.
+- **A collision** with one of the user's own live exercises — `exercises_owner_name_key`, unique on
+  `lower(name)` where not archived — is a validation error on the field they are already editing. Not
+  an auto-suffix: `(2)` is a name nobody typed, and INV-27's promise is that user content reads back
+  exactly as written.
+
+**Three findings about what the task actually has to build**, none of them obvious from the task file:
+
+- **The device has no `personal_records` table and must not gain one.** [03 §4](03-database-schema.md)
+  is explicit — it is a derived cache, the device does not have it, and recomputes locally. So client
+  PR detection is a core function over local `set_logs`; only the server keeps the cache and its
+  rebuild command. Adding the table locally would break the schema parity `check_schema.py` enforces.
+- **First-launch seeding does not exist yet.** `packages/shared/seeds/reference.json` is generated and
+  committed (201 exercises, matching both catalogs), but nothing on the device reads it — `src/db/`
+  has migrations and no seed. That is task 004's first criterion and it starts from zero.
+- **Neither `expo-haptics` nor `expo-notifications` is a dependency.** The rest timer needs both, and
+  Android notification channels put them in `src/platform/` and nowhere else (INV-28).
+
+**The order the work goes in**, recorded because the task is XL and the sequence is a decision:
+docs (this entry), then the Rust core and its fixtures, then local data, **then the set row on a real
+phone with its ✓ latency measured** — before the catalog, the routines, the finish flow, the charts,
+the mirror API and the device pass. The task file's own note is the reason: *if it is not faster than
+Hevy there is no reason for this app to exist*, and that is cheapest to find out fourth rather than
+last. Charts come last deliberately.
+
+**One risk named now rather than met later:** INV-09 requires a synchronous SQLite write before the UI
+updates, and NFR-2 gives the ✓ under 100 ms, with an FFI hop for e1RM on top. If the budget cannot be
+met, that tension is an ADR, not a quiet compromise — which is why the set-row stage measures it on the
+Galaxy S21 FE rather than assuming.
+
+- A fifth correction, found while checking the others: **[tasks/README](tasks/README.md) still had 017
+  "in progress since 2026-09-16"** and task 004 unstarted. Both rows and the ordering rule beneath them
+  now match what happened.
+- No invariant changed and no ADR was added: 49 documents, 15 ADRs. Five documents corrected
+  ([00](00-project-context.md), [02](02-architecture.md),
+  [task 004](tasks/004-exercise-catalog-and-logging.md), [tasks/README](tasks/README.md), this file),
+  two decisions recorded, one open question closed — **8 remain, none blocking**.
+
+### 2026-09-19 — task 004 stage 1: the core's first real residents, through both bindings
+
+`core-rs/src/strength/` exists. **e1RM (INV-07), `is_counted_set()` (INV-04), tonnage and PR
+detection (FR-2.15) are written once, in Rust**, and reached from Python and TypeScript through the
+two bindings — ADR-004 option B doing the job it was accepted for, on the first task that needed it.
+
+- **The named acceptance case passes in Rust and in Python**: body weight 80 kg + 20 kg × 5 @ RIR 2
+  is 100 kg × (1 + 7/30) = **123.3 kg** displayed; a later weigh-in leaves it untouched (body weight
+  is resolved per set, on or before its own date — INV-17); and with no body weight logged by that
+  date it is NULL, the same no-guessing rule as a missing RIR.
+- **Three new shared fixtures** — `e1rm.json`, `is_counted_set.json`, `pr_detection.json` — read by
+  all three suites. **No expectation is a computed float**: e1RM's cases state a load and an
+  effective rep count so each runtime applies Epley itself, because `100 × 37/30` has no exact
+  decimal form and writing one would test this file's rounding rather than the code's.
+- **The fixture was watched failing**, the way task 017 watched `cargo deny` bite: the Epley divisor
+  changed 30 → 29, `every_e1rm_case_agrees` failed on the first case, divisor restored.
+- **The UniFFI bindings were regenerated in WSL2**, all three ABIs plus the TypeScript from one
+  `ubrn build android --and-generate`, so the generated surface and the shipped `.so` cannot drift.
+  NDK 27.1.12297006. Native Windows remains unable to build the tool, exactly as ADR-004 allows.
+
+**Two decisions the code forced, both small and both recorded rather than left implicit.**
+
+- **A blank added load on a bodyweight exercise is zero, not missing.** An unweighted pull-up is the
+  common case and leaving the weight field alone is how it gets logged; the lifter moved their body
+  weight whatever the field says. Nothing is invented, so INV-07's no-guessing rule is not bent — it
+  still refuses to invent a *body weight*. On an ordinary exercise a blank weight stays "not
+  recorded".
+- **`is_counted_set()` asks two questions, not one.** INV-04's own rule is the set *type*; the second
+  is completion, because a `set_logs` row exists from the moment a set is pre-filled from a routine.
+  Counting an untouched row would inflate every total on the screen the user is reading mid-workout.
+  The type-only half is exported separately as `is_counted_type()` for a UI drawing a badge.
+
+**A limit worth stating before it is mistaken for a pass.** Task 004's criterion *"the e1RM fixture
+produces identical results in Python and TypeScript"* is **not** provable in Jest: the core reaches
+the app as a JSI turbo-module, which does not load under Node — the same reason task 011's rounding
+fixture test checks shape rather than calling the function. Jest holds the three files to their own
+spec (49 cases); Rust and Python run them; **the client half is settled on the device**, as task 017
+settled the spike's two values on the Galaxy S21 FE. It is listed with the device criteria, not
+ticked by a green Jest run.
+
+**Verified, matching what CI runs**: `core-rs` — fmt, clippy `-D warnings` over the workspace, 41
+unit + 5 fixture tests, `cargo deny` clean on advisories, bans, licenses and sources. API — `ruff`,
+`ruff format`, `mypy --strict` over 107 files, all **six** import contracts kept (including "only the
+domain reaches the core", which the new `app/domain/strength.py` passes through), **156** unit tests,
+up from 146. Mobile — `tsc`, `eslint`, 47 lint fixtures, the platform-file check, both catalogs at
+474 messages, and **489** Jest tests, up from 437.
+
+- **Also found, not fixed, not mine to fix here:** `packages/core-native` has a `typecheck` script
+  and no `tsconfig.json`, so it has never run. CI does not invoke it, and the generated bindings are
+  type-checked through the app's own `tsc`. Noted for whoever touches that package next.
+- No invariant changed and no ADR was added.
+
+### 2026-09-19 — task 004 stage 2: the catalog seeds itself, and a defect task 002 could not have seen
+
+The device gets its catalog before it has ever synced ([ADR-001](decisions/ADR-001.md)): 201 exercises,
+21 muscle groups, the increments, tracks, sport profiles and achievements, out of the committed
+`reference.json` and into SQLite on first launch. Reference rows carry **a key and no translated
+text** (INV-27), so one seed serves both languages.
+
+**A defect found while writing it, and it is task 002's, not this task's.** SQLite has foreign keys
+**off by default** — every connection must ask — and nothing ever asked. The device schema declares
+**58 `FOREIGN KEY` clauses** that Postgres enforces and the phone was silently ignoring, against a
+schema whose own ADR is titled *the schema enforces itself* ([ADR-013](decisions/ADR-013.md)). Fixed
+in `src/db/client.ts` with `PRAGMA foreign_keys = ON`, which must run on the open connection and
+outside a transaction — inside one it is a no-op, which is the usual way this is got wrong. **Nothing
+proved it before and nothing proves it now except a device**, so it joins the stage-8 checks rather
+than being called done.
+
+**Three decisions the seed forced.**
+
+- **Seeded globals carry a fixed timestamp, not `Date.now()`.** Two devices seeding the same bundled
+  file must produce identical rows; a wall-clock reading would make them differ by install date, and
+  sync would then have to hold an opinion about data that is byte-identical on both. The server
+  stamps its own copies with `now()`, so the two sides will not agree on those columns — noted for
+  [task 006](tasks/006-sync-layer.md) rather than guessed at here.
+- **Rows are upserted, and `deleted_at` is never in the update.** An app update shipping a corrected
+  exercise must reach an install that has the old one; a global the user archived stays archived,
+  because re-seeding is not a reason to hand somebody back an exercise they put away (INV-11).
+- **Seeding is keyed on a SHA-256 of the file**, held in `sync_state` in the same transaction as the
+  rows. So it runs on first launch and after an app update that ships a new catalog, and never
+  otherwise — and a half-finished seed leaves a database that seeds again rather than one holding
+  half a catalog and claiming to hold all of it. Comparing a fingerprint rather than counting rows is
+  what lets a *corrected* exercise reach an existing install.
+  **`pnpm check:seed-version` is the gate**, in CI beside the catalog check: change the data without
+  bumping the constant and it fails, naming the value to paste. **Watched failing** before being
+  restored, like the e1RM fixture and task 017's `cargo deny`.
+
+**Bilingual search works, and the criterion has a test.** `foldForSearch` drops case and accents —
+*tríceps* and *triceps* are one search — and `matchesSearch` matches every word of a query against
+any of the names a row is known by. A global is known by its name in **both** catalogs, a user
+exercise by the one name its owner typed and never a translation (INV-27). So **a pt-BR user finds
+the bench press by typing *supino* or *bench***, and "supino incline" finds it too, because that is
+how Brazilian gym vocabulary actually runs (ADR-008). The combining-mark range is written out rather
+than matched with `\p{Diacritic}`: Unicode property escapes are not something to assume of Hermes,
+and `String.prototype.normalize` itself is guarded and listed for the device pass.
+
+**Scope moved, deliberately.** Stage 2 was planned as the seed *plus* query modules for catalog,
+routines, workouts, sets and history. The seed and the search matcher are here; the query modules
+move to the stages that build the screens using them. Designing a query API before its only consumer
+exists is how it ends up shaped for nothing.
+
+**Verified**: `tsc`, `eslint`, 47 lint fixtures, the platform-file check, catalogs at 474 messages,
+the new seed-version gate, `db:generate` showing no schema drift, and **512** Jest tests, up from 489.
+
+- No invariant changed and no ADR was added. One CI step added.
+
+### 2026-09-19 — task 004 stage 3: the set row is built, and INV-16 had no legal way to mint an id
+
+The live workout exists. A signed-in user starts one, adds an exercise, types a weight on the app's own
+keypad, taps reps, taps a RIR chip and ticks the set — and **every one of those taps is a synchronous
+SQLite write that the screen then re-reads** (INV-09). React holds no copy of anything that matters:
+the hook writes first and renders what actually landed, which is the difference between surviving a
+force-quit and merely intending to.
+
+**The defect this stage found, and it is a rule's, not a line of code's. [INV-16](invariants.md) had no
+enforcement path for training data.** Every user-data primary key is a client-minted UUIDv7; `uuidV7`
+lives in `src/crypto/identifiers.ts` because randomness has one home; and
+[ADR-012](decisions/ADR-012.md)'s matrix let neither `features/` nor `db/` import `crypto/`. Until this
+stage the only caller was `src/account/`, which may — so an invariant with no route to its own
+enforcement cost nothing and was invisible. The first workout row is what surfaced it. **Amended in
+ADR-012, before any code**: `src/db/` may import `crypto/`'s identifier entry point and **nothing else
+in that folder**, narrowed by the same file-category mechanism that already holds the root layout to two
+entry points. Threading a `newId` parameter through every future call site was rejected as a lot of
+plumbing to avoid one import; a second RNG inside `db/` was rejected for keeping the matrix intact by
+breaking the rule the matrix exists to express. `features/` still may not import `crypto/` at all.
+**Watched failing**: `lint-fixtures/src/db/imports-crypto-barrel.ts` proves the barrel is still refused,
+and the app's own lint proves the one permitted file is not.
+
+**Open question 9 is now built, not just decided.** `5+` opens a second row, `5 6 7 8 9 10`, and the
+chip **stores nothing by itself** — six tests say so, in both languages and both themes, including that
+pressing it calls `onChange` not at all. A stored 7 shows its own row without being asked, so a set
+restored from the database reads back as the user left it. `5+` is a **button**, not a radio: it is a
+disclosure, and a screen reader must not hear a press that stores nothing as though it stored something.
+`Chip` gained an `expanded` state for exactly that.
+
+**Three decisions the code forced.**
+
+- **A set row exists from the moment it appears on screen**, empty and incomplete. That is what makes
+  the ✓ an `UPDATE` with no id to mint and no promise to await — and it is why stage 1 made
+  `is_counted_set()` ask about completion as well as type. The two halves were designed for each other
+  a stage apart, and they met correctly.
+- **Un-ticking a set clears `completed_at`** rather than keeping the moment of a tick the user took
+  back. A set that is not complete was not completed at any time, and a stale timestamp is a small lie
+  some later aggregate would eventually read as truth.
+- **The exercise picker is deliberately the minimum**: the catalog in name order, in a sheet. Browse,
+  search and filter go to stage 4 with the screen that owns them — stage 2's own reasoning, reapplied.
+  The bilingual matcher it will use already exists and is untouched here.
+
+**What is measured, and what is not — stated so the number is not read as more than it is.**
+`measureTickLatency()` times the two things the ✓ actually does, on the real schema: the synchronous
+`UPDATE` and the re-read of the whole open workout the screen renders from, 60 taps across a
+five-exercise, twenty-set session, reported p50 / p95 / worst. **It does not measure React's commit or
+the paint.** That half is settled by using the screen on the phone. This half is the one that can
+regress silently as a session grows, because it is the half that re-reads every row.
+
+**⚠ The stage is not finished.** Its entire purpose — *the set row measured on a real phone* — needs the
+Galaxy S21 FE, and none of it has been run: the ✓ latency, the force-quit restore, the keypad never
+covering the row it edits, TalkBack, the 200 % font pass in Portuguese in pounds, and whether
+`PRAGMA foreign_keys = ON` actually bites. **Nothing above may be called done until those are run**, and
+the task file's device criteria are where they are recorded.
+
+**Verified, matching what CI runs**: `tsc`, `eslint`, **48** lint fixtures, the platform-file check,
+catalogs at **488** messages, the seed-version gate, `db:generate` showing no schema drift, and **597**
+Jest tests, up from 512. API — 156 unit tests still green, since both catalogs gained the same keys.
+
+- **Also found, not fixed:** the Jest harness's known Windows flake bit once in a full run — a timeout
+  on `MATRIX[0]` of `surfaces.test.tsx`, never on an assertion, passing alone immediately after. It is
+  the behaviour `jest.config.js` already documents from task 017, and it is still a harness problem
+  rather than a test one.
+- No invariant changed. **One ADR amended** (ADR-012), so the counts are unchanged: 49 documents,
+  15 ADRs. One dependency added, `expo-haptics`, which puts the ✓'s haptic in `src/platform/` and
+  nowhere else (INV-28) and needs a fresh prebuild on the device.
+
+### 2026-09-19 — task 004 stage 3 on the phone: the ✓ is 10 ms, and three things were quietly broken
+
+The stage-3 device pass ran on a **Galaxy S21 FE (SM-G990E), Android 16, locale pt-BR, metric, dark,
+font scale 0.86**. It is the reason the plan put the set row on a phone before building anything around
+it, and it paid for itself three times over.
+
+**The number the task asked for, measured rather than assumed.** Tapping ✓ — the synchronous SQLite
+write plus the re-read the screen renders from — is **p50 10.5 ms, p95 12.4 ms, worst 20.1 ms** over 60
+taps across a five-exercise, twenty-set session, reproduced on a second run. NFR-2 allows 100 ms for the
+whole tap, so the data path uses about a tenth of it and leaves the rest to React's commit and the paint,
+**which this number does not include** and which are judged by using the screen.
+
+**A full set was logged in Portuguese, end to end**: 40 kg × 6 @ RIR 7 on *Crossover na polia*, a global
+exercise named through its key (INV-27). The keypad's separator key renders `,` and is disabled for reps;
+the row speaks *"40 quilogramas"*, *"6 repetições"* — so the Hermes `Intl` plural and decimal-comma
+criterion is met. A blank chip reads *"RIR não registrado"*, never 0 (INV-03). **`5+` opened `5 6 7 8 9 10`
+and stored nothing by itself** — the row still read "não registrado" until 7 was tapped — and the
+accessibility tree carries the distinction the decision turns on: `RIR 7` is `checked`, `RIR 5 ou mais`
+is `selected` and **not** `checked`. Force-stopping mid-workout and cold-launching brought the row back
+exactly (INV-09), and `PRAGMA foreign_keys = 1` with an orphan insert rejected closes **stage 2's one
+honestly-open criterion**.
+
+**Three defects, none of them in stage 3's own logic, and none findable without a phone.**
+
+- **⚠ `seedReferenceData()` had no callers.** Stage 2 wrote the seed, tested its pure half, and gated it
+  in CI — and **nothing ever called it**. The phone was running with 36 tables and **0 exercises**, which
+  is why the exercise picker had nothing to show. Stage 2's entry above says the catalog reaches the
+  device "on first launch"; **on a real first launch it did not**, and every suite stayed green because
+  they exercise `referenceSeedRows()` and never the wiring. Now called from the root layout's
+  post-migration effect through `src/db/migrate.ts` — the entry point [ADR-012](decisions/ADR-012.md)
+  already allows, so no rule changed. Verified on the device afterwards: **201 exercises, 21 muscle
+  groups, 11 sport profiles, 14 increments, 16 tracks, 16 achievements**, each with a key and a null
+  name, and the fingerprint in `sync_state`.
+- **⚠ `Sheet` never opened** — task 011's, and the subject of
+  [ADR-014 § Amendment](decisions/ADR-014.md). It set `mounted` during render; with the React Compiler
+  enabled the sibling `setLastVisible` took and `setMounted` was lost. Its two tests both pass `visible`
+  as a constant, so the `false → true` path had never run anywhere. Repaired by mounting straight from
+  the prop; **the cost is the 240 ms exit fade**, recorded as a decision rather than absorbed quietly.
+  **The uncomfortable half, checked rather than assumed:** the transition test added with the fix was run
+  against the broken code and **passed in all eight matrix settings**, and `eslint` is silent on it too —
+  **Jest does not apply the React Compiler that the shipped bundle applies**. So the new test encodes a
+  good rule but would not have caught this. Until the suite runs under the compiler or the pattern is
+  banned by lint, a phone is the only gate this class of defect has.
+- **The set row reflows at font scale 0.86** — the ✓ wraps below the numbers as soon as the row holds
+  `40 kg × 6 RIR 7`. Nothing truncates and every target stays 56 dp, so the reflow is doing its job; it
+  is [07 §6](07-brand-and-ui.md)'s *one line* picture that no longer matches. Left open deliberately:
+  whether the spec or the layout gives way is a design call, and the 200 % pass should inform it.
+
+**The toolchain moved underneath the project, and that is now written down** ([06 §1](06-operations.md)).
+Android Studio ships **JDK 25**, and JDK 24+ refuses the restricted `System.load` calls AGP's CMake tasks
+make — every native task fails with one unattributed line. JDK 17 fixes it. The Windows build then still
+dies in `react-native-libsodium`'s CMake, so the APK is built in WSL2 as ADR-004 allows (~30 minutes
+cold, four ABIs for a phone that needs one). And **`packages/core-native`'s `.so` files are gitignored**,
+so stage 1's claim that the generated surface and the shipped library *"cannot drift"* holds **only on the
+machine that ran `ubrn build`**: a second checkout links stage-1 bindings against a pre-stage-1 binary and
+fails on `undefined symbol: …volume_kg`. Worth closing with a CI step rather than a paragraph.
+
+**Also fixed:** `expo-haptics` was committed as `^57.0.3` against a lockfile saying `~57.0.3`, which
+`pnpm install --frozen-lockfile` refuses — the command CI runs, so it would have failed there.
+
+**What stage 3 still owes**, and what stage 4 waits on: the 200 % font pass, the imperial pass, TalkBack
+with the screen reader actually on, a short screen for the keypad, and airplane mode. The task file's
+device list says which are ticked and which are not.
+
+**Verified after the pass, matching what CI runs**: `tsc`, `eslint`, 48 lint fixtures, the platform-file
+check, catalogs at 488 messages, the seed-version gate, and **613** Jest tests, up from 597 — the 16 new
+ones being `Sheet` opened and closed by a caller that moves the prop, across the whole matrix.
+
+- No invariant changed. **One ADR amended** (ADR-014, joining ADR-012 earlier in the day): 49 documents,
+  15 ADRs. Three cross-cutting gaps recorded above, none of them owned by a task.
+
+### 2026-09-21 — task 004's stages are written down, and the catalog screen forces three decisions
+
+**The stage plan existed nowhere in `docs/`.** Four stages were built against a decomposition that
+lived only in the conversation that made it: this file cites "stage 4", "stage 5's" and "the stage-8
+checks", the task file cites "stages 4–6", and no document ever said what any of them were.
+`.agents/AGENTS.md` makes `docs/` the source of truth, and the decomposition of the project's largest
+task is exactly the kind of thing that rule is for. It is now a table in
+[task 004](tasks/004-exercise-catalog-and-logging.md) § Stages — **stages 0–3 as a record,
+reconstructed from what each stage wrote about itself, and stages 4–8 as a plan** that may be re-cut
+in that file when a stage learns something. Nothing about the built stages changed; what changed is
+that the next person can read the shape of the task without asking.
+
+**Three decisions stage 4 forces, settled before the code rather than inside it.**
+
+- **Archiving a *global* exercise is local to the device, and the UI says *hide*, not *delete*.**
+  Stage 2 recorded that "a global the user archived stays archived", which is right on one phone and
+  unexamined past it: `deleted_at` sits on a row whose `owner_user_id` is NULL — a row every user
+  shares — so replicating that write is one user putting an exercise away for everybody. It stays a
+  local act, and **how a per-user opinion about a shared row travels is an input to
+  [task 006](tasks/006-sync-layer.md)**, stated there rather than guessed at now. The wording matters
+  as much as the mechanism: *hide* is a claim about one person's list, and *delete* is a claim about
+  the catalog.
+- **Re-forking a global reuses an archived fork and un-archives it.** The task file already says a
+  second fork is never made; what it did not say is what happens when the first one was archived.
+  Refusing to reuse it means the save collides with `exercises_owner_name_key` against a row the user
+  cannot see — an error message about something invisible, which is the worst kind. Reuse is also the
+  honest reading of INV-11: the row was put away, not destroyed, and editing the global it came from
+  is the user asking for it back.
+- **The create form offers only `weight_reps` and `reps_only`.** FR-2.3's `duration` and
+  `distance_duration` stay in the schema and arrive with the set row that can log them (stage 5).
+  Offering all four now would let a user build an exercise the app cannot log — a dead end they would
+  reasonably read as a bug.
+
+- No invariant changed and no ADR was added. Counts unchanged: 49 documents, 15 ADRs.
+
+### 2026-09-23 — task 004 stage 5 planned: re-cut in three, and seven decisions before the code
+
+**Stage 5 is re-cut into 5a, 5b and 5c** ([task 004](tasks/004-exercise-catalog-and-logging.md) § Stages). Reading the
+task against the code found four promises no stage owned: ✓ advancing focus (never built), removing and reordering
+exercises mid-session (FR-2.8 — only adding exists), reopening the workout in progress on relaunch (the force-quit
+criterion — relaunch lands on home), and the two tracking modes stage 4 deferred "to stage 5" when stage 5's row did not
+mention them. **5a** is routines, supersets and start-from-routine; **5b** finishes the live session — set types, the
+rest timer, focus, remove and reorder, resume; **5c** is the `duration` and `distance_duration` set row, before stage 6.
+
+**Seven decisions**, each in the task file where the code will read them:
+
+- **`workout_exercises` gains `rest_seconds`, `target_min_reps`, `target_max_reps` and `target_rir`**
+  ([03 §4](03-database-schema.md)), in both schemas. They are *copied* from the routine at start, so a routine edited
+  afterwards never moves a timer that is already running; `rest_seconds` NULL is **no timer**, not an invented default.
+  A schema change after task 002, made while no user holds data — the cheap moment 002 names, still open.
+- **The running rest timer is derived** — the last completed set's `completed_at` plus its exercise's rest — so it
+  survives a force-quit with no state of its own (INV-09). Skipping it is a device-local record, never synced; `±15 s`
+  edits that exercise's rest for the rest of the session.
+- **A routine pre-fills the weight and the reps, never the RIR.** The target RIR is shown beside the row, not written
+  into it: a RIR stored before the user looked is an e1RM input they did not choose — the rule `5+` and the blank chip
+  already follow (INV-03). FR-2.10's plan default is task 005's.
+- **A superset alternates and rests once per round** (FR-2.6).
+- **A set's type changes from a visible control** — the set number is a button, long-press a shortcut, no swipe — and
+  a non-working set shows `W`/`D`/`B`/`A` and says its type (07 §5–6, INV-24).
+- **Notification permission is asked at the first rest timer**, never at launch, and never again once refused.
+- **`expo-haptics` and `expo-notifications` get a lint fence** (`device-feedback`, allowed in `src/platform/` only).
+  `expo-haptics` was confined by convention alone since stage 3; the fence makes it a rule, with a known-bad fixture.
+
+- No invariant changed and no ADR was added: the decisions sit inside INV-03, INV-09 and INV-24 rather than changing
+  them. Counts unchanged: 49 documents, 15 ADRs.
+
+### 2026-09-23 — task 004 stages 5a and 5b built: routines, and the live session finished off
+
+**Built, green in CI, and not yet on the phone.** Routines exist — build, rename, file in folders, reorder their
+exercises, superset neighbours, set targets and rest, duplicate, archive and restore — and starting one writes the whole
+pre-filled workout in **one synchronous transaction** after the ids are minted, refusing if a workout is already open.
+The live session gained set types, a rest timer with its haptic and notification, ✓ advancing focus (superset-aware),
+removing and reordering exercises, removing a set, and **a cold start reopening the workout in progress**.
+
+**⚠ The finding worth the entry: the generated migration would have deleted every logged set.** Adding four columns to
+`workout_exercises` — one with a CHECK — made `drizzle-kit generate` write a table rebuild. The expo migrator runs every
+pending migration inside one `BEGIN … COMMIT`, where the rebuild's `PRAGMA foreign_keys=OFF` is a no-op; with foreign
+keys on since stage 2, its `DROP TABLE` is an implicit `DELETE` that cascades into `set_logs`. (Its copy step also
+selected the four new columns from a table that did not have them, so it would have failed — on a device, at launch.)
+Replaced by hand with `ADD COLUMN`s, the snapshot kept, and proven against `node:sqlite` with foreign keys on: the logged
+set survives, the CHECK bites, `foreign_key_check` is empty. The rule is now in [06 §4](06-operations.md), because the
+next migration will meet the same generator.
+
+**Four smaller things found on the way:**
+- **A hidden exercise showed a blank name mid-workout.** The live block looked its exercise up in the *live* catalog
+  list, which excludes hidden rows — so hiding one mid-session, or starting a routine holding one, drew an empty
+  heading. Now `readExercise`, which does not filter; the routine editor uses the same.
+- **`expo-haptics` had no fence.** Confined to `src/platform/` by convention since stage 3; now the `device-feedback`
+  fence covers it and `expo-notifications`, with a known-bad fixture (49 fixtures).
+- **The local typed-routes file was stale** (2026-09-21), and `tsc` rejected the new routes against it. It is
+  gitignored and CI has no copy, so typed routes are **not enforced in CI at all** — regenerated here by starting Expo.
+  Noted, not fixed: a CI step that generates it would make typed routes a gate rather than a local courtesy.
+- **A rest-bar test that proved nothing** was caught by mutation before it was committed: the haptic guard's test
+  passed with the guard removed. Rewritten around the case the guard exists for, and watched failing (8 of 8).
+
+**Decided while building**, each in the task file: a routine's `reorder` in FR-2.5 is its exercises' order — the
+routines list keeps creation order, and a reorder function nobody called was deleted rather than left as another
+"written, tested, never called"; a removed routine exercise becomes a tombstone parked **below** every live index, so
+the two-pass renumber never meets it; and the set-type letters are catalog content — `W D B A` in English, `Aq D B A`
+in Portuguese — for the native-speaker review to settle.
+
+**Verified, matching what CI runs**: mobile — `tsc`, `eslint`, **49** lint fixtures, the platform-file check, catalogs
+at **614** messages, the seed-version gate, `db:generate` with no drift, **877** Jest tests, up from 737 at 5a and 613
+before the stage. API — `ruff`, `ruff format`, `mypy`, six import contracts, `alembic upgrade`/`downgrade`/`upgrade`
+through `0005`, the seed, `check_schema` (40 tables), **347** pytest tests. Three key rules watched failing: a RIR
+pre-filled from the target (4 failures), rest mid-superset (1), the stale-clock buzz (8).
+
+- No invariant changed and no ADR was added. One document gained a rule (06 §4). Counts unchanged: 49 documents,
+  15 ADRs. One dependency added, `expo-notifications`, which needs a fresh prebuild on the device.
+
+### 2026-09-23 — task 004 stage 5 on the phone: the migration holds, and the notification was being thrown away
+
+First device pass for stages 5a–5b, on the Galaxy S21 FE, with a development build of `228069e` installed **over** the
+previous one so the phone kept its data — one open workout, two completed sets — for the migration to meet.
+
+**Proven on the phone:** migration `0002` against real logged sets (rehearsed first on a copy pulled off the device,
+then run by the app: both sets intact, `foreign_key_check` empty); **every cold start landing in the open workout**; and
+**a force-quit mid-rest coming back to the same rest** — ticked at 21:00:37 with a 2:00 rest, force-stopped, relaunched,
+reading 1:43 seventeen seconds later. The task file's stage-5 device list says what is ticked and what is not.
+
+**Two defects, both in the notification, both fixed and both invisible to every gate:**
+
+- **⚠ The rest notification was dropped whenever the screen was off** — the one case it exists for. The foreground
+  handler returned "show nothing" unconditionally, believing it is only consulted while the app is on screen; it is
+  consulted whenever the process is alive. The alarm fired, reached the handler, and was discarded. Now it asks
+  `AppState`; the next screen-off rest was delivered.
+- **A force-quit mid-rest lost the notification**, because Android cancels a force-stopped app's alarms and only a
+  mutation rescheduled one. The notification now follows the workout from an effect that runs on mount too.
+
+**Not settled:** how late the notification is. One clean delivery was ~39 s late on a 2:00 rest, the first alarm ~22 s —
+Android deferring an inexact alarm. The later timing runs were disturbed by hand on the phone and were abandoned at the
+owner's request, so whether `SCHEDULE_EXACT_ALARM` is worth asking for stays open. **Also not run:** routines on the
+device, supersets, the refused-permission path, TalkBack, and ✓ latency on a routine session.
+
+**Carried into stage 5c**, both found during the pass: the ✓ completes a set with no weight and no reps — 03 §4's
+"completion requires the tracking mode's fields" is enforced nowhere — and 15 seeded `duration` / `distance_duration`
+exercises are pickable today and logged as weight × reps, while the 31 `reps_only` ones show a weight field.
+
+- No invariant changed and no ADR was added. Counts unchanged: 49 documents, 15 ADRs.
+
+### 2026-09-23 — task 004 stage 5c planned: the row follows what the exercise tracks
+
+Seven decisions, in the task file where the code reads them, closing the two gaps the stage 5 device pass carried
+forward. **Each tracking mode gets its own row** — a plank logs a time and no RIR, a carry logs weight, distance and
+time — so the 15 seeded time and distance exercises stop being logged as weight × reps. **The ✓ no longer completes a
+row missing its mode's required field**; it opens the keypad on that field — 03 §4's "enforced in the service layer",
+finally enforced. **`set_logs.distance_m` becomes `numeric(9,3)`** ([03 §4](03-database-schema.md)): as an integer, an
+imperial user's 100 ft read back as 98 ft — INV-02's precision lesson, arriving through distance, and a schema change
+made while no user holds data. Records for time and distance (longest hold, farthest carry) are left as an open question
+for stages 6–7, and a target time or distance on a routine as another.
+
+- No invariant changed and no ADR was added: 3 applies INV-01 exactly rather than changing it. Counts unchanged:
+  49 documents, 15 ADRs.
+
+### 2026-09-23 — task 004 stage 5c built: every tracking mode logs as itself
+
+**Built, green in CI, not yet on the phone.** The set row draws what its exercise tracks — weight × reps with RIR; reps
+with RIR; a time alone; weight · distance · time — so the 15 seeded holds and carries stop being logged as weight × reps,
+and the 31 reps-only exercises lose a weight field they never had a use for. A time is typed on the app's keypad,
+filling from the right (`130` → 1:30), and spoken as "1 minute 30 seconds". **The ✓ no longer completes a row missing
+what its mode needs** — it opens the keypad on that field. The create form offers all four modes; the targets sheet
+drops the rep range and RIR for a hold or a carry, and clears them on save. A routine start pre-fills last time's time
+and distance.
+
+**`set_logs.distance_m` holds decimals now** — `numeric(9,3)`, Alembic `0006` and device `0003`. As an integer, 100 ft
+read back as 98 ft; a test now round-trips every tenth of a foot from 1 to 300. The device migration is a table rebuild
+Drizzle generated, **kept as generated because it was read and proven first** (06 §4): nothing on the device references
+`set_logs`, so its `DROP` cascades into nothing, and against a copy of the test phone's own database every set
+survived, both CHECKs still bit after the rename, and 30.48 stored exactly.
+
+**Two things found on the way:**
+- **⚠ "Duplicate routine" could never have worked.** Stage 5a passed a whole routine exercise to the row builder as its
+  targets, and the builder spreads targets *after* setting `id` — so every copy carried the original's id and failed on
+  the primary key. The write half runs only on a device and the 5a device checklist never reached it. Fixed with
+  `targetsOf()`, which picks the five targets and nothing else, and a test that the copy keeps its own id.
+- **The INV-23 fence reads any `duration: <literal>` as an animation timing** — including a string such as a translation
+  key, and a tracking mode named `duration`. Worked *within* rather than around: the row's field is called `time`, and
+  the two lookups keyed by the tracking value are `switch` functions. Narrowing the selector to numeric literals would
+  change how INV-23 is enforced, which [`.agents/AGENTS.md`](../.agents/AGENTS.md) routes through an ADR, so it is
+  recorded here and not done.
+
+**Verified, matching what CI runs**: mobile — `tsc`, `eslint`, 49 lint fixtures, the platform-file check, catalogs at
+**630** messages, the seed-version gate, `db:generate` with no drift, **942** Jest tests, up from 879. API — `ruff`,
+`ruff format`, `mypy`, six import contracts, `alembic` up/down/up through `0006`, `check_schema`, **347** pytest tests.
+Watched failing: the completion rule (1) and whole-metre storage (2).
+
+- No invariant changed and no ADR was added. Counts unchanged: 49 documents, 15 ADRs.
+
+### 2026-09-23 — the status rows caught up
+
+A check of every document against the day's work found this file's own summary behind itself, in places older than
+task 004: the **Phase** row still described task 017 as under way, days after it merged; the **Tasks** row counted
+5 complete rather than 6; the **Repository** row left out PR #16; and task 017's checklist here showed six unticked
+boxes under a ☑ while its own file has all 23 criteria ticked. The **Next action** row said "stages 0–4" beside a
+paragraph about 5a–5c. All corrected. Five open questions the stage-5 work raised were in the task file but not in the
+table above — rest-notification lateness, a target time or distance, records for time and distance, feet or yards, and
+the Portuguese set-type letters — now numbered 13–17 there, each with the assumption being built.
+
+- No invariant changed and no ADR was added. Counts unchanged: 49 documents, 15 ADRs.
+
+### 2026-09-24 — task 004 stage 6 planned: the finish flow, and the half of PR detection nobody owned
+
+Nine decisions, in [task 004](tasks/004-exercise-catalog-and-logging.md) § Stages where the code reads them. Three are
+worth stating here.
+
+- **The previous bests move into the core.** `detect_prs` has taken an exercise's standing bests as an argument since
+  stage 1, and `src/domain/`'s comment said the caller "folds them from local `set_logs`". But folding them *is* PR
+  logic: it applies INV-04 and INV-08 exactly as detection does, so a TypeScript fold would be the second copy INV-04
+  forbids. It becomes `personal_bests()`, beside `detect_prs`, through both bindings, with a shared fixture and a
+  property test that the two functions agree. The server's `personal_records` rebuild in stage 7 is the same function.
+- **A record is the current best**, judged against every other finished workout of any date. A retroactively logged
+  workout that beat what came before it, but not what came after, is not celebrated: it would be celebrating a number
+  that is not the best today. This matches the server cache, which keeps the current best only.
+- **A past workout's sets carry its chosen end as `completed_at`, while `updated_at` stays the real time**
+  ([03 §4](03-database-schema.md)). Until now `completionPatch` wrote both from one `now`, which was harmless while they
+  meant the same moment. Backdating `updated_at` would make a retroactive write lose to any stale copy under
+  last-write-wins (NFR-4). The chosen end lives on the device until the workout is finished, which is safe because an
+  open workout never syncs, so the schema does not change.
+
+**Open question 18 added:** no task builds body-weight entry, so every bodyweight exercise has no load, no e1RM and no
+record, however it is logged. Stage 6 does not build it; it is recorded rather than discovered at launch.
+
+- No invariant changed and no ADR was added: the decisions apply INV-03, INV-04, INV-07, INV-08, INV-09 and INV-17
+  rather than changing them. Counts unchanged: 49 documents, 15 ADRs.
+
+### 2026-09-24 — task 004 stage 6 built: the finish flow, and a record that means the current best
+
+**Built, green locally on every gate CI runs, and not yet on the phone.**
+- *Finish* opens a sheet instead of ending the workout. It counts ticked and unticked sets, takes perceived fatigue
+  as one tap (a second tap clears it), and takes the workout's note.
+- It then lands on a **summary**: counted sets and volume, and each new record stated as a fact, with one emphasis
+  and one haptic.
+- With nothing ticked, the sheet offers only *Discard*.
+- An exercise's note lives in its options sheet.
+- *Log a past workout* opens the ordinary live screen dated to a chosen day and time: no rest timer, sets stamped
+  with the chosen end, rows written at the real time.
+
+**The core gained `personal_bests()`, built as a fold of `detect_prs` itself**, so the bests and the records cannot
+disagree about what a record is. A property test checks it from both directions: what a session broke is exactly
+what it moved, and a session folded into the bests breaks nothing against them. The new shared fixture
+`personal_bests.json` runs in Rust and Python, and Jest checks its shape. **Watched failing**: folding the history
+as one lifetime session instead of one session per workout failed three unit tests and the fixture's
+session-volume case.
+
+**The UniFFI bindings were regenerated in WSL2** — 69 lines, all additions, in the four generated files — and the
+three `.so` files copied back beside them, which stage 3's entry says is the only way they match. The WSL2 clone
+was fast-forwarded to the branch head first; it now carries this stage's `core-rs` as uncommitted changes.
+
+**Found on the way:**
+- **"Last time" could come from a workout with nothing ticked.** `readPreviousPerformance` picked the latest workout
+  that *contained* the exercise. Finishing and discarding made that reachable, so it now picks the latest
+  **finished** workout with a **completed** set. Routine pre-fill uses the same function and inherits the fix. It
+  is a query, so only the device can prove it.
+- **`completionPatch` wrote `completed_at` and `updated_at` from one `now`.** They are split now; a test fails if a
+  past workout's `updated_at` is backdated (**watched failing**).
+- **The live screen must not load the core.** The first cut put the finish sheet's tick count beside the summary's
+  arithmetic, which imports `@/domain`, so the live workout would have loaded a native module to count ticks.
+  `finish.ts` is now the only module in the feature that reaches the core, and only the summary screen imports it.
+- **Typed routes**: the new `/summary/[id]` needed `.expo/types/router.d.ts` regenerated locally, which is the CI gap
+  already listed under *Gaps*.
+
+**Verified**:
+- Mobile: `tsc`, `eslint`, 49 lint fixtures, the platform-file check, catalogs at **673** messages, the seed-version
+  gate, `db:generate` with no drift, and **1105** Jest tests, up from 942.
+- Core: fmt, clippy `-D warnings`, 49 unit tests and 6 fixture tests.
+- API: `ruff`, `ruff format`, `mypy`, six import contracts, and 158 unit tests. The integration suite needs the
+  local Postgres and was not run, but nothing the API touches changed except `app/domain/strength.py`'s re-export.
+
+- No invariant changed and no ADR was added. Counts unchanged: 49 documents, 15 ADRs.
+
+### 2026-09-24 — task 004 stage 6 on the phone: the records hold, and every tall sheet ran off the screen
+
+The first device pass for stage 6, the same evening, on the Galaxy S21 FE (Android 16, pt-BR, metric, dark), with a
+development build of `a662add`. It was built in WSL2 in under two minutes (an incremental Gradle build, arm64 only)
+and installed over the previous build, so the phone kept its data. The packaged core library was checked for
+`personal_bests` before installing.
+
+**The client half of the fixture criterion is settled.** Three finishes were predicted from the fixture's rules before
+the tap, and the phone showed exactly those records, read back from SQLite as well as from the screen:
+- a first-ever session, where an e1RM past 12 effective reps is refused;
+- a second session beating it, at **83,33 kg**;
+- a past workout dated *before* the second but judged against it, taking the heaviest-weight record and not the e1RM
+  one — decision 2, the current best whatever the date, on real data.
+
+**Also proven on the phone:**
+- A 100 kg warm-up celebrated nothing and was not counted.
+- Fatigue cleared to NULL, not 0.
+- A note survived a force-stop with the finish sheet open.
+- Discard left a tombstone that no cold start reopens.
+- A past workout ran no timer and scheduled no alarm, its set dated to the chosen end with `updated_at` real.
+
+The task file's stage-6 list has the numbers. TalkBack was not run. The acceptance criterion *the e1RM fixture
+produces identical results in Python and TypeScript* is now ticked.
+
+**⚠ The finding worth the entry: every tall `Sheet` ran off the top of the screen.** It is stage 4's, and its device
+pass had never run. The modal is drawn edge to edge, and the sheet neither kept out of the insets nor shrank. So the
+exercise picker grew to 201 rows tall, pushing its title, close button and search field above the top edge, and it
+could be left only by the system back button. The picker's own list was set to shrink, with nothing above it to
+shrink against, and the comment beside it claimed the sheet "fits any screen". **Every Jest suite passed throughout**,
+the same shape as stage 3's `Sheet` defect: a layout claim that only a phone can check. Fixed in `Sheet`:
+- insets on both edges, and a strip of backdrop to tap;
+- `flexShrink`, so a list inside it scrolls;
+- a `KeyboardAvoidingView`, because the same edge-to-edge modal also left the picker's search results under the
+  keyboard.
+
+Two tests pin the geometry, one watched failing; the phone confirmed both.
+
+**Three smaller fixes**, all verified on the phone:
+- The past-workout sheet's *Registrar* sat below its keypad, off-screen, and *Dia seguinte* wrapped alone. The day
+  now has its own line with its two steps side by side, and *Registrar* is above the keypad.
+- "0 série marcada" is gone: CLDR puts Portuguese 0 with the singular, which reads wrong in Brazil. **Worth the
+  native-speaker review's attention across every plural message**, not just this one.
+- Recorded, not fixed:
+  - the dev client's floating *Tools* button covers *Encerrar* (development builds only);
+  - the ✓ has no accessible name of its own, which is for the TalkBack criterion;
+  - a fork reads identically to its global in the picker, which is a design question.
+
+- No invariant changed and no ADR was added. Counts unchanged: 49 documents, 15 ADRs.
+
+### 2026-09-24 — task 004 stage 5's device list: three screens that never showed a write
+
+The rest of stage 5's device list ran the same evening, on the same build, after stage 6's pass.
+
+**Passed on the phone:**
+- A routine built, reordered, supersetted, given targets, duplicated, archived and restored. Started, it pre-filled
+  exactly as 5a's rules predict, with every RIR NULL.
+- The superset alternated and rested once per round, and the ✓ with the keypad open carried the keypad to the next
+  set's weight.
+- The refused permission: asked at the first rest and not at launch, the bar still counting after "Não permitir",
+  and no second ask. The permission was restored afterwards.
+- 5c's plank and carry, each empty ✓ opening the keypad on the field its mode requires, each value stored exactly.
+
+The task file has the details. TalkBack and ✓ latency under a ticking bar were not run.
+
+**⚠ Three screens never showed their own writes: the routines list, the routine editor and the catalog.** A routine
+created, three exercises added, a row hidden: all in SQLite, none on screen until a remount. Each re-read with
+`useMemo(() => { void revision; return read(); }, [revision])`. **Compiling that pattern with the app's own
+`babel-plugin-react-compiler` showed the cause directly**: the compiler memoizes by what a computation uses, a `void`
+read uses nothing, and the output cached `read(userId)` on `userId` alone. Stages 4 and 5a shipped it with every gate
+green. It is the second defect of the class the *Gaps* list already names, after stage 3's `Sheet`:
+- Fixed with `useDatabaseRead`, which holds the read in state and puts it back into state after each write and on
+  focus.
+- The pattern is refused by a new lint fence, `void-dependency`, with a known-bad fixture (50 fixtures).
+- The class stays open until the suite runs under the compiler.
+
+**Every routine read "0 exercícios".** Drizzle writes a column bare inside a raw `sql` fragment when the query around
+it has no join, so the correlated count compared `routine_id` with its own `id`. `src/db/qualified.ts` now writes
+`"table"."column"` explicitly. Stage 6's body-weight subquery was correct only because its query joins, and uses the
+helper too. A test renders both in a join-less query, and was watched failing against the original fragment.
+
+**A correction to open question 15, found by the summary:** a loaded carry *does* take a heaviest-weight record,
+contrary to "no PR". I think the doc was wrong, not the code; recorded there, the decision is the owner's.
+
+- No invariant changed and no ADR was added. Counts unchanged: 49 documents, 15 ADRs.
+
+### 2026-09-25 — task 004 stage 7 planned: history, charts, and a cache that could not hold its own records
+
+Six decisions, in [task 004](tasks/004-exercise-catalog-and-logging.md) § Stages where the code reads them. The owner
+took each recommendation. Three were already written into the task file; reading the server half against its schema
+found two more, and one was due.
+
+- **Charts on `react-native-svg`**, already a dependency, instead of `victory-native` on Skia. [02 §4](02-architecture.md)
+  changes to match.
+- **The rebuild is one user at a time**, as a service and a command ([06 §5](06-operations.md)). All users would need
+  an unscoped function on ADR-011's allowlist, for a server that holds no sets yet.
+- **History is reached** from the diagnostics screen, the finish summary, and each exercise in a workout's detail.
+- **`personal_records` could not hold its own records.** Its key, `UNIQUE (user_id, exercise_id, kind)`, allows one
+  `max_reps_at_weight` row, while that kind is one record per load. Now two partial unique indexes and a CHECK
+  ([03 §4](03-database-schema.md), migration `0007`). Nothing had ever written the table, so nothing had found it.
+- **`personal_bests()` could not fill the table either.** Its rows need `achieved_at`, `set_log_id` and `workout_id`,
+  and the fold returns values only. The core gains `standing_records()`, the same fold keeping where each best came
+  from; `personal_bests()` becomes its projection. A Python loop over `detect_prs` would have been the second copy of
+  the fold INV-04 forbids.
+- **Open question 15 moves to task 010.** Time and distance records are new kinds, not a stage 7 detail.
+
+- No invariant changed and no ADR was added: 03 §4's key is a schema change to a derived table, and the rest applies
+  INV-04, INV-07, INV-08 and INV-17. Counts unchanged: 49 documents, 15 ADRs.
+
+### 2026-09-25 — task 004 stage 7 built: history, three charts, and the records cache
+
+**Built and green on every gate CI runs, locally; the device pass follows.**
+- **The history**: a list of finished workouts, newest first, each with its counted sets and volume; a workout's
+  detail, every set as logged, with warm-ups, drops and unticked rows marked rather than dropped, its notes and
+  fatigue, and the records it still holds; and an exercise's history, three charts over its sessions, newest first.
+  Reached from the diagnostics screen, the finish summary, and each exercise in a detail.
+- **The charts** are one `LineChart` in `src/ui/` on `react-native-svg`: a 2 dp line in the strength hue, validated
+  against both surfaces with the dataviz script; hairline gridlines at round values in the user's unit; a missing
+  value breaks the line; a tap or TalkBack's adjustable actions move a readout through the sessions.
+- **The core gained `session_metrics()` and `standing_records()`**, through both bindings and two new shared fixtures.
+  `personal_bests()` is now `standing_records()` without the positions. The UniFFI bindings were regenerated in WSL2
+  (241 lines, all additions).
+- **The server**: migration `0007`, a scoped read of a user's finished sets, the rebuild service and
+  `python -m app.jobs.rebuild_records <user-id>` (06 §5).
+
+**Found on the way:**
+- **The chart drew a lone point twice** when it was also the selected one: a duplicate React key, and two dots on top
+  of each other. Fixed; a test counts the dots.
+- **Typed routes were stale again** — `.expo/types/router.d.ts` carried a route to `useDatabaseRead` from some earlier
+  state. Regenerated by starting Expo; it is still the CI gap under *Gaps*.
+- **Watched failing**: the metrics tests with the counted-set filter removed (three failed), and the rebuild's
+  integration test with the body-weight subquery's "on or before the day" dropped, which weighed a pull-up at today's
+  body weight.
+
+**Verified**:
+- Core: fmt, clippy `-D warnings`, 62 unit tests and 8 fixture tests.
+- API: `ruff`, `ruff format`, `mypy`, six import contracts, and **363 tests with the Postgres integration suite run
+  locally** (Docker started for it).
+- Mobile: `tsc`, `eslint`, 50 lint fixtures, the platform-file check, catalogs at **709** messages, the seed-version
+  gate, `db:generate` with no drift, and **1272** Jest tests, up from 1105.
+
+- No invariant changed and no ADR was added. Counts unchanged: 49 documents, 15 ADRs.
+
+### 2026-09-25 — task 004 stage 7 on the phone: every number as predicted, and three things only a phone could see
+
+The same evening, on the Galaxy S21 FE (Android 16, pt-BR, metric, dark), with a development build of `d6354d3`
+built in WSL2 and checked for the new core functions before installing. It was installed over the previous build,
+so the phone kept every earlier pass's workouts. That made it a good test bed: warm-ups, unticked rows, a workout
+logged afterwards, sets without RIR, a hold, a carry, and two discarded workouts. **Every number on screen was
+predicted from the pulled database before the screen was opened, and every one matched.** The task file's stage-7
+list has them. The two worth naming:
+- **The e1RM chart stops where RIR stops.** "Treino A"'s sets have no RIR, so the line ends at 83,3 kg with a note
+  rather than dropping to zero. That ticks *RIR left blank … a chart never treats it as 0*.
+- **An old workout names only what it still holds.** The past workout of the 23rd names its 65 kg records and not its
+  e1RM, which the next day beat. That closes the item stage 6 left for this stage, and *warm-ups appear in the log* is
+  ticked with it.
+
+**Found and fixed**, each verified on the phone:
+- **The oldest point was drawn through its own axis label** whenever it was also the lowest. The labels now have a
+  gutter measured from their own layout. A test checks where the line starts, and it failed with the gutter switched
+  off.
+- **At 200 % font the top axis value rose over the readout.** The top gridline now sits one measured label-height
+  down. Jest lays out nothing, so neither defect was reachable there. It is the same class as stage 6's sheet, a
+  layout claim only a phone can check.
+- **"0 série contada"** — stage 6's zero-plural again, in a new message. Here the zero is the information, so it gets
+  an explicit `=0` case in both languages instead of being hidden. **The native-speaker review should read every
+  `{count, plural}` message with zero in mind.**
+
+**Not run:**
+- Imperial: it would mean overwriting this phone's database, which holds the earlier passes' record.
+- TalkBack.
+- Hiding an exercise with history and reopening it.
+
+Jest covers each of them. After the fixes: 1298 Jest tests, and CI green on `d6354d3`.
+
+- No invariant changed and no ADR was added. Counts unchanged: 49 documents, 15 ADRs.
+
+### 2026-09-25 — task 004 stage 8 built, and a device pass that stopped at a data loss
+
+Stage 8's six decisions are in the task file. The owner took each recommendation, including three adjustments made by
+reading the proposal against 02 §7, 03 §11 and the code:
+- A `PUT` never drops a row left out of the document, because 02 §7 says a set present on either side survives.
+- A write to a global answers `409`, which is what a stranger's id already got.
+- The records rebuild covers only the exercises the write touched, under a per-user advisory lock.
+
+**Built:**
+- The core gains `missing_for_completion`, through both bindings and a shared fixture. The phone's ✓ and the API's
+  `422 set_missing_<field>` are now the same function.
+- `GET` list, `GET /{id}` and `PUT /{id}` for exercises, routines and workouts. Task 003's `POST /workouts` is retired,
+  and its proofs moved to the `PUT`.
+- A units and language switch on the diagnostics screen, calling `updateAccount`.
+
+Also 21 new API integration tests. The concurrent-finishes test failed three runs out of three with the lock removed,
+so it tests the lock and not the timing.
+
+**The device pass found a data loss, and stopped there.** The diagnostics switch's first `PATCH /auth/me` needed a
+refresh, and the local API refused it: the integration suite had emptied the development database, and the phone's
+account with it. The session ended. Ending it deleted the account's device row, and `ON DELETE CASCADE`, live since
+stage 3 turned `PRAGMA foreign_keys` on, took every workout, set and routine on the phone. Every earlier pass's record
+is gone, with no server copy.
+
+**Decided and fixed the same evening:**
+- **A session's end keeps the account's row.** The tokens and the privacy key go and the training stays. This amends
+  task 019. `forgetLocalAccount` is removed, and a lint fence, `account-row-deletion`, refuses any deletion of a
+  `users` row in the app, with two known-bad fixtures.
+- **The integration suite has its own database**, `cyberathlete_test`, granted from `roles.sql`'s own per-database
+  half, locally and in CI. A full run left the development database's users as they were.
+
+**The pass resumed** on a throwaway account registered against the local API, every value predicted from the pulled
+database first:
+- The ✓ on an empty row, now asking the core, opened the keypad on reps.
+- The units switch saved imperial. Typing 100 stored exactly 45.359237 kg, which read 100 lb on the set row, the
+  summary, the workout detail and the chart axes. That ticks *pounds end to end*.
+- A hidden bench press kept its workout detail and its history. That ticks *archiving leaves history displayable*.
+- **The fix, on the path that caused the loss.** The refresh was refused on purpose, and the app signed out as before.
+  This time the phone kept its user row, the workout and its set, and signing back in brought the history back.
+
+CI was green on all five jobs at `ed121e7`, the suite running in its own database.
+
+**Still open:** TalkBack, the full workout in airplane mode, the 30-tap count and the 200 % imperial check need the
+owner at the phone. The task file's *Closing task 004* proposes how to finish, with five decisions.
+
+- No invariant changed and no ADR was added. Counts unchanged: 49 documents, 15 ADRs.
+
+### 2026-09-25 — closing task 004 planned: five decisions, no new stage
+
+The owner took each recommendation in the task file's *Closing task 004*. What is left is a check, a tick or a
+deferral, and one small development-only instrument:
+- **The weighted pull-up is ticked on its proofs.** The core gives 123.3 kg and NULL with no body weight. The server
+  weighs a pull-up at the body weight on its workout's day, not today's. The device's query is pinned to the same rule.
+  The device half waits for open question 18, since nothing in the app writes a body weight.
+- **The rest notification's timing moves to open question 13.** Arrival with the screen off was proven in stage 5.
+- **✓ latency under a ticking rest bar** gets a development-only timer on the live screen: the write and re-read, and
+  the time to the next frame. It is read from logcat, and it stays in the code for task 005 to measure again.
+- **`Sheet`'s exit animation moves to § Gaps.** The ✓'s accessible name is left to the TalkBack pass. The dev client's
+  *Tools* button and a sign-out console error are development-only, and are closed with no action.
+- **The 30 taps are counted on a routine of five exercises × four sets** built beforehand, so the count measures
+  logging and not setup.
+
+- No invariant changed and no ADR was added. Counts unchanged: 49 documents, 15 ADRs.
+
+### 2026-09-25 — closing task 004 on the phone: airplane mode passes, and the ✓ was over budget
+
+**The owner logged a full workout in airplane mode** — a routine start, 20 sets, a warm-up, the finish flow — with the
+API's port forward removed so nothing could reach it. Every row read back as predicted. That ticks the criterion.
+
+**The ✓ latency check found the criterion had been ticked on the wrong number.** Stage 3's 10.5 ms was 60 writes in a
+loop inside one rolled-back transaction, with no render. Measured on a real session with the rest bar running, to the
+next frame after the ✓:
+- A development build read ~200 ms, which is React's development mode rather than the product.
+- **A production bundle read p50 82.3, p95 107.8 ms — over NFR-2.** It was served to the development client with
+  `npx expo start --no-dev --minify`, and needed an `https` API URL to pass the 04 §5 guard.
+- **The commit was not the cause** (0.5 ms, measured). The phone's idle state doubles the database half between sets,
+  which is real and stays.
+- **The render was the cause:** a profile showed every ✓ re-rendering all twenty set rows.
+
+**Decided and fixed:** the set row is memoized on plain values, the app's first `memo`, and the live screen's handlers
+are stable through `useStableHandler`. One ✓ now re-renders one row, and the production bundle reads **p50 55.9, p95
+66.8 ms**. Two tests pin it, each watched failing. *Measure a commit* stays on the diagnostics screen, and the ✓ timer
+stays, switchable in a production bundle, for task 005 to measure again.
+
+**Found and left open:** the ✓ that starts the rest bar reveals the next row against the viewport as it was before the
+bar appeared. That leaves the row below the fold, or half behind the keypad. It existed before the fix and is the
+owner's decision, proposed in the task file as *Closing task 004, the last step*.
+
+**The owner's checks, done at the phone the same evening:** the 30-tap count on the 5 × 4 routine, TalkBack across
+stages 3 and 5–7 (which also settled the ✓'s accessible name, with no change asked for), the 200 % font check in
+pounds, and stage 4's accessibility pass. Confirmed in the session and ticked in the task file; the observations
+themselves were not written down.
+
+- No invariant changed and no ADR was added: a rendering change inside one feature. Counts unchanged: 49 documents,
+  15 ADRs.
+
+### 2026-09-26 — task 004 complete: the reveal re-aimed, and the rest moves onto the keypad while it is open
+
+**The last finding was reproduced first, and was worse than recorded.** On the tall screen, the ✓ that starts a rest
+left the next row below the fold, pushed down by the 238 px bar mounted after the reveal was aimed. With the keypad
+open, **the field being edited went behind the keypad**, where the record had said it stayed visible.
+
+**Measuring before coding changed the fix.** One screenshot at 1080×1600 with the keypad open and a rest running showed
+the keypad's top above the bar's bottom edge: the list had no visible height, so no scroll could help. At 640 dp,
+~86 dp was left. A ✓ from the keypad keeps it open and starts the rest, so that state is the ordinary one.
+
+**Decided (the owner took both recommendations), and built:**
+- **The reveal aims again whenever the list's height changes**, at the row last revealed, until a finger scrolls the
+  list. The short screen is judged by 07 §6's own rule, the field being edited in view.
+- **While the keypad is open, the rest is a countdown on the keypad's heading line** (`Carga · Descanso 1:28`), and the
+  bar is not drawn. *OK* brings the bar back with its controls. A compact bar was ruled out on the numbers. 07 §6 says
+  so now.
+- In passing, a closed keypad counts as 0 in the reveal; it had kept the last keypad's height.
+
+**Proven on the phone**, every position predicted first: tall and short screens, keypad open and closed, *OK* mid-rest,
+a drag followed by the rest ending, and 200 % font. The 200 % check found **the live workout's header pushing *Encerrar*
+half off the screen**, a defect against a ticked criterion. The title now gives way, and it was re-run at 2.0 and 0.86.
+
+**Task 004 is complete.** Every criterion in its task file is ticked or deferred with a reason. Tests: 1 379 Jest, lint,
+52 lint fixtures and the catalogs green locally. [PR #17](https://github.com/hiuriselzler/projeto_cyber/pull/17) is
+marked ready for the owner to merge once CI is green.
+
+- No invariant changed and no ADR was added: a layout change inside one feature, and a design rule restated in 07 §6.
+  Counts unchanged: 49 documents, 15 ADRs.
+
+**Task 005 proposed the same day**, in its task file's new *Stages* section: nine stages, the engine alone and first
+(stages 1–3, pure Rust, no phone), then persistence, the safety controls and three screen stages each ending on the
+phone. Stage 1 carries five decisions for the owner. The one found by reading the gates rather than the requirements:
+**`core-rs/deny.toml` bans `rand` and checks dev-dependencies too, so `proptest` cannot be added as things stand.**

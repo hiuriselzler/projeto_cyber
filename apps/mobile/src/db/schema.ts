@@ -30,8 +30,11 @@ const SEXES = ['male', 'female', 'unspecified'] as const;
 const TIERS = ['trial', 'free', 'pro', 'coach'] as const;
 const STORES = ['apple', 'google'] as const;
 const MUSCLE_REGIONS = ['upper_push', 'upper_pull', 'legs', 'core', 'arms', 'other'] as const;
-const MODALITIES = ['barbell', 'dumbbell', 'machine', 'cable', 'bodyweight', 'band', 'other'] as const;
-const TRACKING = ['weight_reps', 'reps_only', 'duration', 'distance_duration'] as const;
+/** Exported: the catalog screen filters by modality and has to name every one of them (task 004 stage 4). */
+export const MODALITIES = ['barbell', 'dumbbell', 'machine', 'cable', 'bodyweight', 'band', 'other'] as const;
+export const TRACKING = ['weight_reps', 'reps_only', 'duration', 'distance_duration'] as const;
+export type Modality = (typeof MODALITIES)[number];
+export type Tracking = (typeof TRACKING)[number];
 const WORKOUT_SOURCES = ['manual', 'plan', 'routine'] as const;
 const SET_TYPES = ['warmup', 'working', 'drop', 'backoff', 'amrap'] as const;
 const PROGRESSION_STRATEGIES = [
@@ -375,9 +378,17 @@ export const workoutExercises = sqliteTable(
     plannedExerciseId: text('planned_exercise_id').references(() => plannedExercises.id, {
       onDelete: 'set null',
     }),
+    // Copied from the routine (or plan) at start and editable during the session, so editing the routine afterwards
+    // never moves a timer already running. NULL rest is no timer (task 004 stage 5, 03 §4).
+    restSeconds: integer('rest_seconds'),
+    targetMinReps: integer('target_min_reps'),
+    targetMaxReps: integer('target_max_reps'),
+    // Shown beside a set as a target; never written into set_logs.rir (INV-03).
+    targetRir: integer('target_rir'),
     ...syncColumns(),
   },
   (t) => [
+    between('workout_exercises', 'target_rir', 0, 10),
     index('workout_exercises_workout_order_idx').on(t.workoutId, t.orderIndex),
     index('workout_exercises_exercise_workout_idx').on(t.exerciseId, t.workoutId),
   ],
@@ -396,7 +407,8 @@ export const setLogs = sqliteTable(
     weightKg: real('weight_kg'),
     reps: integer('reps'),
     rir: integer('rir'),
-    distanceM: integer('distance_m'),
+    // Decimals, not whole metres: 100 ft is 30.48 m, and an integer read it back as 98 ft (task 004 stage 5c).
+    distanceM: real('distance_m'),
     durationS: integer('duration_s'),
     isCompleted: integer('is_completed', { mode: 'boolean' }).notNull().default(false),
     completedAt: integer('completed_at'),

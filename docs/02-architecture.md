@@ -79,21 +79,22 @@ volume aggregation. It is **pure**: no database, no HTTP, no clock, no randomnes
 Both sides need it. The phone must project the next cycle's numbers while offline; the server must be
 able to recompute authoritatively. If the two implementations ever disagree, sync thrashes.
 
-**How it is implemented is [ADR-004](decisions/ADR-004.md)** — accepted, subject to a two-day
-toolchain spike in [task 017](tasks/017-local-toolchain-device-spike.md), before task 004:
+**How it is implemented is [ADR-004](decisions/ADR-004.md) — settled 2026-09-18 as option B**, after the
+two-day toolchain spike in [task 017](tasks/017-local-toolchain-device-spike.md) passed its bar:
 
-- **Primary:** one Rust crate, `core-rs`, exposed to FastAPI via PyO3 and to the Expo app via
-  UniFFI. Written once, tested once, structurally identical on both sides.
-- **Fallback, if the spike fails:** the logic is written twice — Python in the API, TypeScript in
-  the app — and policed by shared JSON fixtures in `packages/shared/fixtures/`, run by both the
-  pytest and Jest suites, so a divergence fails CI on both sides.
+- **One Rust crate, `core-rs`**, exposed to FastAPI via PyO3 and to the Expo app via UniFFI. Written
+  once, tested once, structurally identical on both sides. `apps/api/app/domain/` and
+  `apps/mobile/src/domain/` are thin binding wrappers that marshal types and hold no logic.
+- **The rejected fallback**, recorded because the reasoning still explains the fixtures: had the spike
+  failed, the logic would have been written twice — Python in the API, TypeScript in the app — and
+  policed by shared JSON fixtures, so a divergence failed CI on both sides.
 
-Either way the fixtures exist and every suite runs them; under the Rust core they are regression
-tests rather than the only thing standing between two copies.
+The fixtures in `packages/shared/fixtures/` exist and every suite runs them either way. Under the Rust
+core they are **regression tests, and a proof that the two bindings agree**, rather than the only thing
+standing between two copies.
 
 The surface stays tiny on purpose: pure functions over plain data, no classes, no framework
-types. That is what keeps the FFI boundary pleasant if ADR-004 is accepted, and what makes the
-duplication survivable if it is not.
+types. That is what keeps the FFI boundary pleasant.
 
 Rejected outright: **server-only projection** (breaks offline planning, [ADR-001](decisions/ADR-001.md)).
 
@@ -109,7 +110,7 @@ Rejected outright: **server-only projection** (breaks offline planning, [ADR-001
 | Active workout | **SQLite, not a store** | INV-09 |
 | Background GPS | `expo-location` + `expo-task-manager` | §6 |
 | Maps | `react-native-maps` | Native provider — Google Maps on Android, Apple Maps when iOS ships; no tile bill |
-| Charts | `victory-native` (Skia) | Smooth on large series |
+| Charts | `react-native-svg`, drawn by `src/ui/` | Already a dependency. Chosen over `victory-native` in task 004 stage 7 (2026-09-25): three small line charts did not justify Skia's two native dependencies and a larger bundle. Revisit if a chart ever needs thousands of points or gestures |
 | Forms | `react-hook-form` + `zod` | Zod schemas shared with API types |
 | Language | `expo-localization` + `i18next`, ICU MessageFormat | Catalogs in `packages/shared/i18n/`, read by the API too (INV-27, [ADR-008](decisions/ADR-008.md)) |
 | Units and numbers | `Intl`, behind one formatting module in `src/ui/` | SI in, unit system and locale out — the only place a unit is converted (INV-01) |
@@ -163,8 +164,18 @@ analytics/   volume by muscle, RIR trend, zone distribution, totals
 sync/        pull (changes since cursor), push (batched upsert)
 ```
 
-**Sync is the primary write path.** The per-entity POST/PATCH endpoints exist for correctness and
-for future clients, but the mobile app writes almost exclusively through `sync/push`.
+**Sync is the primary write path.** The per-entity endpoints exist for correctness and for future
+clients, but the mobile app writes almost exclusively through `sync/push`.
+
+**What `exercises/`, `routines/` and `workouts/` are** ([task 004](tasks/004-exercise-catalog-and-logging.md)
+stage 8). Each is `GET` a keyset-paged list, `GET /{id}` the aggregate, and `PUT /{id}` the aggregate — an exercise
+with its secondary muscles, a routine with its exercises, a workout with its exercises and their sets — applied in
+one transaction. Every row in the document resolves by itself, by §7's rule: absent is created, a newer `updated_at`
+wins, an equal or older one changes nothing, and a row left out of the document is kept. So a retry is a no-op, a
+set is never dropped, and archiving travels as `deleted_at`. Someone else's row is `404` to read and
+`409 id_unavailable` to write, and a global exercise answers a write exactly as a stranger's does. A workout write
+that changes a finished workout rebuilds that user's `personal_records` for the exercises it touched, in the same
+transaction, under a per-user advisory lock.
 
 ## 6. Recording pipeline (cardio)
 
@@ -227,8 +238,8 @@ Track storage format — polyline + typed streams rather than one row per point 
 being able to change the projection algorithm later without rewriting history.
 
 **Costs we are accepting, explicitly:**
-- A native domain core compiled for both sides — or, if ADR-004's spike fails, two implementations of
-  it policed by shared fixtures (§3).
+- A native domain core compiled for both sides (§3), and with it no over-the-air fix for domain
+  logic — accepted on ADR-004's four pre-launch conditions, which are still outstanding.
 - A real sync protocol, which is more work than a CRUD API and where the subtle bugs will be.
 - Local migrations must be versioned as carefully as server migrations, because a device can be
   many app versions behind.

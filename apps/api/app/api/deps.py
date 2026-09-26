@@ -20,7 +20,9 @@ from app.core.security import InvalidAccessTokenError, PasswordHasher, read_acce
 from app.services.auth.deletion import AccountDeletionService, WebLinks
 from app.services.auth.service import AppLinks, AuthService, ClientContext
 from app.services.errors import UnauthenticatedError
+from app.services.exercises import ExerciseService
 from app.services.rate_limit import RateLimiter
+from app.services.routines import RoutineService
 from app.services.workouts import WorkoutService
 
 _bearer = HTTPBearer(auto_error=False)
@@ -90,6 +92,14 @@ def get_workout_service(clock: ClockDependency) -> WorkoutService:
     return WorkoutService(get_session_factory(), clock=clock)
 
 
+def get_exercise_service() -> ExerciseService:
+    return ExerciseService(get_session_factory())
+
+
+def get_routine_service() -> RoutineService:
+    return RoutineService(get_session_factory())
+
+
 def client_context(request: Request) -> ClientContext:
     return ClientContext(ip=request.client.host if request.client else None)
 
@@ -115,6 +125,8 @@ Client = Annotated[ClientContext, Depends(client_context)]
 Auth = Annotated[AuthService, Depends(get_auth_service)]
 AccountDeletion = Annotated[AccountDeletionService, Depends(get_account_deletion_service)]
 Workouts = Annotated[WorkoutService, Depends(get_workout_service)]
+Exercises = Annotated[ExerciseService, Depends(get_exercise_service)]
+Routines = Annotated[RoutineService, Depends(get_routine_service)]
 
 
 async def default_rate_limit(

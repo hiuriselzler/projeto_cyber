@@ -114,6 +114,10 @@ export const sizes = {
   icon: 24,
   edgeHairline: 1,
   edgeSelected: 2,
+  /** A history chart's plot (task 004 stage 7): tall enough to read a trend, short enough that three fit a screen. */
+  chartHeight: 144,
+  /** A chart's point marker radius — an 8 dp dot (the dataviz floor), ringed by `edgeSelected` of surface. */
+  chartDot: 4,
 } as const;
 
 /** 07 §7. The house easing is a cubic-bezier fit to a critically-damped step response. */

@@ -1,0 +1,24 @@
+{
+  "function": "missing_for_completion",
+  "spec": "03 §4: `is_completed = true` requires the fields its tracking mode needs (FR-2.3). Reps for `weight_reps` and `reps_only`, the time for `duration`, the distance for `distance_duration`. Weight is never required: a blank weight is a bodyweight set or a load not recorded, and both are real sets. A zero is a value and only an absent field is missing (INV-03). Task 004 stage 5c wrote the rule on the phone; stage 8 moved it into the core so the API enforces the same one.",
+  "expectation_shape": "`expected` is the `set_logs` column the set is missing — `reps`, `duration_s` or `distance_m` — or null when it holds what its mode needs. The cases cover all four modes empty and filled, so adding a fifth mode without deciding what it requires fails here.",
+  "set_defaults": {
+    "reps": null,
+    "duration_s": null,
+    "distance_m": null
+  },
+  "cases": [
+    { "name": "weight × reps with nothing typed is missing its reps", "tracking": "weight_reps", "set": {}, "expected": "reps" },
+    { "name": "weight × reps with reps and no weight is complete: blank is bodyweight or not recorded", "tracking": "weight_reps", "set": { "reps": 8 }, "expected": null },
+    { "name": "zero reps is a value, not a blank", "tracking": "weight_reps", "set": { "reps": 0 }, "expected": null },
+    { "name": "a time does not stand in for reps", "tracking": "weight_reps", "set": { "duration_s": 60 }, "expected": "reps" },
+    { "name": "reps only with nothing typed is missing its reps", "tracking": "reps_only", "set": {}, "expected": "reps" },
+    { "name": "reps only with reps is complete", "tracking": "reps_only", "set": { "reps": 12 }, "expected": null },
+    { "name": "a hold with nothing typed is missing its time", "tracking": "duration", "set": {}, "expected": "duration_s" },
+    { "name": "a hold with reps and no time is still missing its time", "tracking": "duration", "set": { "reps": 1 }, "expected": "duration_s" },
+    { "name": "a hold with a time is complete", "tracking": "duration", "set": { "duration_s": 90 }, "expected": null },
+    { "name": "a carry with nothing typed is missing its distance", "tracking": "distance_duration", "set": {}, "expected": "distance_m" },
+    { "name": "a carry with a time and no distance is missing its distance", "tracking": "distance_duration", "set": { "duration_s": 40 }, "expected": "distance_m" },
+    { "name": "a carry with a distance is complete, 100 ft as stored", "tracking": "distance_duration", "set": { "distance_m": 30.48 }, "expected": null }
+  ]
+}

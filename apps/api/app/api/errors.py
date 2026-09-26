@@ -16,6 +16,7 @@ from app.services.errors import (
     RefreshRejectedError,
     ServiceError,
     UnauthenticatedError,
+    UnprocessableError,
     WrongPasswordError,
 )
 
@@ -33,6 +34,7 @@ STATUS_CODES: dict[type[ServiceError], int] = {
     InvalidTokenError: status.HTTP_400_BAD_REQUEST,
     PasswordRejectedError: status.HTTP_422_UNPROCESSABLE_CONTENT,
     InvalidPrivacyKeyError: status.HTTP_422_UNPROCESSABLE_CONTENT,
+    UnprocessableError: status.HTTP_422_UNPROCESSABLE_CONTENT,
     RateLimitedError: status.HTTP_429_TOO_MANY_REQUESTS,
 }
 
