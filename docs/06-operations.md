@@ -165,6 +165,20 @@ What closing task 004 (2026-09-25) added:
 - **logcat pads a four-digit process id with a space** (`ReactNativeJS( 7977)`), so split its lines by pattern, not by
   field number. And from Git Bash, `uiautomator dump /sdcard/…` needs `MSYS_NO_PATHCONV=1` like any other device path.
 
+What task 004's last step (2026-09-26) added:
+- **Screen sizes by `adb shell wm size`**, at the S21 FE's density 480 (3 px per dp): `1080x1600` is 533 dp, the short
+  screen of stage 3; `1080x1920` is 640 dp, the common small-phone floor. The app relays out live, no restart. `wm size
+  reset` afterwards, and read `wm size` back.
+- **Font scale by `adb shell settings put system font_scale`** — and read the owner's value first (`get`; it is 0.86 on
+  this phone) and put that back. A change **restarts the app onto the diagnostics screen**, and at 2.0 every label wraps:
+  a wait loop that greps a dumped label for a known line never matches. Deep-link back to the route instead.
+- **`CI=1 pnpm start` serves a Metro that does not watch files** — each edit needs Metro stopped by its port and started
+  again, then a force-stop and relaunch (which also re-fires `onLayout`, per the lesson above).
+- **The `python` on PATH is the Microsoft Store stub.** Parse `uiautomator` dumps with miniconda's
+  (`~/miniconda3/python.exe`) under `PYTHONIOENCODING=utf-8`, or the ✓ and accented labels fail to print.
+- **Measure the room before designing into it.** One screenshot at 1080×1600 with the keypad open and a rest running
+  showed the list had no visible height — which turned a scroll fix into a layout decision before any code was written.
+
 **Reaching the API from the phone:** over USB with `adb reverse`, so the device's `localhost` is this
 machine's. Debug builds may use `http://` to `localhost` and nothing else; release builds allow no
 cleartext at all ([04 §5](04-security-and-auth.md)). uvicorn stays bound to `127.0.0.1` — never

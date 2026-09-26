@@ -423,6 +423,10 @@ decision below.)*
     exercise logged the content is barely taller than the viewport, the clamp is about zero, and the row does not
     move at all. On a 2340 px phone that is invisible; on a 1600 px screen the keypad covered the edited row
     completely. *(Found and fixed 2026-09-21, task 004 stage 3 device pass.)*
+  - **So is aiming again when the list's height changes.** A reveal is aimed before the commit it causes, and anything
+    that commit adds above the list — the rest bar, on the ✓ that starts a rest — shrinks the viewport after the aim:
+    the row lands under the fold or the keypad by exactly that height. The row last revealed is revealed again from the
+    new height, until a finger scrolls the list. *(Found in task 004's closing pass, fixed 2026-09-26.)*
 - RIR is a chip row `0 1 2 3 4 5+` — **one tap, never typed** (FR-2.10).
 - ✓ advances focus to the next set. Haptic on completion.
 - Previous performance is always visible, never a tap away.
@@ -443,6 +447,11 @@ decision below.)*
   the row being edited — with `−15 s`, `+15 s` and *skip*. It ends with a haptic, and with a local notification when
   the app is not in front. It is derived from the last completed set rather than held in memory, so a force-quit
   mid-rest brings it back still running.
+  - **While the keypad is open, the rest is the countdown alone on the keypad's heading line** — `Carga · Descanso
+    1:28`, at that line's height — and the bar is not drawn; *OK* brings the bar back with `−15 s`, `+15 s` and *skip*.
+    The bar is ~79 dp, and on a 533 dp screen the bar and the keypad together left the list no visible height at all;
+    at 640 dp, ~86 dp. A ✓ from the keypad keeps it open and starts the rest, so that was the ordinary state, not an edge.
+    *(Decided 2026-09-26, task 004's closing pass.)*
 
 > **Decided 2026-09-24 — the row reflows (option 1 below).** The set number stays, because the set-type letter lives
 > there (`Aq`, `D`, `B`, `A`) and INV-24 wants the type shown, not only spoken; the unit stays, because an imperial user

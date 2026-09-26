@@ -99,7 +99,7 @@ Jest tests, and none was findable without a device.
 | **6** | The finish flow — PR detection and its celebration, perceived fatigue, notes, retroactive logging | ☑ 2026-09-24, device pass run the same evening (TalkBack not) |
 | **7** | History and per-exercise charts; `personal_records` as a cache, with its rebuild command | ☑ 2026-09-25, device pass run the same evening (imperial and TalkBack not) |
 | **8** | The API mirror endpoints, and the closing device pass over the whole loop | ☑ built 2026-09-25; device pass run the same day — the data loss it found fixed and proven on the phone, the rest in *Closing task 004*, below |
-| **Closing** | The owner's device checks, the ✓ latency fix they led to, and the ticks that close the task | ☑ checks run 2026-09-25; one finding awaiting the owner's decision — *Closing task 004, the last step*, below |
+| **Closing** | The owner's device checks, the ✓ latency fix they led to, and the ticks that close the task | ☑ checks run 2026-09-25; the last step — the reveal re-aimed, the rest on the keypad's heading line — built and proven on the phone 2026-09-26 |
 
 **Stage 4 carries three decisions the catalog screen forces**, recorded in PROJECT-STATUS's decision
 log on 2026-09-21 and repeated here because the code reads this file:
@@ -436,8 +436,8 @@ PROJECT-STATUS's decision log:
 5. **The 30 taps are counted on a routine of five exercises × four sets**, built on the phone beforehand, from
    *Iniciar* to *Finalizar*, weights excluded.
 
-**Closing task 004, the last step — proposed 2026-09-25, not started.** Written at the end of the closing session so the
-next one starts from here.
+**Closing task 004, the last step — proposed 2026-09-25, built and proven on the phone 2026-09-26.** Written at the end
+of the closing session so the next one starts from here; what it became follows the proposal.
 
 - *What is done.* Every acceptance criterion and device check above is ticked or explicitly deferred. The airplane-mode
   workout and ✓ latency were run in the closing pass (below); the 30 taps, TalkBack, the 200 % font check in pounds and
@@ -461,6 +461,28 @@ One decision is the owner's, with a recommendation:
    The live screen cannot be rendered under Jest (it opens the database), so the proof is the phone: the first ✓ of a
    rest with the keypad closed and with it open, on the tall screen and on the 1080×1600 short one, each next row fully
    above the fold or the keypad. The alternative is a line in PROJECT-STATUS § Gaps and task 004 closed as it stands.
+
+**The last step carries two decisions** *(2026-09-26, the owner took each recommendation)*, recorded in PROJECT-STATUS's
+decision log:
+
+1. **Fixed now, and the short screen judged by 07 §6's own rule** — the field being edited in view, not the whole row,
+   which on a 1600 px screen no row taller than ~67 dp can meet (decided 2026-09-24).
+2. **With the keypad open, the rest moves onto the keypad's heading line.** Measured before any code: the bar is 238 px
+   (~79 dp) with its margin, and on the 1080×1600 screen the keypad's top sat *above* the bar's bottom edge — with a rest
+   running and the keypad open the list had no visible height at all, so no scroll could reveal anything. At 640 dp
+   (1080×1920) it left ~86 dp, enough at scale 1.0 and not above it. And that state is the ordinary one: a ✓ from the
+   keypad moves it to the next set and starts the rest. So while the keypad is open the bar above the list is not drawn;
+   the countdown alone sits at the end of the keypad's heading line (`Carga · Descanso 1:28`), at that line's height, and
+   −15 s, +15 s and skip come back with the bar when *OK* closes the keypad. A compact bar was ruled out on the numbers:
+   ~48 dp against ~67 dp of list leaves less than a field.
+
+*What was built.* `useRowReveal` holds the reveal geometry the screen held, and **aims again whenever the viewport
+changes height**, at the row last revealed, until a finger scrolls the list. `useRestClock` is the bar's clock, shared
+with `RestCountdown`, the heading-line countdown; exactly one is mounted, so the end is felt once. `AppText` takes
+`tabular` for a changing number in a text style (INV-24). A closed keypad now counts as 0 in the reveal — it had kept
+the last keypad's height, moving the list further than the row needed. Tests: seven for the reveal, the two that aim
+again and the drag watched failing without their code; four for the countdown in `SetEditor`'s heading line, its
+tabular figures watched failing without the flag.
 
 ## Acceptance criteria
 - [x] A full workout can be logged start to finish in airplane mode. *(Stage 3 logged one set start to finish with
@@ -533,7 +555,9 @@ set-logging UI this task builds; `SetRow` and `NumericKeypad` existed from task 
       still 56 dp. **The imperial half is not run**: units come from the signed-in account and the API is not
       running locally, so an imperial pass needs either the stack up or the cached `users` row flipped. **The imperial
       half done by the owner at the phone, 2026-09-25**, on the imperial throwaway account, and confirmed in the closing
-      session; the observations were not written down
+      session; the observations were not written down. **The live workout's header broke it, found 2026-09-26** in the
+      last step's 200 % check: the title took its full width and pushed *Encerrar* half off the screen. The title now
+      gives way (`flexShrink`), reflowing to two lines with the button whole; at 0.86 the header is pixel-identical
 - [x] The numeric keypad never covers the set row it is editing, on a short screen as well as a tall one —
       *tall screen: row at y 479–683, keypad from y 1282 on a 2340 px screen.* **Short screen run 2026-09-21 at
       1080×1600, and it failed: the keypad covered the edited row completely**, only the row's top border showing.
@@ -811,11 +835,28 @@ predicted before the tap and read back from the phone's SQLite and from logcat)*
         unchanged at p50 35 ms, of which the re-read is ~24 ms — the next thing to look at if task 005 adds to this path.
       - The keypad path checked on the phone after the fix: 20 typed on set 1, ✓, stored and ticked, and the keypad moved
         to set 2's weight starting from its stored value
-- [ ] **The ✓ that starts the rest bar reveals against the viewport before the bar.** The bar mounts above the list in
+- [x] **The ✓ that starts the rest bar reveals against the viewport before the bar.** The bar mounts above the list in
       the same commit, so the list moves down by the bar's height after the reveal has been computed: the next row is left
-      below the fold with the keypad closed, and half behind the keypad with it open — the edited field itself stays
-      visible. Only the ✓ that starts a rest; later ✓s reveal correctly. Not caused by the fix above (the reveal is
-      untouched); found by it. *Open — the owner's decision, proposed in* Closing task 004, the last step *above*
+      below the fold with the keypad closed, and half behind the keypad with it open. Only the ✓ that starts a rest;
+      later ✓s reveal correctly. Not caused by the fix above (the reveal is untouched); found by it. **Fixed 2026-09-26**
+      — *Closing task 004, the last step*, above. On the phone (development bundle, every position predicted first, in
+      screen pixels; the viewport ends at 2295 on the tall screen and 1555 on the short one, `space[2]` is 24):
+      - *Before, tall, keypad closed:* the reveal aimed squat set 1's bottom at 2271, and the bar (238) left it with only
+        its top border above the fold. *Keypad open:* worse than recorded above — **the field being edited was behind the
+        keypad** (keypad top 1282), only the row's top ~80 px showing.
+      - *Before, short, keypad open with a rest running:* the keypad's top (~540) above the bar's bottom edge — no list
+        at all. At 1080×1920: ~86 dp.
+      - *After, tall, keypad closed:* the next row ends at 2270 with the bar mounted — the re-aim moved it by the bar's
+        height. *Keypad open:* no bar; `Descanso 1:28` on the heading line; the keypad's top unmoved at 1282; the next
+        row, its weight field focused, ends at 1205. *OK mid-rest:* the bar returns with its controls and the row stays in
+        view, moved by the bar's height and no more.
+      - *After, short, keypad open:* the edited value in view with the countdown beside `Carga`; the field's bottom
+        border ~7 px under the keypad's edge, as stage 3 left it — 07 §6's short-screen rule. *Keypad closed:* the next
+        row ends at 1530 against 1531 predicted.
+      - *A finger drag, then the rest skipped:* the revealed row stayed off the top where the drag put it — not pulled
+        back.
+      - *200 % font:* the countdown holds one line beside `Carga`; the edited row fully above the keypad. The same check
+        found the header defect recorded under the 200 % criterion above, fixed and re-run
 
 **Found on the device, and not yet fixed**
 - [x] **The set row reflows at font scale 0.86** — *half answered 2026-09-21, and the half that was a defect is

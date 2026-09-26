@@ -15,13 +15,13 @@ when its own criteria are ticked. Tick the box here only then.
 
 | | |
 |---|---|
-| **Phase** | **Tasks 001, 002, 011, 003, 019 and 017 complete; [task 004](tasks/004-exercise-catalog-and-logging.md) in progress.** The schema exists in Postgres and SQLite, seeded and enforcing itself; the design system exists in `src/ui/`, token-driven and tested in both languages, both unit systems and both themes; accounts, sessions and the privacy key exist on both sides, with row-level security proven under the API's own role; a user can delete their account, from the app or the web; and [ADR-004](decisions/ADR-004.md) has its answer — **option B, the single Rust core**, proven through both bindings on the device. Task 004 has stages 0–8 built — the core's first residents, the seeded catalog, the set row, the catalog screen, routines, the rest timer, set types, every tracking mode, the finish flow with its records, the history with its charts and the server's records cache, and the API's mirror endpoints — and its closing checks are all run. What remains is one finding awaiting the owner's decision, then the task's box and PR #17 (*updated 2026-09-25*) |
-| **Repository** | Private GitHub repository `hiuriselzler/projeto_cyber`. `main` holds the documentation and tasks 001, 002, 011, 003, 019 and 017, each merged by pull request (#1; #5; #7 and #8; #9; #11; #16); each further piece arrives the same way, with CI green before merge. Task 004 is on `feat/task-004-catalog-and-logging`, in **draft [PR #17](https://github.com/hiuriselzler/projeto_cyber/pull/17)** (opened 2026-09-24, green on all five jobs as of `ed121e7`, stage 8; the closing session's commits pushed 2026-09-25), to be marked ready once *Closing task 004, the last step* is done |
+| **Phase** | **Tasks 001, 002, 011, 003, 019, 017 and 004 complete.** The schema exists in Postgres and SQLite, seeded and enforcing itself; the design system exists in `src/ui/`, token-driven and tested in both languages, both unit systems and both themes; accounts, sessions and the privacy key exist on both sides, with row-level security proven under the API's own role; a user can delete their account, from the app or the web; and [ADR-004](decisions/ADR-004.md) has its answer — **option B, the single Rust core**, proven through both bindings on the device. **The core loop exists** ([task 004](tasks/004-exercise-catalog-and-logging.md)): the seeded catalog, the set row, routines, the rest timer, set types, every tracking mode, the finish flow with its records, history and charts, and the API's mirror endpoints — offline, on the phone (*updated 2026-09-26*) |
+| **Repository** | Private GitHub repository `hiuriselzler/projeto_cyber`. `main` holds the documentation and tasks 001, 002, 011, 003, 019 and 017, each merged by pull request (#1; #5; #7 and #8; #9; #11; #16); each further piece arrives the same way, with CI green before merge. Task 004 is on `feat/task-004-catalog-and-logging`, in **[PR #17](https://github.com/hiuriselzler/projeto_cyber/pull/17)** (opened 2026-09-24 as a draft; the last step pushed 2026-09-26 and the PR marked ready once CI is green), **waiting for the owner to merge** |
 | **Docs** | 49 files, internally consistent, all cross-links resolving |
 | **Decisions** | 15 ADRs, **all now accepted**. [ADR-004](decisions/ADR-004.md)'s spike passed on 2026-09-18 and its outcome is recorded: **option B, the single Rust core**. Its four pre-launch conditions remain outstanding, in tasks 005 and 006 |
-| **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **6 complete** (001, 002, 011, 003, 019, 017) |
+| **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **7 complete** (001, 002, 011, 003, 019, 017, 004) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) — the core loop, in progress since 2026-09-19. Stages 0–8 are built.** Stage 8 (2026-09-25) built the mirror endpoints for exercises, routines and workouts and moved the completion rule into the core. Its device pass found a data loss: a refused refresh ended the phone's session, and ending it deleted the account's row, which cascaded through every set on the device. **Fixed the same evening and proven on the phone** — a session's end now keeps the row (task 019 amended), a lint fence refuses deleting it, and the integration suite runs in its own database. The resumed pass ticked **pounds end to end** and **a hidden exercise's history**. **Closing task 004 ran 2026-09-25**: the weighted pull-up ticked on its proofs, the rest notification's timing moved to open question 13, `Sheet`'s exit animation moved to § Gaps; **the airplane-mode workout passed on the phone, and ✓ latency was found over budget on a production bundle (p95 107.8 ms), profiled and fixed by memoizing the set rows (p95 66.8 ms)**; the 30 taps, TalkBack, the 200 % font check in pounds and stage 4's accessibility pass done by the owner at the phone. **Next: *Closing task 004, the last step*, proposed in the task file and waiting on one decision** — the ✓ that starts the rest bar reveals the next row against the viewport before the bar appears, leaving it below the fold or half behind the keypad; recommended: fix it now (re-reveal when the list's height changes), proven on the phone. Then task 004's box ticked here, CI green and [PR #17](https://github.com/hiuriselzler/projeto_cyber/pull/17) marked ready for the owner to merge — and [task 005](tasks/005-strength-progression-planner.md), the progression planner, planned. The phone is signed in to a throwaway local account, `stage8-device@example.com`; its earlier history is gone. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done, and the zero-plural found on the phone is worth their attention — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
+| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) is complete (2026-09-26)** — its last step re-aimed the live list's reveal when the list's height changes, and moved the rest onto the keypad's heading line while the keypad is open, after a short screen showed the two together left the list no room; proven on the phone at three screen heights and at 200 % font, which also found and fixed the header pushing *Encerrar* off the screen. **Next: the owner merges [PR #17](https://github.com/hiuriselzler/projeto_cyber/pull/17); then [task 005](tasks/005-strength-progression-planner.md), the progression planner — the reason the product exists — planned before any code**, with ADR-004's kill switch and minimum engine version among its criteria. The phone is signed in to a throwaway local account, `stage8-device@example.com`, holding an open "Cinco por quatro" workout from the last step's pass. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done, and the zero-plural found on the phone is worth their attention — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
 
 ### The decision that was open is closed — option B
 
@@ -201,22 +201,23 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
       `SystemTime::now` each watched failing
 - [x] **⚠ ADR-004 outcome written into the ADR.** Task 004 does not start while it is open
 
-#### ☐ 004 — Exercise catalog and workout logging · **XL** · depends: 002 · blocks: 005, 009
+#### ☑ 004 — Exercise catalog and workout logging · **XL** · depends: 002 · blocks: 005, 009
 > The core loop. Local-only, no sync. **This deserves more care than any other UI in the project.**
-> **All built, and every acceptance criterion in the task file ticked or deferred (2026-09-25)** — the boxes below are
-> ticked with the task, once *Closing task 004, the last step* settles its one finding.
-- [ ] Catalog: seed locally, browse/search/filter, custom exercises, **fork-on-edit** of globals,
+> **Complete (2026-09-26).** Every acceptance criterion in the task file is ticked or deferred with a reason — the
+> weighted pull-up's device half to open question 18, the rest notification's timing to open question 13 — each proven
+> by a test, a lint fixture or the Galaxy S21 FE. The last step re-aimed the live list's reveal and moved the rest onto
+> the keypad's heading line while it is open. Built on `feat/task-004-catalog-and-logging`
+> ([PR #17](https://github.com/hiuriselzler/projeto_cyber/pull/17)).
+- [x] Catalog: seed locally, browse/search/filter, custom exercises, **fork-on-edit** of globals,
       archive that never orphans history (INV-11)
-- [ ] Routines with supersets; start-from-routine pre-fills targets and last-used weights
-- [ ] **The set row** — `[weight] [reps] [RIR] [✓]` with last time's performance behind it
-- [ ] **Custom numeric keypad** that never covers the row being edited, handling `,` and `.`
-- [ ] **RIR as a chip row, never a keyboard.** Blank stores NULL, never 0 (INV-03)
-- [ ] Set types, rest timer with haptics, notes, retroactive logging
-- [ ] **Every mutation writes to SQLite synchronously** (INV-09) — no React state is the only copy
-- [ ] History, charts, PR detection; `e1rm()` and `is_counted_set()` implemented **once** — *built, stages 1, 6 and 7;
-      ticked with the task's own criteria*
-- [ ] Mirror API endpoints so task 006 has something to sync against — *built, stage 8 (2026-09-25); ticked with the
-      task's own criteria*
+- [x] Routines with supersets; start-from-routine pre-fills targets and last-used weights
+- [x] **The set row** — `[weight] [reps] [RIR] [✓]` with last time's performance behind it
+- [x] **Custom numeric keypad** that never covers the row being edited, handling `,` and `.`
+- [x] **RIR as a chip row, never a keyboard.** Blank stores NULL, never 0 (INV-03)
+- [x] Set types, rest timer with haptics, notes, retroactive logging
+- [x] **Every mutation writes to SQLite synchronously** (INV-09) — no React state is the only copy
+- [x] History, charts, PR detection; `e1rm()` and `is_counted_set()` implemented **once** — stages 1, 6 and 7
+- [x] Mirror API endpoints so task 006 has something to sync against — stage 8
 
 #### ☐ 005 — Strength progression planner · **XL** · depends: 004 · blocks: 009, 010, 013, 014
 > **The reason the product exists.**
@@ -555,6 +556,7 @@ nothing itself ([task 004](tasks/004-exercise-catalog-and-logging.md) § Scope).
 | 2026-09-25 | Task 004 stage 8: every mirror write is a `PUT` of the aggregate resolved row by row, a row left out is kept (02 §5, §7); the completion rule moves into the core; a global answers a write as a stranger's row does; the records cache rebuilds per exercise inside the write, under a per-user lock. **Task 019 amended:** a session's end keeps the account's local row, which the device's training cascades from — see the dated entry below |
 | 2026-09-25 | Closing task 004 planned: the weighted pull-up ticked on its proofs (device half → OQ 18); the rest notification's timing moved to OQ 13; a development-only ✓ timer for latency under the rest bar; `Sheet`'s exit animation moved to § Gaps; the 30 taps counted on a 5 × 4 routine — see the dated entry below |
 | 2026-09-25 | ✓ latency judged on a **production bundle** with the rest bar running, not on the development build or a synthetic loop; the live workout's set rows **memoized** (the app's first `memo`) with stable handlers, after a profile showed every ✓ re-rendering all twenty — see the dated entry below |
+| 2026-09-26 | **Task 004 complete.** The live list's reveal aims again when its height changes; **with the keypad open the rest is a countdown on the keypad's heading line and the bar is not drawn** (07 §6) — on a 533 dp screen the two together left the list no height; the short screen judged by the field being edited — see the dated entry below |
 
 ### 2026-09-08 — documentation reconciliation pass
 
@@ -2325,3 +2327,32 @@ themselves were not written down.
 
 - No invariant changed and no ADR was added: a rendering change inside one feature. Counts unchanged: 49 documents,
   15 ADRs.
+
+### 2026-09-26 — task 004 complete: the reveal re-aimed, and the rest moves onto the keypad while it is open
+
+**The last finding was reproduced first, and was worse than recorded.** On the tall screen, the ✓ that starts a rest
+left the next row below the fold, pushed down by the 238 px bar mounted after the reveal was aimed. With the keypad
+open, **the field being edited went behind the keypad**, where the record had said it stayed visible.
+
+**Measuring before coding changed the fix.** One screenshot at 1080×1600 with the keypad open and a rest running showed
+the keypad's top above the bar's bottom edge: the list had no visible height, so no scroll could help. At 640 dp,
+~86 dp was left. A ✓ from the keypad keeps it open and starts the rest, so that state is the ordinary one.
+
+**Decided (the owner took both recommendations), and built:**
+- **The reveal aims again whenever the list's height changes**, at the row last revealed, until a finger scrolls the
+  list. The short screen is judged by 07 §6's own rule, the field being edited in view.
+- **While the keypad is open, the rest is a countdown on the keypad's heading line** (`Carga · Descanso 1:28`), and the
+  bar is not drawn. *OK* brings the bar back with its controls. A compact bar was ruled out on the numbers. 07 §6 says
+  so now.
+- In passing, a closed keypad counts as 0 in the reveal; it had kept the last keypad's height.
+
+**Proven on the phone**, every position predicted first: tall and short screens, keypad open and closed, *OK* mid-rest,
+a drag followed by the rest ending, and 200 % font. The 200 % check found **the live workout's header pushing *Encerrar*
+half off the screen**, a defect against a ticked criterion. The title now gives way, and it was re-run at 2.0 and 0.86.
+
+**Task 004 is complete.** Every criterion in its task file is ticked or deferred with a reason. Tests: 1 379 Jest, lint,
+52 lint fixtures and the catalogs green locally. [PR #17](https://github.com/hiuriselzler/projeto_cyber/pull/17) is
+marked ready for the owner to merge once CI is green.
+
+- No invariant changed and no ADR was added: a layout change inside one feature, and a design rule restated in 07 §6.
+  Counts unchanged: 49 documents, 15 ADRs.
