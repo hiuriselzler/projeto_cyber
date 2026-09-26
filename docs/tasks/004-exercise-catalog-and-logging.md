@@ -98,7 +98,7 @@ Jest tests, and none was findable without a device.
 | **5c** | The `duration` and `distance_duration` tracking modes — the set row that logs them, and the create form offering them | ☑ 2026-09-23, device pass not yet run |
 | **6** | The finish flow — PR detection and its celebration, perceived fatigue, notes, retroactive logging | ☑ 2026-09-24, device pass run the same evening (TalkBack not) |
 | **7** | History and per-exercise charts; `personal_records` as a cache, with its rebuild command | ☑ 2026-09-25, device pass run the same evening (imperial and TalkBack not) |
-| **8** | The API mirror endpoints, and the closing device pass over the whole loop | ☐ built 2026-09-25; the device pass stopped at a data loss, fixed the same evening, and resumes with the phone signed in again |
+| **8** | The API mirror endpoints, and the closing device pass over the whole loop | ☑ built 2026-09-25; device pass part-run — the data loss it found fixed and proven on the phone, the owner's checks left to *Closing task 004*, below |
 
 **Stage 4 carries three decisions the catalog screen forces**, recorded in PROJECT-STATUS's decision
 log on 2026-09-21 and repeated here because the code reads this file:
@@ -379,7 +379,41 @@ included)*, recorded in PROJECT-STATUS's decision log:
 
 **Built in this order:** 8a the core predicate, bindings regenerated in WSL2 · 8b exercises · 8c routines · 8d workouts
 and the in-transaction rebuild · 8e the OpenAPI export, shared types and docs · 8f the diagnostics switch · 8g the closing
-device pass, then PR #17 marked ready.
+device pass, then PR #17 marked ready. **8a–8f built and 8g part-run on 2026-09-25** (`706005e`, `21b6c71`, `ed121e7`;
+CI green on all five jobs at `ed121e7`); the pass found the sign-out data loss recorded below, fixed the same evening.
+
+**Closing task 004 — proposed 2026-09-25, not started.** Everything left is a check, a tick or a deferral: no stage 9 of
+code. Written at the end of stage 8's session so the next one starts from here.
+
+- *What is left.* Three acceptance criteria are open — the airplane-mode workout, the weighted pull-up, the 30 taps — and
+  the device list's TalkBack items (stages 3, 5, 6, 7), the 200 % check in pounds, stage 4's accessibility and font-scale
+  pass, the rest notification's timing, and ✓ latency under a ticking rest bar. The phone is signed in to the throwaway
+  account `stage8-device@example.com` on the local API (the test suite's password), holding one finished imperial
+  workout; its own history was lost (below). Stage 8's device section lists what ran.
+- *What only the owner can do, at the phone:* TalkBack switched on, airplane mode, the tap count with real hands, and
+  the 200 % font in pounds. The next session prepares each — routines to start from, data predicted from the pulled
+  database — and reads the database back after.
+- *When it is done:* every criterion below ticked or explicitly deferred with a reason, PROJECT-STATUS's task 004 box
+  ticked, and PR #17 marked ready for the owner to merge.
+
+Five decisions are the owner's before the pass, each with a recommendation:
+
+1. **The weighted pull-up.** Nothing in the app writes a body weight (open question 18), so the phone cannot show it.
+   The arithmetic is proven where it lives: `test_the_case_task_004_names` gives 123.3 kg and NULL with no body weight,
+   and `test_personal_records.py` proves the body weight read is the one on the workout's day, not today's.
+   Recommended: **tick it on those proofs**, saying the device half waits for open question 18.
+2. **The rest notification "on time".** One clean sample was ~39 s late, and whether to ask for
+   `SCHEDULE_EXACT_ALARM` is already open question 13, decided before launch. Recommended: **defer the criterion to open
+   question 13** — arrival is proven, timing is a launch decision, not task 004's.
+3. **✓ latency under a ticking rest bar.** "Measure, do not assume": the stage-3 number came from a synthetic session.
+   Recommended: **a development-only timer around the ✓'s write and re-read in the live screen**, logged to the console
+   and read from logcat over ~20 real ticks with the bar running — a few lines behind `__DEV__`, no product change.
+4. **`Sheet`'s lost exit animation and the ✓'s missing accessible name.** Neither is one of this task's criteria, and
+   the second is the TalkBack pass's to settle. Recommended: **settle the ✓'s name in the TalkBack pass; move the exit
+   animation to PROJECT-STATUS § Gaps** as a design-system follow-up, so it neither blocks task 004 nor gets lost.
+5. **The 30-tap count's workout.** A 5-exercise, 20-set session needs something to start from. Recommended: **a routine
+   of five exercises × four sets, built on the phone beforehand** so the count measures logging, not setup — taps counted
+   from *Iniciar* to *Finalizar*, weights excluded as the criterion says.
 
 ## Acceptance criteria
 - [ ] A full workout can be logged start to finish in airplane mode. *(Stage 3 logged one set start to finish with

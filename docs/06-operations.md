@@ -131,6 +131,23 @@ What it cost to learn, each once:
   its readiness test migrated that down and back up — every run deleted the accounts a phone signs in with, and a phone
   whose refresh is refused signs out.
 
+What task 004 stage 8's pass (2026-09-25) added:
+- **Pull the database with `adb exec-out`, never `adb shell`.** `adb shell run-as … cat` goes through a terminal that
+  rewrites line endings, and the copy reads as *"database disk image is malformed"* — which looks like corruption on the
+  phone and is not. `adb exec-out run-as com.cyberathlete.app cat files/SQLite/cyberathlete.db > copy.db` is byte-exact.
+- **`MSYS_NO_PATHCONV=1` cuts both ways.** It keeps `/sdcard/...` intact for `adb`, and it also stops `/tmp/...` being
+  translated for native Windows tools such as `sqlite3`, which then cannot open the file. Give Windows tools a
+  `C:/...` path.
+- **`npx expo start` exits at once if 8081 is taken.** Non-interactive, it cannot answer "use 8082 instead?". A Metro
+  left running from an earlier session is serving the same checkout; reuse it (`curl localhost:8081/status`).
+- **To exercise a refused refresh on purpose** (the path that ends a session): set `revoked_at` on the account's
+  `refresh_tokens` rows as `postgres`, wait out the 15-minute access token, then make the app send any request. The
+  server answers the refresh `401` and the app signs out.
+- **Registering over adb**: `adb shell input text` takes `%s` for a space. The account exists only in the local database.
+- **A sheet moves when the keyboard closes.** The exercise picker grows back to full height once the keyboard is
+  dismissed, so a tap aimed from a dump taken with the keyboard open lands on the wrong row. Dump again after
+  `KEYCODE_BACK`, then tap.
+
 **Reaching the API from the phone:** over USB with `adb reverse`, so the device's `localhost` is this
 machine's. Debug builds may use `http://` to `localhost` and nothing else; release builds allow no
 cleartext at all ([04 §5](04-security-and-auth.md)). uvicorn stays bound to `127.0.0.1` — never
