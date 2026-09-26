@@ -33,20 +33,65 @@ pub enum LoadStep {
     BasisPoints(u32),
 }
 
-/// Which progression strategy a rule applies (01 §3.2). Stage 1 builds two of the five v1 strategies;
-/// `double_progression`, `percent_1rm` and `rir_autoregulated` arrive in stage 2, and `cycle_pattern`
-/// is v2.
-#[derive(Debug, Clone, Copy, PartialEq)]
+/// Which progression strategy a rule applies — the five v1 strategies of 01 §3.2. `cycle_pattern` is
+/// v2, and absent rather than half-built.
+///
+/// Each variant carries exactly what it needs, so a rule missing its step, its wave or its baseline
+/// cannot be expressed here; the wrappers refuse to build one. Generation is **open-loop**: with no logs
+/// yet, each strategy projects as if every working cycle were `Met` (01 §3.4). What logged performance
+/// changes is `reconcile`'s.
+#[derive(Debug, Clone, PartialEq)]
 pub enum Strategy {
     /// FR-3.5: never change anything. For accessories and rehab work.
     Fixed,
     /// 01 §3.2 (a): the same sets × reps, a step more load each working cycle.
     LinearLoad(LoadStep),
+    /// 01 §3.2 (b): hold the load and add reps up the rule's range; at the top, a step more load and back
+    /// to the bottom. The exercise moves as one (01 §3.2, task 005 stage 2).
+    DoubleProgression {
+        step: LoadStep,
+        /// `progression_rules.rep_step` — reps added a cycle, stopping at the top of the range.
+        rep_step: u32,
+    },
+    /// 01 §3.2 (c): each working cycle's counted sets at a share of the e1RM, following a wave.
+    Percent1rm {
+        /// `progression_rules.percent_wave_bp` — tiled across the working cycles, cycle 1 first.
+        wave_bp: Vec<u32>,
+        /// The reference e1RM, so generation is total with no e1RM in history (FR-3.2c, INV-07). For a
+        /// bodyweight exercise it is body weight plus added load, as every e1RM is (ADR-010 §1).
+        baseline_e1rm_kg: f64,
+    },
+    /// 01 §3.2 (d): the load climbs a step each working cycle while the target RIR descends from
+    /// `rir_start` to `rir_end`. How big the step is after a logged cycle is `reconcile`'s (§3.4).
+    RirAutoregulated {
+        step: LoadStep,
+        /// RIR at cycle 1. With none, cycle 1's own RIRs are held.
+        rir_start: Option<u32>,
+        /// RIR at the last working cycle. With none, the target holds at `rir_start`.
+        rir_end: Option<u32>,
+    },
+}
+
+/// FR-3.8a: whether a rule sets one target RIR for the whole exercise, or a ladder of them.
+///
+/// Authoring only — `planned_sets.target_rir` exists per set either way. The engine applies the ladder
+/// where a strategy moves the exercise's target, which in v1 is `rir_autoregulated`; the other strategies
+/// hold RIR still, so cycle 1's per-set RIRs, which already hold the ladder as the user wrote it, are
+/// kept (task 005 stage 2, decision 5).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum RirMode {
+    PerExercise,
+    /// `progression_rules.rir_offsets` — an offset per counted set, in `set_index` order. A set past the
+    /// end of the ladder takes 0; an offset may be negative. Every sum is clamped into the rule and marked
+    /// (INV-05, ADR-010 §2).
+    PerSet {
+        offsets: Vec<i32>,
+    },
 }
 
 /// One exercise's progression rule, already resolved through FR-3.6's cascade — exercise, then
 /// mesocycle default, then user default. The cascade is table lookups, so it is the wrapper's job.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Rule {
     pub strategy: Strategy,
     /// INV-05: no generated set may prescribe fewer reps than this…
@@ -58,6 +103,7 @@ pub struct Rule {
     pub max_rir: u32,
     /// How a working load is rounded onto the plate grid (INV-02, ADR-010 § Amendment).
     pub rounding: RoundingMode,
+    pub rir_mode: RirMode,
 }
 
 /// The deload policy, one of FR-3.1b's three modes. `None` is a real choice, not a missing setting.
@@ -123,6 +169,13 @@ pub struct ExerciseSpec {
     /// the wrapper does it (task 005, stage 1, decision 4).
     pub increment_kg: f64,
     pub rule: Rule,
+    /// `exercises.uses_bodyweight` — whether the lifter is part of the load, so a set's weight is the
+    /// *added* load (INV-07).
+    pub uses_bodyweight: bool,
+    /// The latest body weight, for `percent_1rm` on a bodyweight exercise: its e1RM is over body weight
+    /// plus added load, and a planned set prescribes the added part. `None` if none was ever logged, and
+    /// then the engine does not guess (INV-07).
+    pub body_weight_kg: Option<f64>,
     pub sets: Vec<CycleOneSet>,
 }
 
@@ -145,6 +198,9 @@ pub struct PlannedSet {
     pub target_weight_kg: Option<f64>,
     /// Always inside the rule's rep bounds (INV-05).
     pub target_reps: Option<u32>,
+    /// The rep range a double-progression set is shown against (03 §5); `None` for every other strategy.
+    pub target_min_reps: Option<u32>,
+    pub target_max_reps: Option<u32>,
     /// Always inside the rule's RIR bounds (INV-05).
     pub target_rir: Option<u32>,
     /// The engine bent a target to fit its rule: a deload's raised RIR, or a target carried from cycle 1

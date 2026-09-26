@@ -243,23 +243,31 @@ ENGINE_VERSION: int
 """The engine that stamps every microcycle it projects (INV-06). Not `core_version()`."""
 
 class ProgressionStrategy:
-    """The strategies stage 1 builds, from the schema's `progression_strategy_enum`."""
+    """The five v1 strategies of the schema's `progression_strategy_enum` (01 §3.2)."""
 
     Fixed: ProgressionStrategy
     LinearLoad: ProgressionStrategy
+    DoubleProgression: ProgressionStrategy
+    Percent1rm: ProgressionStrategy
+    RirAutoregulated: ProgressionStrategy
 
     @staticmethod
     def from_name(name: str) -> ProgressionStrategy:
-        """The strategy's name in the database. Raises `ValueError` for one not yet built."""
+        """The strategy's name in the database. Raises `ValueError` for anything else, including
+        `cycle_pattern`, which is v2."""
 
     @property
     def name(self) -> str:
         """The inverse of `from_name`."""
 
 class ProgressionRule:
-    """One exercise's rule, resolved through FR-3.6's cascade by the caller.
+    """One exercise's rule, resolved through FR-3.6's cascade by the caller — the
+    `progression_rules` columns as the schema spells them.
 
-    `linear_load` takes exactly one of `load_step_kg` and `load_step_bp`, or raises `ValueError`.
+    Raises `ValueError` for a rule that lacks what its strategy needs: `linear_load`,
+    `double_progression` and `rir_autoregulated` take exactly one of `load_step_kg` and
+    `load_step_bp`; `percent_1rm` needs `baseline_e1rm_kg`; `rir_mode` is `per_exercise` or
+    `per_set`, which reads `rir_offsets`.
     """
 
     def __init__(
@@ -272,6 +280,13 @@ class ProgressionRule:
         rounding: RoundingMode = ...,
         load_step_kg: float | None = None,
         load_step_bp: int | None = None,
+        rep_step: int | None = None,
+        percent_wave_bp: list[int] = ...,
+        baseline_e1rm_kg: float | None = None,
+        rir_start: int | None = None,
+        rir_end: int | None = None,
+        rir_mode: str = "per_exercise",
+        rir_offsets: list[int] = ...,
     ) -> None: ...
 
 class CycleOneSet:
@@ -298,7 +313,8 @@ class CycleOneSet:
 
 class ExerciseSpec:
     """One exercise of cycle 1. `increment_kg` is INV-02's increment in the user's unit system,
-    already resolved, in exact kilograms."""
+    already resolved, in exact kilograms. `body_weight_kg` is the latest body weight, read only by
+    `percent_1rm` on a bodyweight exercise; `None` holds cycle 1's loads rather than guess (INV-07)."""
 
     def __init__(
         self,
@@ -306,6 +322,8 @@ class ExerciseSpec:
         increment_kg: float,
         rule: ProgressionRule,
         sets: list[CycleOneSet],
+        uses_bodyweight: bool = False,
+        body_weight_kg: float | None = None,
     ) -> None: ...
 
 class SessionSpec:
@@ -347,6 +365,11 @@ class PlannedSet:
     def target_weight_kg(self) -> float | None: ...
     @property
     def target_reps(self) -> int | None: ...
+    @property
+    def target_min_reps(self) -> int | None:
+        """Double progression's range, shown with the target; `None` for other strategies."""
+    @property
+    def target_max_reps(self) -> int | None: ...
     @property
     def target_rir(self) -> int | None: ...
     @property

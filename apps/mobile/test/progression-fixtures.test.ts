@@ -14,14 +14,25 @@ const MIN_LENGTH_DAYS = 1;
 const MAX_LENGTH_DAYS = 28;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+/** The five v1 values of `progression_strategy_enum`; `cycle_pattern` is v2 (01 §3.2). */
+const V1_STRATEGIES = ['fixed', 'linear_load', 'double_progression', 'percent_1rm', 'rir_autoregulated'];
+const COUNTED_TYPES = ['working', 'amrap'];
+
 interface Rule {
   strategy: string;
   load_step_kg: number | null;
   load_step_bp: number | null;
+  rep_step: number | null;
   min_reps: number;
   max_reps: number;
   min_rir: number;
   max_rir: number;
+  rir_mode: string;
+  rir_offsets: number[] | null;
+  rir_start: number | null;
+  rir_end: number | null;
+  percent_wave_bp: number[] | null;
+  baseline_e1rm_kg: number | null;
   rounding: string;
 }
 
@@ -29,6 +40,8 @@ interface CycleOneExercise {
   order_index: number;
   increment_kg: number;
   rule: Rule;
+  uses_bodyweight: boolean;
+  body_weight_kg: number | null;
   sets: { set_index: number; set_type: string }[];
 }
 
@@ -44,6 +57,8 @@ interface PlannedSet {
   target_weight_kg?: number | null;
   target_weight_steps?: number;
   target_reps: number | null;
+  target_min_reps: number | null;
+  target_max_reps: number | null;
   target_rir: number | null;
   was_clamped: boolean;
 }
@@ -121,6 +136,22 @@ describe('generate.json', () => {
       }
     });
 
+    it('writes every rule as a v1 strategy with what that strategy needs', () => {
+      for (const session of fixtureCase.cycle_one) {
+        for (const { rule } of session.exercises) {
+          expect(V1_STRATEGIES).toContain(rule.strategy);
+          expect(['per_exercise', 'per_set']).toContain(rule.rir_mode);
+          const steps = [rule.load_step_kg, rule.load_step_bp].filter((it) => it !== null);
+          if (['linear_load', 'double_progression', 'rir_autoregulated'].includes(rule.strategy)) {
+            expect(steps).toHaveLength(1);
+          }
+          if (rule.strategy === 'percent_1rm') {
+            expect(rule.baseline_e1rm_kg).not.toBeNull();
+          }
+        }
+      }
+    });
+
     it('prescribes only liftable loads and targets inside each rule (INV-02, INV-05)', () => {
       const sessions = canonical(fixtureCase.cycle_one);
       for (const cycle of expected) {
@@ -130,7 +161,13 @@ describe('generate.json', () => {
             expect(spec).toBeDefined();
             if (!spec) continue;
             for (const set of exercise.sets) {
+              // A rep range rides on exactly the counted sets of a double-progression exercise (03 §5).
+              const ranged = spec.rule.strategy === 'double_progression' && COUNTED_TYPES.includes(set.set_type);
+              expect([set.target_min_reps, set.target_max_reps]).toEqual(
+                ranged ? [spec.rule.min_reps, spec.rule.max_reps] : [null, null],
+              );
               if (set.target_weight_kg !== undefined && set.target_weight_kg !== null) {
+                expect(set.target_weight_kg).toBeGreaterThanOrEqual(0);
                 const steps = set.target_weight_kg / spec.increment_kg;
                 expect(Math.abs(steps - Math.round(steps))).toBeLessThan(1e-9);
               }

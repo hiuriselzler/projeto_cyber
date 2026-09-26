@@ -12,7 +12,7 @@ use std::collections::BTreeMap;
 use cyberathlete_core::{
     CycleOneSet, DeloadPolicy, ENGINE_VERSION, EpochDay, ExerciseSpec, LengthOverride, LoadStep,
     LoggedSet, MesocycleSpec, PersonalBests, PlannedExercise, PlannedMicrocycle, PlannedSession,
-    PlannedSet, PrAchievement, PrKind, RepsAtWeight, RoundingMode, Rule, SessionMetrics,
+    PlannedSet, PrAchievement, PrKind, RepsAtWeight, RirMode, RoundingMode, Rule, SessionMetrics,
     SessionSpec, SetEntry, SetField, SetType, StandingRecord, Strategy, Tracking,
     counted_set_count as core_counted_set_count, detect_prs as core_detect_prs, e1rm as core_e1rm,
     e1rm_series as core_e1rm_series, generate as core_generate,
@@ -656,8 +656,8 @@ fn missing_for_completion(tracking: PyTracking, entry: PySetEntry) -> Option<&'s
 // the schema does not know is a `ValueError` at the call site, never a surprise deep inside a
 // projection. Each holds the core's own value once checked. The outputs are the core's rows, read-only.
 
-/// Which progression strategy a rule applies — the schema's `progression_strategy_enum`, the part of it
-/// stage 1 builds. `double_progression`, `percent_1rm` and `rir_autoregulated` arrive in stage 2.
+/// Which progression strategy a rule applies — the five v1 values of the schema's
+/// `progression_strategy_enum`. `cycle_pattern` is v2 and refused by name.
 #[pyclass(
     name = "ProgressionStrategy",
     eq,
@@ -670,6 +670,9 @@ fn missing_for_completion(tracking: PyTracking, entry: PySetEntry) -> Option<&'s
 pub enum PyProgressionStrategy {
     Fixed,
     LinearLoad,
+    DoubleProgression,
+    Percent1rm,
+    RirAutoregulated,
 }
 
 #[pymethods]
@@ -680,8 +683,14 @@ impl PyProgressionStrategy {
         match name {
             "fixed" => Ok(Self::Fixed),
             "linear_load" => Ok(Self::LinearLoad),
+            "double_progression" => Ok(Self::DoubleProgression),
+            "percent_1rm" => Ok(Self::Percent1rm),
+            "rir_autoregulated" => Ok(Self::RirAutoregulated),
+            "cycle_pattern" => Err(PyValueError::new_err(
+                "cycle_pattern is v2 and not built (01 §3.2 (e))",
+            )),
             _ => Err(PyValueError::new_err(format!(
-                "unknown or not yet built strategy {name:?}; stage 1 builds fixed and linear_load"
+                "unknown strategy {name:?}; expected fixed, linear_load, double_progression, percent_1rm or rir_autoregulated"
             ))),
         }
     }
@@ -691,26 +700,48 @@ impl PyProgressionStrategy {
         match self {
             Self::Fixed => "fixed",
             Self::LinearLoad => "linear_load",
+            Self::DoubleProgression => "double_progression",
+            Self::Percent1rm => "percent_1rm",
+            Self::RirAutoregulated => "rir_autoregulated",
         }
     }
 }
 
-/// One exercise's progression rule, resolved through FR-3.6's cascade. Mirrors [`Rule`], with the
-/// schema's two step columns in place of the core's `LoadStep`.
+/// One exercise's progression rule, resolved through FR-3.6's cascade. Mirrors [`Rule`], taking the
+/// `progression_rules` columns as the schema spells them and refusing a rule that lacks what its
+/// strategy needs.
 #[pyclass(
     name = "ProgressionRule",
     frozen,
     from_py_object,
     module = "cyberathlete_core"
 )]
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct PyProgressionRule {
     rule: Rule,
 }
 
+/// A rule's load step: exactly one of the schema's two columns.
+fn load_step(
+    strategy: PyProgressionStrategy,
+    kg: Option<f64>,
+    bp: Option<u32>,
+) -> PyResult<LoadStep> {
+    match (kg, bp) {
+        (Some(kg), None) => Ok(LoadStep::Kg(kg)),
+        (None, Some(bp)) => Ok(LoadStep::BasisPoints(bp)),
+        _ => Err(PyValueError::new_err(format!(
+            "{} takes exactly one of load_step_kg and load_step_bp",
+            strategy.name()
+        ))),
+    }
+}
+
 #[pymethods]
 impl PyProgressionRule {
-    /// `linear_load` takes exactly one of `load_step_kg` and `load_step_bp`; `fixed` reads neither.
+    /// `linear_load`, `double_progression` and `rir_autoregulated` take exactly one of `load_step_kg` and
+    /// `load_step_bp`; `percent_1rm` needs `baseline_e1rm_kg`. `rir_mode` is `per_exercise` or `per_set`,
+    /// which reads `rir_offsets`. The defaults are the schema's (03 §5).
     #[new]
     #[pyo3(signature = (
         strategy,
@@ -721,6 +752,13 @@ impl PyProgressionRule {
         rounding = PyRoundingMode::Nearest,
         load_step_kg = None,
         load_step_bp = None,
+        rep_step = None,
+        percent_wave_bp = Vec::new(),
+        baseline_e1rm_kg = None,
+        rir_start = None,
+        rir_end = None,
+        rir_mode = "per_exercise",
+        rir_offsets = Vec::new(),
     ))]
     #[expect(
         clippy::too_many_arguments,
@@ -735,19 +773,44 @@ impl PyProgressionRule {
         rounding: PyRoundingMode,
         load_step_kg: Option<f64>,
         load_step_bp: Option<u32>,
+        rep_step: Option<u32>,
+        percent_wave_bp: Vec<u32>,
+        baseline_e1rm_kg: Option<f64>,
+        rir_start: Option<u32>,
+        rir_end: Option<u32>,
+        rir_mode: &str,
+        rir_offsets: Vec<i32>,
     ) -> PyResult<Self> {
-        let strategy = match (strategy, load_step_kg, load_step_bp) {
-            (PyProgressionStrategy::Fixed, _, _) => Strategy::Fixed,
-            (PyProgressionStrategy::LinearLoad, Some(kg), None) => {
-                Strategy::LinearLoad(LoadStep::Kg(kg))
-            }
-            (PyProgressionStrategy::LinearLoad, None, Some(bp)) => {
-                Strategy::LinearLoad(LoadStep::BasisPoints(bp))
-            }
-            (PyProgressionStrategy::LinearLoad, _, _) => {
-                return Err(PyValueError::new_err(
-                    "linear_load takes exactly one of load_step_kg and load_step_bp",
-                ));
+        let step = || load_step(strategy, load_step_kg, load_step_bp);
+        let strategy = match strategy {
+            PyProgressionStrategy::Fixed => Strategy::Fixed,
+            PyProgressionStrategy::LinearLoad => Strategy::LinearLoad(step()?),
+            PyProgressionStrategy::DoubleProgression => Strategy::DoubleProgression {
+                step: step()?,
+                // `rep_step smallint NULL DEFAULT 1`: a NULL reads as the default.
+                rep_step: rep_step.unwrap_or(1),
+            },
+            PyProgressionStrategy::Percent1rm => Strategy::Percent1rm {
+                wave_bp: percent_wave_bp,
+                baseline_e1rm_kg: baseline_e1rm_kg.ok_or_else(|| {
+                    PyValueError::new_err("percent_1rm needs baseline_e1rm_kg (FR-3.2c)")
+                })?,
+            },
+            PyProgressionStrategy::RirAutoregulated => Strategy::RirAutoregulated {
+                step: step()?,
+                rir_start,
+                rir_end,
+            },
+        };
+        let rir_mode = match rir_mode {
+            "per_exercise" => RirMode::PerExercise,
+            "per_set" => RirMode::PerSet {
+                offsets: rir_offsets,
+            },
+            other => {
+                return Err(PyValueError::new_err(format!(
+                    "unknown rir_mode {other:?}; expected per_exercise or per_set"
+                )));
             }
         };
         Ok(Self {
@@ -758,6 +821,7 @@ impl PyProgressionRule {
                 min_rir,
                 max_rir,
                 rounding: rounding.into(),
+                rir_mode,
             },
         })
     }
@@ -833,18 +897,31 @@ pub struct PyExerciseSpec {
 
 #[pymethods]
 impl PyExerciseSpec {
+    /// `body_weight_kg` is the latest body weight, read only by `percent_1rm` on a bodyweight exercise.
     #[new]
+    #[pyo3(signature = (
+        order_index,
+        increment_kg,
+        rule,
+        sets,
+        uses_bodyweight = false,
+        body_weight_kg = None,
+    ))]
     fn new(
         order_index: u32,
         increment_kg: f64,
         rule: PyProgressionRule,
         sets: Vec<PyCycleOneSet>,
+        uses_bodyweight: bool,
+        body_weight_kg: Option<f64>,
     ) -> Self {
         Self {
             exercise: ExerciseSpec {
                 order_index,
                 increment_kg,
                 rule: rule.rule,
+                uses_bodyweight,
+                body_weight_kg,
                 sets: sets.into_iter().map(Into::into).collect(),
             },
         }
@@ -980,6 +1057,8 @@ pub struct PyPlannedSet {
     pub set_type: PySetType,
     pub target_weight_kg: Option<f64>,
     pub target_reps: Option<u32>,
+    pub target_min_reps: Option<u32>,
+    pub target_max_reps: Option<u32>,
     pub target_rir: Option<u32>,
     pub was_clamped: bool,
 }
@@ -991,6 +1070,8 @@ impl From<PlannedSet> for PyPlannedSet {
             set_type: set.set_type.into(),
             target_weight_kg: set.target_weight_kg,
             target_reps: set.target_reps,
+            target_min_reps: set.target_min_reps,
+            target_max_reps: set.target_max_reps,
             target_rir: set.target_rir,
             was_clamped: set.was_clamped,
         }

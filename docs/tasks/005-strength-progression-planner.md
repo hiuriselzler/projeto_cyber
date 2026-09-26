@@ -138,7 +138,7 @@ no phone.
 |---|---|---|
 | **0** | The task file catches up with [ADR-004](../decisions/ADR-004.md)'s option B — see below | ☑ |
 | **1** | **The engine's foundation:** the plan's types, `resolve_dates`, `ENGINE_VERSION`, `generate` for `linear_load` and `fixed`, the three deload policies, the property-test harness, **fixture #1** | ☑ |
-| **2** | The other three v1 strategies — `double_progression`, `percent_1rm` (total, via `baseline_e1rm_kg`), `rir_autoregulated` — and the per-set RIR ladder, clamped and marked (INV-05) | ☐ |
+| **2** | The other three v1 strategies — `double_progression`, `percent_1rm` (total, via `baseline_e1rm_kg`), `rir_autoregulated` — and the per-set RIR ladder, clamped and marked (INV-05) | ☑ |
 | **3** | `classify` and `reconcile`: the INV-06 guard, the older engine yielding, user edits and pins surviving (FR-3.14), a strategy switched from the load achieved (FR-3.6a), extending and shortening a block, and date re-derivation | ☐ |
 | **4** | Persistence and API (Phase B): the batched insert on both sides, the endpoints, reconciliation on workout completion; the engine reaches the app through UniFFI (the WSL2 loop in [06 §1](../06-operations.md)) | ☐ |
 | **5** | The engine safety controls: the per-strategy kill switch and the minimum engine version | ☐ |
@@ -271,17 +271,94 @@ second-guessed by any 'we recommend a deload' nag". *Assumption until then:* und
 the block early and never proposes a deload. Two failures in a row are still worth saying, but a deload is exactly what
 the user declined.
 
+*Confirmed by the owner, 2026-09-26:* the rule that a session past a shorter cycle's end moves to its last day.
+
+**Stage 2 — the other three v1 strategies. Proposed and approved 2026-09-26, every decision as recommended; built
+the same day (below the decisions).** `generate` learns `double_progression`,
+`percent_1rm` and `rir_autoregulated`, and the per-set RIR ladder (FR-3.8a). Generation is **open-loop**: no logs exist
+yet, so every strategy projects as if each working cycle were `Met`. What logged performance changes — the size of
+`rir_autoregulated`'s jump, `percent_1rm`'s new e1RM, `failure_policy` — is stage 3's `reconcile`.
+- *What it builds:* `Strategy` gains the three variants, each carrying what it needs, so a rule missing its step, wave
+  or baseline cannot be expressed. `Rule` gains `rir_mode` with its offsets. `ExerciseSpec` gains `uses_bodyweight` and
+  `body_weight_kg`, for `percent_1rm` (decision 3). `PlannedSet` gains `target_min_reps` and `target_max_reps`, which the
+  schema already has for double progression's range. The PyO3 rule constructor takes the schema's remaining columns
+  and refuses a rule missing what its strategy needs. `cycle_pattern` stays refused by name, as v2.
+- *The fixtures:* the double-progression criterion; the two per-set ladder cases; a `percent_1rm` wave tiled across a
+  block with a deload in it; `percent_1rm` on a bodyweight exercise, with and without a body weight; `rir_autoregulated`
+  descending 3 → 0 across a block with a deload; a rep step that would overshoot the range; double progression through
+  a deload.
+- *The properties:* the INV-02 property over **10 000 random rules of all five strategies**; INV-05 across all five,
+  every per-set sum included; the stage-1 properties extended to the new strategies.
+- *The criteria it closes:* the per-set ladder · double progression's `3×6@40 → … → 3×6@42.5` · 10 000 random rules.
+- *No ENGINE_VERSION bump:* no existing fixture's output changes. The two new columns are written out as `null` in
+  the stage-1 cases, which is their value there, not a change in behaviour.
+
+Stage 2 carries six decisions, each the owner's, each with a recommendation:
+
+1. **How double progression moves.** 01 §3.2 (b) gives the rule for one rep count; an exercise has several sets.
+   **Recommended:** *the exercise moves as one.* Every counted set below the top of the range gains `rep_step` reps,
+   **capped at the top**. When every counted set is at the top, the load takes one step and every counted set drops
+   back to the bottom. Warm-up, drop and back-off sets hold their reps, and their loads follow the exercise's steps.
+   A rep step that would overshoot the top stops at it rather than turning the excess into load — every rep count
+   in the range is prescribed once. The load rounds by the rule's own `rounding`: 01's `round_up` predates that column.
+   A `load_step_bp` is a share of cycle 1's load, as for `linear_load`. The alternative, each set moving on its own,
+   splits one exercise across two loads in the same session.
+2. **What `percent_1rm` prescribes for each set.** **Recommended:** every counted set prescribes
+   `baseline_e1rm_kg × wave`, rounded by the rule. The wave is tiled across the working cycles, cycle 1 first, and a
+   deload consumes no wave step. Warm-up, drop and back-off sets are **held as authored**. An empty wave holds cycle
+   1's loads, so the strategy stays total. The alternative scales every set by the wave's ratio to its first value,
+   which keeps a back-off set in proportion but makes cycle 1's typed loads, not the baseline, the real reference. The
+   cost of the recommendation: under `percent_1rm`, a pyramid of different working loads is not expressible in v1.
+3. **`percent_1rm` on a bodyweight exercise.** e1RM is over body weight plus added load (INV-07, ADR-010), but a
+   planned set prescribes the added load. **Recommended:** the wrapper passes the latest body weight. The prescription
+   is `baseline × wave − body weight`, never below zero. With no body weight, the exercise holds cycle 1's loads:
+   the no-guessing rule of INV-07, running open-loop. Until open question 18 gives body weight an entry point, that
+   second branch is the one that runs.
+4. **How `rir_autoregulated` descends at generation.** **Recommended:** the target RIR moves from `rir_start` at cycle 1
+   to `rir_end` at the last working cycle, in integer arithmetic across the working cycles, a tie rounding to **the
+   higher RIR** — the same side ADR-010's tie rule takes for loads. Deloads consume no step. The load climbs by the
+   rule's step each working cycle, as if every cycle were `Met`. With no `rir_start`, cycle 1's RIRs are held; with no
+   `rir_end`, the target holds at `rir_start`.
+5. **Where the per-set ladder applies.** Under `rir_mode = 'per_set'`, a set's target is the exercise target plus its
+   offset, clamped and marked (INV-05, ADR-010). **Recommended:** the engine applies the ladder wherever a strategy
+   *moves* the exercise-level target, which in v1 is `rir_autoregulated`. The other four hold RIR constant, so cycle 1's
+   per-set RIRs — the ladder as the user authored it — are held and clamped. Offsets go to counted sets in `set_index`
+   order; a set past the end of the array takes 0; an offset may be negative. Non-counted sets keep cycle 1's RIR.
+6. **ENGINE_VERSION stays 1**, for the reason above.
+
+**Stage 2 — built 2026-09-26.** The rules above are now written into [01 §3.2](../01-business-requirements.md) as
+*Exactly what (b)–(d) generate*.
+- *Code:* each strategy's working-cycle prescription is in a new `core-rs/src/progression/strategies.rs`, one function
+  per strategy. `generate.rs` keeps the block walk, the session layout and the deload. `Strategy` carries each
+  strategy's parameters, and `Rule` gains `rir_mode` (`RirMode`); neither is `Copy` any more. `ExerciseSpec` gains
+  `uses_bodyweight` and `body_weight_kg`, and `PlannedSet` gains `target_min_reps` and `target_max_reps`.
+- *Bindings:* the PyO3 rule takes every `progression_rules` column the engine reads. It refuses a stepping rule
+  without exactly one step and a `percent_1rm` without its baseline, and refuses `cycle_pattern` by name as v2.
+- *Fixtures:* `generate.json` now has 21 cases, 12 of them new. Every rule column is written out, null where unread.
+  The new cases: double progression's criterion, an overshooting rep step, and double progression through a deload;
+  a 70/75/80 % wave with a deload; `percent_1rm` on a bodyweight exercise with a body weight, without one, and below
+  zero; `rir_autoregulated` 3 → 0 through two deloads, and a RIR tie; and the per-set ladder's two criteria plus
+  negative and past-the-end offsets.
+- *Properties:* the rule generator now covers all five strategies, both RIR modes, empty waves, missing RIR ends,
+  a zero rep step, and bodyweight exercises with and without a body weight. A new property holds INV-02 over
+  **10 000 random rules** (about 20 s in a debug build). INV-05 now also checks that a rep range rides on exactly the
+  counted sets of double progression. Two deliberate breaks each failed the property that guards them: an uncapped
+  rep step, and a negative added load.
+- *Counts:* 88 core unit tests, 4 fixture tests, 7 properties; 35 pytest; 111 Jest checks on the fixture files.
+
 ## Acceptance criteria
 - [ ] Fixture #1 (the user's 40 → 62.5 kg example) passes in every suite — `cargo test`, pytest through PyO3, and
       the app on the device through UniFFI
-- [ ] A per-set ladder `[2, 1, 0]` on a rule with `max_rir = 3` produces RIR `3, 3, 3` marked
-      clamped at target 3, and `3, 2, 1` unclamped at target 1 (FR-3.8a)
+- [x] A per-set ladder `[2, 1, 0]` on a rule with `max_rir = 3` produces RIR `3, 3, 3` marked
+      clamped at target 3, and `3, 2, 1` unclamped at target 1 (FR-3.8a) — *stage 2: `generate.json`, in `cargo test`
+      and pytest*
 - [ ] A 2.5 % step (`load_step_bp = 250`) from a 140 kg squat prescribes **142.5 kg** — the former
       two-decimal fraction, stored as 3 %, gave 145 kg — and every suite agrees on every
       percentage-derived load in the fixture set
-- [ ] Double progression with range 6–8 and a 2.5 kg step produces
-      `3×6@40 → 3×7@40 → 3×8@40 → 3×6@42.5`
-- [ ] No generated weight is ever a non-multiple of the increment, over 10 000 random rules
+- [x] Double progression with range 6–8 and a 2.5 kg step produces
+      `3×6@40 → 3×7@40 → 3×8@40 → 3×6@42.5` — *stage 2: `generate.json` and a core unit test*
+- [x] No generated weight is ever a non-multiple of the increment, over 10 000 random rules — *stage 2:
+      `no_load_is_ever_off_the_grid_over_ten_thousand_rules`, all five strategies*
 - [ ] Editing cycle 9's squat, then completing cycle 4, leaves cycle 9's edit untouched
 - [x] A block of **9-day microcycles** generates correctly, and cycle 3 starts 18 days after
       cycle 1 — no weekday assumption anywhere (INV-25) — *stage 1: `generate.json` and `resolve_dates.json`, in

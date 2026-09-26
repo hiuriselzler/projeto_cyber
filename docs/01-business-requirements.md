@@ -196,6 +196,27 @@ special case for the empty block.
 (e.g. cycle 1 @ RIR 3 → final cycle @ RIR 0/1) while load climbs; the actual RIR logged last
 cycle determines how big this cycle's jump is. See §3.4.
 
+**Exactly what (b)–(d) generate** (settled 2026-09-26, [task 005](tasks/005-strength-progression-planner.md) stage 2).
+Generation is **open-loop**: with no logs yet, each strategy projects as if every working cycle were `Met`, and a deload
+consumes no step of any of them (FR-3.9). What logged performance changes is reconciliation's (§3.4).
+- **`double_progression` moves the exercise as one.** Each working cycle, every counted set below `max_reps` gains
+  `rep_step` reps, **stopping at the top** — a step never overshoots into load. When every counted set is at the top, the
+  load takes one step and every counted set drops back to `min_reps`. Warm-up, drop and back-off sets hold their reps,
+  and their loads follow the exercise's steps. The load rounds by the rule's `rounding`. A `load_step_bp` is a share of
+  cycle 1's load, as for `linear_load`. Each counted set carries the range as `target_min_reps`/`target_max_reps`.
+- **`percent_1rm`:** every counted set prescribes `baseline_e1rm_kg × wave`, the wave tiled across the working cycles
+  with cycle 1 at its first value; warm-up, drop and back-off sets are held as authored; an empty wave holds cycle 1's
+  loads. On a **bodyweight exercise** the prescription is the *added* load, `baseline × wave − body weight`, never below
+  zero; with no body weight logged, cycle 1's loads are held rather than guessed (INV-07). *Accepted cost:* a pyramid of
+  different working loads is not expressible under `percent_1rm` in v1.
+- **`rir_autoregulated`:** the load climbs by the rule's step each working cycle, and the counted sets' target RIR moves
+  from `rir_start` at cycle 1 to `rir_end` at the last working cycle in whole reps, **a tie rounding to the higher RIR**.
+  With no `rir_start` cycle 1's RIRs are held; with no `rir_end` the target holds at `rir_start`.
+- **The per-set ladder** (FR-3.8a) applies wherever a strategy moves the exercise's target RIR — in v1,
+  `rir_autoregulated`. The other four hold RIR constant, so cycle 1's per-set RIRs, which already hold the ladder as the
+  user wrote it, are held and clamped. Offsets go to counted sets in `set_index` order; a set past the end of the ladder
+  takes 0; an offset may be negative.
+
 **(e) `cycle_pattern`** — **v2, not v1.** The user defines a repeating pattern of microcycles and
 the engine tiles it across the block. A pattern step is a multiplier or delta applied to the running
 baseline:

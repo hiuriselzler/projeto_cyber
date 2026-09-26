@@ -5,14 +5,15 @@
 //! § Amendment 2026-09-26), and when a property fails it **shrinks** the block to the smallest one that
 //! still breaks it.
 //!
-//! Stage 1 holds what exists: liftable loads in both unit systems (INV-02), rep and RIR bounds (INV-05),
-//! day indices inside their own cycle (INV-25), contiguous dates, one natural key per row (ADR-002), the
-//! same output from the same input (INV-10), and `none` never deloading (FR-3.1b). The 10 000-rule
-//! property waits for stage 2, when every strategy that generates a load exists.
+//! Over all five v1 strategies and both RIR modes: liftable loads in both unit systems (INV-02) — once
+//! over 52-cycle blocks after storage, and once over **10 000 random rules**, task 005's criterion; rep
+//! and RIR bounds, every per-set sum included (INV-05); day indices inside their own cycle (INV-25);
+//! contiguous dates; one natural key per row (ADR-002); the same output from the same input (INV-10);
+//! and `none` never deloading (FR-3.1b).
 
 use cyberathlete_core::{
     CycleOneSet, DeloadPolicy, ENGINE_VERSION, ExerciseSpec, LengthOverride, LoadStep,
-    MesocycleSpec, PlannedMicrocycle, RoundingMode, Rule, SessionSpec, SetType,
+    MesocycleSpec, PlannedMicrocycle, RirMode, RoundingMode, Rule, SessionSpec, SetType,
     Strategy as Progression, generate, round_to_increment,
 };
 use proptest::prelude::*;
@@ -57,34 +58,76 @@ fn set_type() -> impl Strategy<Value = SetType> {
     ])
 }
 
-/// One exercise of cycle 1: a rule of either stage-1 strategy, and up to six sets whose targets may sit
-/// outside the rule's bounds, so the clamp is exercised rather than assumed.
+/// A load step: whole increments in kilograms, or basis points of cycle 1's load.
+fn load_step(step_kg: f64) -> impl Strategy<Value = LoadStep> {
+    prop_oneof![
+        (1_u32..=4).prop_map(move |n| LoadStep::Kg(f64::from(n) * step_kg)),
+        (1_u32..=1_000).prop_map(LoadStep::BasisPoints),
+    ]
+}
+
+/// Any of the five v1 strategies, with the parameters each carries — an empty wave, a missing RIR
+/// start or end and a zero rep step included, since the engine must be total over all of them.
+fn strategy(step_kg: f64) -> impl Strategy<Value = Progression> {
+    prop_oneof![
+        Just(Progression::Fixed),
+        load_step(step_kg).prop_map(Progression::LinearLoad),
+        (load_step(step_kg), 0_u32..=4)
+            .prop_map(|(step, rep_step)| Progression::DoubleProgression { step, rep_step }),
+        (
+            prop::collection::vec(4_000_u32..=10_000, 0..=4),
+            20.0_f64..400.0
+        )
+            .prop_map(|(wave_bp, baseline)| Progression::Percent1rm {
+                wave_bp,
+                baseline_e1rm_kg: stored(baseline, 4),
+            }),
+        (
+            load_step(step_kg),
+            prop::option::weighted(0.9, 0_u32..=10),
+            prop::option::weighted(0.9, 0_u32..=10)
+        )
+            .prop_map(|(step, rir_start, rir_end)| Progression::RirAutoregulated {
+                step,
+                rir_start,
+                rir_end,
+            }),
+    ]
+}
+
+fn rir_mode() -> impl Strategy<Value = RirMode> {
+    prop_oneof![
+        Just(RirMode::PerExercise),
+        prop::collection::vec(-4_i32..=4, 0..=6).prop_map(|offsets| RirMode::PerSet { offsets }),
+    ]
+}
+
+/// One exercise of cycle 1: a rule of any strategy, and up to six sets whose targets may sit outside
+/// the rule's bounds, so the clamp is exercised rather than assumed. A bodyweight exercise, with or
+/// without a body weight, for `percent_1rm`'s added load.
 fn exercise(
     order_index: u32,
     increment_kg: f64,
     step_kg: f64,
 ) -> impl Strategy<Value = ExerciseSpec> {
     let rule = (
-        prop_oneof![
-            Just(Progression::Fixed),
-            (1_u32..=4)
-                .prop_map(move |n| Progression::LinearLoad(LoadStep::Kg(f64::from(n) * step_kg))),
-            (1_u32..=1_000).prop_map(|bp| Progression::LinearLoad(LoadStep::BasisPoints(bp))),
-        ],
+        strategy(step_kg),
         1_u32..=12,
         0_u32..=8,
         0_u32..=5,
         0_u32..=5,
         rounding(),
+        rir_mode(),
     )
         .prop_map(
-            |(strategy, min_reps, rep_span, min_rir, rir_span, rounding)| Rule {
+            |(strategy, min_reps, rep_span, min_rir, rir_span, rounding, rir_mode)| Rule {
                 strategy,
                 min_reps,
                 max_reps: min_reps + rep_span,
                 min_rir,
                 max_rir: (min_rir + rir_span).min(10),
                 rounding,
+                rir_mode,
             },
         );
     let set = (
@@ -93,22 +136,30 @@ fn exercise(
         prop::option::weighted(0.9, 0_u32..=25),
         prop::option::weighted(0.7, 0_u32..=10),
     );
-    (rule, prop::collection::vec(set, 1..=6)).prop_map(move |(rule, sets)| ExerciseSpec {
-        order_index,
-        increment_kg,
-        rule,
-        sets: (0..)
-            .zip(sets)
-            .map(|(set_index, (set_type, weight, reps, rir))| CycleOneSet {
-                set_index,
-                set_type,
-                // A load as it would have been stored, so the start is itself a storable value.
-                target_weight_kg: weight.map(|it| stored(it, 4)),
-                target_reps: reps,
-                target_rir: rir,
-            })
-            .collect(),
-    })
+    let body = (
+        prop::bool::weighted(0.2),
+        prop::option::weighted(0.7, 40.0_f64..150.0),
+    );
+    (rule, body, prop::collection::vec(set, 1..=6)).prop_map(
+        move |(rule, (uses_bodyweight, body), sets)| ExerciseSpec {
+            order_index,
+            increment_kg,
+            rule,
+            uses_bodyweight,
+            body_weight_kg: body.map(|it| stored(it, 4)),
+            sets: (0..)
+                .zip(sets)
+                .map(|(set_index, (set_type, weight, reps, rir))| CycleOneSet {
+                    set_index,
+                    set_type,
+                    // A load as it would have been stored, so the start is itself a storable value.
+                    target_weight_kg: weight.map(|it| stored(it, 4)),
+                    target_reps: reps,
+                    target_rir: rir,
+                })
+                .collect(),
+        },
+    )
 }
 
 /// Cycle 1: up to four sessions on distinct days of a cycle up to 28 days, each with one or two
@@ -249,25 +300,22 @@ proptest! {
         }
     }
 
-    /// INV-05: every generated rep and RIR target sits inside its rule's bounds, deloads included.
+    /// INV-05: every generated rep and RIR target sits inside its rule's bounds — deloads, every per-set
+    /// ladder sum and every double-progression step included — and a rep range is shown on exactly the
+    /// counted sets of a double-progression exercise.
     #[test]
     fn every_target_is_inside_its_rule(block in block(2..=52)) {
         let generated = generate(&block.mesocycle, &block.cycle_one);
-        let rules: Vec<Rule> = block
-            .cycle_one
-            .iter()
-            .flat_map(|session| session.exercises.iter().map(|exercise| exercise.rule))
-            .collect();
         for cycle in &generated {
             for (session, spec) in cycle.sessions.iter().zip(sorted(&block.cycle_one)) {
                 for exercise in &session.exercises {
-                    let rule = spec
+                    let rule: &Rule = spec
                         .exercises
                         .iter()
                         .find(|it| it.order_index == exercise.order_index)
-                        .map(|it| it.rule)
+                        .map(|it| &it.rule)
                         .expect("every generated exercise comes from cycle 1");
-                    prop_assert!(rules.contains(&rule));
+                    let double = matches!(rule.strategy, Progression::DoubleProgression { .. });
                     for set in &exercise.sets {
                         if let Some(reps) = set.target_reps {
                             prop_assert!((rule.min_reps..=rule.max_reps).contains(&reps));
@@ -275,6 +323,11 @@ proptest! {
                         if let Some(rir) = set.target_rir {
                             prop_assert!((rule.min_rir..=rule.max_rir).contains(&rir));
                         }
+                        let ranged = double && cyberathlete_core::is_counted_type(set.set_type);
+                        prop_assert_eq!(
+                            (set.target_min_reps, set.target_max_reps),
+                            if ranged { (Some(rule.min_reps), Some(rule.max_reps)) } else { (None, None) }
+                        );
                     }
                 }
             }
@@ -362,6 +415,23 @@ proptest! {
                 .map(|exercise| exercise.sets.len())
                 .sum();
             prop_assert_eq!(sets, sets_in_cycle_one);
+        }
+    }
+}
+
+proptest! {
+    #![proptest_config(ProptestConfig::with_cases(10_000))]
+
+    /// Task 005's criterion: **no generated weight is ever a non-multiple of the increment, over 10 000
+    /// random rules** — every strategy, both RIR modes, both unit systems, bodyweight exercises with and
+    /// without a body weight, any deload policy and block length.
+    #[test]
+    fn no_load_is_ever_off_the_grid_over_ten_thousand_rules(block in block(2..=52)) {
+        for set in every_set(&generate(&block.mesocycle, &block.cycle_one)) {
+            let Some(load) = set.target_weight_kg else { continue };
+            prop_assert!(load.is_finite() && load >= 0.0, "{} kg", load);
+            let steps = (load / block.increment_kg).round();
+            prop_assert_eq!(load, steps * block.increment_kg, "on the grid");
         }
     }
 }

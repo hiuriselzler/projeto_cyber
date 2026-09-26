@@ -1,9 +1,8 @@
 //! Progression: the plan's shape, its dates, the strategies, and the load rounding every one of them
 //! ends in — [task 005](../../../docs/tasks/005-strength-progression-planner.md).
 //!
-//! Stage 1 builds the foundation: [`generate`] for `linear_load` and `fixed`, the three deload policies,
-//! and [`resolve_dates`]. The other three v1 strategies arrive in stage 2, and `classify` and
-//! `reconcile` in stage 3.
+//! Stages 1 and 2 build [`generate`] for the five v1 strategies, the three deload policies, the per-set
+//! RIR ladder and [`resolve_dates`]. `classify` and `reconcile` arrive in stage 3.
 //!
 //! **What this module does not know, deliberately.** No ids: the engine names a row by its place in the
 //! plan and the wrappers mint the UUIDv7s ([ADR-002](../../../docs/decisions/ADR-002.md) § Amendment
@@ -15,13 +14,14 @@ mod deload;
 mod generate;
 mod plan;
 mod rounding;
+mod strategies;
 
 pub use dates::{EpochDay, MAX_LENGTH_DAYS, MIN_LENGTH_DAYS, resolve_dates};
 pub use deload::deload_schedule;
 pub use generate::generate;
 pub use plan::{
     CycleOneSet, DeloadPolicy, ExerciseSpec, LengthOverride, LoadStep, MAX_MICROCYCLES,
-    MesocycleSpec, PlannedExercise, PlannedMicrocycle, PlannedSession, PlannedSet, Rule,
+    MesocycleSpec, PlannedExercise, PlannedMicrocycle, PlannedSession, PlannedSet, RirMode, Rule,
     SessionSpec, Strategy,
 };
 pub use rounding::{RoundingMode, round_to_increment};

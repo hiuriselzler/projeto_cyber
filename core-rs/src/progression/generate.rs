@@ -8,23 +8,25 @@
 use super::dates::{clamp_length, resolve_dates};
 use super::deload::deload_schedule;
 use super::plan::{
-    CycleOneSet, ExerciseSpec, LoadStep, MAX_MICROCYCLES, MesocycleSpec, PlannedExercise,
-    PlannedMicrocycle, PlannedSession, PlannedSet, SessionSpec, Strategy,
+    ExerciseSpec, MAX_MICROCYCLES, MesocycleSpec, PlannedExercise, PlannedMicrocycle,
+    PlannedSession, PlannedSet, SessionSpec,
 };
+use super::strategies::{Progress, clamp, working_sets};
 use super::{BASIS_POINTS, ENGINE_VERSION, RoundingMode, round_to_increment};
 use crate::strength::is_counted_type;
 
 /// Generate microcycles 2..N from microcycle 1.
 ///
 /// **How a block advances** (01 §3.2, FR-3.9). Each working cycle stands one progression step past the
-/// working cycle before it; cycle 1 is step 0. A deload **consumes no step**: it prescribes a share of
-/// each set's last working prescription, and the cycle after it resumes one step past the last working
-/// cycle. In the owner's example that is 50 kg at cycle 5, 30 kg at cycle 6 and 52.5 kg at cycle 7.
+/// working cycle before it; cycle 1 is step 0. What a step means is the strategy's
+/// ([`strategies`](super::strategies)). A deload **consumes no step**: it prescribes a share of each
+/// set's last working prescription, and the cycle after it resumes one step past the last working cycle.
+/// In the owner's example that is 50 kg at cycle 5, 30 kg at cycle 6 and 52.5 kg at cycle 7.
 ///
-/// **Every load is re-anchored**, never nudged: a working load is cycle 1's load plus its steps, rounded
-/// once by the rule's own mode (INV-02). Error cannot accumulate across a block, because no load is
-/// computed from a load that was already rounded — except a deload's, which is one rounding away from a
-/// load already on the grid.
+/// **Every load is re-anchored**, never nudged: a working load is computed from cycle 1 and its steps,
+/// then rounded once by the rule's own mode (INV-02). Error cannot accumulate across a block, because no
+/// load is computed from a load that was already rounded — except a deload's, which is one rounding away
+/// from a load already on the grid.
 ///
 /// **Total** (INV-10): a block longer than 52 cycles is cut at 52, a length outside 1–28 is clamped, a
 /// target outside its rule's bounds is clamped and marked `was_clamped` (INV-05), and nothing panics.
@@ -36,6 +38,13 @@ pub fn generate(spec: &MesocycleSpec, cycle_one: &[SessionSpec]) -> Vec<PlannedM
     let lengths: Vec<u32> = (1..=cycles).map(|cycle| length_of(spec, cycle)).collect();
     let starts = resolve_dates(spec.start_day, &lengths);
     let deloads = deload_schedule(&spec.deload, cycles);
+    // Cycle 1 is never a deload, so it is always the first working cycle.
+    let working_cycles = deloads.iter().fold(
+        0_u32,
+        |count, &deload| {
+            if deload { count } else { count + 1 }
+        },
+    );
 
     let mut sessions: Vec<&SessionSpec> = cycle_one.iter().collect();
     sessions.sort_by_key(|session| (session.day_index, session.order_index));
@@ -53,13 +62,17 @@ pub fn generate(spec: &MesocycleSpec, cycle_one: &[SessionSpec]) -> Vec<PlannedM
         if !is_deload {
             step += 1;
         }
+        let at = Progress {
+            step,
+            working_cycles,
+        };
         let deload = is_deload.then_some(spec);
         let sessions = lay_out(&sessions, length)
             .into_iter()
             .map(|(day_index, order_index, session)| PlannedSession {
                 day_index,
                 order_index,
-                exercises: prescribe_session(session, step, deload),
+                exercises: prescribe_session(session, at, deload),
             })
             .collect();
         block.push(PlannedMicrocycle {
@@ -118,80 +131,24 @@ fn lay_out<'a>(sessions: &[&'a SessionSpec], length: u32) -> Vec<(u32, u32, &'a 
 
 fn prescribe_session(
     session: &SessionSpec,
-    step: u32,
+    at: Progress,
     deload: Option<&MesocycleSpec>,
 ) -> Vec<PlannedExercise> {
     let mut exercises: Vec<&ExerciseSpec> = session.exercises.iter().collect();
     exercises.sort_by_key(|exercise| exercise.order_index);
     exercises
         .into_iter()
-        .map(|exercise| PlannedExercise {
-            order_index: exercise.order_index,
-            sets: prescribe_exercise(exercise, step, deload),
+        .map(|exercise| {
+            let working = working_sets(exercise, at);
+            PlannedExercise {
+                order_index: exercise.order_index,
+                sets: match deload {
+                    None => working,
+                    Some(spec) => deload_sets(exercise, working, spec),
+                },
+            }
         })
         .collect()
-}
-
-fn prescribe_exercise(
-    exercise: &ExerciseSpec,
-    step: u32,
-    deload: Option<&MesocycleSpec>,
-) -> Vec<PlannedSet> {
-    let mut sets: Vec<&CycleOneSet> = exercise.sets.iter().collect();
-    sets.sort_by_key(|set| set.set_index);
-    let working = sets
-        .into_iter()
-        .map(|set| working_set(exercise, set, step))
-        .collect();
-    match deload {
-        None => working,
-        Some(spec) => deload_sets(exercise, working, spec),
-    }
-}
-
-/// A set as a working cycle at `step` prescribes it.
-fn working_set(exercise: &ExerciseSpec, set: &CycleOneSet, step: u32) -> PlannedSet {
-    let rule = &exercise.rule;
-    let target_weight_kg = set.target_weight_kg.map(|weight_kg| {
-        round_to_increment(
-            progressed(rule.strategy, weight_kg, step),
-            exercise.increment_kg,
-            rule.rounding,
-        )
-    });
-    let (target_reps, reps_clamped) = clamp(set.target_reps, rule.min_reps, rule.max_reps);
-    let (target_rir, rir_clamped) = clamp(set.target_rir, rule.min_rir, rule.max_rir);
-    PlannedSet {
-        set_index: set.set_index,
-        set_type: set.set_type,
-        target_weight_kg,
-        target_reps,
-        target_rir,
-        was_clamped: reps_clamped || rir_clamped,
-    }
-}
-
-/// Cycle 1's load, `step` working cycles on — before rounding.
-fn progressed(strategy: Strategy, weight_kg: f64, step: u32) -> f64 {
-    match strategy {
-        Strategy::Fixed => weight_kg,
-        // Plain multiply and add, never a fused `mul_add`: ADR-010 keeps load arithmetic to operations
-        // IEEE-754 defines one way everywhere, and `round_to_increment` absorbs the rest.
-        Strategy::LinearLoad(LoadStep::Kg(step_kg)) => weight_kg + f64::from(step) * step_kg,
-        // A share of cycle 1's load per step, so it adds a constant amount and never compounds. The
-        // basis points are summed as integers first, so 140 kg at 250 bp is 140 × 10 250 / 10 000 =
-        // 143.5 kg exactly, before `round_to_increment` puts it on the grid at 142.5 kg (ADR-010 §3).
-        Strategy::LinearLoad(LoadStep::BasisPoints(bp)) => {
-            let share = u64::from(BASIS_POINTS) + u64::from(step) * u64::from(bp);
-            weight_kg * exact(share) / f64::from(BASIS_POINTS)
-        }
-    }
-}
-
-/// An integer as a float, exactly: a share is at most 10 000 + 51 × `u32::MAX`, far below 2⁵³, where
-/// every integer has an exact `f64`.
-const fn exact(value: u64) -> f64 {
-    value as f64
 }
 
 /// FR-3.9: a deload cycle, from the working prescription it multiplies.
@@ -230,7 +187,7 @@ fn deload_sets(
         });
         let raised = set
             .target_rir
-            .map(|rir| rir.saturating_add(spec.deload_rir_bump));
+            .map(|rir| i64::from(rir) + i64::from(spec.deload_rir_bump));
         let (target_rir, rir_clamped) = clamp(raised, rule.min_rir, rule.max_rir);
         sets.push(PlannedSet {
             target_weight_kg,
@@ -265,19 +222,12 @@ fn deload_set_count(counted: usize, set_bp: u32) -> usize {
         .clamp(1, counted)
 }
 
-/// A target clamped into `[low, high]`, and whether clamping changed it (INV-05). `None` stays `None`:
-/// no target is not a target of zero (INV-03). Total even if the bounds are inverted.
-fn clamp(value: Option<u32>, low: u32, high: u32) -> (Option<u32>, bool) {
-    value.map_or((None, false), |it| {
-        let clamped = it.max(low).min(high);
-        (Some(clamped), clamped != it)
-    })
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::progression::plan::{DeloadPolicy, LengthOverride, Rule};
+    use crate::progression::plan::{
+        CycleOneSet, DeloadPolicy, LengthOverride, LoadStep, RirMode, Rule, Strategy,
+    };
     use crate::strength::SetType;
 
     fn rule(strategy: Strategy) -> Rule {
@@ -288,6 +238,7 @@ mod tests {
             min_rir: 0,
             max_rir: 4,
             rounding: RoundingMode::Nearest,
+            rir_mode: RirMode::PerExercise,
         }
     }
 
@@ -314,16 +265,22 @@ mod tests {
         }
     }
 
+    fn exercise(rule: Rule, sets: Vec<CycleOneSet>) -> ExerciseSpec {
+        ExerciseSpec {
+            order_index: 0,
+            increment_kg: 2.5,
+            rule,
+            uses_bodyweight: false,
+            body_weight_kg: None,
+            sets,
+        }
+    }
+
     fn one_session(strategy: Strategy, sets: Vec<CycleOneSet>) -> Vec<SessionSpec> {
         vec![SessionSpec {
             day_index: 1,
             order_index: 0,
-            exercises: vec![ExerciseSpec {
-                order_index: 0,
-                increment_kg: 2.5,
-                rule: rule(strategy),
-                sets,
-            }],
+            exercises: vec![exercise(rule(strategy), sets)],
         }]
     }
 
@@ -484,5 +441,47 @@ mod tests {
         assert_eq!(block.len(), 51);
         assert_eq!(block.last().map(|it| it.cycle_number), Some(52));
         assert!(block.iter().all(|it| it.engine_version == ENGINE_VERSION));
+    }
+
+    #[test]
+    fn double_progression_is_the_task_s_own_sequence() {
+        // Task 005's criterion: range 6–8, 2.5 kg step → 3×6@40 → 3×7@40 → 3×8@40 → 3×6@42.5.
+        let mut double = rule(Strategy::DoubleProgression {
+            step: LoadStep::Kg(2.5),
+            rep_step: 1,
+        });
+        double.max_reps = 8;
+        let sessions = vec![SessionSpec {
+            day_index: 1,
+            order_index: 0,
+            exercises: vec![exercise(
+                double,
+                vec![working(0, 40.0), working(1, 40.0), working(2, 40.0)],
+            )],
+        }];
+        let block = generate(&spec(4, DeloadPolicy::None), &sessions);
+        let shape: Vec<Vec<(Option<u32>, Option<f64>)>> = block
+            .iter()
+            .map(|cycle| {
+                cycle.sessions[0].exercises[0]
+                    .sets
+                    .iter()
+                    .map(|set| (set.target_reps, set.target_weight_kg))
+                    .collect()
+            })
+            .collect();
+        assert_eq!(
+            shape,
+            vec![
+                vec![(Some(7), Some(40.0)); 3],
+                vec![(Some(8), Some(40.0)); 3],
+                vec![(Some(6), Some(42.5)); 3],
+            ]
+        );
+        let set = first_set(&block[0]);
+        assert_eq!(
+            (set.target_min_reps, set.target_max_reps),
+            (Some(6), Some(8))
+        );
     }
 }

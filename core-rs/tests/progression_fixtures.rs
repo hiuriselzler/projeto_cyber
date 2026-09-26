@@ -10,8 +10,8 @@
 
 use cyberathlete_core::{
     CycleOneSet, DeloadPolicy, ENGINE_VERSION, EpochDay, ExerciseSpec, LengthOverride, LoadStep,
-    MesocycleSpec, PlannedMicrocycle, PlannedSet, RoundingMode, Rule, SessionSpec, SetType,
-    Strategy, generate, resolve_dates,
+    MesocycleSpec, PlannedMicrocycle, PlannedSet, RirMode, RoundingMode, Rule, SessionSpec,
+    SetType, Strategy, generate, resolve_dates,
 };
 use serde::Deserialize;
 
@@ -137,19 +137,30 @@ struct FixtureExercise {
     order_index: u32,
     increment_kg: f64,
     rule: FixtureRule,
+    uses_bodyweight: bool,
+    body_weight_kg: Option<f64>,
     sets: Vec<FixtureCycleOneSet>,
 }
 
+/// A `progression_rules` row, every column the engine reads written out and null where the strategy
+/// does not read it.
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct FixtureRule {
     strategy: String,
     load_step_kg: Option<f64>,
     load_step_bp: Option<u32>,
+    rep_step: Option<u32>,
     min_reps: u32,
     max_reps: u32,
     min_rir: u32,
     max_rir: u32,
+    rir_mode: String,
+    rir_offsets: Option<Vec<i32>>,
+    rir_start: Option<u32>,
+    rir_end: Option<u32>,
+    percent_wave_bp: Option<Vec<u32>>,
+    baseline_e1rm_kg: Option<f64>,
     rounding: String,
 }
 
@@ -196,6 +207,8 @@ struct FixturePlannedSet {
     target_weight_kg: Option<f64>,
     target_weight_steps: Option<i64>,
     target_reps: Option<u32>,
+    target_min_reps: Option<u32>,
+    target_max_reps: Option<u32>,
     target_rir: Option<u32>,
     was_clamped: bool,
 }
@@ -204,12 +217,45 @@ fn set_type(name: &str) -> SetType {
     SetType::from_name(name).unwrap_or_else(|| panic!("unknown set type {name:?}"))
 }
 
+/// The rule's load step: exactly one of the two columns, as the bindings require.
+fn load_step(rule: &FixtureRule) -> LoadStep {
+    match (rule.load_step_kg, rule.load_step_bp) {
+        (Some(kg), None) => LoadStep::Kg(kg),
+        (None, Some(bp)) => LoadStep::BasisPoints(bp),
+        (kg, bp) => panic!(
+            "{} needs one step, has {kg:?} kg / {bp:?} bp",
+            rule.strategy
+        ),
+    }
+}
+
 fn build_rule(rule: &FixtureRule) -> Rule {
-    let strategy = match (rule.strategy.as_str(), rule.load_step_kg, rule.load_step_bp) {
-        ("fixed", None, None) => Strategy::Fixed,
-        ("linear_load", Some(kg), None) => Strategy::LinearLoad(LoadStep::Kg(kg)),
-        ("linear_load", None, Some(bp)) => Strategy::LinearLoad(LoadStep::BasisPoints(bp)),
-        (other, kg, bp) => panic!("no stage-1 rule is {other:?} with step {kg:?} kg / {bp:?} bp"),
+    let strategy = match rule.strategy.as_str() {
+        "fixed" => Strategy::Fixed,
+        "linear_load" => Strategy::LinearLoad(load_step(rule)),
+        "double_progression" => Strategy::DoubleProgression {
+            step: load_step(rule),
+            rep_step: rule.rep_step.unwrap_or(1),
+        },
+        "percent_1rm" => Strategy::Percent1rm {
+            wave_bp: rule.percent_wave_bp.clone().unwrap_or_default(),
+            baseline_e1rm_kg: rule
+                .baseline_e1rm_kg
+                .expect("percent_1rm requires baseline_e1rm_kg"),
+        },
+        "rir_autoregulated" => Strategy::RirAutoregulated {
+            step: load_step(rule),
+            rir_start: rule.rir_start,
+            rir_end: rule.rir_end,
+        },
+        other => panic!("no v1 strategy is {other:?}"),
+    };
+    let rir_mode = match rule.rir_mode.as_str() {
+        "per_exercise" => RirMode::PerExercise,
+        "per_set" => RirMode::PerSet {
+            offsets: rule.rir_offsets.clone().unwrap_or_default(),
+        },
+        other => panic!("unknown rir_mode {other:?}"),
     };
     Rule {
         strategy,
@@ -219,6 +265,7 @@ fn build_rule(rule: &FixtureRule) -> Rule {
         max_rir: rule.max_rir,
         rounding: RoundingMode::from_name(&rule.rounding)
             .unwrap_or_else(|| panic!("unknown rounding {:?}", rule.rounding)),
+        rir_mode,
     }
 }
 
@@ -264,6 +311,8 @@ fn build_cycle_one(sessions: &[FixtureSession]) -> Vec<SessionSpec> {
                     order_index: exercise.order_index,
                     increment_kg: exercise.increment_kg,
                     rule: build_rule(&exercise.rule),
+                    uses_bodyweight: exercise.uses_bodyweight,
+                    body_weight_kg: exercise.body_weight_kg,
                     sets: exercise
                         .sets
                         .iter()
@@ -323,6 +372,8 @@ fn build_expected(case: &GenerateCase) -> Vec<PlannedMicrocycle> {
                                         })
                                     }),
                                     target_reps: set.target_reps,
+                                    target_min_reps: set.target_min_reps,
+                                    target_max_reps: set.target_max_reps,
                                     target_rir: set.target_rir,
                                     was_clamped: set.was_clamped,
                                 })

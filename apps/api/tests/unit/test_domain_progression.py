@@ -32,6 +32,7 @@ from tests.fixtures.loader import load_fixture
 
 
 def _rule(spec: dict[str, Any]) -> ProgressionRule:
+    """A `progression_rules` row as the fixture writes it — every column, null where unread."""
     return ProgressionRule(
         strategy=ProgressionStrategy.from_name(spec["strategy"]),
         min_reps=spec["min_reps"],
@@ -41,6 +42,13 @@ def _rule(spec: dict[str, Any]) -> ProgressionRule:
         rounding=RoundingMode.from_name(spec["rounding"]),
         load_step_kg=spec["load_step_kg"],
         load_step_bp=spec["load_step_bp"],
+        rep_step=spec["rep_step"],
+        percent_wave_bp=spec["percent_wave_bp"] or [],
+        baseline_e1rm_kg=spec["baseline_e1rm_kg"],
+        rir_start=spec["rir_start"],
+        rir_end=spec["rir_end"],
+        rir_mode=spec["rir_mode"],
+        rir_offsets=spec["rir_offsets"] or [],
     )
 
 
@@ -81,6 +89,8 @@ def _cycle_one(sessions: list[dict[str, Any]]) -> list[SessionSpec]:
                         )
                         for s in exercise["sets"]
                     ],
+                    uses_bodyweight=exercise["uses_bodyweight"],
+                    body_weight_kg=exercise["body_weight_kg"],
                 )
                 for exercise in session["exercises"]
             ],
@@ -113,7 +123,13 @@ def _as_fixture(
             out["target_weight_steps"] = steps
         else:
             out["target_weight_kg"] = s.target_weight_kg
-        out.update(target_reps=s.target_reps, target_rir=s.target_rir, was_clamped=s.was_clamped)
+        out.update(
+            target_reps=s.target_reps,
+            target_min_reps=s.target_min_reps,
+            target_max_reps=s.target_max_reps,
+            target_rir=s.target_rir,
+            was_clamped=s.was_clamped,
+        )
         return out
 
     return {
@@ -173,16 +189,49 @@ def test_the_date_helpers_are_each_other_s_inverse_and_count_from_1970() -> None
         assert from_epoch_day(epoch_day(day)) == day
 
 
-def test_a_linear_rule_needs_exactly_one_step() -> None:
+@pytest.mark.parametrize(
+    "strategy",
+    [
+        ProgressionStrategy.LinearLoad,
+        ProgressionStrategy.DoubleProgression,
+        ProgressionStrategy.RirAutoregulated,
+    ],
+    ids=lambda it: it.name,
+)
+def test_a_stepping_rule_needs_exactly_one_step(strategy: ProgressionStrategy) -> None:
     for step_kg, step_bp in ((None, None), (2.5, 250)):
         with pytest.raises(ValueError, match="exactly one"):
             ProgressionRule(
-                ProgressionStrategy.LinearLoad,
+                strategy,
                 min_reps=6,
                 max_reps=6,
                 load_step_kg=step_kg,
                 load_step_bp=step_bp,
             )
+
+
+def test_percent_1rm_needs_its_baseline() -> None:
+    # FR-3.2c, and the schema's CHECK: the baseline is what makes generation total.
+    with pytest.raises(ValueError, match="baseline_e1rm_kg"):
+        ProgressionRule(
+            ProgressionStrategy.Percent1rm, min_reps=5, max_reps=5, percent_wave_bp=[7000]
+        )
+
+
+def test_an_unknown_rir_mode_is_refused() -> None:
+    with pytest.raises(ValueError, match="unknown rir_mode"):
+        ProgressionRule(ProgressionStrategy.Fixed, min_reps=5, max_reps=5, rir_mode="ladder")
+
+
+def test_every_v1_strategy_round_trips_by_name() -> None:
+    for name in (
+        "fixed",
+        "linear_load",
+        "double_progression",
+        "percent_1rm",
+        "rir_autoregulated",
+    ):
+        assert ProgressionStrategy.from_name(name).name == name
 
 
 def test_an_unknown_deload_mode_or_a_missing_n_is_refused() -> None:
@@ -197,6 +246,8 @@ def test_an_unknown_deload_mode_or_a_missing_n_is_refused() -> None:
         )
 
 
-def test_a_strategy_not_yet_built_is_refused_by_name() -> None:
-    with pytest.raises(ValueError, match="not yet built"):
-        ProgressionStrategy.from_name("double_progression")
+def test_cycle_pattern_is_refused_by_name_as_v2() -> None:
+    # 01 §3.2 (e): the enum value exists in the schema, the arm does not — unimplemented, not
+    # half-implemented.
+    with pytest.raises(ValueError, match="v2"):
+        ProgressionStrategy.from_name("cycle_pattern")

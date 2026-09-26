@@ -21,7 +21,7 @@ when its own criteria are ticked. Tick the box here only then.
 | **Decisions** | 15 ADRs, **all now accepted**. [ADR-004](decisions/ADR-004.md)'s spike passed on 2026-09-18 and its outcome is recorded: **option B, the single Rust core**. Its four pre-launch conditions remain outstanding, in tasks 005 and 006 |
 | **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **7 complete** (001, 002, 011, 003, 019, 017, 004) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | **[Task 005](tasks/005-strength-progression-planner.md), the progression planner, is in progress** on `feat/task-005-progression-planner`. Stages 0 and 1 are done (2026-09-26): the task file now follows ADR-004's option B, and the engine's foundation is built — `generate` for `linear_load` and `fixed`, the three deload policies, `resolve_dates`, fixture #1 (40 → 62.5 kg) and six properties, run in Rust and through PyO3. **Next: stage 2**, the other three v1 strategies — `double_progression`, `percent_1rm` and `rir_autoregulated` — with the per-set RIR ladder and the 10 000-rule property. It starts with the plan-and-approval step. **Two things for the owner from stage 1:** confirm the rule that a session past a shorter cycle's end moves to its last day, and note the open question, parked for stage 8, of whether FR-3.12's deload suggestion appears under `deload_mode = 'none'` (task file, stage 1). The phone is signed in to a throwaway local account, `stage8-device@example.com`, and is not needed until stage 4. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done, and the zero-plural found on the phone is worth their attention — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
+| **Next action** | **[Task 005](tasks/005-strength-progression-planner.md), the progression planner, is in progress** on `feat/task-005-progression-planner`. Stages 0–2 are done (2026-09-26), on draft [PR #18](https://github.com/hiuriselzler/projeto_cyber/pull/18): the task file follows ADR-004's option B, and `generate` covers all five v1 strategies, the three deload policies and the per-set RIR ladder, with fixture #1 (40 → 62.5 kg), 21 shared cases and seven properties, including 10 000 random rules. Everything runs in Rust and through PyO3. **Next: stage 3**, `classify` and `reconcile` — the INV-06 guard, the older engine yielding, user edits and pins surviving, a strategy switched from the load achieved, extending and shortening a block, and date re-derivation. It starts with the plan-and-approval step. Parked for stage 8: whether FR-3.12's deload suggestion appears under `deload_mode = 'none'` (task file, stage 1). The phone is signed in to a throwaway local account, `stage8-device@example.com`, and is not needed until stage 4. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done, and the zero-plural found on the phone is worth their attention — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
 
 ### The decision that was open is closed — option B
 
@@ -222,9 +222,10 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
 #### ☐ 005 — Strength progression planner · **XL** · depends: 004 · blocks: 009, 010, 013, 014
 > **The reason the product exists.**
 > **In progress** on `feat/task-005-progression-planner` (started 2026-09-26). Its nine stages are in the task file.
-> Stage 0 is done, bringing the file up to date with ADR-004's option B. **Stage 1, the engine's foundation, is built**
-> (2026-09-26): `generate` for `linear_load` and `fixed`, the three deload policies, `resolve_dates`, fixture #1 and
-> six properties, in Rust and through PyO3. Stage 2, the other three strategies, is next and gets its own plan first.
+> Stage 0 is done, bringing the file up to date with ADR-004's option B. **Stages 1 and 2 are built** (2026-09-26):
+> `generate` for all five v1 strategies, the three deload policies, the per-set RIR ladder, `resolve_dates`, fixture #1
+> and 21 shared cases, and seven properties including 10 000 random rules — in Rust and through PyO3. Stage 3,
+> `classify` and `reconcile`, is next and gets its own plan first.
 - [ ] Engine: five v1 strategies (`cycle_pattern` is v2 — leave the arm unimplemented, not half-done)
 - [ ] Generation + reconciliation as one **pure, deterministic, idempotent** function, `now` a parameter
 - [ ] **Every projection stamped with `engine_version`; an older engine never re-projects a newer
@@ -560,6 +561,7 @@ nothing itself ([task 004](tasks/004-exercise-catalog-and-logging.md) § Scope).
 | 2026-09-25 | Task 004 stage 8: every mirror write is a `PUT` of the aggregate resolved row by row, a row left out is kept (02 §5, §7); the completion rule moves into the core; a global answers a write as a stranger's row does; the records cache rebuilds per exercise inside the write, under a per-user lock. **Task 019 amended:** a session's end keeps the account's local row, which the device's training cascades from — see the dated entry below |
 | 2026-09-25 | Closing task 004 planned: the weighted pull-up ticked on its proofs (device half → OQ 18); the rest notification's timing moved to OQ 13; a development-only ✓ timer for latency under the rest bar; `Sheet`'s exit animation moved to § Gaps; the 30 taps counted on a 5 × 4 routine — see the dated entry below |
 | 2026-09-25 | ✓ latency judged on a **production bundle** with the rest bar running, not on the development build or a synthetic loop; the live workout's set rows **memoized** (the app's first `memo`) with stable handlers, after a profile showed every ✓ re-rendering all twenty — see the dated entry below |
+| 2026-09-26 | Task 005 stage 2: the other three strategies generate open-loop — double progression moves the exercise as one, `percent_1rm` prescribes counted sets from the wave and holds the rest, a bodyweight `percent_1rm` prescribes the added load or holds without a body weight, `rir_autoregulated` descends with ties to the higher RIR, the per-set ladder applies where a strategy moves the target (01 §3.2); the session-move rule confirmed — see the dated entry below |
 | 2026-09-26 | **Task 005 started.** Stage 0 brings the task file up to date with option B; stage 1's six decisions were taken as recommended: `proptest` with dev-dependencies outside `cargo deny`'s graph ([ADR-012](decisions/ADR-012.md) amended, INV-10's enforcement line with it); natural keys in the engine, ids minted by the wrappers ([ADR-002](decisions/ADR-002.md) amended); a deload multiplies the last working prescription and consumes no step (01 FR-3.9); the wrappers resolve the increment; plain records shaped like the rows; dates as whole days since 1970 — see the dated entry below |
 | 2026-09-26 | **Task 004 complete.** The live list's reveal aims again when its height changes; **with the keypad open the rest is a countdown on the keypad's heading line and the bar is not drawn** (07 §6) — on a 533 dp screen the two together left the list no height; the short screen judged by the field being edited — see the dated entry below |
 
@@ -2419,3 +2421,24 @@ as the owner's table:** 62.5 kg at cycle 11, and deloads of 1×6 at 30 kg and 37
 - **Criteria ticked:** the 9-day block, and `round_to_increment`'s tie. Fixture #1 and the 2.5 % step wait for the
   device half in stage 4.
 - No invariant changed and no ADR was added in this step. Counts unchanged: 49 documents, 15 ADRs.
+
+### 2026-09-26 — task 005 stage 2: the other three strategies, and the per-set ladder
+
+The owner confirmed stage 1's session-move rule, and took all six of stage 2's recommendations. Written into
+[01 §3.2](01-business-requirements.md) as *Exactly what (b)–(d) generate*. Generation is **open-loop**: every strategy
+projects as if each working cycle were `Met`, and a deload consumes no step of any of them.
+- **`double_progression` moves the exercise as one.** Reps climb to the top of the range, never past it; then the
+  load steps and every counted set drops to the bottom.
+- **`percent_1rm` prescribes the counted sets from the wave** and holds warm-ups and back-offs as authored. On a
+  bodyweight exercise it prescribes the added load. With no body weight it holds cycle 1's loads, which is what runs
+  until open question 18 is answered.
+- **`rir_autoregulated` descends in whole reps**, a tie rounding to the higher RIR.
+- **The per-set ladder applies where a strategy moves the target**, which in v1 is `rir_autoregulated`. Elsewhere,
+  cycle 1's per-set RIRs are held and clamped.
+- **Proven:** 21 shared cases in `cargo test` and pytest, 12 of them new, and seven properties. The new property holds
+  INV-02 over 10 000 random rules of all five strategies. Deliberately uncapping the rep step and letting an added load
+  go negative each failed its property. The PyO3 rule refuses a stepping rule without exactly one step, a
+  `percent_1rm` without its baseline, and `cycle_pattern`.
+- **Criteria ticked:** the per-set ladder, the double-progression sequence, and 10 000 random rules.
+- No invariant changed, no ADR was added, and `ENGINE_VERSION` stays 1, because no existing fixture's output changed.
+  Counts unchanged: 49 documents, 15 ADRs.
