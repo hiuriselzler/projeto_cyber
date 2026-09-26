@@ -32,12 +32,12 @@ import { ExerciseOptionsSheet } from './ExerciseOptionsSheet';
 import { ExercisePicker } from './ExercisePicker';
 import { FinishSheet } from './FinishSheet';
 import { nextFocus, tickCounts } from './liveFlow';
-import { PastWorkoutSheet } from './PastWorkoutSheet';
-import { RestTimerBar } from './RestTimerBar';
+import { PastWorkoutSheet } from './PastWorkoutSheet';import { RestTimerBar } from './RestTimerBar';
 import { SetEditor } from './SetEditor';
 import { SetTypeSheet } from './SetTypeSheet';
 import { timeTick } from './tickTiming';
 import { useLiveWorkout, useSignedInUserId } from './useLiveWorkout';
+import { useStableHandler } from './useStableHandler';
 
 /** Which column of `set_logs` each editable field of the row writes. */
 const COLUMN: Record<SetRowField, SetField> = {
@@ -157,7 +157,7 @@ export function LiveWorkoutScreen() {
    * remembers (FR-2.6). With the keypad open it moves to the next set's weight; otherwise the next set is scrolled
    * into view, ready for one tap on its pre-filled row.
    */
-  const toggleComplete = useCallback(
+  const toggleComplete = useStableHandler(
     (setLogId: string, isCompleted: boolean) => {
       // **A row missing what its mode needs is not completed** — the keypad opens on that field instead: one tap to the
       // fix, and no error to read mid-set (03 §4, task 004 stage 5c). Checked against the rows as read, before any write.
@@ -183,8 +183,17 @@ export function LiveWorkoutScreen() {
       const target = findWithExercise(fresh, next.setLogId);
       if (target !== undefined) startEditing(next.setLogId, firstField(target.tracking), target.set);
     },
-    [editing, reveal, startEditing, workout],
   );
+
+  /** A field tapped on a row: the keypad opens on it, starting from the value SQLite holds now. Stable, as above. */
+  const editField = useStableHandler((setLogId: string, field: SetRowField) => {
+    startEditing(setLogId, field, workout.workout === null ? undefined : findSet(workout.workout, setLogId));
+  });
+
+  /** Where a row sits in its block — refs only, so stable as written. */
+  const rowLayout = useCallback((blockId: string, setLogId: string, top: number, height: number) => {
+    rowBoxes.current.set(setLogId, { blockId, top, height });
+  }, []);
 
   if (userId === null) {
     return <Screen />;
@@ -263,14 +272,12 @@ export function LiveWorkoutScreen() {
                 workoutId={live.id}
                 exercise={exercise}
                 editing={editing}
-                onEdit={startEditing}
+                onEdit={editField}
                 onToggleComplete={toggleComplete}
                 onAddSet={() => workout.addSet(exercise.id)}
                 onChangeType={setTypeFor}
                 onOptions={() => setOptionsFor(exercise.id)}
-                onRowLayout={(setLogId, top, height) =>
-                  rowBoxes.current.set(setLogId, { blockId: exercise.id, top, height })
-                }
+                onRowLayout={rowLayout}
               />
             </View>
           ))
@@ -366,10 +373,10 @@ function ExerciseBlockFor({
   readonly workoutId: string;
   readonly exercise: Parameters<typeof ExerciseBlock>[0]['exercise'];
   readonly editing: Editing | null;
-  readonly onEdit: (setLogId: string, field: SetRowField, set: LiveSet | undefined) => void;
+  readonly onEdit: (setLogId: string, field: SetRowField) => void;
   readonly onToggleComplete: (setLogId: string, isCompleted: boolean) => void;
   readonly onAddSet: () => void;
-  readonly onRowLayout: (setLogId: string, top: number, height: number) => void;
+  readonly onRowLayout: (blockId: string, setLogId: string, top: number, height: number) => void;
   readonly onChangeType: (setLogId: string) => void;
   readonly onOptions: () => void;
 }) {
@@ -380,6 +387,12 @@ function ExerciseBlockFor({
     () => readPreviousPerformance({ userId, exerciseId: exercise.exerciseId, exceptWorkoutId: workoutId }),
     [exercise.exerciseId, userId, workoutId],
   );
+  // Bound to this block once, not per render: the set rows are memoized and a new function would re-render them all.
+  const blockId = exercise.id;
+  const onBlockRowLayout = useCallback(
+    (setLogId: string, top: number, height: number) => onRowLayout(blockId, setLogId, top, height),
+    [blockId, onRowLayout],
+  );
 
   return (
     <ExerciseBlock
@@ -387,16 +400,10 @@ function ExerciseBlockFor({
       catalog={catalog}
       previous={previous}
       editing={editing}
-      onEdit={(setLogId, field) => {
-        onEdit(
-          setLogId,
-          field,
-          exercise.sets.find((one) => one.id === setLogId),
-        );
-      }}
+      onEdit={onEdit}
       onToggleComplete={onToggleComplete}
       onAddSet={onAddSet}
-      onRowLayout={onRowLayout}
+      onRowLayout={onBlockRowLayout}
       onChangeType={onChangeType}
       onOptions={onOptions}
     />

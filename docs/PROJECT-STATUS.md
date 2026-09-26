@@ -21,7 +21,7 @@ when its own criteria are ticked. Tick the box here only then.
 | **Decisions** | 15 ADRs, **all now accepted**. [ADR-004](decisions/ADR-004.md)'s spike passed on 2026-09-18 and its outcome is recorded: **option B, the single Rust core**. Its four pre-launch conditions remain outstanding, in tasks 005 and 006 |
 | **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **6 complete** (001, 002, 011, 003, 019, 017) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) — the core loop, in progress since 2026-09-19. Stages 0–8 are built.** Stage 8 (2026-09-25) built the mirror endpoints for exercises, routines and workouts and moved the completion rule into the core. Its device pass found a data loss: a refused refresh ended the phone's session, and ending it deleted the account's row, which cascaded through every set on the device. **Fixed the same evening and proven on the phone** — a session's end now keeps the row (task 019 amended), a lint fence refuses deleting it, and the integration suite runs in its own database. The resumed pass ticked **pounds end to end** and **a hidden exercise's history**. **Next: *Closing task 004*, planned 2026-09-25 with its five decisions taken** — the weighted pull-up ticked on its proofs, the rest notification's timing moved to open question 13, `Sheet`'s exit animation moved to § Gaps, and the development-only ✓ timer built (`src/features/strength/tickTiming.ts`, logging to logcat). What remains is the owner's checks at the phone — TalkBack, a full workout in airplane mode, the 30 taps, the 200 % font check in pounds, stage 4's accessibility pass — and [PR #17](https://github.com/hiuriselzler/projeto_cyber/pull/17) marked ready. The phone is signed in to a throwaway local account, `stage8-device@example.com`; its earlier history is gone. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done, and the zero-plural found on the phone is worth their attention — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
+| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) — the core loop, in progress since 2026-09-19. Stages 0–8 are built.** Stage 8 (2026-09-25) built the mirror endpoints for exercises, routines and workouts and moved the completion rule into the core. Its device pass found a data loss: a refused refresh ended the phone's session, and ending it deleted the account's row, which cascaded through every set on the device. **Fixed the same evening and proven on the phone** — a session's end now keeps the row (task 019 amended), a lint fence refuses deleting it, and the integration suite runs in its own database. The resumed pass ticked **pounds end to end** and **a hidden exercise's history**. **Next: *Closing task 004*, planned 2026-09-25 with its five decisions taken** — the weighted pull-up ticked on its proofs, the rest notification's timing moved to open question 13, `Sheet`'s exit animation moved to § Gaps, and the development-only ✓ timer built (`src/features/strength/tickTiming.ts`, logging to logcat). **The airplane-mode workout passed on the phone, and ✓ latency was found over budget on a production bundle (p95 107.8 ms), profiled and fixed by memoizing the set rows (p95 66.8 ms)** — see the dated entry below. Open from it: the ✓ that starts the rest bar reveals the next row against the old viewport — the owner's call. What remains is the owner's checks at the phone — the 30-tap count from the airplane-mode session, TalkBack, the 200 % font check in pounds, stage 4's accessibility pass — and [PR #17](https://github.com/hiuriselzler/projeto_cyber/pull/17) marked ready. The phone is signed in to a throwaway local account, `stage8-device@example.com`; its earlier history is gone. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done, and the zero-plural found on the phone is worth their attention — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
 
 ### The decision that was open is closed — option B
 
@@ -552,6 +552,7 @@ nothing itself ([task 004](tasks/004-exercise-catalog-and-logging.md) § Scope).
 | 2026-09-25 | Task 004 stage 7 planned: charts on `react-native-svg` (02 §4 changed); the records rebuild one user at a time; `personal_records` keyed per load for reps; the core's `standing_records()` says where a record came from; open question 15 moved to task 010 — see the dated entry below |
 | 2026-09-25 | Task 004 stage 8: every mirror write is a `PUT` of the aggregate resolved row by row, a row left out is kept (02 §5, §7); the completion rule moves into the core; a global answers a write as a stranger's row does; the records cache rebuilds per exercise inside the write, under a per-user lock. **Task 019 amended:** a session's end keeps the account's local row, which the device's training cascades from — see the dated entry below |
 | 2026-09-25 | Closing task 004 planned: the weighted pull-up ticked on its proofs (device half → OQ 18); the rest notification's timing moved to OQ 13; a development-only ✓ timer for latency under the rest bar; `Sheet`'s exit animation moved to § Gaps; the 30 taps counted on a 5 × 4 routine — see the dated entry below |
+| 2026-09-25 | ✓ latency judged on a **production bundle** with the rest bar running, not on the development build or a synthetic loop; the live workout's set rows **memoized** (the app's first `memo`) with stable handlers, after a profile showed every ✓ re-rendering all twenty — see the dated entry below |
 
 ### 2026-09-08 — documentation reconciliation pass
 
@@ -2290,3 +2291,30 @@ deferral, and one small development-only instrument:
   logging and not setup.
 
 - No invariant changed and no ADR was added. Counts unchanged: 49 documents, 15 ADRs.
+
+### 2026-09-25 — closing task 004 on the phone: airplane mode passes, and the ✓ was over budget
+
+**The owner logged a full workout in airplane mode** — a routine start, 20 sets, a warm-up, the finish flow — with the
+API's port forward removed so nothing could reach it. Every row read back as predicted. That ticks the criterion.
+
+**The ✓ latency check found the criterion had been ticked on the wrong number.** Stage 3's 10.5 ms was 60 writes in a
+loop inside one rolled-back transaction, with no render. Measured on a real session with the rest bar running, to the
+next frame after the ✓:
+- A development build read ~200 ms, which is React's development mode rather than the product.
+- **A production bundle read p50 82.3, p95 107.8 ms — over NFR-2.** It was served to the development client with
+  `npx expo start --no-dev --minify`, and needed an `https` API URL to pass the 04 §5 guard.
+- **The commit was not the cause** (0.5 ms, measured). The phone's idle state doubles the database half between sets,
+  which is real and stays.
+- **The render was the cause:** a profile showed every ✓ re-rendering all twenty set rows.
+
+**Decided and fixed:** the set row is memoized on plain values, the app's first `memo`, and the live screen's handlers
+are stable through `useStableHandler`. One ✓ now re-renders one row, and the production bundle reads **p50 55.9, p95
+66.8 ms**. Two tests pin it, each watched failing. *Measure a commit* stays on the diagnostics screen, and the ✓ timer
+stays, switchable in a production bundle, for task 005 to measure again.
+
+**Found and left open:** the ✓ that starts the rest bar reveals the next row against the viewport as it was before the
+bar appeared. That leaves the row below the fold, or half behind the keypad. It existed before the fix and is the
+owner's decision.
+
+- No invariant changed and no ADR was added: a rendering change inside one feature. Counts unchanged: 49 documents,
+  15 ADRs.

@@ -16,8 +16,10 @@ import {
   checkForeignKeysEnforced,
   checkSqliteRoundTrip,
   EXPECTED_TABLES,
+  measureCommitCost,
   measureTickLatency,
   readLocalDatabaseState,
+  type CommitCost,
   type TickLatency,
 } from '@/db/diagnostics';
 import { roundLoadToIncrement } from '@/domain';
@@ -58,6 +60,7 @@ export function DiagnosticsScreen() {
   const [privacyKey, setPrivacyKey] = useState<PrivacyKeyProbe | null>(null);
   const [privacyKeyRunning, setPrivacyKeyRunning] = useState(false);
   const [tickLatency, setTickLatency] = useState<TickLatency | null>(null);
+  const [commitCost, setCommitCost] = useState<CommitCost | null | undefined>(undefined);
   const taps = useDiagnosticsStore((state) => state.taps);
   const tap = useDiagnosticsStore((state) => state.tap);
   const platform = describePlatform();
@@ -104,6 +107,17 @@ export function DiagnosticsScreen() {
             'React’s commit and the paint are on top of this; use the workout screen below to judge those.'}
       </Check>
       <Button title="Measure the ✓" onPress={() => setTickLatency(measureTickLatency())} />
+
+      <Check title="A ✓'s commit: one UPDATE autocommitted, as a real ✓ is, against the same UPDATE inside one transaction">
+        {commitCost === undefined
+          ? 'not run'
+          : commitCost === null
+            ? 'no set on this device to update'
+            : `journal_mode ${commitCost.journalMode} · synchronous ${commitCost.synchronous} · ${commitCost.writes} writes each\n` +
+              `committed: p50 ${commitCost.committed.p50Ms} ms · p95 ${commitCost.committed.p95Ms} ms · worst ${commitCost.committed.worstMs} ms\n` +
+              `in one transaction: p50 ${commitCost.uncommitted.p50Ms} ms · p95 ${commitCost.uncommitted.p95Ms} ms · worst ${commitCost.uncommitted.worstMs} ms`}
+      </Check>
+      <Button title="Measure a commit" onPress={() => setCommitCost(measureCommitCost())} />
       <Button title="Open the live workout screen" onPress={() => router.push('/workout')} />
       <Button title="Open the exercise catalog" onPress={() => router.push('/exercises')} />
       <Button title="Open the routines" onPress={() => router.push('/routines')} />

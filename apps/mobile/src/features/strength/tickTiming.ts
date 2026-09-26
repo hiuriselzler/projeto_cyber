@@ -9,8 +9,13 @@ export interface TickTiming {
 /**
  * On in a development build, off in a release one (`__DEV__` is inlined to false and the branch is dropped) and off
  * under Jest, which runs with `__DEV__` true and would print a line for every ✓ in the suite.
+ *
+ * **`EXPO_PUBLIC_TICK_TIMING=1` turns it on in a production bundle as well**, inlined at bundle time. A development
+ * build's React runs its checks on unminified code, and the first real-session numbers (2026-09-25) put the next frame
+ * at ~200 ms there — so the number NFR-2 is judged on comes from `npx expo start --no-dev --minify` with the flag set,
+ * served to the development client. Nothing sets it for a store build.
  */
-const ENABLED = __DEV__ && process.env.NODE_ENV !== 'test';
+const ENABLED = (__DEV__ || process.env.EXPO_PUBLIC_TICK_TIMING === '1') && process.env.NODE_ENV !== 'test';
 
 /**
  * **✓ latency on a real session** — task 004's closing decision 3.

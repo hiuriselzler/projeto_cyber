@@ -326,6 +326,78 @@ export function measureTickLatency(): TickLatency {
   throw new Error('tick latency measurement did not run');
 }
 
+export interface Percentiles {
+  readonly p50Ms: number;
+  readonly p95Ms: number;
+  readonly worstMs: number;
+}
+
+export interface CommitCost {
+  /** `PRAGMA journal_mode` and `PRAGMA synchronous` as this connection runs them. */
+  readonly journalMode: string;
+  readonly synchronous: number;
+  readonly writes: number;
+  /** Each write its own transaction — what a ✓ pays, since it is one autocommitted `UPDATE`. */
+  readonly committed: Percentiles;
+  /** The same writes inside one transaction — what `measureTickLatency` has always measured. */
+  readonly uncommitted: Percentiles;
+}
+
+const COMMIT_WRITES = 40;
+const COMMIT_WARMUP = 5;
+
+/**
+ * **What a ✓'s commit costs** — task 004's closing pass (2026-09-25). `measureTickLatency` gives ~11 ms for the
+ * write and the re-read, but on a real session the same two steps took 30–38 ms. That measure runs all its taps inside
+ * one transaction it rolls back, so it has never paid a commit, and a real ✓ is an autocommitted `UPDATE` that does.
+ *
+ * This times one `UPDATE` both ways, on an existing set, and nothing else. The update writes each column back to
+ * itself — SQLite still journals and rewrites the page, so the commit is real — and no trigger watches `set_logs`, so
+ * nothing on the device changes: no row inserted, altered or deleted. Returns null on a device with no set to update.
+ */
+export function measureCommitCost(): CommitCost | null {
+  const target = sqlite.getFirstSync<{ id: string }>('SELECT id FROM set_logs LIMIT 1');
+  if (target === null) return null;
+  const write = () => sqlite.runSync('UPDATE set_logs SET is_completed = is_completed WHERE id = ?', target.id);
+  const timed = (): number => {
+    const started = performance.now();
+    write();
+    return performance.now() - started;
+  };
+
+  for (let index = 0; index < COMMIT_WARMUP; index += 1) write();
+
+  const committed: number[] = [];
+  for (let index = 0; index < COMMIT_WRITES; index += 1) committed.push(timed());
+
+  const uncommitted: number[] = [];
+  sqlite.execSync('BEGIN');
+  try {
+    for (let index = 0; index < COMMIT_WRITES; index += 1) uncommitted.push(timed());
+  } finally {
+    sqlite.execSync('ROLLBACK');
+  }
+
+  const journal = sqlite.getFirstSync<{ journal_mode: string }>('PRAGMA journal_mode');
+  const synchronous = sqlite.getFirstSync<{ synchronous: number }>('PRAGMA synchronous');
+  return {
+    journalMode: journal?.journal_mode ?? 'unknown',
+    synchronous: synchronous?.synchronous ?? -1,
+    writes: COMMIT_WRITES,
+    committed: percentiles(committed),
+    uncommitted: percentiles(uncommitted),
+  };
+}
+
+function percentiles(samples: number[]): Percentiles {
+  const sorted = [...samples].sort((a, b) => a - b);
+  return {
+    p50Ms: round(percentile(sorted, 0.5)),
+    p95Ms: round(percentile(sorted, 0.95)),
+    worstMs: round(sorted[sorted.length - 1] ?? 0),
+  };
+}
+
 function percentile(sorted: readonly number[], fraction: number): number {
   if (sorted.length === 0) return 0;
   const index = Math.min(sorted.length - 1, Math.floor(sorted.length * fraction));

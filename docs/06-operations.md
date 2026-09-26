@@ -148,6 +148,23 @@ What task 004 stage 8's pass (2026-09-25) added:
   dismissed, so a tap aimed from a dump taken with the keyboard open lands on the wrong row. Dump again after
   `KEYCODE_BACK`, then tap.
 
+What closing task 004 (2026-09-25) added:
+- **Judge speed on a production bundle, never on the development build.** A development build's React runs its checks
+  on unminified code: the same ✓ read ~200 ms there and ~82 ms in production. Serve one to the development client
+  without rebuilding: `EXPO_PUBLIC_TICK_TIMING=1 EXPO_PUBLIC_API_BASE_URL=https://localhost:8000 CI=1 npx expo start
+  --no-dev --minify --clear --port 8082`, `adb reverse tcp:8082 tcp:8082`, then launch the client at
+  `localhost%3A8082`. **The `https` URL is required**: `__DEV__` is false there, so 04 §5's guard refuses an `http` one
+  and the app fails to start on *"Cannot read property 'ErrorBoundary' of undefined"* — the root layout never
+  evaluated. Nothing listens on it; the app treats requests as offline. There is no diagnostics screen in that bundle,
+  so reach screens by deep link. Stop the Metro by its port afterwards (`Get-NetTCPConnection -LocalPort 8082`): the
+  node process outlives the shell that started it.
+- **A loop is not a tap.** Sixty writes back to back keep the CPU awake; a real ✓ arrives after a pause, and the same
+  write and re-read cost twice as much. Time spaced taps.
+- **In airplane mode `adb reverse` still reaches the API over USB.** Remove `tcp:8000` for an offline check, and put it
+  back afterwards.
+- **logcat pads a four-digit process id with a space** (`ReactNativeJS( 7977)`), so split its lines by pattern, not by
+  field number. And from Git Bash, `uiautomator dump /sdcard/…` needs `MSYS_NO_PATHCONV=1` like any other device path.
+
 **Reaching the API from the phone:** over USB with `adb reverse`, so the device's `localhost` is this
 machine's. Debug builds may use `http://` to `localhost` and nothing else; release builds allow no
 cleartext at all ([04 §5](04-security-and-auth.md)). uvicorn stays bound to `127.0.0.1` — never

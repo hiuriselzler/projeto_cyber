@@ -436,9 +436,12 @@ PROJECT-STATUS's decision log:
    *Iniciar* to *Finalizar*, weights excluded.
 
 ## Acceptance criteria
-- [ ] A full workout can be logged start to finish in airplane mode. *(Stage 3 logged one set start to finish with
+- [x] A full workout can be logged start to finish in airplane mode. *(Stage 3 logged one set start to finish with
       no network involved, but airplane mode itself was not switched on, and "full" means routines, set types and
-      the finish flow, which are stages 5–6 in the table above.)*
+      the finish flow, which are stages 5–6 in the table above.)* **On the phone, 2026-09-25, by the owner:** airplane
+      mode on and the API's port forward removed, so nothing could reach it; "Cinco por quatro" started from its routine,
+      five exercises with their rest and targets copied, 20 sets ticked with every RIR NULL, the curl's first set changed
+      to a warm-up, fatigue 8, finished — every row read back from the phone's SQLite
 - [x] Force-quitting mid-workout and reopening restores the exact state, including the set in
       progress and the running rest timer (INV-09). *(Stage 3: the **state** survives a force-stop and comes back
       exactly — see the device list. **Stage 5b built the rest of it** (2026-09-23): a cold start with a workout open
@@ -447,7 +450,12 @@ PROJECT-STATUS's decision log:
       stage 5 device list. Stage 6's pass added a note surviving a force-stop with the finish sheet open. Ticked
       2026-09-24, when this note was found still saying "not yet on the phone")*
 - [x] Tapping ✓ renders in < 100 ms on a mid-range Android device (measure, do not assume) —
-      **p50 10.5 ms, p95 12.4 ms, worst 20.1 ms** on a Galaxy S21 FE, 2026-09-19, for the write and the re-read
+      **p50 10.5 ms, p95 12.4 ms, worst 20.1 ms** on a Galaxy S21 FE, 2026-09-19, for the write and the re-read.
+      **Corrected 2026-09-25: that number measured neither a real ✓ nor a render** — 60 writes back to back inside one
+      rolled-back transaction, on a CPU the loop itself had woken. Measured on a real session with the rest bar running
+      and a pause between sets, to the next frame after the ✓, on a production bundle: **p50 82.3, p95 107.8, worst
+      113.9 ms** — over. Every ✓ re-rendered all twenty set rows; the rows are now memoized, and the same measure reads
+      **p50 55.9, p95 66.8, worst 69.0 ms**. The closing pass below has the investigation
 - [x] RIR left blank stores NULL; a chart or total never treats it as 0. *(Storage half proven on the device — a
       blank row reads "RIR não registrado" and `5+` writes nothing. **Chart half on the phone, stage 7 (2026-09-25):** the
       bench press's e1RM chart runs 80 → 82,3 → 83,3 and stops at "Treino A", whose sets have no RIR, with the note saying
@@ -559,9 +567,8 @@ metric, dark — a development build carrying commit `228069e`, installed **over
       focus back to the bench's set 2; with the keypad open on the bench's set 2, its ✓ moved the keypad to the row's set 2
       weight, revealed above it, with no bar — mid-round)*
 - [ ] TalkBack reaches the set type through the row's "Change set type" action, and the timer bar reads its time left
-- [ ] ✓ latency re-measured on a routine-started session, with the timer bar ticking beside the rows. *Not run: the
-      stage-3 number came from `measureTickLatency()` on a synthetic session; measuring under a ticking bar needs the same
-      instrument pointed at a real one*
+- [x] ✓ latency re-measured on a routine-started session, with the timer bar ticking beside the rows. *(2026-09-25, with
+      closing decision 3's timer: over budget on the first measure, fixed, and re-measured — the closing pass below)*
 - [x] **5c on the phone** (2026-09-24): a plank's row is a time alone; its ✓ on an empty time opened the keypad on *Tempo*
       instead of completing it; `130` read "1 minuto e 30 segundos" and stored 90 s with no weight, reps or RIR. A farmer's
       walk's empty ✓ opened the keypad on *Distância* — its required field — and 24 kg · 30 m · 40 s stored exactly, RIR NULL.
@@ -735,6 +742,40 @@ value was predicted before the tap and read back from the phone's SQLite)*
       why its refresh token was refused. **Fixed:** the suite now creates `<name>_test` beside the database its URLs
       name, grants it from `infra/postgres/roles.sql`'s own per-database half, and points every URL there — locally and in
       CI alike. A full run left the development database's 97 users exactly as they were
+
+**Closing on the device** *(2026-09-25, the Galaxy S21 FE, pt-BR, imperial, dark, the throwaway account. Every value
+predicted before the tap and read back from the phone's SQLite and from logcat)*
+- [x] **The full workout in airplane mode**, by the owner — the acceptance criterion above. 22 ✓ were logged for 20 sets:
+      the first set was ticked, un-ticked 0.3 s later and ticked again — a second tap on a ✓ that seemed not to have
+      landed, which is what a ~200 ms development-build response looks like from the outside
+- [x] **✓ latency with the rest bar running, measured and then fixed.** Closing decision 3's timer logs the write and
+      re-read, and the time to the next frame after them (roughly React's commit; not the paint). What it found, in order:
+      - *Development bundle, the owner's session:* next frame p50 201, p95 219 ms. A development build's React checks
+        everything on unminified code, so this is not the number a user feels.
+      - *Production bundle* (`npx expo start --no-dev --minify` served to the development client, the timer switched on by
+        `EXPO_PUBLIC_TICK_TIMING=1`): next frame **p50 82.3, p95 107.8, worst 113.9 ms** — 2 of 20 over NFR-2.
+      - *Not the commit* — the first hypothesis, refuted. `measureTickLatency` never commits, a real ✓ does, and the
+        database runs a rollback journal with `synchronous` FULL. The diagnostics screen's new *Measure a commit* times one
+        no-op `UPDATE` both ways: **0.50 ms** committed against 0.33 ms inside a transaction.
+      - *The phone's idle state doubles the database half.* Ticks queued back to back took 15–16 ms for the write and
+        re-read; the same ticks after a pause, 34–35 ms. A lifter always pauses, so the paused number is the real one.
+      - *The render was the rest.* React's `<Profiler>` (temporary, not committed) showed **every ✓ re-rendering all twenty
+        set rows** — ~83 % of the commit — because the re-read hands back every set as a new object (INV-09) and a row
+        inside a `.map()` has no cache under the React Compiler; the screen's ✓ handler also changed identity with every
+        re-read.
+      - *The fix:* the row is `memo`ized on plain values (`SetRowItem` in `ExerciseBlock`), and the screen's handlers are
+        stable through `useStableHandler`, which calls the latest one through a ref set after commit. One ✓ now re-renders
+        one row. A test counts the rows drawn (watched failing without `memo`), and one pins the handler's identity and
+        freshness (watched failing with the raw handler).
+      - *After, production bundle, 20 spaced ✓:* next frame **p50 55.9, p95 66.8, worst 69.0 ms**; write and re-read
+        unchanged at p50 35 ms, of which the re-read is ~24 ms — the next thing to look at if task 005 adds to this path.
+      - The keypad path checked on the phone after the fix: 20 typed on set 1, ✓, stored and ticked, and the keypad moved
+        to set 2's weight starting from its stored value
+- [ ] **The ✓ that starts the rest bar reveals against the viewport before the bar.** The bar mounts above the list in
+      the same commit, so the list moves down by the bar's height after the reveal has been computed: the next row is left
+      below the fold with the keypad closed, and half behind the keypad with it open — the edited field itself stays
+      visible. Only the ✓ that starts a rest; later ✓s reveal correctly. Not caused by the fix above (the reveal is
+      untouched); found by it. *Open — the owner's decision*
 
 **Found on the device, and not yet fixed**
 - [x] **The set row reflows at font scale 0.86** — *half answered 2026-09-21, and the half that was a defect is
