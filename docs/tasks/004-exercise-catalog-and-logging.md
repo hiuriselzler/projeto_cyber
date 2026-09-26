@@ -402,10 +402,12 @@ device pass, then PR #17 marked ready.
       warm-up before a 62,5 kg working set celebrated nothing, and the summary counted 1 set and 500 kg. **Stage 7, on the
       phone:** the same warm-up appears in the workout's detail and the exercise's history as "Aq · Aquecimento", while
       the list counts that workout as 1 set and 500 kg and the top-set chart reads 62,5 kg, not 100)*
-- [ ] Archiving an exercise leaves every historical set intact and displayable. *(Stage 7: the exercise history reads
+- [x] Archiving an exercise leaves every historical set intact and displayable. *(Stage 7: the exercise history reads
       through an archived exercise and says it is hidden — in Jest (`historyScreens.test.tsx`) and by construction,
-      `readExercise` and `readExerciseSessions` not filtering on `deleted_at`. Not yet done on the phone: hide an exercise
-      with history and open it from an old workout's detail)*
+      `readExercise` and `readExerciseSessions` not filtering on `deleted_at`. **On the phone, stage 8 (2026-09-25):** the
+      bench press hidden from the catalog took `deleted_at`; the finished workout's detail still showed "100 lb × 5
+      repetições" and its three records, and *Histórico deste exercício* opened with "Oculto do seletor de exercícios. O
+      histórico dele continua como estava.", both charts and the session listed)*
 - [x] The e1RM fixture produces identical results in Python and TypeScript — Rust and Python run the shared fixtures;
       the TypeScript half runs through the same core on the phone, where stage 6's finishes showed exactly the e1RMs
       Epley gives — 80 kg for 60 × 8 @ 2, 83,33 kg for 62,5 × 8 @ 2 — and none past 12 effective reps (2026-09-24)
@@ -416,8 +418,12 @@ device pass, then PR #17 marked ready.
       `en.json`/`pt-BR.json` catalogs in `catalogFilter.test.ts`, 2026-09-22, not a stub catalog
 - [x] A custom exercise named in Portuguese appears exactly as typed in an English UI — same suite, same date;
       "Supino do João" is never translated and a global still reads in whichever language is on screen
-- [ ] An imperial user logs and reads pounds end to end, and the stored `weight_kg` round-trips to
-      exactly the lb value they entered
+- [x] An imperial user logs and reads pounds end to end, and the stored `weight_kg` round-trips to
+      exactly the lb value they entered. *(On the phone, stage 8, 2026-09-25: switched to imperial through the
+      diagnostics switch's `PATCH /auth/me`; **100** typed on the keypad stored `weight_kg` **45.359237** — 100.0 lb
+      exactly — and read back as "100 lb × 5" on the row, "500 lb" of volume and records of 100 lb in the summary, the
+      same in the workout's detail, and charts with lb axes. The API keeps four places, 45.3592, which reads 100.0 lb at
+      display precision — `test_strength_api.py`)*
 - [ ] Logging a 5-exercise, 20-set workout takes fewer than 30 taps beyond the weights themselves
 
 **On a physical device** *(moved from [task 017](017-local-toolchain-device-spike.md) on 2026-09-16 — each needs the
@@ -614,8 +620,8 @@ from the pulled SQLite copy before the screen was opened)*
       there is nothing to chart; the plank lists 1:30 and says time is not charted yet
 - [x] **200 % font**: after the two fixes below, every axis value stays inside its plot and the line starts clear of the
       widest one. The phone's scale was restored to 0.86 afterwards
-- [ ] **Imperial**: not run. It needs the cached `users` row flipped, and this phone's database is every earlier pass's
-      record; the conversion is covered by Jest (`history.test.ts`, `historyFormats.test.ts`)
+- [x] **Imperial**: not run in stage 7. **Run in stage 8** (2026-09-25): after the switch, the history's axes read 90 / 100 /
+      110 lb and 450 / 500 / 550 lb, and the readouts "25/09/2026 · 100 lb" and "· 500 lb"
 - [ ] **TalkBack** on the chart's adjustable actions: not run (a phone setting); the tree gives the plot `adjustable`
       and the summary as its label
 
@@ -630,6 +636,25 @@ from the pulled SQLite copy before the screen was opened)*
       sheet, in a new message. There a zero could be hidden; here it is the information, so the message has an explicit
       `=0` case in both languages: "nenhuma série contada", "no counted sets". *The native-speaker review should look at
       every `{count, plural}` message for the same thing*
+
+**Stage 8 on the device** *(2026-09-25, resumed after the fixes below, on a throwaway account registered against the
+local API — `stage8-device@example.com` — since the phone's own account and history were gone. pt-BR, dark. Every
+value was predicted before the tap and read back from the phone's SQLite)*
+- [x] **The ✓ on an empty row asks the core, and still opens the keypad on the missing field**: a bench press row with
+      nothing typed opened *Repetições*, and the set stayed `is_completed = 0`. The rule now crosses the FFI boundary;
+      the behaviour is stage 5c's
+- [x] **The units switch**: *imperial* answered "saved: imperial · pt-BR", `PATCH /auth/me` answered 200, and the
+      phone's cached `users` row read `imperial`
+- [x] The imperial round trip and a hidden exercise's history — the two acceptance criteria above, ticked from this pass
+- [x] **The fix below, on the path that caused the loss**: the account's refresh tokens revoked on the server, the
+      15-minute access token left to run out, then a `PATCH` from the switch — the refresh answered `401` and the app
+      signed out, exactly as before. **The phone kept 1 user row, 1 workout and its set, `45.359237 × 5`.** Signing back in
+      listed "Treino, 25/09/2026, 1 série contada, 500 lb" in the history
+- [ ] **Not run, and the owner's at the phone:** TalkBack (stages 3, 5, 6, 7), a full workout in airplane mode, the
+      30-tap count, the 200 % font check in pounds, stage 4's accessibility pass, ✓ latency under a ticking rest bar
+- [ ] **A development-only console error on signing out**: *"Can't perform a React state update on a component that
+      hasn't mounted yet"*, raised inside `expo-router`'s `ContextNavigator` as the session gate swapped to the sign-in
+      screen. Not the app's code by its stack, and harmless on screen; recorded rather than chased
 
 **Found by the stage 8 device pass** *(2026-09-25, on the Galaxy S21 FE — a development build with the regenerated core,
 `missing_for_completion` checked in both packaged libraries, installed over the previous build. The pass stopped here)*
