@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 import { getSessionState, subscribeToSession } from '@/account';
 import { readExercise } from '@/db/catalog';
 import { moveItem } from '@/db/ordering';
+import { blocksOfWorkout, reconcileBlocks } from '@/db/planner';
 import {
   clearPastWorkoutEnd,
   readPastWorkoutEnd,
@@ -15,6 +16,7 @@ import {
   addSet,
   discardWorkout,
   endWorkout,
+  localDayOf,
   readOpenWorkout,
   removeSessionExercise,
   removeSet,
@@ -338,8 +340,14 @@ export function useLiveWorkout(userId: string | null): LiveWorkoutController {
     // Forgotten only once `ended_at` holds it — the column that exists for it.
     if (pastEnd !== null) clearPastWorkoutEnd();
     refresh();
+    // The plan adjusts to what was done (01 §3.4) — after the workout is saved, never inside its writes, so a
+    // failure here can never cost it (INV-09). A block left unreconciled is healed at the next start-up (task 005
+    // stage 4a, decision 4).
+    if (userId !== null) {
+      void reconcileBlocks(userId, blocksOfWorkout(userId, workout.id), localDayOf(now), now);
+    }
     return workout.id;
-  }, [pastEnd, refresh, workout]);
+  }, [pastEnd, refresh, userId, workout]);
 
   const discard = useCallback(() => {
     if (workout === null) return;

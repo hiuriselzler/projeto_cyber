@@ -6,7 +6,7 @@
 import nativeModule from "./cyberathlete_core_ffi-ffi";
 import { type UniffiRustFutureContinuationCallback, type UniffiForeignFutureDroppedCallback, type UniffiForeignFutureDroppedCallbackStruct,
 } from "./cyberathlete_core_ffi-ffi";
-import { type UniffiByteArray, AbstractFfiConverterByteArray, Cursor, FfiConverterArray, FfiConverterBool, FfiConverterFloat64, FfiConverterOptional, FfiConverterUInt32, FfiConverterUInt8, RustBuffer, UniffiEnum, UniffiInternalError, UniffiRustCaller, uniffiCreateFfiConverterString, uniffiCreateRecord,
+import { type UniffiByteArray, AbstractFfiConverterByteArray, Cursor, FfiConverterArray, FfiConverterBool, FfiConverterFloat64, FfiConverterInt32, FfiConverterOptional, FfiConverterUInt32, FfiConverterUInt8, RustBuffer, UniffiEnum, UniffiError, UniffiInternalError, UniffiRustCaller, uniffiCreateFfiConverterString, uniffiCreateRecord, uniffiTypeNameSymbol, variantOrdinalSymbol,
 } from "@ubjs/core";
 const uniffiCaller = new UniffiRustCaller(() => ({ code: 0 }));
 
@@ -18,6 +18,26 @@ const uniffiIsDebug =
   false;
 
 // Public interface members begin here.
+
+/**
+ * How one planned exercise went (01 §3.4).
+ */
+export function classify(planned: Array<PlanSet>, logs: Array<PlanLog>): Outcome {
+    const __rb: Uint8Array = uniffiCaller.rustCall(
+            /*caller:*/ (callStatus) => {
+                return nativeModule().ubrn_uniffi_cyberathlete_core_ffi_fn_func_classify(
+        FfiConverterSequenceTypePlanSet.lower(planned, nativeModule().rustbuffer_alloc),
+        FfiConverterSequenceTypePlanLog.lower(logs, nativeModule().rustbuffer_alloc),
+                callStatus);
+            },
+            /*liftString:*/ FfiConverterString.lift.bind(FfiConverterString),
+    );
+    try {
+        return FfiConverterTypeOutcome.lift(__rb);
+    } finally {
+        nativeModule().rustbuffer_free(__rb);
+    }
+    }
 
 /**
  * The version of the core this module was built from. **Not** `ENGINE_VERSION`, which stamps a
@@ -111,6 +131,63 @@ export function e1rmSeries(sets: Array<LoggedSet>): Array<number | undefined> {
     }
 
 /**
+ * The engine that stamps every projection (INV-06). Not `coreVersion`, which names the build.
+ */
+export function engineVersion(): number {
+    return FfiConverterUInt32.lift(uniffiCaller.rustCall(
+            /*caller:*/ (callStatus) => {
+                return nativeModule().ubrn_uniffi_cyberathlete_core_ffi_fn_func_engine_version(
+                callStatus);
+            },
+            /*liftString:*/ FfiConverterString.lift.bind(FfiConverterString),
+    ));
+    }
+
+/**
+ * Lengthen a block to `to` cycles, changing nothing before the first new one (FR-3.1c).
+ */
+export function extend(mesocycle: MesocycleSpec, plan: Array<PlanCycle>, logs: Array<PlanLog>, today: number, to: number): Array<PlanCycle> /*throws*/ {
+    const __rb: Uint8Array = uniffiCaller.rustCallWithError(
+            /*liftError:*/ FfiConverterTypePlanError.lift.bind(FfiConverterTypePlanError),
+            /*caller:*/ (callStatus) => {
+                return nativeModule().ubrn_uniffi_cyberathlete_core_ffi_fn_func_extend(
+        FfiConverterTypeMesocycleSpec.lower(mesocycle, nativeModule().rustbuffer_alloc),
+        FfiConverterSequenceTypePlanCycle.lower(plan, nativeModule().rustbuffer_alloc),
+        FfiConverterSequenceTypePlanLog.lower(logs, nativeModule().rustbuffer_alloc),
+        FfiConverterInt32.lower(today, nativeModule().rustbuffer_alloc),
+        FfiConverterUInt32.lower(to, nativeModule().rustbuffer_alloc),
+                callStatus);
+            },
+            /*liftString:*/ FfiConverterString.lift.bind(FfiConverterString),
+    );
+    try {
+        return FfiConverterSequenceTypePlanCycle.lift(__rb);
+    } finally {
+        nativeModule().rustbuffer_free(__rb);
+    }
+    }
+
+/**
+ * Microcycles 2..N from microcycle 1 (FR-3.3), dated and stamped.
+ */
+export function generate(mesocycle: MesocycleSpec, cycleOne: Array<SessionSpec>): Array<PlannedMicrocycle> {
+    const __rb: Uint8Array = uniffiCaller.rustCall(
+            /*caller:*/ (callStatus) => {
+                return nativeModule().ubrn_uniffi_cyberathlete_core_ffi_fn_func_generate(
+        FfiConverterTypeMesocycleSpec.lower(mesocycle, nativeModule().rustbuffer_alloc),
+        FfiConverterSequenceTypeSessionSpec.lower(cycleOne, nativeModule().rustbuffer_alloc),
+                callStatus);
+            },
+            /*liftString:*/ FfiConverterString.lift.bind(FfiConverterString),
+    );
+    try {
+        return FfiConverterSequenceTypePlannedMicrocycle.lift(__rb);
+    } finally {
+        nativeModule().rustbuffer_free(__rb);
+    }
+    }
+
+/**
  * Whether a set counts toward volume, PRs and set counts (INV-04).
  */
 export function isCountedSet(set: LoggedSet): boolean {
@@ -184,6 +261,71 @@ export function personalBests(sessions: Array<Array<LoggedSet>>): PersonalBests 
     }
 
 /**
+ * Re-project the plan from what was logged, as of `today` (01 §3.4, INV-06).
+ */
+export function reconcile(mesocycle: MesocycleSpec, plan: Array<PlanCycle>, logs: Array<PlanLog>, today: number): Reconciled {
+    const __rb: Uint8Array = uniffiCaller.rustCall(
+            /*caller:*/ (callStatus) => {
+                return nativeModule().ubrn_uniffi_cyberathlete_core_ffi_fn_func_reconcile(
+        FfiConverterTypeMesocycleSpec.lower(mesocycle, nativeModule().rustbuffer_alloc),
+        FfiConverterSequenceTypePlanCycle.lower(plan, nativeModule().rustbuffer_alloc),
+        FfiConverterSequenceTypePlanLog.lower(logs, nativeModule().rustbuffer_alloc),
+        FfiConverterInt32.lower(today, nativeModule().rustbuffer_alloc),
+                callStatus);
+            },
+            /*liftString:*/ FfiConverterString.lift.bind(FfiConverterString),
+    );
+    try {
+        return FfiConverterTypeReconciled.lift(__rb);
+    } finally {
+        nativeModule().rustbuffer_free(__rb);
+    }
+    }
+
+/**
+ * Give one cycle a length of `days`; every later start follows it (FR-3.1a).
+ */
+export function relength(plan: Array<PlanCycle>, logs: Array<PlanLog>, cycleNumber: number, days: number): Array<PlanCycle> /*throws*/ {
+    const __rb: Uint8Array = uniffiCaller.rustCallWithError(
+            /*liftError:*/ FfiConverterTypePlanError.lift.bind(FfiConverterTypePlanError),
+            /*caller:*/ (callStatus) => {
+                return nativeModule().ubrn_uniffi_cyberathlete_core_ffi_fn_func_relength(
+        FfiConverterSequenceTypePlanCycle.lower(plan, nativeModule().rustbuffer_alloc),
+        FfiConverterSequenceTypePlanLog.lower(logs, nativeModule().rustbuffer_alloc),
+        FfiConverterUInt32.lower(cycleNumber, nativeModule().rustbuffer_alloc),
+        FfiConverterUInt32.lower(days, nativeModule().rustbuffer_alloc),
+                callStatus);
+            },
+            /*liftString:*/ FfiConverterString.lift.bind(FfiConverterString),
+    );
+    try {
+        return FfiConverterSequenceTypePlanCycle.lift(__rb);
+    } finally {
+        nativeModule().rustbuffer_free(__rb);
+    }
+    }
+
+/**
+ * The day each cycle starts on, walking the block from `start_day` (03 §5).
+ */
+export function resolveDates(startDay: number, lengthDays: Array<number>): Array<number> {
+    const __rb: Uint8Array = uniffiCaller.rustCall(
+            /*caller:*/ (callStatus) => {
+                return nativeModule().ubrn_uniffi_cyberathlete_core_ffi_fn_func_resolve_dates(
+        FfiConverterInt32.lower(startDay, nativeModule().rustbuffer_alloc),
+        FfiConverterSequenceUInt32.lower(lengthDays, nativeModule().rustbuffer_alloc),
+                callStatus);
+            },
+            /*liftString:*/ FfiConverterString.lift.bind(FfiConverterString),
+    );
+    try {
+        return FfiConverterSequenceInt32.lift(__rb);
+    } finally {
+        nativeModule().rustbuffer_free(__rb);
+    }
+    }
+
+/**
  * Round a load to a multiple of an increment (INV-02).
  */
 export function roundToIncrement(weightKg: number, incrementKg: number, mode: RoundingMode): number {
@@ -219,6 +361,49 @@ export function sessionMetrics(sessions: Array<Array<LoggedSet>>): Array<Session
     }
 
 /**
+ * Move each cycle's status on from the logs, as of `today` — settle, then reconcile, then write.
+ */
+export function settleStatuses(plan: Array<PlanCycle>, logs: Array<PlanLog>, today: number): Array<PlanCycle> {
+    const __rb: Uint8Array = uniffiCaller.rustCall(
+            /*caller:*/ (callStatus) => {
+                return nativeModule().ubrn_uniffi_cyberathlete_core_ffi_fn_func_settle_statuses(
+        FfiConverterSequenceTypePlanCycle.lower(plan, nativeModule().rustbuffer_alloc),
+        FfiConverterSequenceTypePlanLog.lower(logs, nativeModule().rustbuffer_alloc),
+        FfiConverterInt32.lower(today, nativeModule().rustbuffer_alloc),
+                callStatus);
+            },
+            /*liftString:*/ FfiConverterString.lift.bind(FfiConverterString),
+    );
+    try {
+        return FfiConverterSequenceTypePlanCycle.lift(__rb);
+    } finally {
+        nativeModule().rustbuffer_free(__rb);
+    }
+    }
+
+/**
+ * Shorten a block to `to` cycles; the dropped numbers are for the caller to archive (INV-11).
+ */
+export function shorten(plan: Array<PlanCycle>, logs: Array<PlanLog>, to: number): Shortened /*throws*/ {
+    const __rb: Uint8Array = uniffiCaller.rustCallWithError(
+            /*liftError:*/ FfiConverterTypePlanError.lift.bind(FfiConverterTypePlanError),
+            /*caller:*/ (callStatus) => {
+                return nativeModule().ubrn_uniffi_cyberathlete_core_ffi_fn_func_shorten(
+        FfiConverterSequenceTypePlanCycle.lower(plan, nativeModule().rustbuffer_alloc),
+        FfiConverterSequenceTypePlanLog.lower(logs, nativeModule().rustbuffer_alloc),
+        FfiConverterUInt32.lower(to, nativeModule().rustbuffer_alloc),
+                callStatus);
+            },
+            /*liftString:*/ FfiConverterString.lift.bind(FfiConverterString),
+    );
+    try {
+        return FfiConverterTypeShortened.lift(__rb);
+    } finally {
+        nativeModule().rustbuffer_free(__rb);
+    }
+    }
+
+/**
  * Every record standing after a history, oldest session first, with where each was set (task 004
  * stage 7).
  */
@@ -239,6 +424,33 @@ export function standingRecords(sessions: Array<Array<LoggedSet>>): Array<Standi
     }
 
 /**
+ * Put `rule` on one exercise from `from_cycle` on, and reconcile — preview and commit alike (FR-3.6a).
+ */
+export function switchRule(mesocycle: MesocycleSpec, plan: Array<PlanCycle>, logs: Array<PlanLog>, today: number, exerciseId: string, occurrence: number, fromCycle: number, rule: Rule): Reconciled /*throws*/ {
+    const __rb: Uint8Array = uniffiCaller.rustCallWithError(
+            /*liftError:*/ FfiConverterTypePlanError.lift.bind(FfiConverterTypePlanError),
+            /*caller:*/ (callStatus) => {
+                return nativeModule().ubrn_uniffi_cyberathlete_core_ffi_fn_func_switch_rule(
+        FfiConverterTypeMesocycleSpec.lower(mesocycle, nativeModule().rustbuffer_alloc),
+        FfiConverterSequenceTypePlanCycle.lower(plan, nativeModule().rustbuffer_alloc),
+        FfiConverterSequenceTypePlanLog.lower(logs, nativeModule().rustbuffer_alloc),
+        FfiConverterInt32.lower(today, nativeModule().rustbuffer_alloc),
+        FfiConverterString.lower(exerciseId, nativeModule().rustbuffer_alloc),
+        FfiConverterUInt32.lower(occurrence, nativeModule().rustbuffer_alloc),
+        FfiConverterUInt32.lower(fromCycle, nativeModule().rustbuffer_alloc),
+        FfiConverterTypeRule.lower(rule, nativeModule().rustbuffer_alloc),
+                callStatus);
+            },
+            /*liftString:*/ FfiConverterString.lift.bind(FfiConverterString),
+    );
+    try {
+        return FfiConverterTypeReconciled.lift(__rb);
+    } finally {
+        nativeModule().rustbuffer_free(__rb);
+    }
+    }
+
+/**
  * Total tonnage of the counted sets, in kilograms (INV-04).
  */
 export function volumeKg(sets: Array<LoggedSet>): number {
@@ -253,7 +465,7 @@ export function volumeKg(sets: Array<LoggedSet>): number {
     }
 
 /**
- * How a set was performed. Mirrors [`cyberathlete_core::SetType`].
+ * How a set was performed — the schema's `set_type_enum`.
  */
 export enum SetType {
     Warmup,
@@ -292,11 +504,988 @@ const FfiConverterTypeSetType = (() => {
     return new FFIConverter();
 })();
 
+export type CycleOneSet = {
+    setIndex: number,
+    setType: SetType,
+    targetWeightKg?: number,
+    targetReps?: number,
+    targetRir?: number
+}
+
 /**
- * One logged set. Mirrors [`cyberathlete_core::LoggedSet`].
- *
- * `bodyWeightKg` and `isDeload` are resolved by the caller, because resolving them is a query and
- * the core does no I/O (INV-10). `rir` is nullable and a null is never a zero (INV-03).
+ * Generated factory for {@link CycleOneSet} record objects.
+ */
+export const CycleOneSet = (() => {
+    const defaults = () => ({
+    });
+    const create = (() => {
+        return uniffiCreateRecord<CycleOneSet, ReturnType<typeof defaults>>(defaults);
+    })();
+    return Object.freeze({
+        create,
+        new: create,
+        defaults: () => Object.freeze(defaults()) as Partial<CycleOneSet>,
+    });
+})();
+
+const FfiConverterTypeCycleOneSet = (() => {
+    type TypeName = CycleOneSet;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            return {
+                setIndex: FfiConverterUInt32.readFromCursor(c), 
+                setType: FfiConverterTypeSetType.readFromCursor(c), 
+                targetWeightKg: FfiConverterOptionalFloat64.readFromCursor(c), 
+                targetReps: FfiConverterOptionalUInt32.readFromCursor(c), 
+                targetRir: FfiConverterOptionalUInt32.readFromCursor(c)
+            };
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            FfiConverterUInt32.writeIntoCursor(value.setIndex, c);
+            FfiConverterTypeSetType.writeIntoCursor(value.setType, c);
+            FfiConverterOptionalFloat64.writeIntoCursor(value.targetWeightKg, c);
+            FfiConverterOptionalUInt32.writeIntoCursor(value.targetReps, c);
+            FfiConverterOptionalUInt32.writeIntoCursor(value.targetRir, c);
+        }
+        allocationSize(value: TypeName): number {
+            return FfiConverterUInt32.allocationSize(value.setIndex) +
+             FfiConverterTypeSetType.allocationSize(value.setType) +
+             FfiConverterOptionalFloat64.allocationSize(value.targetWeightKg) +
+             FfiConverterOptionalUInt32.allocationSize(value.targetReps) +
+             FfiConverterOptionalUInt32.allocationSize(value.targetRir);
+            
+        }
+    };
+    return new FFIConverter();
+})();
+
+
+// Enum: LoadStep
+export enum LoadStep_Tags {
+    Kg = "Kg",
+    BasisPoints = "BasisPoints"
+}
+/**
+ * How a `linear_load`, `double_progression` or `rir_autoregulated` rule advances.
+ */
+export const LoadStep = (() => {
+
+    type Kg__interface = {
+        tag: LoadStep_Tags.Kg;
+        inner: 
+Readonly<
+[number
+]>
+    };
+    class Kg_ extends UniffiEnum implements Kg__interface {
+        /**
+         * @private
+         * This field is private and should not be used, use `tag` instead.
+         */
+        readonly [uniffiTypeNameSymbol] = "LoadStep";
+        readonly tag = LoadStep_Tags.Kg;
+        readonly inner: 
+Readonly<
+[number
+]>;
+        constructor(v0: number) {
+            super("LoadStep", "Kg");
+
+            this.inner = Object.freeze([v0]);
+        }
+        static new(v0: number): Kg_ {
+            return new Kg_(v0);
+        }
+
+        static instanceOf(obj: any): obj is Kg_ {
+            return obj.tag === LoadStep_Tags.Kg;
+        }
+
+    }
+
+    type BasisPoints__interface = {
+        tag: LoadStep_Tags.BasisPoints;
+        inner: 
+Readonly<
+[number
+]>
+    };
+    class BasisPoints_ extends UniffiEnum implements BasisPoints__interface {
+        /**
+         * @private
+         * This field is private and should not be used, use `tag` instead.
+         */
+        readonly [uniffiTypeNameSymbol] = "LoadStep";
+        readonly tag = LoadStep_Tags.BasisPoints;
+        readonly inner: 
+Readonly<
+[number
+]>;
+        constructor(v0: number) {
+            super("LoadStep", "BasisPoints");
+
+            this.inner = Object.freeze([v0]);
+        }
+        static new(v0: number): BasisPoints_ {
+            return new BasisPoints_(v0);
+        }
+
+        static instanceOf(obj: any): obj is BasisPoints_ {
+            return obj.tag === LoadStep_Tags.BasisPoints;
+        }
+
+    }
+
+    function instanceOf(obj: any): obj is LoadStep {
+        return obj[uniffiTypeNameSymbol] === "LoadStep";
+    }
+
+    return Object.freeze({
+        instanceOf,
+  Kg: Kg_, 
+  BasisPoints: BasisPoints_
+    });
+
+})();
+/**
+ * How a `linear_load`, `double_progression` or `rir_autoregulated` rule advances.
+ */
+export type LoadStep = InstanceType<
+    typeof LoadStep['Kg' | 'BasisPoints']
+>;
+
+// FfiConverter for enum LoadStep
+const FfiConverterTypeLoadStep = (() => {
+    type TypeName = LoadStep;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            switch (c.readI32()) {
+                case 1: return new LoadStep.Kg(FfiConverterFloat64.readFromCursor(c));
+                case 2: return new LoadStep.BasisPoints(FfiConverterUInt32.readFromCursor(c));
+                default: throw new UniffiInternalError.UnexpectedEnumCase();
+            }
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            switch (value.tag) {
+                case LoadStep_Tags.Kg: {
+                    c.writeI32(1);
+                    const inner = value.inner;
+                    FfiConverterFloat64.writeIntoCursor(inner[0], c);
+                    return;
+                }
+                case LoadStep_Tags.BasisPoints: {
+                    c.writeI32(2);
+                    const inner = value.inner;
+                    FfiConverterUInt32.writeIntoCursor(inner[0], c);
+                    return;
+                }
+                default:
+                    // Throwing from here means that LoadStep_Tags hasn't matched an ordinal.
+                    throw new UniffiInternalError.UnexpectedEnumCase();
+            }
+        }
+        allocationSize(value: TypeName): number {
+            switch (value.tag) {
+                case LoadStep_Tags.Kg: {
+                    const inner = value.inner;
+                    let size = 4;
+                    size += FfiConverterFloat64.allocationSize(inner[0]);
+                    return size;
+                }
+                case LoadStep_Tags.BasisPoints: {
+                    const inner = value.inner;
+                    let size = 4;
+                    size += FfiConverterUInt32.allocationSize(inner[0]);
+                    return size;
+                }
+                default: throw new UniffiInternalError.UnexpectedEnumCase();
+            }
+        }
+    }
+    return new FFIConverter();
+})();
+
+
+// Enum: Strategy
+export enum Strategy_Tags {
+    Fixed = "Fixed",
+    LinearLoad = "LinearLoad",
+    DoubleProgression = "DoubleProgression",
+    Percent1rm = "Percent1rm",
+    RirAutoregulated = "RirAutoregulated"
+}
+/**
+ * The five v1 strategies, each carrying what it needs (01 §3.2).
+ */
+export const Strategy = (() => {
+
+    type Fixed__interface = {
+        tag: Strategy_Tags.Fixed
+    };
+    class Fixed_ extends UniffiEnum implements Fixed__interface {
+        /**
+         * @private
+         * This field is private and should not be used, use `tag` instead.
+         */
+        readonly [uniffiTypeNameSymbol] = "Strategy";
+        readonly tag = Strategy_Tags.Fixed;
+        constructor() {
+            super("Strategy", "Fixed");
+        }
+
+        static new(): Fixed_ {
+            return new Fixed_();
+        }
+
+        static instanceOf(obj: any): obj is Fixed_ {
+            return obj.tag === Strategy_Tags.Fixed;
+        }
+
+    }
+
+    type LinearLoad__interface = {
+        tag: Strategy_Tags.LinearLoad;
+        inner: 
+Readonly<
+[LoadStep
+]>
+    };
+    class LinearLoad_ extends UniffiEnum implements LinearLoad__interface {
+        /**
+         * @private
+         * This field is private and should not be used, use `tag` instead.
+         */
+        readonly [uniffiTypeNameSymbol] = "Strategy";
+        readonly tag = Strategy_Tags.LinearLoad;
+        readonly inner: 
+Readonly<
+[LoadStep
+]>;
+        constructor(v0: LoadStep) {
+            super("Strategy", "LinearLoad");
+
+            this.inner = Object.freeze([v0]);
+        }
+        static new(v0: LoadStep): LinearLoad_ {
+            return new LinearLoad_(v0);
+        }
+
+        static instanceOf(obj: any): obj is LinearLoad_ {
+            return obj.tag === Strategy_Tags.LinearLoad;
+        }
+
+    }
+
+    type DoubleProgression__interface = {
+        tag: Strategy_Tags.DoubleProgression;
+        inner: 
+Readonly<{step: LoadStep; repStep: number}>
+    };
+    class DoubleProgression_ extends UniffiEnum implements DoubleProgression__interface {
+        /**
+         * @private
+         * This field is private and should not be used, use `tag` instead.
+         */
+        readonly [uniffiTypeNameSymbol] = "Strategy";
+        readonly tag = Strategy_Tags.DoubleProgression;
+        readonly inner: 
+Readonly<{step: LoadStep; repStep: number}>;
+        constructor(
+inner: {step: LoadStep; repStep: number }) {
+            super("Strategy", "DoubleProgression");
+
+            this.inner = Object.freeze(inner);
+        }
+        static new(
+inner: {step: LoadStep; repStep: number }): DoubleProgression_ {
+            return new DoubleProgression_(inner);
+        }
+
+        static instanceOf(obj: any): obj is DoubleProgression_ {
+            return obj.tag === Strategy_Tags.DoubleProgression;
+        }
+
+    }
+
+    type Percent1rm__interface = {
+        tag: Strategy_Tags.Percent1rm;
+        inner: 
+Readonly<{waveBp: Array<number>; baselineE1rmKg: number}>
+    };
+    class Percent1rm_ extends UniffiEnum implements Percent1rm__interface {
+        /**
+         * @private
+         * This field is private and should not be used, use `tag` instead.
+         */
+        readonly [uniffiTypeNameSymbol] = "Strategy";
+        readonly tag = Strategy_Tags.Percent1rm;
+        readonly inner: 
+Readonly<{waveBp: Array<number>; baselineE1rmKg: number}>;
+        constructor(
+inner: {waveBp: Array<number>; baselineE1rmKg: number }) {
+            super("Strategy", "Percent1rm");
+
+            this.inner = Object.freeze(inner);
+        }
+        static new(
+inner: {waveBp: Array<number>; baselineE1rmKg: number }): Percent1rm_ {
+            return new Percent1rm_(inner);
+        }
+
+        static instanceOf(obj: any): obj is Percent1rm_ {
+            return obj.tag === Strategy_Tags.Percent1rm;
+        }
+
+    }
+
+    type RirAutoregulated__interface = {
+        tag: Strategy_Tags.RirAutoregulated;
+        inner: 
+Readonly<{step: LoadStep; rirStart?: number; rirEnd?: number}>
+    };
+    class RirAutoregulated_ extends UniffiEnum implements RirAutoregulated__interface {
+        /**
+         * @private
+         * This field is private and should not be used, use `tag` instead.
+         */
+        readonly [uniffiTypeNameSymbol] = "Strategy";
+        readonly tag = Strategy_Tags.RirAutoregulated;
+        readonly inner: 
+Readonly<{step: LoadStep; rirStart?: number; rirEnd?: number}>;
+        constructor(
+inner: {step: LoadStep; rirStart?: number; rirEnd?: number }) {
+            super("Strategy", "RirAutoregulated");
+
+            this.inner = Object.freeze(inner);
+        }
+        static new(
+inner: {step: LoadStep; rirStart?: number; rirEnd?: number }): RirAutoregulated_ {
+            return new RirAutoregulated_(inner);
+        }
+
+        static instanceOf(obj: any): obj is RirAutoregulated_ {
+            return obj.tag === Strategy_Tags.RirAutoregulated;
+        }
+
+    }
+
+    function instanceOf(obj: any): obj is Strategy {
+        return obj[uniffiTypeNameSymbol] === "Strategy";
+    }
+
+    return Object.freeze({
+        instanceOf,
+  Fixed: Fixed_, 
+  LinearLoad: LinearLoad_, 
+  DoubleProgression: DoubleProgression_, 
+  Percent1rm: Percent1rm_, 
+  RirAutoregulated: RirAutoregulated_
+    });
+
+})();
+/**
+ * The five v1 strategies, each carrying what it needs (01 §3.2).
+ */
+export type Strategy = InstanceType<
+    typeof Strategy['Fixed' | 'LinearLoad' | 'DoubleProgression' | 'Percent1rm' | 'RirAutoregulated']
+>;
+
+// FfiConverter for enum Strategy
+const FfiConverterTypeStrategy = (() => {
+    type TypeName = Strategy;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            switch (c.readI32()) {
+                case 1: return new Strategy.Fixed();
+                case 2: return new Strategy.LinearLoad(FfiConverterTypeLoadStep.readFromCursor(c));
+                case 3: return new Strategy.DoubleProgression({step: FfiConverterTypeLoadStep.readFromCursor(c), repStep: FfiConverterUInt32.readFromCursor(c) });
+                case 4: return new Strategy.Percent1rm({waveBp: FfiConverterSequenceUInt32.readFromCursor(c), baselineE1rmKg: FfiConverterFloat64.readFromCursor(c) });
+                case 5: return new Strategy.RirAutoregulated({step: FfiConverterTypeLoadStep.readFromCursor(c), rirStart: FfiConverterOptionalUInt32.readFromCursor(c), rirEnd: FfiConverterOptionalUInt32.readFromCursor(c) });
+                default: throw new UniffiInternalError.UnexpectedEnumCase();
+            }
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            switch (value.tag) {
+                case Strategy_Tags.Fixed: {
+                    c.writeI32(1);
+                    return;
+                }
+                case Strategy_Tags.LinearLoad: {
+                    c.writeI32(2);
+                    const inner = value.inner;
+                    FfiConverterTypeLoadStep.writeIntoCursor(inner[0], c);
+                    return;
+                }
+                case Strategy_Tags.DoubleProgression: {
+                    c.writeI32(3);
+                    const inner = value.inner;
+                    FfiConverterTypeLoadStep.writeIntoCursor(inner.step, c);
+                    FfiConverterUInt32.writeIntoCursor(inner.repStep, c);
+                    return;
+                }
+                case Strategy_Tags.Percent1rm: {
+                    c.writeI32(4);
+                    const inner = value.inner;
+                    FfiConverterSequenceUInt32.writeIntoCursor(inner.waveBp, c);
+                    FfiConverterFloat64.writeIntoCursor(inner.baselineE1rmKg, c);
+                    return;
+                }
+                case Strategy_Tags.RirAutoregulated: {
+                    c.writeI32(5);
+                    const inner = value.inner;
+                    FfiConverterTypeLoadStep.writeIntoCursor(inner.step, c);
+                    FfiConverterOptionalUInt32.writeIntoCursor(inner.rirStart, c);
+                    FfiConverterOptionalUInt32.writeIntoCursor(inner.rirEnd, c);
+                    return;
+                }
+                default:
+                    // Throwing from here means that Strategy_Tags hasn't matched an ordinal.
+                    throw new UniffiInternalError.UnexpectedEnumCase();
+            }
+        }
+        allocationSize(value: TypeName): number {
+            switch (value.tag) {
+                case Strategy_Tags.Fixed: {
+                    return 4;
+                }
+                case Strategy_Tags.LinearLoad: {
+                    const inner = value.inner;
+                    let size = 4;
+                    size += FfiConverterTypeLoadStep.allocationSize(inner[0]);
+                    return size;
+                }
+                case Strategy_Tags.DoubleProgression: {
+                    const inner = value.inner;
+                    let size = 4;
+                    size += FfiConverterTypeLoadStep.allocationSize(inner.step);
+                    size += FfiConverterUInt32.allocationSize(inner.repStep);
+                    return size;
+                }
+                case Strategy_Tags.Percent1rm: {
+                    const inner = value.inner;
+                    let size = 4;
+                    size += FfiConverterSequenceUInt32.allocationSize(inner.waveBp);
+                    size += FfiConverterFloat64.allocationSize(inner.baselineE1rmKg);
+                    return size;
+                }
+                case Strategy_Tags.RirAutoregulated: {
+                    const inner = value.inner;
+                    let size = 4;
+                    size += FfiConverterTypeLoadStep.allocationSize(inner.step);
+                    size += FfiConverterOptionalUInt32.allocationSize(inner.rirStart);
+                    size += FfiConverterOptionalUInt32.allocationSize(inner.rirEnd);
+                    return size;
+                }
+                default: throw new UniffiInternalError.UnexpectedEnumCase();
+            }
+        }
+    }
+    return new FFIConverter();
+})();
+
+/**
+ * Which way a load between two steps is moved; a tie goes to the lighter load (ADR-010).
+ */
+export enum RoundingMode {
+    Nearest,
+    Down,
+    Up
+}
+
+const FfiConverterTypeRoundingMode = (() => {
+    type TypeName = RoundingMode;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            switch (c.readI32()) {
+                case 1: return RoundingMode.Nearest;
+                case 2: return RoundingMode.Down;
+                case 3: return RoundingMode.Up;
+                default: throw new UniffiInternalError.UnexpectedEnumCase();
+            }
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            switch (value) {
+                case RoundingMode.Nearest: return c.writeI32(1);
+                case RoundingMode.Down: return c.writeI32(2);
+                case RoundingMode.Up: return c.writeI32(3);
+            }
+        }
+        allocationSize(value: TypeName): number {
+            return 4;
+        }
+    }
+    return new FFIConverter();
+})();
+
+
+// Enum: RirMode
+export enum RirMode_Tags {
+    PerExercise = "PerExercise",
+    PerSet = "PerSet"
+}
+/**
+ * FR-3.8a: one target RIR for the exercise, or a ladder of offsets.
+ */
+export const RirMode = (() => {
+
+    type PerExercise__interface = {
+        tag: RirMode_Tags.PerExercise
+    };
+    class PerExercise_ extends UniffiEnum implements PerExercise__interface {
+        /**
+         * @private
+         * This field is private and should not be used, use `tag` instead.
+         */
+        readonly [uniffiTypeNameSymbol] = "RirMode";
+        readonly tag = RirMode_Tags.PerExercise;
+        constructor() {
+            super("RirMode", "PerExercise");
+        }
+
+        static new(): PerExercise_ {
+            return new PerExercise_();
+        }
+
+        static instanceOf(obj: any): obj is PerExercise_ {
+            return obj.tag === RirMode_Tags.PerExercise;
+        }
+
+    }
+
+    type PerSet__interface = {
+        tag: RirMode_Tags.PerSet;
+        inner: 
+Readonly<{offsets: Array<number>}>
+    };
+    class PerSet_ extends UniffiEnum implements PerSet__interface {
+        /**
+         * @private
+         * This field is private and should not be used, use `tag` instead.
+         */
+        readonly [uniffiTypeNameSymbol] = "RirMode";
+        readonly tag = RirMode_Tags.PerSet;
+        readonly inner: 
+Readonly<{offsets: Array<number>}>;
+        constructor(
+inner: {offsets: Array<number> }) {
+            super("RirMode", "PerSet");
+
+            this.inner = Object.freeze(inner);
+        }
+        static new(
+inner: {offsets: Array<number> }): PerSet_ {
+            return new PerSet_(inner);
+        }
+
+        static instanceOf(obj: any): obj is PerSet_ {
+            return obj.tag === RirMode_Tags.PerSet;
+        }
+
+    }
+
+    function instanceOf(obj: any): obj is RirMode {
+        return obj[uniffiTypeNameSymbol] === "RirMode";
+    }
+
+    return Object.freeze({
+        instanceOf,
+  PerExercise: PerExercise_, 
+  PerSet: PerSet_
+    });
+
+})();
+/**
+ * FR-3.8a: one target RIR for the exercise, or a ladder of offsets.
+ */
+export type RirMode = InstanceType<
+    typeof RirMode['PerExercise' | 'PerSet']
+>;
+
+// FfiConverter for enum RirMode
+const FfiConverterTypeRirMode = (() => {
+    type TypeName = RirMode;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            switch (c.readI32()) {
+                case 1: return new RirMode.PerExercise();
+                case 2: return new RirMode.PerSet({offsets: FfiConverterSequenceInt32.readFromCursor(c) });
+                default: throw new UniffiInternalError.UnexpectedEnumCase();
+            }
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            switch (value.tag) {
+                case RirMode_Tags.PerExercise: {
+                    c.writeI32(1);
+                    return;
+                }
+                case RirMode_Tags.PerSet: {
+                    c.writeI32(2);
+                    const inner = value.inner;
+                    FfiConverterSequenceInt32.writeIntoCursor(inner.offsets, c);
+                    return;
+                }
+                default:
+                    // Throwing from here means that RirMode_Tags hasn't matched an ordinal.
+                    throw new UniffiInternalError.UnexpectedEnumCase();
+            }
+        }
+        allocationSize(value: TypeName): number {
+            switch (value.tag) {
+                case RirMode_Tags.PerExercise: {
+                    return 4;
+                }
+                case RirMode_Tags.PerSet: {
+                    const inner = value.inner;
+                    let size = 4;
+                    size += FfiConverterSequenceInt32.allocationSize(inner.offsets);
+                    return size;
+                }
+                default: throw new UniffiInternalError.UnexpectedEnumCase();
+            }
+        }
+    }
+    return new FFIConverter();
+})();
+
+
+// Enum: FailurePolicy
+export enum FailurePolicy_Tags {
+    Hold = "Hold",
+    RepeatCycle = "RepeatCycle",
+    ReduceLoad = "ReduceLoad"
+}
+/**
+ * FR-3.11: what an `Under` outcome does next.
+ */
+export const FailurePolicy = (() => {
+
+    type Hold__interface = {
+        tag: FailurePolicy_Tags.Hold
+    };
+    class Hold_ extends UniffiEnum implements Hold__interface {
+        /**
+         * @private
+         * This field is private and should not be used, use `tag` instead.
+         */
+        readonly [uniffiTypeNameSymbol] = "FailurePolicy";
+        readonly tag = FailurePolicy_Tags.Hold;
+        constructor() {
+            super("FailurePolicy", "Hold");
+        }
+
+        static new(): Hold_ {
+            return new Hold_();
+        }
+
+        static instanceOf(obj: any): obj is Hold_ {
+            return obj.tag === FailurePolicy_Tags.Hold;
+        }
+
+    }
+
+    type RepeatCycle__interface = {
+        tag: FailurePolicy_Tags.RepeatCycle
+    };
+    class RepeatCycle_ extends UniffiEnum implements RepeatCycle__interface {
+        /**
+         * @private
+         * This field is private and should not be used, use `tag` instead.
+         */
+        readonly [uniffiTypeNameSymbol] = "FailurePolicy";
+        readonly tag = FailurePolicy_Tags.RepeatCycle;
+        constructor() {
+            super("FailurePolicy", "RepeatCycle");
+        }
+
+        static new(): RepeatCycle_ {
+            return new RepeatCycle_();
+        }
+
+        static instanceOf(obj: any): obj is RepeatCycle_ {
+            return obj.tag === FailurePolicy_Tags.RepeatCycle;
+        }
+
+    }
+
+    type ReduceLoad__interface = {
+        tag: FailurePolicy_Tags.ReduceLoad;
+        inner: 
+Readonly<{loadBp: number}>
+    };
+    class ReduceLoad_ extends UniffiEnum implements ReduceLoad__interface {
+        /**
+         * @private
+         * This field is private and should not be used, use `tag` instead.
+         */
+        readonly [uniffiTypeNameSymbol] = "FailurePolicy";
+        readonly tag = FailurePolicy_Tags.ReduceLoad;
+        readonly inner: 
+Readonly<{loadBp: number}>;
+        constructor(
+inner: {loadBp: number }) {
+            super("FailurePolicy", "ReduceLoad");
+
+            this.inner = Object.freeze(inner);
+        }
+        static new(
+inner: {loadBp: number }): ReduceLoad_ {
+            return new ReduceLoad_(inner);
+        }
+
+        static instanceOf(obj: any): obj is ReduceLoad_ {
+            return obj.tag === FailurePolicy_Tags.ReduceLoad;
+        }
+
+    }
+
+    function instanceOf(obj: any): obj is FailurePolicy {
+        return obj[uniffiTypeNameSymbol] === "FailurePolicy";
+    }
+
+    return Object.freeze({
+        instanceOf,
+  Hold: Hold_, 
+  RepeatCycle: RepeatCycle_, 
+  ReduceLoad: ReduceLoad_
+    });
+
+})();
+/**
+ * FR-3.11: what an `Under` outcome does next.
+ */
+export type FailurePolicy = InstanceType<
+    typeof FailurePolicy['Hold' | 'RepeatCycle' | 'ReduceLoad']
+>;
+
+// FfiConverter for enum FailurePolicy
+const FfiConverterTypeFailurePolicy = (() => {
+    type TypeName = FailurePolicy;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            switch (c.readI32()) {
+                case 1: return new FailurePolicy.Hold();
+                case 2: return new FailurePolicy.RepeatCycle();
+                case 3: return new FailurePolicy.ReduceLoad({loadBp: FfiConverterUInt32.readFromCursor(c) });
+                default: throw new UniffiInternalError.UnexpectedEnumCase();
+            }
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            switch (value.tag) {
+                case FailurePolicy_Tags.Hold: {
+                    c.writeI32(1);
+                    return;
+                }
+                case FailurePolicy_Tags.RepeatCycle: {
+                    c.writeI32(2);
+                    return;
+                }
+                case FailurePolicy_Tags.ReduceLoad: {
+                    c.writeI32(3);
+                    const inner = value.inner;
+                    FfiConverterUInt32.writeIntoCursor(inner.loadBp, c);
+                    return;
+                }
+                default:
+                    // Throwing from here means that FailurePolicy_Tags hasn't matched an ordinal.
+                    throw new UniffiInternalError.UnexpectedEnumCase();
+            }
+        }
+        allocationSize(value: TypeName): number {
+            switch (value.tag) {
+                case FailurePolicy_Tags.Hold: {
+                    return 4;
+                }
+                case FailurePolicy_Tags.RepeatCycle: {
+                    return 4;
+                }
+                case FailurePolicy_Tags.ReduceLoad: {
+                    const inner = value.inner;
+                    let size = 4;
+                    size += FfiConverterUInt32.allocationSize(inner.loadBp);
+                    return size;
+                }
+                default: throw new UniffiInternalError.UnexpectedEnumCase();
+            }
+        }
+    }
+    return new FFIConverter();
+})();
+
+/**
+ * One exercise's rule, resolved through FR-3.6's cascade by the caller.
+ */
+export type Rule = {
+    strategy: Strategy,
+    minReps: number,
+    maxReps: number,
+    minRir: number,
+    maxRir: number,
+    rounding: RoundingMode,
+    rirMode: RirMode,
+    failurePolicy: FailurePolicy
+}
+
+/**
+ * Generated factory for {@link Rule} record objects.
+ */
+export const Rule = (() => {
+    const defaults = () => ({
+    });
+    const create = (() => {
+        return uniffiCreateRecord<Rule, ReturnType<typeof defaults>>(defaults);
+    })();
+    return Object.freeze({
+        create,
+        new: create,
+        defaults: () => Object.freeze(defaults()) as Partial<Rule>,
+    });
+})();
+
+const FfiConverterTypeRule = (() => {
+    type TypeName = Rule;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            return {
+                strategy: FfiConverterTypeStrategy.readFromCursor(c), 
+                minReps: FfiConverterUInt32.readFromCursor(c), 
+                maxReps: FfiConverterUInt32.readFromCursor(c), 
+                minRir: FfiConverterUInt32.readFromCursor(c), 
+                maxRir: FfiConverterUInt32.readFromCursor(c), 
+                rounding: FfiConverterTypeRoundingMode.readFromCursor(c), 
+                rirMode: FfiConverterTypeRirMode.readFromCursor(c), 
+                failurePolicy: FfiConverterTypeFailurePolicy.readFromCursor(c)
+            };
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            FfiConverterTypeStrategy.writeIntoCursor(value.strategy, c);
+            FfiConverterUInt32.writeIntoCursor(value.minReps, c);
+            FfiConverterUInt32.writeIntoCursor(value.maxReps, c);
+            FfiConverterUInt32.writeIntoCursor(value.minRir, c);
+            FfiConverterUInt32.writeIntoCursor(value.maxRir, c);
+            FfiConverterTypeRoundingMode.writeIntoCursor(value.rounding, c);
+            FfiConverterTypeRirMode.writeIntoCursor(value.rirMode, c);
+            FfiConverterTypeFailurePolicy.writeIntoCursor(value.failurePolicy, c);
+        }
+        allocationSize(value: TypeName): number {
+            return FfiConverterTypeStrategy.allocationSize(value.strategy) +
+             FfiConverterUInt32.allocationSize(value.minReps) +
+             FfiConverterUInt32.allocationSize(value.maxReps) +
+             FfiConverterUInt32.allocationSize(value.minRir) +
+             FfiConverterUInt32.allocationSize(value.maxRir) +
+             FfiConverterTypeRoundingMode.allocationSize(value.rounding) +
+             FfiConverterTypeRirMode.allocationSize(value.rirMode) +
+             FfiConverterTypeFailurePolicy.allocationSize(value.failurePolicy);
+            
+        }
+    };
+    return new FFIConverter();
+})();
+
+export type ExerciseSpec = {
+    orderIndex: number,
+    incrementKg: number,
+    rule: Rule,
+    usesBodyweight: boolean,
+    bodyWeightKg?: number,
+    sets: Array<CycleOneSet>
+}
+
+/**
+ * Generated factory for {@link ExerciseSpec} record objects.
+ */
+export const ExerciseSpec = (() => {
+    const defaults = () => ({
+    });
+    const create = (() => {
+        return uniffiCreateRecord<ExerciseSpec, ReturnType<typeof defaults>>(defaults);
+    })();
+    return Object.freeze({
+        create,
+        new: create,
+        defaults: () => Object.freeze(defaults()) as Partial<ExerciseSpec>,
+    });
+})();
+
+const FfiConverterTypeExerciseSpec = (() => {
+    type TypeName = ExerciseSpec;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            return {
+                orderIndex: FfiConverterUInt32.readFromCursor(c), 
+                incrementKg: FfiConverterFloat64.readFromCursor(c), 
+                rule: FfiConverterTypeRule.readFromCursor(c), 
+                usesBodyweight: FfiConverterBool.readFromCursor(c), 
+                bodyWeightKg: FfiConverterOptionalFloat64.readFromCursor(c), 
+                sets: FfiConverterSequenceTypeCycleOneSet.readFromCursor(c)
+            };
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            FfiConverterUInt32.writeIntoCursor(value.orderIndex, c);
+            FfiConverterFloat64.writeIntoCursor(value.incrementKg, c);
+            FfiConverterTypeRule.writeIntoCursor(value.rule, c);
+            FfiConverterBool.writeIntoCursor(value.usesBodyweight, c);
+            FfiConverterOptionalFloat64.writeIntoCursor(value.bodyWeightKg, c);
+            FfiConverterSequenceTypeCycleOneSet.writeIntoCursor(value.sets, c);
+        }
+        allocationSize(value: TypeName): number {
+            return FfiConverterUInt32.allocationSize(value.orderIndex) +
+             FfiConverterFloat64.allocationSize(value.incrementKg) +
+             FfiConverterTypeRule.allocationSize(value.rule) +
+             FfiConverterBool.allocationSize(value.usesBodyweight) +
+             FfiConverterOptionalFloat64.allocationSize(value.bodyWeightKg) +
+             FfiConverterSequenceTypeCycleOneSet.allocationSize(value.sets);
+            
+        }
+    };
+    return new FFIConverter();
+})();
+
+export type LengthOverride = {
+    cycleNumber: number,
+    lengthDays: number
+}
+
+/**
+ * Generated factory for {@link LengthOverride} record objects.
+ */
+export const LengthOverride = (() => {
+    const defaults = () => ({
+    });
+    const create = (() => {
+        return uniffiCreateRecord<LengthOverride, ReturnType<typeof defaults>>(defaults);
+    })();
+    return Object.freeze({
+        create,
+        new: create,
+        defaults: () => Object.freeze(defaults()) as Partial<LengthOverride>,
+    });
+})();
+
+const FfiConverterTypeLengthOverride = (() => {
+    type TypeName = LengthOverride;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            return {
+                cycleNumber: FfiConverterUInt32.readFromCursor(c), 
+                lengthDays: FfiConverterUInt32.readFromCursor(c)
+            };
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            FfiConverterUInt32.writeIntoCursor(value.cycleNumber, c);
+            FfiConverterUInt32.writeIntoCursor(value.lengthDays, c);
+        }
+        allocationSize(value: TypeName): number {
+            return FfiConverterUInt32.allocationSize(value.cycleNumber) +
+             FfiConverterUInt32.allocationSize(value.lengthDays);
+            
+        }
+    };
+    return new FFIConverter();
+})();
+
+/**
+ * One logged set. `bodyWeightKg` and `isDeload` are resolved by the caller, because resolving them is
+ * a query and the core does no I/O (INV-10). `rir` is nullable and a null is never a zero (INV-03).
  */
 export type LoggedSet = {
     setType: SetType,
@@ -359,6 +1548,254 @@ const FfiConverterTypeLoggedSet = (() => {
              FfiConverterBool.allocationSize(value.usesBodyweight) +
              FfiConverterOptionalFloat64.allocationSize(value.bodyWeightKg) +
              FfiConverterBool.allocationSize(value.isDeload);
+            
+        }
+    };
+    return new FFIConverter();
+})();
+
+
+// Enum: DeloadPolicy
+export enum DeloadPolicy_Tags {
+    None = "None",
+    EveryN = "EveryN",
+    Manual = "Manual"
+}
+/**
+ * FR-3.1b's three deload modes.
+ */
+export const DeloadPolicy = (() => {
+
+    type None__interface = {
+        tag: DeloadPolicy_Tags.None
+    };
+    class None_ extends UniffiEnum implements None__interface {
+        /**
+         * @private
+         * This field is private and should not be used, use `tag` instead.
+         */
+        readonly [uniffiTypeNameSymbol] = "DeloadPolicy";
+        readonly tag = DeloadPolicy_Tags.None;
+        constructor() {
+            super("DeloadPolicy", "None");
+        }
+
+        static new(): None_ {
+            return new None_();
+        }
+
+        static instanceOf(obj: any): obj is None_ {
+            return obj.tag === DeloadPolicy_Tags.None;
+        }
+
+    }
+
+    type EveryN__interface = {
+        tag: DeloadPolicy_Tags.EveryN;
+        inner: 
+Readonly<{every: number; finalCycle: boolean}>
+    };
+    class EveryN_ extends UniffiEnum implements EveryN__interface {
+        /**
+         * @private
+         * This field is private and should not be used, use `tag` instead.
+         */
+        readonly [uniffiTypeNameSymbol] = "DeloadPolicy";
+        readonly tag = DeloadPolicy_Tags.EveryN;
+        readonly inner: 
+Readonly<{every: number; finalCycle: boolean}>;
+        constructor(
+inner: {every: number; finalCycle: boolean }) {
+            super("DeloadPolicy", "EveryN");
+
+            this.inner = Object.freeze(inner);
+        }
+        static new(
+inner: {every: number; finalCycle: boolean }): EveryN_ {
+            return new EveryN_(inner);
+        }
+
+        static instanceOf(obj: any): obj is EveryN_ {
+            return obj.tag === DeloadPolicy_Tags.EveryN;
+        }
+
+    }
+
+    type Manual__interface = {
+        tag: DeloadPolicy_Tags.Manual;
+        inner: 
+Readonly<{cycles: Array<number>}>
+    };
+    class Manual_ extends UniffiEnum implements Manual__interface {
+        /**
+         * @private
+         * This field is private and should not be used, use `tag` instead.
+         */
+        readonly [uniffiTypeNameSymbol] = "DeloadPolicy";
+        readonly tag = DeloadPolicy_Tags.Manual;
+        readonly inner: 
+Readonly<{cycles: Array<number>}>;
+        constructor(
+inner: {cycles: Array<number> }) {
+            super("DeloadPolicy", "Manual");
+
+            this.inner = Object.freeze(inner);
+        }
+        static new(
+inner: {cycles: Array<number> }): Manual_ {
+            return new Manual_(inner);
+        }
+
+        static instanceOf(obj: any): obj is Manual_ {
+            return obj.tag === DeloadPolicy_Tags.Manual;
+        }
+
+    }
+
+    function instanceOf(obj: any): obj is DeloadPolicy {
+        return obj[uniffiTypeNameSymbol] === "DeloadPolicy";
+    }
+
+    return Object.freeze({
+        instanceOf,
+  None: None_, 
+  EveryN: EveryN_, 
+  Manual: Manual_
+    });
+
+})();
+/**
+ * FR-3.1b's three deload modes.
+ */
+export type DeloadPolicy = InstanceType<
+    typeof DeloadPolicy['None' | 'EveryN' | 'Manual']
+>;
+
+// FfiConverter for enum DeloadPolicy
+const FfiConverterTypeDeloadPolicy = (() => {
+    type TypeName = DeloadPolicy;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            switch (c.readI32()) {
+                case 1: return new DeloadPolicy.None();
+                case 2: return new DeloadPolicy.EveryN({every: FfiConverterUInt32.readFromCursor(c), finalCycle: FfiConverterBool.readFromCursor(c) });
+                case 3: return new DeloadPolicy.Manual({cycles: FfiConverterSequenceUInt32.readFromCursor(c) });
+                default: throw new UniffiInternalError.UnexpectedEnumCase();
+            }
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            switch (value.tag) {
+                case DeloadPolicy_Tags.None: {
+                    c.writeI32(1);
+                    return;
+                }
+                case DeloadPolicy_Tags.EveryN: {
+                    c.writeI32(2);
+                    const inner = value.inner;
+                    FfiConverterUInt32.writeIntoCursor(inner.every, c);
+                    FfiConverterBool.writeIntoCursor(inner.finalCycle, c);
+                    return;
+                }
+                case DeloadPolicy_Tags.Manual: {
+                    c.writeI32(3);
+                    const inner = value.inner;
+                    FfiConverterSequenceUInt32.writeIntoCursor(inner.cycles, c);
+                    return;
+                }
+                default:
+                    // Throwing from here means that DeloadPolicy_Tags hasn't matched an ordinal.
+                    throw new UniffiInternalError.UnexpectedEnumCase();
+            }
+        }
+        allocationSize(value: TypeName): number {
+            switch (value.tag) {
+                case DeloadPolicy_Tags.None: {
+                    return 4;
+                }
+                case DeloadPolicy_Tags.EveryN: {
+                    const inner = value.inner;
+                    let size = 4;
+                    size += FfiConverterUInt32.allocationSize(inner.every);
+                    size += FfiConverterBool.allocationSize(inner.finalCycle);
+                    return size;
+                }
+                case DeloadPolicy_Tags.Manual: {
+                    const inner = value.inner;
+                    let size = 4;
+                    size += FfiConverterSequenceUInt32.allocationSize(inner.cycles);
+                    return size;
+                }
+                default: throw new UniffiInternalError.UnexpectedEnumCase();
+            }
+        }
+    }
+    return new FFIConverter();
+})();
+
+/**
+ * The mesocycle as generation reads it.
+ */
+export type MesocycleSpec = {
+    startDay: number,
+    numMicrocycles: number,
+    defaultLengthDays: number,
+    lengthOverrides: Array<LengthOverride>,
+    deload: DeloadPolicy,
+    deloadSetBp: number,
+    deloadLoadBp: number,
+    deloadRirBump: number
+}
+
+/**
+ * Generated factory for {@link MesocycleSpec} record objects.
+ */
+export const MesocycleSpec = (() => {
+    const defaults = () => ({
+    });
+    const create = (() => {
+        return uniffiCreateRecord<MesocycleSpec, ReturnType<typeof defaults>>(defaults);
+    })();
+    return Object.freeze({
+        create,
+        new: create,
+        defaults: () => Object.freeze(defaults()) as Partial<MesocycleSpec>,
+    });
+})();
+
+const FfiConverterTypeMesocycleSpec = (() => {
+    type TypeName = MesocycleSpec;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            return {
+                startDay: FfiConverterInt32.readFromCursor(c), 
+                numMicrocycles: FfiConverterUInt32.readFromCursor(c), 
+                defaultLengthDays: FfiConverterUInt32.readFromCursor(c), 
+                lengthOverrides: FfiConverterSequenceTypeLengthOverride.readFromCursor(c), 
+                deload: FfiConverterTypeDeloadPolicy.readFromCursor(c), 
+                deloadSetBp: FfiConverterUInt32.readFromCursor(c), 
+                deloadLoadBp: FfiConverterUInt32.readFromCursor(c), 
+                deloadRirBump: FfiConverterUInt32.readFromCursor(c)
+            };
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            FfiConverterInt32.writeIntoCursor(value.startDay, c);
+            FfiConverterUInt32.writeIntoCursor(value.numMicrocycles, c);
+            FfiConverterUInt32.writeIntoCursor(value.defaultLengthDays, c);
+            FfiConverterSequenceTypeLengthOverride.writeIntoCursor(value.lengthOverrides, c);
+            FfiConverterTypeDeloadPolicy.writeIntoCursor(value.deload, c);
+            FfiConverterUInt32.writeIntoCursor(value.deloadSetBp, c);
+            FfiConverterUInt32.writeIntoCursor(value.deloadLoadBp, c);
+            FfiConverterUInt32.writeIntoCursor(value.deloadRirBump, c);
+        }
+        allocationSize(value: TypeName): number {
+            return FfiConverterInt32.allocationSize(value.startDay) +
+             FfiConverterUInt32.allocationSize(value.numMicrocycles) +
+             FfiConverterUInt32.allocationSize(value.defaultLengthDays) +
+             FfiConverterSequenceTypeLengthOverride.allocationSize(value.lengthOverrides) +
+             FfiConverterTypeDeloadPolicy.allocationSize(value.deload) +
+             FfiConverterUInt32.allocationSize(value.deloadSetBp) +
+             FfiConverterUInt32.allocationSize(value.deloadLoadBp) +
+             FfiConverterUInt32.allocationSize(value.deloadRirBump);
             
         }
     };
@@ -465,6 +1902,678 @@ const FfiConverterTypePersonalBests = (() => {
     return new FFIConverter();
 })();
 
+export enum CycleStatus {
+    Projected,
+    Locked,
+    InProgress,
+    Completed,
+    Skipped
+}
+
+const FfiConverterTypeCycleStatus = (() => {
+    type TypeName = CycleStatus;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            switch (c.readI32()) {
+                case 1: return CycleStatus.Projected;
+                case 2: return CycleStatus.Locked;
+                case 3: return CycleStatus.InProgress;
+                case 4: return CycleStatus.Completed;
+                case 5: return CycleStatus.Skipped;
+                default: throw new UniffiInternalError.UnexpectedEnumCase();
+            }
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            switch (value) {
+                case CycleStatus.Projected: return c.writeI32(1);
+                case CycleStatus.Locked: return c.writeI32(2);
+                case CycleStatus.InProgress: return c.writeI32(3);
+                case CycleStatus.Completed: return c.writeI32(4);
+                case CycleStatus.Skipped: return c.writeI32(5);
+            }
+        }
+        allocationSize(value: TypeName): number {
+            return 4;
+        }
+    }
+    return new FFIConverter();
+})();
+
+export enum WriteKind {
+    Engine,
+    User
+}
+
+const FfiConverterTypeWriteKind = (() => {
+    type TypeName = WriteKind;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            switch (c.readI32()) {
+                case 1: return WriteKind.Engine;
+                case 2: return WriteKind.User;
+                default: throw new UniffiInternalError.UnexpectedEnumCase();
+            }
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            switch (value) {
+                case WriteKind.Engine: return c.writeI32(1);
+                case WriteKind.User: return c.writeI32(2);
+            }
+        }
+        allocationSize(value: TypeName): number {
+            return 4;
+        }
+    }
+    return new FFIConverter();
+})();
+
+// Hermes (React Native ≥ 0.74) ships TextEncoder and encodeInto, but not
+// TextDecoder. For single-string decode (bytesToString), we polyfill via the
+// C++ string_from_buffer helper using a duck-typed object matching the
+// standard TextDecoder.decode signature. Once Hermes ships a real
+// TextDecoder, the `typeof` check will pick it up automatically.
+//
+// For array-of-strings decode (readStringFromBuffer), we keep a dedicated C++
+// helper: the polyfill path (new Uint8Array view + decode) measured ~40%
+// slower on getStringArray benchmarks than a direct (buf, offset, length)
+// call, due to the per-read view allocation and extra property lookups in
+// string_from_buffer.
+const stringConverter = (() => {
+    const encoder = new TextEncoder();
+    const decoder: { decode(input: UniffiByteArray): string } =
+        typeof TextDecoder !== "undefined"
+            ? new TextDecoder()
+            : {
+                  decode: (bytes: UniffiByteArray) =>
+                      nativeModule().ubrn_uniffi_internal_fn_func_ffi__string_from_buffer(
+                          bytes,
+                          undefined as any,
+                      ) as string,
+              };
+    return {
+        // Single-string lower() uses the C++ helper — TextEncoder.encode
+        // measured ~43% slower on takeString benchmarks.
+        stringToBytes: (s: string) =>
+            nativeModule().ubrn_uniffi_internal_fn_func_ffi__string_to_buffer(s, undefined as any),
+        bytesToString: (ab: UniffiByteArray) => decoder.decode(ab),
+        // Direct C++ call — bypasses uniffiCaller.rustCall() overhead.
+        // Matters for N-element arrays.
+        stringByteLength: (s: string) =>
+            nativeModule().ubrn_uniffi_internal_fn_func_ffi__string_to_byte_length(s, undefined as any) as number,
+        // Encode directly into the RustBuffer backing store via
+        // TextEncoder.encodeInto — zero intermediate allocation. Replaces
+        // the old C++ write_string_into_buffer helper.
+        writeStringIntoBuffer: (s: string, buf: any, offset: number): number => {
+            const view = new Uint8Array(
+                buf.arrayBuffer,
+                offset,
+                buf.arrayBuffer.byteLength - offset,
+            );
+            return encoder.encodeInto(s, view).written;
+        },
+        // Dedicated C++ helper — avoids per-read Uint8Array allocation and
+        // the double property-lookup in string_from_buffer.
+        readStringFromBuffer: (buf: any, offset: number, length: number): string =>
+            nativeModule().ubrn_uniffi_internal_fn_func_ffi__read_string_from_buffer(buf, offset, length) as string,
+    };
+})();
+const FfiConverterString = uniffiCreateFfiConverterString(stringConverter);
+
+export enum SetOrigin {
+    Generated,
+    UserEdited
+}
+
+const FfiConverterTypeSetOrigin = (() => {
+    type TypeName = SetOrigin;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            switch (c.readI32()) {
+                case 1: return SetOrigin.Generated;
+                case 2: return SetOrigin.UserEdited;
+                default: throw new UniffiInternalError.UnexpectedEnumCase();
+            }
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            switch (value) {
+                case SetOrigin.Generated: return c.writeI32(1);
+                case SetOrigin.UserEdited: return c.writeI32(2);
+            }
+        }
+        allocationSize(value: TypeName): number {
+            return 4;
+        }
+    }
+    return new FFIConverter();
+})();
+
+export type PlanSet = {
+    setIndex: number,
+    setType: SetType,
+    targetWeightKg?: number,
+    targetReps?: number,
+    targetMinReps?: number,
+    targetMaxReps?: number,
+    targetRir?: number,
+    wasClamped: boolean,
+    origin: SetOrigin,
+    isPinned: boolean
+}
+
+/**
+ * Generated factory for {@link PlanSet} record objects.
+ */
+export const PlanSet = (() => {
+    const defaults = () => ({
+    });
+    const create = (() => {
+        return uniffiCreateRecord<PlanSet, ReturnType<typeof defaults>>(defaults);
+    })();
+    return Object.freeze({
+        create,
+        new: create,
+        defaults: () => Object.freeze(defaults()) as Partial<PlanSet>,
+    });
+})();
+
+const FfiConverterTypePlanSet = (() => {
+    type TypeName = PlanSet;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            return {
+                setIndex: FfiConverterUInt32.readFromCursor(c), 
+                setType: FfiConverterTypeSetType.readFromCursor(c), 
+                targetWeightKg: FfiConverterOptionalFloat64.readFromCursor(c), 
+                targetReps: FfiConverterOptionalUInt32.readFromCursor(c), 
+                targetMinReps: FfiConverterOptionalUInt32.readFromCursor(c), 
+                targetMaxReps: FfiConverterOptionalUInt32.readFromCursor(c), 
+                targetRir: FfiConverterOptionalUInt32.readFromCursor(c), 
+                wasClamped: FfiConverterBool.readFromCursor(c), 
+                origin: FfiConverterTypeSetOrigin.readFromCursor(c), 
+                isPinned: FfiConverterBool.readFromCursor(c)
+            };
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            FfiConverterUInt32.writeIntoCursor(value.setIndex, c);
+            FfiConverterTypeSetType.writeIntoCursor(value.setType, c);
+            FfiConverterOptionalFloat64.writeIntoCursor(value.targetWeightKg, c);
+            FfiConverterOptionalUInt32.writeIntoCursor(value.targetReps, c);
+            FfiConverterOptionalUInt32.writeIntoCursor(value.targetMinReps, c);
+            FfiConverterOptionalUInt32.writeIntoCursor(value.targetMaxReps, c);
+            FfiConverterOptionalUInt32.writeIntoCursor(value.targetRir, c);
+            FfiConverterBool.writeIntoCursor(value.wasClamped, c);
+            FfiConverterTypeSetOrigin.writeIntoCursor(value.origin, c);
+            FfiConverterBool.writeIntoCursor(value.isPinned, c);
+        }
+        allocationSize(value: TypeName): number {
+            return FfiConverterUInt32.allocationSize(value.setIndex) +
+             FfiConverterTypeSetType.allocationSize(value.setType) +
+             FfiConverterOptionalFloat64.allocationSize(value.targetWeightKg) +
+             FfiConverterOptionalUInt32.allocationSize(value.targetReps) +
+             FfiConverterOptionalUInt32.allocationSize(value.targetMinReps) +
+             FfiConverterOptionalUInt32.allocationSize(value.targetMaxReps) +
+             FfiConverterOptionalUInt32.allocationSize(value.targetRir) +
+             FfiConverterBool.allocationSize(value.wasClamped) +
+             FfiConverterTypeSetOrigin.allocationSize(value.origin) +
+             FfiConverterBool.allocationSize(value.isPinned);
+            
+        }
+    };
+    return new FFIConverter();
+})();
+
+export type PlanExercise = {
+    orderIndex: number,
+    exerciseId: string,
+    incrementKg: number,
+    rule: Rule,
+    usesBodyweight: boolean,
+    bodyWeightKg?: number,
+    sets: Array<PlanSet>
+}
+
+/**
+ * Generated factory for {@link PlanExercise} record objects.
+ */
+export const PlanExercise = (() => {
+    const defaults = () => ({
+    });
+    const create = (() => {
+        return uniffiCreateRecord<PlanExercise, ReturnType<typeof defaults>>(defaults);
+    })();
+    return Object.freeze({
+        create,
+        new: create,
+        defaults: () => Object.freeze(defaults()) as Partial<PlanExercise>,
+    });
+})();
+
+const FfiConverterTypePlanExercise = (() => {
+    type TypeName = PlanExercise;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            return {
+                orderIndex: FfiConverterUInt32.readFromCursor(c), 
+                exerciseId: FfiConverterString.readFromCursor(c), 
+                incrementKg: FfiConverterFloat64.readFromCursor(c), 
+                rule: FfiConverterTypeRule.readFromCursor(c), 
+                usesBodyweight: FfiConverterBool.readFromCursor(c), 
+                bodyWeightKg: FfiConverterOptionalFloat64.readFromCursor(c), 
+                sets: FfiConverterSequenceTypePlanSet.readFromCursor(c)
+            };
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            FfiConverterUInt32.writeIntoCursor(value.orderIndex, c);
+            FfiConverterString.writeIntoCursor(value.exerciseId, c);
+            FfiConverterFloat64.writeIntoCursor(value.incrementKg, c);
+            FfiConverterTypeRule.writeIntoCursor(value.rule, c);
+            FfiConverterBool.writeIntoCursor(value.usesBodyweight, c);
+            FfiConverterOptionalFloat64.writeIntoCursor(value.bodyWeightKg, c);
+            FfiConverterSequenceTypePlanSet.writeIntoCursor(value.sets, c);
+        }
+        allocationSize(value: TypeName): number {
+            return FfiConverterUInt32.allocationSize(value.orderIndex) +
+             FfiConverterString.allocationSize(value.exerciseId) +
+             FfiConverterFloat64.allocationSize(value.incrementKg) +
+             FfiConverterTypeRule.allocationSize(value.rule) +
+             FfiConverterBool.allocationSize(value.usesBodyweight) +
+             FfiConverterOptionalFloat64.allocationSize(value.bodyWeightKg) +
+             FfiConverterSequenceTypePlanSet.allocationSize(value.sets);
+            
+        }
+    };
+    return new FFIConverter();
+})();
+
+export type PlanSession = {
+    dayIndex: number,
+    orderIndex: number,
+    exercises: Array<PlanExercise>
+}
+
+/**
+ * Generated factory for {@link PlanSession} record objects.
+ */
+export const PlanSession = (() => {
+    const defaults = () => ({
+    });
+    const create = (() => {
+        return uniffiCreateRecord<PlanSession, ReturnType<typeof defaults>>(defaults);
+    })();
+    return Object.freeze({
+        create,
+        new: create,
+        defaults: () => Object.freeze(defaults()) as Partial<PlanSession>,
+    });
+})();
+
+const FfiConverterTypePlanSession = (() => {
+    type TypeName = PlanSession;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            return {
+                dayIndex: FfiConverterUInt32.readFromCursor(c), 
+                orderIndex: FfiConverterUInt32.readFromCursor(c), 
+                exercises: FfiConverterSequenceTypePlanExercise.readFromCursor(c)
+            };
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            FfiConverterUInt32.writeIntoCursor(value.dayIndex, c);
+            FfiConverterUInt32.writeIntoCursor(value.orderIndex, c);
+            FfiConverterSequenceTypePlanExercise.writeIntoCursor(value.exercises, c);
+        }
+        allocationSize(value: TypeName): number {
+            return FfiConverterUInt32.allocationSize(value.dayIndex) +
+             FfiConverterUInt32.allocationSize(value.orderIndex) +
+             FfiConverterSequenceTypePlanExercise.allocationSize(value.exercises);
+            
+        }
+    };
+    return new FFIConverter();
+})();
+
+export type PlanCycle = {
+    cycleNumber: number,
+    lengthDays: number,
+    startsOn: number,
+    isDeload: boolean,
+    status: CycleStatus,
+    engineVersion: number,
+    lastWriteKind: WriteKind,
+    sessions: Array<PlanSession>
+}
+
+/**
+ * Generated factory for {@link PlanCycle} record objects.
+ */
+export const PlanCycle = (() => {
+    const defaults = () => ({
+    });
+    const create = (() => {
+        return uniffiCreateRecord<PlanCycle, ReturnType<typeof defaults>>(defaults);
+    })();
+    return Object.freeze({
+        create,
+        new: create,
+        defaults: () => Object.freeze(defaults()) as Partial<PlanCycle>,
+    });
+})();
+
+const FfiConverterTypePlanCycle = (() => {
+    type TypeName = PlanCycle;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            return {
+                cycleNumber: FfiConverterUInt32.readFromCursor(c), 
+                lengthDays: FfiConverterUInt32.readFromCursor(c), 
+                startsOn: FfiConverterInt32.readFromCursor(c), 
+                isDeload: FfiConverterBool.readFromCursor(c), 
+                status: FfiConverterTypeCycleStatus.readFromCursor(c), 
+                engineVersion: FfiConverterUInt32.readFromCursor(c), 
+                lastWriteKind: FfiConverterTypeWriteKind.readFromCursor(c), 
+                sessions: FfiConverterSequenceTypePlanSession.readFromCursor(c)
+            };
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            FfiConverterUInt32.writeIntoCursor(value.cycleNumber, c);
+            FfiConverterUInt32.writeIntoCursor(value.lengthDays, c);
+            FfiConverterInt32.writeIntoCursor(value.startsOn, c);
+            FfiConverterBool.writeIntoCursor(value.isDeload, c);
+            FfiConverterTypeCycleStatus.writeIntoCursor(value.status, c);
+            FfiConverterUInt32.writeIntoCursor(value.engineVersion, c);
+            FfiConverterTypeWriteKind.writeIntoCursor(value.lastWriteKind, c);
+            FfiConverterSequenceTypePlanSession.writeIntoCursor(value.sessions, c);
+        }
+        allocationSize(value: TypeName): number {
+            return FfiConverterUInt32.allocationSize(value.cycleNumber) +
+             FfiConverterUInt32.allocationSize(value.lengthDays) +
+             FfiConverterInt32.allocationSize(value.startsOn) +
+             FfiConverterBool.allocationSize(value.isDeload) +
+             FfiConverterTypeCycleStatus.allocationSize(value.status) +
+             FfiConverterUInt32.allocationSize(value.engineVersion) +
+             FfiConverterTypeWriteKind.allocationSize(value.lastWriteKind) +
+             FfiConverterSequenceTypePlanSession.allocationSize(value.sessions);
+            
+        }
+    };
+    return new FFIConverter();
+})();
+
+export type PlanLog = {
+    cycleNumber: number,
+    dayIndex: number,
+    sessionOrderIndex: number,
+    exerciseOrderIndex: number,
+    setIndex: number,
+    set: LoggedSet
+}
+
+/**
+ * Generated factory for {@link PlanLog} record objects.
+ */
+export const PlanLog = (() => {
+    const defaults = () => ({
+    });
+    const create = (() => {
+        return uniffiCreateRecord<PlanLog, ReturnType<typeof defaults>>(defaults);
+    })();
+    return Object.freeze({
+        create,
+        new: create,
+        defaults: () => Object.freeze(defaults()) as Partial<PlanLog>,
+    });
+})();
+
+const FfiConverterTypePlanLog = (() => {
+    type TypeName = PlanLog;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            return {
+                cycleNumber: FfiConverterUInt32.readFromCursor(c), 
+                dayIndex: FfiConverterUInt32.readFromCursor(c), 
+                sessionOrderIndex: FfiConverterUInt32.readFromCursor(c), 
+                exerciseOrderIndex: FfiConverterUInt32.readFromCursor(c), 
+                setIndex: FfiConverterUInt32.readFromCursor(c), 
+                set: FfiConverterTypeLoggedSet.readFromCursor(c)
+            };
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            FfiConverterUInt32.writeIntoCursor(value.cycleNumber, c);
+            FfiConverterUInt32.writeIntoCursor(value.dayIndex, c);
+            FfiConverterUInt32.writeIntoCursor(value.sessionOrderIndex, c);
+            FfiConverterUInt32.writeIntoCursor(value.exerciseOrderIndex, c);
+            FfiConverterUInt32.writeIntoCursor(value.setIndex, c);
+            FfiConverterTypeLoggedSet.writeIntoCursor(value.set, c);
+        }
+        allocationSize(value: TypeName): number {
+            return FfiConverterUInt32.allocationSize(value.cycleNumber) +
+             FfiConverterUInt32.allocationSize(value.dayIndex) +
+             FfiConverterUInt32.allocationSize(value.sessionOrderIndex) +
+             FfiConverterUInt32.allocationSize(value.exerciseOrderIndex) +
+             FfiConverterUInt32.allocationSize(value.setIndex) +
+             FfiConverterTypeLoggedSet.allocationSize(value.set);
+            
+        }
+    };
+    return new FFIConverter();
+})();
+
+export type PlannedSet = {
+    setIndex: number,
+    setType: SetType,
+    targetWeightKg?: number,
+    targetReps?: number,
+    targetMinReps?: number,
+    targetMaxReps?: number,
+    targetRir?: number,
+    wasClamped: boolean
+}
+
+/**
+ * Generated factory for {@link PlannedSet} record objects.
+ */
+export const PlannedSet = (() => {
+    const defaults = () => ({
+    });
+    const create = (() => {
+        return uniffiCreateRecord<PlannedSet, ReturnType<typeof defaults>>(defaults);
+    })();
+    return Object.freeze({
+        create,
+        new: create,
+        defaults: () => Object.freeze(defaults()) as Partial<PlannedSet>,
+    });
+})();
+
+const FfiConverterTypePlannedSet = (() => {
+    type TypeName = PlannedSet;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            return {
+                setIndex: FfiConverterUInt32.readFromCursor(c), 
+                setType: FfiConverterTypeSetType.readFromCursor(c), 
+                targetWeightKg: FfiConverterOptionalFloat64.readFromCursor(c), 
+                targetReps: FfiConverterOptionalUInt32.readFromCursor(c), 
+                targetMinReps: FfiConverterOptionalUInt32.readFromCursor(c), 
+                targetMaxReps: FfiConverterOptionalUInt32.readFromCursor(c), 
+                targetRir: FfiConverterOptionalUInt32.readFromCursor(c), 
+                wasClamped: FfiConverterBool.readFromCursor(c)
+            };
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            FfiConverterUInt32.writeIntoCursor(value.setIndex, c);
+            FfiConverterTypeSetType.writeIntoCursor(value.setType, c);
+            FfiConverterOptionalFloat64.writeIntoCursor(value.targetWeightKg, c);
+            FfiConverterOptionalUInt32.writeIntoCursor(value.targetReps, c);
+            FfiConverterOptionalUInt32.writeIntoCursor(value.targetMinReps, c);
+            FfiConverterOptionalUInt32.writeIntoCursor(value.targetMaxReps, c);
+            FfiConverterOptionalUInt32.writeIntoCursor(value.targetRir, c);
+            FfiConverterBool.writeIntoCursor(value.wasClamped, c);
+        }
+        allocationSize(value: TypeName): number {
+            return FfiConverterUInt32.allocationSize(value.setIndex) +
+             FfiConverterTypeSetType.allocationSize(value.setType) +
+             FfiConverterOptionalFloat64.allocationSize(value.targetWeightKg) +
+             FfiConverterOptionalUInt32.allocationSize(value.targetReps) +
+             FfiConverterOptionalUInt32.allocationSize(value.targetMinReps) +
+             FfiConverterOptionalUInt32.allocationSize(value.targetMaxReps) +
+             FfiConverterOptionalUInt32.allocationSize(value.targetRir) +
+             FfiConverterBool.allocationSize(value.wasClamped);
+            
+        }
+    };
+    return new FFIConverter();
+})();
+
+export type PlannedExercise = {
+    orderIndex: number,
+    sets: Array<PlannedSet>
+}
+
+/**
+ * Generated factory for {@link PlannedExercise} record objects.
+ */
+export const PlannedExercise = (() => {
+    const defaults = () => ({
+    });
+    const create = (() => {
+        return uniffiCreateRecord<PlannedExercise, ReturnType<typeof defaults>>(defaults);
+    })();
+    return Object.freeze({
+        create,
+        new: create,
+        defaults: () => Object.freeze(defaults()) as Partial<PlannedExercise>,
+    });
+})();
+
+const FfiConverterTypePlannedExercise = (() => {
+    type TypeName = PlannedExercise;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            return {
+                orderIndex: FfiConverterUInt32.readFromCursor(c), 
+                sets: FfiConverterSequenceTypePlannedSet.readFromCursor(c)
+            };
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            FfiConverterUInt32.writeIntoCursor(value.orderIndex, c);
+            FfiConverterSequenceTypePlannedSet.writeIntoCursor(value.sets, c);
+        }
+        allocationSize(value: TypeName): number {
+            return FfiConverterUInt32.allocationSize(value.orderIndex) +
+             FfiConverterSequenceTypePlannedSet.allocationSize(value.sets);
+            
+        }
+    };
+    return new FFIConverter();
+})();
+
+export type PlannedSession = {
+    dayIndex: number,
+    orderIndex: number,
+    exercises: Array<PlannedExercise>
+}
+
+/**
+ * Generated factory for {@link PlannedSession} record objects.
+ */
+export const PlannedSession = (() => {
+    const defaults = () => ({
+    });
+    const create = (() => {
+        return uniffiCreateRecord<PlannedSession, ReturnType<typeof defaults>>(defaults);
+    })();
+    return Object.freeze({
+        create,
+        new: create,
+        defaults: () => Object.freeze(defaults()) as Partial<PlannedSession>,
+    });
+})();
+
+const FfiConverterTypePlannedSession = (() => {
+    type TypeName = PlannedSession;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            return {
+                dayIndex: FfiConverterUInt32.readFromCursor(c), 
+                orderIndex: FfiConverterUInt32.readFromCursor(c), 
+                exercises: FfiConverterSequenceTypePlannedExercise.readFromCursor(c)
+            };
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            FfiConverterUInt32.writeIntoCursor(value.dayIndex, c);
+            FfiConverterUInt32.writeIntoCursor(value.orderIndex, c);
+            FfiConverterSequenceTypePlannedExercise.writeIntoCursor(value.exercises, c);
+        }
+        allocationSize(value: TypeName): number {
+            return FfiConverterUInt32.allocationSize(value.dayIndex) +
+             FfiConverterUInt32.allocationSize(value.orderIndex) +
+             FfiConverterSequenceTypePlannedExercise.allocationSize(value.exercises);
+            
+        }
+    };
+    return new FFIConverter();
+})();
+
+export type PlannedMicrocycle = {
+    cycleNumber: number,
+    lengthDays: number,
+    startsOn: number,
+    isDeload: boolean,
+    engineVersion: number,
+    sessions: Array<PlannedSession>
+}
+
+/**
+ * Generated factory for {@link PlannedMicrocycle} record objects.
+ */
+export const PlannedMicrocycle = (() => {
+    const defaults = () => ({
+    });
+    const create = (() => {
+        return uniffiCreateRecord<PlannedMicrocycle, ReturnType<typeof defaults>>(defaults);
+    })();
+    return Object.freeze({
+        create,
+        new: create,
+        defaults: () => Object.freeze(defaults()) as Partial<PlannedMicrocycle>,
+    });
+})();
+
+const FfiConverterTypePlannedMicrocycle = (() => {
+    type TypeName = PlannedMicrocycle;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            return {
+                cycleNumber: FfiConverterUInt32.readFromCursor(c), 
+                lengthDays: FfiConverterUInt32.readFromCursor(c), 
+                startsOn: FfiConverterInt32.readFromCursor(c), 
+                isDeload: FfiConverterBool.readFromCursor(c), 
+                engineVersion: FfiConverterUInt32.readFromCursor(c), 
+                sessions: FfiConverterSequenceTypePlannedSession.readFromCursor(c)
+            };
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            FfiConverterUInt32.writeIntoCursor(value.cycleNumber, c);
+            FfiConverterUInt32.writeIntoCursor(value.lengthDays, c);
+            FfiConverterInt32.writeIntoCursor(value.startsOn, c);
+            FfiConverterBool.writeIntoCursor(value.isDeload, c);
+            FfiConverterUInt32.writeIntoCursor(value.engineVersion, c);
+            FfiConverterSequenceTypePlannedSession.writeIntoCursor(value.sessions, c);
+        }
+        allocationSize(value: TypeName): number {
+            return FfiConverterUInt32.allocationSize(value.cycleNumber) +
+             FfiConverterUInt32.allocationSize(value.lengthDays) +
+             FfiConverterInt32.allocationSize(value.startsOn) +
+             FfiConverterBool.allocationSize(value.isDeload) +
+             FfiConverterUInt32.allocationSize(value.engineVersion) +
+             FfiConverterSequenceTypePlannedSession.allocationSize(value.sessions);
+            
+        }
+    };
+    return new FFIConverter();
+})();
+
 /**
  * Which record was broken. Mirrors [`cyberathlete_core::PrKind`].
  */
@@ -564,6 +2673,138 @@ const FfiConverterTypePrAchievement = (() => {
     return new FFIConverter();
 })();
 
+export enum Outcome {
+    Exceeded,
+    Met,
+    Under,
+    Missed
+}
+
+const FfiConverterTypeOutcome = (() => {
+    type TypeName = Outcome;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            switch (c.readI32()) {
+                case 1: return Outcome.Exceeded;
+                case 2: return Outcome.Met;
+                case 3: return Outcome.Under;
+                case 4: return Outcome.Missed;
+                default: throw new UniffiInternalError.UnexpectedEnumCase();
+            }
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            switch (value) {
+                case Outcome.Exceeded: return c.writeI32(1);
+                case Outcome.Met: return c.writeI32(2);
+                case Outcome.Under: return c.writeI32(3);
+                case Outcome.Missed: return c.writeI32(4);
+            }
+        }
+        allocationSize(value: TypeName): number {
+            return 4;
+        }
+    }
+    return new FFIConverter();
+})();
+
+export type SlotOutcome = {
+    cycleNumber: number,
+    exerciseId: string,
+    occurrence: number,
+    outcome: Outcome,
+    openLoop: boolean
+}
+
+/**
+ * Generated factory for {@link SlotOutcome} record objects.
+ */
+export const SlotOutcome = (() => {
+    const defaults = () => ({
+    });
+    const create = (() => {
+        return uniffiCreateRecord<SlotOutcome, ReturnType<typeof defaults>>(defaults);
+    })();
+    return Object.freeze({
+        create,
+        new: create,
+        defaults: () => Object.freeze(defaults()) as Partial<SlotOutcome>,
+    });
+})();
+
+const FfiConverterTypeSlotOutcome = (() => {
+    type TypeName = SlotOutcome;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            return {
+                cycleNumber: FfiConverterUInt32.readFromCursor(c), 
+                exerciseId: FfiConverterString.readFromCursor(c), 
+                occurrence: FfiConverterUInt32.readFromCursor(c), 
+                outcome: FfiConverterTypeOutcome.readFromCursor(c), 
+                openLoop: FfiConverterBool.readFromCursor(c)
+            };
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            FfiConverterUInt32.writeIntoCursor(value.cycleNumber, c);
+            FfiConverterString.writeIntoCursor(value.exerciseId, c);
+            FfiConverterUInt32.writeIntoCursor(value.occurrence, c);
+            FfiConverterTypeOutcome.writeIntoCursor(value.outcome, c);
+            FfiConverterBool.writeIntoCursor(value.openLoop, c);
+        }
+        allocationSize(value: TypeName): number {
+            return FfiConverterUInt32.allocationSize(value.cycleNumber) +
+             FfiConverterString.allocationSize(value.exerciseId) +
+             FfiConverterUInt32.allocationSize(value.occurrence) +
+             FfiConverterTypeOutcome.allocationSize(value.outcome) +
+             FfiConverterBool.allocationSize(value.openLoop);
+            
+        }
+    };
+    return new FFIConverter();
+})();
+
+export type Reconciled = {
+    cycles: Array<PlanCycle>,
+    outcomes: Array<SlotOutcome>
+}
+
+/**
+ * Generated factory for {@link Reconciled} record objects.
+ */
+export const Reconciled = (() => {
+    const defaults = () => ({
+    });
+    const create = (() => {
+        return uniffiCreateRecord<Reconciled, ReturnType<typeof defaults>>(defaults);
+    })();
+    return Object.freeze({
+        create,
+        new: create,
+        defaults: () => Object.freeze(defaults()) as Partial<Reconciled>,
+    });
+})();
+
+const FfiConverterTypeReconciled = (() => {
+    type TypeName = Reconciled;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            return {
+                cycles: FfiConverterSequenceTypePlanCycle.readFromCursor(c), 
+                outcomes: FfiConverterSequenceTypeSlotOutcome.readFromCursor(c)
+            };
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            FfiConverterSequenceTypePlanCycle.writeIntoCursor(value.cycles, c);
+            FfiConverterSequenceTypeSlotOutcome.writeIntoCursor(value.outcomes, c);
+        }
+        allocationSize(value: TypeName): number {
+            return FfiConverterSequenceTypePlanCycle.allocationSize(value.cycles) +
+             FfiConverterSequenceTypeSlotOutcome.allocationSize(value.outcomes);
+            
+        }
+    };
+    return new FFIConverter();
+})();
+
 /**
  * One session of one exercise, reduced to what its history charts. Mirrors
  * [`cyberathlete_core::SessionMetrics`].
@@ -613,6 +2854,53 @@ const FfiConverterTypeSessionMetrics = (() => {
              FfiConverterOptionalFloat64.allocationSize(value.bestE1rmKg) +
              FfiConverterOptionalFloat64.allocationSize(value.volumeKg) +
              FfiConverterUInt32.allocationSize(value.countedSets);
+            
+        }
+    };
+    return new FFIConverter();
+})();
+
+export type SessionSpec = {
+    dayIndex: number,
+    orderIndex: number,
+    exercises: Array<ExerciseSpec>
+}
+
+/**
+ * Generated factory for {@link SessionSpec} record objects.
+ */
+export const SessionSpec = (() => {
+    const defaults = () => ({
+    });
+    const create = (() => {
+        return uniffiCreateRecord<SessionSpec, ReturnType<typeof defaults>>(defaults);
+    })();
+    return Object.freeze({
+        create,
+        new: create,
+        defaults: () => Object.freeze(defaults()) as Partial<SessionSpec>,
+    });
+})();
+
+const FfiConverterTypeSessionSpec = (() => {
+    type TypeName = SessionSpec;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            return {
+                dayIndex: FfiConverterUInt32.readFromCursor(c), 
+                orderIndex: FfiConverterUInt32.readFromCursor(c), 
+                exercises: FfiConverterSequenceTypeExerciseSpec.readFromCursor(c)
+            };
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            FfiConverterUInt32.writeIntoCursor(value.dayIndex, c);
+            FfiConverterUInt32.writeIntoCursor(value.orderIndex, c);
+            FfiConverterSequenceTypeExerciseSpec.writeIntoCursor(value.exercises, c);
+        }
+        allocationSize(value: TypeName): number {
+            return FfiConverterUInt32.allocationSize(value.dayIndex) +
+             FfiConverterUInt32.allocationSize(value.orderIndex) +
+             FfiConverterSequenceTypeExerciseSpec.allocationSize(value.exercises);
             
         }
     };
@@ -669,6 +2957,49 @@ const FfiConverterTypeSetEntry = (() => {
     return new FFIConverter();
 })();
 
+export type Shortened = {
+    cycles: Array<PlanCycle>,
+    dropped: Array<number>
+}
+
+/**
+ * Generated factory for {@link Shortened} record objects.
+ */
+export const Shortened = (() => {
+    const defaults = () => ({
+    });
+    const create = (() => {
+        return uniffiCreateRecord<Shortened, ReturnType<typeof defaults>>(defaults);
+    })();
+    return Object.freeze({
+        create,
+        new: create,
+        defaults: () => Object.freeze(defaults()) as Partial<Shortened>,
+    });
+})();
+
+const FfiConverterTypeShortened = (() => {
+    type TypeName = Shortened;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            return {
+                cycles: FfiConverterSequenceTypePlanCycle.readFromCursor(c), 
+                dropped: FfiConverterSequenceUInt32.readFromCursor(c)
+            };
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            FfiConverterSequenceTypePlanCycle.writeIntoCursor(value.cycles, c);
+            FfiConverterSequenceUInt32.writeIntoCursor(value.dropped, c);
+        }
+        allocationSize(value: TypeName): number {
+            return FfiConverterSequenceTypePlanCycle.allocationSize(value.cycles) +
+             FfiConverterSequenceUInt32.allocationSize(value.dropped);
+            
+        }
+    };
+    return new FFIConverter();
+})();
+
 /**
  * A record still standing after a history, and the session that set it. Mirrors
  * [`cyberathlete_core::StandingRecord`].
@@ -716,35 +3047,113 @@ const FfiConverterTypeStandingRecord = (() => {
     return new FFIConverter();
 })();
 
-/**
- * Which way a load between two steps is moved. Mirrors [`cyberathlete_core::RoundingMode`].
- */
-export enum RoundingMode {
-    Nearest,
-    Down,
-    Up
-}
 
-const FfiConverterTypeRoundingMode = (() => {
-    type TypeName = RoundingMode;
+// Error type: PlanError
+export enum PlanError_Tags {
+    Refused = "Refused"
+}
+/**
+ * A block edit the engine refused (task 005 stage 3b): why — `started`, `locked`, `history`,
+ * `session_does_not_fit`, `newer_engine`, `out_of_range`, `no_such_cycle`, `no_such_exercise` — and
+ * where. Thrown to JavaScript as an error the caller can read.
+ */
+export const PlanError = (() => {
+
+    type Refused__interface = {
+        tag: PlanError_Tags.Refused;
+        inner: 
+Readonly<{reason: string; cycleNumber?: number; dayIndex?: number}>
+    };
+    class Refused_ extends UniffiError implements Refused__interface {
+        /**
+         * @private
+         * This field is private and should not be used, use `tag` instead.
+         */
+        readonly [uniffiTypeNameSymbol] = "PlanError";
+        readonly tag = PlanError_Tags.Refused;
+        readonly inner: 
+Readonly<{reason: string; cycleNumber?: number; dayIndex?: number}>;
+        constructor(
+inner: {reason: string; cycleNumber?: number; dayIndex?: number }) {
+            super("PlanError", "Refused");
+
+            this.inner = Object.freeze(inner);
+        }
+        static new(
+inner: {reason: string; cycleNumber?: number; dayIndex?: number }): Refused_ {
+            return new Refused_(inner);
+        }
+
+        static instanceOf(obj: any): obj is Refused_ {
+            return obj.tag === PlanError_Tags.Refused;
+        }
+        static hasInner(obj: any): obj is Refused_ {
+            return Refused_.instanceOf(obj);
+        }
+
+        static getInner(obj: Refused_): 
+Readonly<{reason: string; cycleNumber?: number; dayIndex?: number}> {
+            return obj.inner;
+        }
+
+    }
+
+    function instanceOf(obj: any): obj is PlanError {
+        return obj[uniffiTypeNameSymbol] === "PlanError";
+    }
+
+    return Object.freeze({
+        instanceOf,
+  Refused: Refused_
+    });
+
+})();
+/**
+ * A block edit the engine refused (task 005 stage 3b): why — `started`, `locked`, `history`,
+ * `session_does_not_fit`, `newer_engine`, `out_of_range`, `no_such_cycle`, `no_such_exercise` — and
+ * where. Thrown to JavaScript as an error the caller can read.
+ */
+export type PlanError = InstanceType<
+    typeof PlanError['Refused']
+>;
+
+// FfiConverter for enum PlanError
+const FfiConverterTypePlanError = (() => {
+    type TypeName = PlanError;
     class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
         readFromCursor(c: Cursor): TypeName {
             switch (c.readI32()) {
-                case 1: return RoundingMode.Nearest;
-                case 2: return RoundingMode.Down;
-                case 3: return RoundingMode.Up;
+                case 1: return new PlanError.Refused({reason: FfiConverterString.readFromCursor(c), cycleNumber: FfiConverterOptionalUInt32.readFromCursor(c), dayIndex: FfiConverterOptionalUInt32.readFromCursor(c) });
                 default: throw new UniffiInternalError.UnexpectedEnumCase();
             }
         }
         writeIntoCursor(value: TypeName, c: Cursor): void {
-            switch (value) {
-                case RoundingMode.Nearest: return c.writeI32(1);
-                case RoundingMode.Down: return c.writeI32(2);
-                case RoundingMode.Up: return c.writeI32(3);
+            switch (value.tag) {
+                case PlanError_Tags.Refused: {
+                    c.writeI32(1);
+                    const inner = value.inner;
+                    FfiConverterString.writeIntoCursor(inner.reason, c);
+                    FfiConverterOptionalUInt32.writeIntoCursor(inner.cycleNumber, c);
+                    FfiConverterOptionalUInt32.writeIntoCursor(inner.dayIndex, c);
+                    return;
+                }
+                default:
+                    // Throwing from here means that PlanError_Tags hasn't matched an ordinal.
+                    throw new UniffiInternalError.UnexpectedEnumCase();
             }
         }
         allocationSize(value: TypeName): number {
-            return 4;
+            switch (value.tag) {
+                case PlanError_Tags.Refused: {
+                    const inner = value.inner;
+                    let size = 4;
+                    size += FfiConverterString.allocationSize(inner.reason);
+                    size += FfiConverterOptionalUInt32.allocationSize(inner.cycleNumber);
+                    size += FfiConverterOptionalUInt32.allocationSize(inner.dayIndex);
+                    return size;
+                }
+                default: throw new UniffiInternalError.UnexpectedEnumCase();
+            }
         }
     }
     return new FFIConverter();
@@ -821,66 +3230,56 @@ const FfiConverterTypeTracking = (() => {
     return new FFIConverter();
 })();
 
-// Hermes (React Native ≥ 0.74) ships TextEncoder and encodeInto, but not
-// TextDecoder. For single-string decode (bytesToString), we polyfill via the
-// C++ string_from_buffer helper using a duck-typed object matching the
-// standard TextDecoder.decode signature. Once Hermes ships a real
-// TextDecoder, the `typeof` check will pick it up automatically.
-//
-// For array-of-strings decode (readStringFromBuffer), we keep a dedicated C++
-// helper: the polyfill path (new Uint8Array view + decode) measured ~40%
-// slower on getStringArray benchmarks than a direct (buf, offset, length)
-// call, due to the per-read view allocation and extra property lookups in
-// string_from_buffer.
-const stringConverter = (() => {
-    const encoder = new TextEncoder();
-    const decoder: { decode(input: UniffiByteArray): string } =
-        typeof TextDecoder !== "undefined"
-            ? new TextDecoder()
-            : {
-                  decode: (bytes: UniffiByteArray) =>
-                      nativeModule().ubrn_uniffi_internal_fn_func_ffi__string_from_buffer(
-                          bytes,
-                          undefined as any,
-                      ) as string,
-              };
-    return {
-        // Single-string lower() uses the C++ helper — TextEncoder.encode
-        // measured ~43% slower on takeString benchmarks.
-        stringToBytes: (s: string) =>
-            nativeModule().ubrn_uniffi_internal_fn_func_ffi__string_to_buffer(s, undefined as any),
-        bytesToString: (ab: UniffiByteArray) => decoder.decode(ab),
-        // Direct C++ call — bypasses uniffiCaller.rustCall() overhead.
-        // Matters for N-element arrays.
-        stringByteLength: (s: string) =>
-            nativeModule().ubrn_uniffi_internal_fn_func_ffi__string_to_byte_length(s, undefined as any) as number,
-        // Encode directly into the RustBuffer backing store via
-        // TextEncoder.encodeInto — zero intermediate allocation. Replaces
-        // the old C++ write_string_into_buffer helper.
-        writeStringIntoBuffer: (s: string, buf: any, offset: number): number => {
-            const view = new Uint8Array(
-                buf.arrayBuffer,
-                offset,
-                buf.arrayBuffer.byteLength - offset,
-            );
-            return encoder.encodeInto(s, view).written;
-        },
-        // Dedicated C++ helper — avoids per-read Uint8Array allocation and
-        // the double property-lookup in string_from_buffer.
-        readStringFromBuffer: (buf: any, offset: number, length: number): string =>
-            nativeModule().ubrn_uniffi_internal_fn_func_ffi__read_string_from_buffer(buf, offset, length) as string,
-    };
-})();
-const FfiConverterString = uniffiCreateFfiConverterString(stringConverter);
-
 // FfiConverter for number | undefined
 const FfiConverterOptionalFloat64 = new FfiConverterOptional(FfiConverterFloat64);
 
 // FfiConverter for number | undefined
 const FfiConverterOptionalUInt32 = new FfiConverterOptional(FfiConverterUInt32);
 
+// FfiConverter for Array<number>
+const FfiConverterSequenceUInt32 = new FfiConverterArray(FfiConverterUInt32);
+
+// FfiConverter for Array<number>
+const FfiConverterSequenceInt32 = new FfiConverterArray(FfiConverterInt32);
+
+// FfiConverter for Array<CycleOneSet>
+const FfiConverterSequenceTypeCycleOneSet = new FfiConverterArray(FfiConverterTypeCycleOneSet);
+
+// FfiConverter for Array<LengthOverride>
+const FfiConverterSequenceTypeLengthOverride = new FfiConverterArray(FfiConverterTypeLengthOverride);
+
 // FfiConverter for Array<RepsAtWeight>
 const FfiConverterSequenceTypeRepsAtWeight = new FfiConverterArray(FfiConverterTypeRepsAtWeight);
+
+// FfiConverter for Array<PlanSet>
+const FfiConverterSequenceTypePlanSet = new FfiConverterArray(FfiConverterTypePlanSet);
+
+// FfiConverter for Array<PlanExercise>
+const FfiConverterSequenceTypePlanExercise = new FfiConverterArray(FfiConverterTypePlanExercise);
+
+// FfiConverter for Array<PlanSession>
+const FfiConverterSequenceTypePlanSession = new FfiConverterArray(FfiConverterTypePlanSession);
+
+// FfiConverter for Array<PlannedSet>
+const FfiConverterSequenceTypePlannedSet = new FfiConverterArray(FfiConverterTypePlannedSet);
+
+// FfiConverter for Array<PlannedExercise>
+const FfiConverterSequenceTypePlannedExercise = new FfiConverterArray(FfiConverterTypePlannedExercise);
+
+// FfiConverter for Array<PlannedSession>
+const FfiConverterSequenceTypePlannedSession = new FfiConverterArray(FfiConverterTypePlannedSession);
+
+// FfiConverter for Array<PlanCycle>
+const FfiConverterSequenceTypePlanCycle = new FfiConverterArray(FfiConverterTypePlanCycle);
+
+// FfiConverter for Array<SlotOutcome>
+const FfiConverterSequenceTypeSlotOutcome = new FfiConverterArray(FfiConverterTypeSlotOutcome);
+
+// FfiConverter for Array<ExerciseSpec>
+const FfiConverterSequenceTypeExerciseSpec = new FfiConverterArray(FfiConverterTypeExerciseSpec);
+
+// FfiConverter for Array<PlanLog>
+const FfiConverterSequenceTypePlanLog = new FfiConverterArray(FfiConverterTypePlanLog);
 
 // FfiConverter for Array<LoggedSet>
 const FfiConverterSequenceTypeLoggedSet = new FfiConverterArray(FfiConverterTypeLoggedSet);
@@ -890,6 +3289,12 @@ const FfiConverterSequenceTypePrAchievement = new FfiConverterArray(FfiConverter
 
 // FfiConverter for Array<number | undefined>
 const FfiConverterSequenceOptionalFloat64 = new FfiConverterArray(FfiConverterOptionalFloat64);
+
+// FfiConverter for Array<SessionSpec>
+const FfiConverterSequenceTypeSessionSpec = new FfiConverterArray(FfiConverterTypeSessionSpec);
+
+// FfiConverter for Array<PlannedMicrocycle>
+const FfiConverterSequenceTypePlannedMicrocycle = new FfiConverterArray(FfiConverterTypePlannedMicrocycle);
 
 // FfiConverter for SetField | undefined
 const FfiConverterOptionalTypeSetField = new FfiConverterOptional(FfiConverterTypeSetField);
@@ -922,6 +3327,9 @@ function uniffiEnsureInitialized() {
     if (bindingsContractVersion !== scaffoldingContractVersion) {
         throw new UniffiInternalError.ContractVersionMismatch(scaffoldingContractVersion, bindingsContractVersion);
     }
+    if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_classify() !== 722) {
+        throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_classify");
+    }
     if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_core_version() !== 6041) {
         throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_core_version");
     }
@@ -937,6 +3345,15 @@ function uniffiEnsureInitialized() {
     if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_e1rm_series() !== 51229) {
         throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_e1rm_series");
     }
+    if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_engine_version() !== 62148) {
+        throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_engine_version");
+    }
+    if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_extend() !== 11702) {
+        throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_extend");
+    }
+    if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_generate() !== 14786) {
+        throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_generate");
+    }
     if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_is_counted_set() !== 54819) {
         throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_is_counted_set");
     }
@@ -949,14 +3366,32 @@ function uniffiEnsureInitialized() {
     if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_personal_bests() !== 22176) {
         throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_personal_bests");
     }
+    if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_reconcile() !== 56780) {
+        throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_reconcile");
+    }
+    if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_relength() !== 21186) {
+        throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_relength");
+    }
+    if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_resolve_dates() !== 37314) {
+        throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_resolve_dates");
+    }
     if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_round_to_increment() !== 62903) {
         throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_round_to_increment");
     }
     if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_session_metrics() !== 52849) {
         throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_session_metrics");
     }
+    if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_settle_statuses() !== 20888) {
+        throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_settle_statuses");
+    }
+    if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_shorten() !== 16366) {
+        throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_shorten");
+    }
     if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_standing_records() !== 58322) {
         throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_standing_records");
+    }
+    if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_switch_rule() !== 9461) {
+        throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_switch_rule");
     }
     if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_volume_kg() !== 54613) {
         throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_volume_kg");
@@ -967,17 +3402,45 @@ function uniffiEnsureInitialized() {
 export default Object.freeze({
   initialize: uniffiEnsureInitialized,
   converters: {
+    FfiConverterTypeCycleOneSet,
+    FfiConverterTypeCycleStatus,
+    FfiConverterTypeDeloadPolicy,
+    FfiConverterTypeExerciseSpec,
+    FfiConverterTypeFailurePolicy,
+    FfiConverterTypeLengthOverride,
+    FfiConverterTypeLoadStep,
     FfiConverterTypeLoggedSet,
+    FfiConverterTypeMesocycleSpec,
+    FfiConverterTypeOutcome,
     FfiConverterTypePersonalBests,
+    FfiConverterTypePlanCycle,
+    FfiConverterTypePlanError,
+    FfiConverterTypePlanExercise,
+    FfiConverterTypePlanLog,
+    FfiConverterTypePlanSession,
+    FfiConverterTypePlanSet,
+    FfiConverterTypePlannedExercise,
+    FfiConverterTypePlannedMicrocycle,
+    FfiConverterTypePlannedSession,
+    FfiConverterTypePlannedSet,
     FfiConverterTypePrAchievement,
     FfiConverterTypePrKind,
+    FfiConverterTypeReconciled,
     FfiConverterTypeRepsAtWeight,
+    FfiConverterTypeRirMode,
     FfiConverterTypeRoundingMode,
+    FfiConverterTypeRule,
     FfiConverterTypeSessionMetrics,
+    FfiConverterTypeSessionSpec,
     FfiConverterTypeSetEntry,
     FfiConverterTypeSetField,
+    FfiConverterTypeSetOrigin,
     FfiConverterTypeSetType,
+    FfiConverterTypeShortened,
+    FfiConverterTypeSlotOutcome,
     FfiConverterTypeStandingRecord,
+    FfiConverterTypeStrategy,
     FfiConverterTypeTracking,
+    FfiConverterTypeWriteKind,
   }
 });

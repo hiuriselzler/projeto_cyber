@@ -1,6 +1,11 @@
+import { and, eq, isNull } from 'drizzle-orm';
+
+import { reconcilePlan, settlePlanStatuses } from '@/domain';
+
 import { db, sqlite } from './client';
-import { exercises, muscleGroups, setLogs, users, workoutExercises, workouts } from './schema';
-import { readOpenWorkout, setLogRow, setSetCompleted } from './strength';
+import { diffPlan, idsNeeded, insertBlock, prepareBlock, readPlan, rowsIn, type NewBlock } from './planner';
+import { exercises, muscleGroups, progressionRules, setLogs, users, workoutExercises, workouts } from './schema';
+import { localDayOf, readOpenWorkout, setLogRow, setSetCompleted } from './strength';
 
 /** Every table in 03 §8 — 33 shared with Postgres, plus raw_gps_points, outbox and sync_state. */
 export const EXPECTED_TABLES = 36;
@@ -406,4 +411,145 @@ function percentile(sorted: readonly number[], fraction: number): number {
 
 function round(value: number): number {
   return Math.round(value * 100) / 100;
+}
+
+// ── Task 005 stage 4a: a planner block on this device ─────────────────────────────────────────────
+
+export interface PlannerBlockMeasure {
+  readonly rows: number;
+  readonly cycles: number;
+  /** Reading the catalog and the rule, generating through UniFFI, and minting every id. */
+  readonly prepareMs: number;
+  /** The batched insert, inside one transaction. */
+  readonly insertMs: number;
+  /** Prepare and insert — task 005's "a 24-cycle × 5-session block generates in < 500 ms on-device". */
+  readonly totalMs: number;
+  /** Reading the block back as the engine reads it, then settling and reconciling it. */
+  readonly reconcileMs: number;
+  /** Rows a reconciliation of the fresh block would write — zero, or the first write-back is not idempotent. */
+  readonly rewrites: number;
+  /** The first exercise's first-set load in cycles 1–5, as read back: 60, 62.5, 65, a deload, 67.5. */
+  readonly firstLoads: string;
+}
+
+class PlannerRollback {
+  constructor(readonly result: PlannerBlockMeasure) {}
+}
+
+const PLANNER_MARKER = 'diagnostic-planner';
+const PLANNER_CYCLES = 24;
+const PLANNER_DAYS = [1, 2, 4, 5, 6] as const;
+const PLANNER_EXERCISES_EACH = 5;
+const PLANNER_SETS_EACH = 4;
+
+/**
+ * **A 24-cycle × 5-session block, generated and written on this device** — task 005's 500 ms criterion, and the
+ * proof that the write-back is idempotent against rows the device itself wrote (stage 4a).
+ *
+ * Five sessions of five exercises of four sets, every one of the 24 cycles materialised: some three thousand rows.
+ * The block is inserted, read back and reconciled inside one transaction that is then rolled back, so it leaves no
+ * history — only its rule, one archived row the block had to reference, reused on every run.
+ */
+export async function measurePlannerBlock(userId: string): Promise<PlannerBlockMeasure> {
+  const now = Date.now();
+  const today = localDayOf(now);
+  const ruleId = `${PLANNER_MARKER}-rule-${userId}`;
+  db.insert(progressionRules)
+    .values({
+      id: ruleId,
+      userId,
+      name: 'Planner diagnostic',
+      strategy: 'linear_load',
+      loadStepKg: 2.5,
+      minReps: 8,
+      maxReps: 8,
+      createdAt: now,
+      updatedAt: now,
+      deletedAt: now,
+    })
+    .onConflictDoNothing()
+    .run();
+  const picks = db
+    .select({ id: exercises.id })
+    .from(exercises)
+    .where(and(isNull(exercises.ownerUserId), isNull(exercises.deletedAt), eq(exercises.tracking, 'weight_reps')))
+    .limit(PLANNER_DAYS.length * PLANNER_EXERCISES_EACH)
+    .all();
+  if (picks.length < PLANNER_DAYS.length * PLANNER_EXERCISES_EACH) throw new Error('the catalog is not seeded');
+
+  const block: NewBlock = {
+    userId,
+    name: 'Planner diagnostic',
+    goal: 'strength',
+    startDate: today,
+    numMicrocycles: PLANNER_CYCLES,
+    defaultMicrocycleDays: 7,
+    lengthOverrides: [],
+    deload: { mode: 'every_n_microcycles', every: 4, finalCycle: false },
+    defaultRuleId: ruleId,
+    sessions: PLANNER_DAYS.map((dayIndex, at) => ({
+      dayIndex,
+      orderIndex: 0,
+      name: `Session ${at + 1}`,
+      exercises: picks.slice(at * PLANNER_EXERCISES_EACH, (at + 1) * PLANNER_EXERCISES_EACH).map((pick, order) => ({
+        exerciseId: pick.id,
+        orderIndex: order,
+        progressionRuleId: null,
+        restSeconds: 120,
+        notes: null,
+        sets: Array.from({ length: PLANNER_SETS_EACH }, (_, setIndex) => ({
+          setIndex,
+          setType: 'working' as const,
+          targetWeightKg: 60,
+          targetReps: 8,
+          targetRir: 2,
+        })),
+      })),
+    })),
+  };
+
+  const started = performance.now();
+  const prepared = await prepareBlock(block, today, now);
+  const preparedAt = performance.now();
+  try {
+    db.transaction((tx) => {
+      insertBlock(tx, prepared);
+      const insertedAt = performance.now();
+      const read = readPlan(userId, prepared.mesocycle.id);
+      if (read === null) throw new Error('the block did not read back');
+      const settled = settlePlanStatuses(read.cycles, read.logs, today);
+      const reconciled = reconcilePlan(read.spec, settled, read.logs, today);
+      const diff = diffPlan(read.cycles, reconciled.cycles);
+      const reconciledAt = performance.now();
+      const rewrites =
+        diff.cycles.updated.length +
+        idsNeeded(diff) +
+        diff.sets.updated.length +
+        diff.cycles.archived.length +
+        diff.sessions.archived.length +
+        diff.exercises.archived.length +
+        diff.sets.archived.length;
+      const firstLoads = read.cycles
+        .slice(0, 5)
+        .map((cycle) => {
+          const load = cycle.sessions[0]?.exercises[0]?.sets[0]?.targetWeightKg;
+          return `${cycle.isDeload ? 'deload ' : ''}${String(load)}`;
+        })
+        .join(', ');
+      throw new PlannerRollback({
+        rows: rowsIn(prepared),
+        cycles: read.cycles.length,
+        prepareMs: round(preparedAt - started),
+        insertMs: round(insertedAt - preparedAt),
+        totalMs: round(insertedAt - started),
+        reconcileMs: round(reconciledAt - insertedAt),
+        rewrites,
+        firstLoads,
+      });
+    });
+  } catch (error) {
+    if (error instanceof PlannerRollback) return error.result;
+    throw error;
+  }
+  throw new Error('planner measurement did not run');
 }

@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Button, ScrollView, StyleSheet, TextInput } from 'react-native';
 
+import { getSessionState } from '@/account';
 import {
   checkLanAddressRefused,
   checkPrivacyKeyHeld,
@@ -17,9 +18,11 @@ import {
   checkSqliteRoundTrip,
   EXPECTED_TABLES,
   measureCommitCost,
+  measurePlannerBlock,
   measureTickLatency,
   readLocalDatabaseState,
   type CommitCost,
+  type PlannerBlockMeasure,
   type TickLatency,
 } from '@/db/diagnostics';
 import { roundLoadToIncrement } from '@/domain';
@@ -28,6 +31,7 @@ import { SegmentedControl, useTheme, type SegmentedOption, type ThemePreference 
 
 import { AccountPreferences } from './AccountPreferences';
 import { Check } from './Check';
+import { runPlannerFixtures, type FixtureRun } from './plannerFixtures';
 import { useDiagnosticsStore } from './store';
 
 /** Developer-facing, so written out rather than translated (ADR-014). */
@@ -61,6 +65,8 @@ export function DiagnosticsScreen() {
   const [privacyKeyRunning, setPrivacyKeyRunning] = useState(false);
   const [tickLatency, setTickLatency] = useState<TickLatency | null>(null);
   const [commitCost, setCommitCost] = useState<CommitCost | null | undefined>(undefined);
+  const [plannerFixtures, setPlannerFixtures] = useState<FixtureRun[] | null>(null);
+  const [plannerBlock, setPlannerBlock] = useState<PlannerBlockMeasure | string | null>(null);
   const taps = useDiagnosticsStore((state) => state.taps);
   const tap = useDiagnosticsStore((state) => state.tap);
   const platform = describePlatform();
@@ -118,6 +124,40 @@ export function DiagnosticsScreen() {
               `in one transaction: p50 ${commitCost.uncommitted.p50Ms} ms · p95 ${commitCost.uncommitted.p95Ms} ms · worst ${commitCost.uncommitted.worstMs} ms`}
       </Check>
       <Button title="Measure a commit" onPress={() => setCommitCost(measureCommitCost())} />
+
+      <Check title="Planner fixtures through UniFFI (task 005 stage 4a): every shared generate, reconcile and edits case, on this device">
+        {plannerFixtures === null
+          ? 'not run'
+          : plannerFixtures
+              .map((run) => `${run.file}: ${run.passed} passed, ${run.failed.length} failed${run.failed.map((name) => `\n  ✗ ${name}`).join('')}`)
+              .join('\n')}
+      </Check>
+      <Button title="Run the planner fixtures" onPress={() => setPlannerFixtures(runPlannerFixtures())} />
+
+      <Check title="A 24-cycle × 5-session block (task 005: generates in < 500 ms on-device), read back and reconciled — rolled back">
+        {plannerBlock === null
+          ? 'not run'
+          : typeof plannerBlock === 'string'
+            ? plannerBlock
+            : `${plannerBlock.rows} rows over ${plannerBlock.cycles} cycles\n` +
+              `generate + ids ${plannerBlock.prepareMs} ms · insert ${plannerBlock.insertMs} ms · total ${plannerBlock.totalMs} ms\n` +
+              `read back and reconcile ${plannerBlock.reconcileMs} ms · rows a first reconciliation would rewrite: ${plannerBlock.rewrites}\n` +
+              `first set, cycles 1–5: ${plannerBlock.firstLoads}`}
+      </Check>
+      <Button
+        title="Measure a 24 × 5 block"
+        onPress={() => {
+          const state = getSessionState();
+          if (state.status !== 'signed-in') {
+            setPlannerBlock('sign in first: the block is built from this account’s unit system');
+            return;
+          }
+          setPlannerBlock('running…');
+          measurePlannerBlock(state.account.id).then(setPlannerBlock, (error: unknown) =>
+            setPlannerBlock(`FAILED: ${String(error)}`),
+          );
+        }}
+      />
       <Button title="Open the live workout screen" onPress={() => router.push('/workout')} />
       <Button title="Open the exercise catalog" onPress={() => router.push('/exercises')} />
       <Button title="Open the routines" onPress={() => router.push('/routines')} />

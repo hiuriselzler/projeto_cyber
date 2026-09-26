@@ -141,7 +141,8 @@ no phone.
 | **2** | The other three v1 strategies — `double_progression`, `percent_1rm` (total, via `baseline_e1rm_kg`), `rir_autoregulated` — and the per-set RIR ladder, clamped and marked (INV-05) | ☑ |
 | **3a** | `classify` and `reconcile`: the INV-06 guard, the older engine yielding, outcomes and `failure_policy`, user edits and pins surviving (FR-3.14) | ☑ |
 | **3b** | Block edits: extending and shortening a block, a cycle's length changing with date re-derivation, a strategy switched mid-block from the load achieved (FR-3.6a) with its preview | ☑ |
-| **4** | Persistence and API (Phase B): the batched insert on both sides, the endpoints, reconciliation on workout completion; the engine reaches the app through UniFFI (the WSL2 loop in [06 §1](../06-operations.md)) | ☐ |
+| **4a** | The phone: the engine through UniFFI, `src/db/planner.ts` (create, read, write back only what changed), reconciliation after a workout and at start-up, the diagnostics proof — **built; the device pass is next** | ◐ |
+| **4b** | The API: the `mesocycles/` endpoints, the Postgres batched insert, server reconciliation when a workout arrives | ☐ |
 | **5** | The engine safety controls: the per-strategy kill switch and the minimum engine version | ☐ |
 | **6** | The mesocycle builder, with the whole block previewed before it is committed — device pass | ☐ |
 | **7** | The cycle view and the calendar view, which must agree, and editing a future cycle — device pass | ☐ |
@@ -570,6 +571,134 @@ Stage 3b carries seven decisions, each the owner's, each with a recommendation:
   already follow the new one. The same is true of any projected cycle made stale by a log the plan was not yet
   reconciled against: an extension adds cycles; it does not reconcile the old ones.
 - *Counts:* 95 core unit tests, 6 fixture tests, 17 properties; 74 pytest; 237 Jest checks on the fixture files.
+
+**Stage 4 — persistence, the API and UniFFI. Proposed and approved 2026-09-26, all seven decisions as recommended: split
+into 4a (the phone) and 4b (the API). 4a is built and waits on its device pass (below the decisions).** The engine leaves the test suites. Blocks are written
+to both databases, reconciliation runs when a workout completes, and the engine reaches the phone.
+
+Stage 4 carries seven decisions, each the owner's, each with a recommendation:
+
+1. **Split it**, as stage 3 was.
+   - **4a — the phone:**
+     - the UniFFI surface for the whole engine, and `src/domain/progression.ts`;
+     - `src/db/planner.ts` — create and generate a block in one transaction, read a plan for the engine, write back
+       only what changed, archive what a shorten drops;
+     - local reconciliation when a workout completes;
+     - a device pass.
+   - **4b — the API:**
+     - the `mesocycles/` endpoints, `POST …/generate` and `POST …/reconcile`, with 409 for a `PlanRefused`;
+     - the batched insert in Postgres;
+     - server reconciliation when a workout arrives carrying planned-set links.
+
+   **Recommended, 4a first**, while the phone is connected. 4b needs no phone and follows it.
+2. **Cycle status transitions live in the core**, as a pure `settle_statuses(plan, logs, today)`, so the phone and the
+   server move a cycle through its statuses identically, and the INV-06 guard's entry point has one definition.
+   **Recommended rule:**
+   - `projected` → `in_progress` at the first set logged against the cycle;
+   - `in_progress` → `completed` when every session is logged or the cycle's last day has passed;
+   - `locked` and `skipped` are the user's and never moved;
+   - nothing ever moves backwards.
+
+   The entry point is *settle, then reconcile, then write*. The alternative, each wrapper deciding statuses itself,
+   is two implementations of a rule that must agree.
+3. **Writing a reconciled plan back: only what changed.** The wrapper diffs the engine's output against the rows by
+   natural key. It updates a changed row in place (keeping its id, so `user_edited` and pins stay attached), inserts
+   new rows with ids minted through `src/crypto/identifiers.ts` (ADR-012's amendment already allows it), and archives
+   what an edit removed (INV-11). All of it happens in one transaction. This is what keeps "reconciling twice produces
+   byte-identical rows" true in the database, `updated_at` included (stage 3a's note).
+4. **When the phone reconciles.** **Recommended:**
+   - after a workout that holds planned-set links has finished and committed, in a transaction of its own, so a
+     failure can never cost the workout (INV-09);
+   - again at app start for the active mesocycle, since it is idempotent and cheap, so a crash between the two never
+     leaves the plan stale.
+5. **FR-3.6's rule cascade has no storage for its last tier.** It is exercise → mesocycle default → **user default**,
+   and no table holds a user default. **Recommended:** stage 4 resolves exercise → mesocycle default and refuses to
+   generate an exercise with neither — there is no product default to fall back on (FR-3.2). The user tier becomes an
+   open question for stage 6's builder, which is where it would be set, and it needs a column: a migration best
+   decided with the screen.
+6. **The device proof.** **Recommended:** a debug-only *Planner* check on the diagnostics screen. It runs every shared
+   progression fixture through UniFFI on the phone and reports each case, which is the device half of fixture #1 and
+   the 2.5 % step. It also times generating and inserting a 24-cycle × 5-session block, task 005's 500 ms criterion,
+   measured here where the insert is built rather than in stage 8.
+7. **Dates on the phone** are `YYYY-MM-DD` text in SQLite. "Today" is the device's local date (INV-17). Conversion to
+   and from the core's days since 1970 lives in `src/domain/` and nowhere else.
+
+*Stage 4a would close:*
+- fixture #1 and the 2.5 % step in every suite;
+- the 24 × 5 block under 500 ms on the device;
+- the engine half of "the whole flow works in airplane mode" — the phone generates and reconciles with no network.
+  The screens are stages 6–8.
+
+*Stage 4b would close* the batched insert and date re-derivation in one transaction on the server, and reconciliation
+on workout completion on both sides.
+
+**Stage 4a — built 2026-09-26; the device pass is still to run.** Everything below passes on the Windows machine, and
+nothing below has run on the phone yet.
+- *The core* gains `settle_statuses(plan, logs, today)` in `core-rs/src/progression/status.rs` (decision 2). It has
+  three unit tests and three `edits.json` cases (op `settle_statuses`), runs in `cargo test` and pytest, and is
+  exported through PyO3 for 4b. A status that moves is written as the user's, because 03 §5's trigger refuses an
+  engine write to a cycle that is no longer projected.
+- *UniFFI* (`core-rs/bindings/uniffi/src/lib.rs`) exposes the whole planner:
+  - `generate`, `resolve_dates`, `classify`, `settle_statuses`, `reconcile`, `extend`, `shorten`, `relength`,
+    `switch_rule` and `engine_version`;
+  - a `PlanError::Refused` thrown to JavaScript.
+
+  **It uses `uniffi::remote`**, redeclaring the core's own types rather than mirroring them by hand, so nothing is
+  copied and a mismatch fails to compile. `RoundingMode`, `SetType` and `LoggedSet` moved from task 004's hand-made
+  mirrors to `remote` as well, and their generated TypeScript is unchanged.
+- *The bindings were regenerated in WSL2* with `ubrn build android --and-generate`. The four generated files and the
+  three `.so` files were copied to this checkout. An arm64 debug APK was built, and its packaged `.so` carries
+  `reconcile`, `generate`, `settle_statuses`, `switch_rule` and `engine_version`. **That APK is installed on the
+  phone** — `adb install -r`, data kept, 2026-09-26.
+- *`src/domain/`*: a new `progression.ts` holds schema-shaped types (string enums, `null`, `YYYY-MM-DD`) marshalled
+  to the binding. It is the only date ↔ day-count conversion on the phone (decision 7), and it throws
+  `PlanRefusedError` and `IncompleteRuleError`. A new `marshal.ts` holds what it shares with `index.ts`: `LoggedSet`,
+  `SetType`, and the `null` ↔ `undefined` translation.
+- *`src/db/planner.ts`*:
+  - `prepareBlock` (reads, generation, ids) and `insertBlock` (batched, 500 rows a statement), with `createBlock`
+    doing both;
+  - `readPlan` resolves FR-3.6 exercise → mesocycle default and INV-02's increment, reads the latest body weight,
+    and places every log on its planned set's natural key with its day's body weight;
+  - `diffPlan` and `writePlan` write only what changed, and revive an archived row that still holds a unique position
+    rather than inserting beside it;
+  - `reconcileBlock` settles, reconciles, then writes; `reconcileBlocks` never lets one block's failure escape.
+
+  Ids come from a new `uuidV7Batch` in `src/crypto/identifiers.ts`: one draw of the CSPRNG for a whole block.
+- *The triggers* (decision 4):
+  - `useLiveWorkout`'s finish reconciles the workout's blocks after `endWorkout` has committed;
+  - `restoreAccountSession` reconciles every active block after the session is restored, which keeps the root
+    layout's two entry points (ADR-012).
+- *The device proof* (decision 6), on the diagnostics screen:
+  - **Run the planner fixtures** runs every `generate.json`, `reconcile.json` and `edits.json` case through UniFFI and
+    lists any failure;
+  - **Measure a 24 × 5 block** prepares, inserts, reads back and reconciles a 24-cycle × 5-session × 5-exercise ×
+    4-set block for the signed-in user inside one rolled-back transaction. It reports the rows, the generate and
+    insert times against 500 ms, and how many rows a first reconciliation would rewrite, which must be 0. Its rule is
+    one archived row, reused.
+- *Tests:* `src/db/__tests__/planner.test.ts` covers the cascades and the diff — 8 cases, among them that a no-op
+  writes nothing. Totals: 1 633 Jest tests, lint and 52 lint fixtures, `tsc`; the core's full suite and pytest.
+- **Found on the way:** my fixture generator's `simple(..., statuses={})` meant "cycle 1 completed", because an empty
+  dict is falsy in Python. The cases that meant "nothing started" now start with nothing started. They had passed
+  before, since input and expectation were wrong together, but they were not testing what their notes said.
+
+**Next session — the stage 4a device pass, then 4b.** The phone holds the new APK and the account
+`stage8-device@example.com`. A copy of its database from before the install is at
+`scratchpad/device/before-4a.db` — a session scratchpad, so treat it as gone and pull a fresh copy first.
+1. Pull a copy of the phone's database (the memory rule: its data has no other copy until task 006).
+2. `adb reverse tcp:8081 tcp:8081` (and 8000), `pnpm exec expo start --dev-client` in `apps/mobile`, and open the
+   build at Metro (06 §1's deep link).
+3. On the diagnostics screen: **Run the planner fixtures** — expect every case passed in all three files. Then
+   **Measure a 24 × 5 block** — expect about 3 000 rows, a total under 500 ms, `rows a first reconciliation would
+   rewrite: 0`, and first loads of `60, 62.5, 65, deload 40, 67.5` **if** the first exercise the check picks has a
+   2.5 kg increment. Cycle 4 is the every-4 deload, 65 × 0.6 = 39 → 40; cycle 5 is the third step. A different
+   increment gives different loads, so check that exercise's modality in the pulled database before judging.
+4. Prove a real block end to end: create one on the device (a debug button, or from the diagnostics screen), log a
+   session against it, finish, and read the pulled database. The reconciled rows must have moved, their `updated_at`
+   must be new, and nothing else may have changed. Relaunch, and nothing may be written at start-up.
+5. If all holds: tick fixture #1, the 2.5 % step and the 500 ms criteria; record the numbers here and in
+   PROJECT-STATUS; commit and push. Then plan 4b.
+- **Still open from decision 5:** where FR-3.6's *user default* rule is stored. No column exists; it is open question
+  20 in PROJECT-STATUS, decided with stage 6's builder.
 
 ## Acceptance criteria
 - [ ] Fixture #1 (the user's 40 → 62.5 kg example) passes in every suite — `cargo test`, pytest through PyO3, and
