@@ -43,6 +43,12 @@ targets = [
 # be toggled off if true, if you want to conditionally enable `--all-features` it
 # is recommended to pass `--all-features` on the cmd line instead
 all-features = false
+# INV-10's crate ban is about what the core *ships with*: the library the API and the app load. A
+# dev-dependency is never linked into that library, so the graph leaves them out — which is what lets
+# `proptest`, a test harness that depends on `rand`, generate the planner's property cases (task 005,
+# ADR-012 § Amendment 2026-09-26). The library stays covered twice: this ban on every crate it links,
+# and clippy's call bans, which `cargo clippy --all-targets` runs over the tests as well.
+exclude-dev = true
 # If true, metadata will be collected with `--no-default-features`. The same
 # caveat with `all-features` applies
 no-default-features = false

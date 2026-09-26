@@ -137,7 +137,7 @@ no phone.
 | # | What it lands | State |
 |---|---|---|
 | **0** | The task file catches up with [ADR-004](../decisions/ADR-004.md)'s option B — see below | ☑ |
-| **1** | **The engine's foundation:** the plan's types, `resolve_dates`, `ENGINE_VERSION`, `generate` for `linear_load` and `fixed`, the three deload policies, the property-test harness, **fixture #1** | ☐ |
+| **1** | **The engine's foundation:** the plan's types, `resolve_dates`, `ENGINE_VERSION`, `generate` for `linear_load` and `fixed`, the three deload policies, the property-test harness, **fixture #1** | ☑ |
 | **2** | The other three v1 strategies — `double_progression`, `percent_1rm` (total, via `baseline_e1rm_kg`), `rir_autoregulated` — and the per-set RIR ladder, clamped and marked (INV-05) | ☐ |
 | **3** | `classify` and `reconcile`: the INV-06 guard, the older engine yielding, user edits and pins surviving (FR-3.14), a strategy switched from the load achieved (FR-3.6a), extending and shortening a block, and date re-derivation | ☐ |
 | **4** | Persistence and API (Phase B): the batched insert on both sides, the endpoints, reconciliation on workout completion; the engine reaches the app through UniFFI (the WSL2 loop in [06 §1](../06-operations.md)) | ☐ |
@@ -231,6 +231,46 @@ weighed are kept below because the reasoning is what a later stage will need:
 
 \* 3 + 2 = 5, clamped to the rule's maximum of 4 and marked `was_clamped`. Every working cycle is 3×6 at RIR 3.
 
+**Stage 1 — built 2026-09-26.** `core-rs/src/progression/` gains `plan.rs` (the records), `dates.rs` (`resolve_dates`,
+`EpochDay`), `deload.rs` (`deload_schedule`) and `generate.rs`, with `ENGINE_VERSION = 1` in `mod.rs`. PyO3 exposes
+`generate`, `resolve_dates` and `ENGINE_VERSION`, and `app/domain/progression.py` re-exports them with the only date
+conversion on the server (`epoch_day`, `from_epoch_day`).
+- *Fixtures* — `generate.json`, nine cases: fixture #1; the 9-day block; one 5-day cycle among 7s; 24 cycles under
+  `none`; the 2.5 % step (142.5 kg); every second cycle with the final one too; a manual deload on a `fixed` exercise
+  with a warm-up; targets from cycle 1 outside the rule; and a 135 lb block on the 5 lb grid, written in steps.
+  `resolve_dates.json`, five cases, including a leap day and a year end. Run by `cargo test` and by pytest through PyO3
+  (each watched failing on a wrong load and a wrong date); Jest checks both files against the invariants they
+  illustrate.
+- *Properties* — `core-rs/tests/progression_properties.rs`, 512 cases each: INV-02 over 52 cycles in both unit
+  systems after `numeric(9,4)` storage; INV-05 bounds, deloads included; day indices inside their own cycle and
+  contiguous dates; unique natural keys with no session dropped; the same plan from the same input in any order; and
+  `none` never deloading. Two deliberate breaks — no load rounding, no deload clamp — each failed exactly the property
+  that guards it.
+- **Decided while building, the owner to confirm:** *a session that no longer fits a shorter cycle moves to the
+  cycle's last day, after the sessions already there.* A 7-day template with sessions on days 1, 3, 5 and 7 becomes
+  1, 3, 5 and 5 in a 5-day travel cycle. Nothing is dropped, and the order is kept. The alternatives were dropping the
+  session, which silently removes training, and refusing to generate, which would make a legitimate length (FR-3.1a)
+  fail. The session's natural key in that cycle is `(5, 1)`. Stage 3 must keep a user's edit to it if the cycle's
+  length changes again — noted in ADR-002's amendment.
+- **Found while building:** *a warm-up survives a deload's set cut, but its load is deloaded.* As first written, 01
+  FR-3.9 kept warm-up, drop and back-off sets "as they are", which would leave a back-off set heavier than the working
+  sets it follows. Corrected in FR-3.9 before the code was committed.
+- **Found by shrinking:** a **1 lb** increment stored at `numeric(10,6)` is 3.7 × 10⁻⁷ kg short per step. That adds up
+  to 0.001 lb by 1 120 lb: invisible at the two places the app shows, and within INV-02's own precision argument. The
+  INV-02 property therefore asks what the user reads — the pounds at two places are a whole number of steps — not a
+  tighter bound on the raw quotient.
+- *Criteria:* ticked — the 9-day block, and `round_to_increment`'s tie (proven in every suite by tasks 017 and 004).
+  **Not yet ticked, and why:** fixture #1 and the 2.5 % step pass in Rust and Python, but the device half waits for
+  UniFFI in stage 4. The 5-day cycle's dates are proven, but refusing to move a completed cycle is stage 3's. The
+  24-cycle `none` block generates correctly, but "never nags about one" waits for stage 8's deload suggestion — see
+  the open question below.
+
+**Open question for stage 8, found in stage 1:** under `deload_mode = 'none'`, does FR-3.12's suggestion still appear?
+FR-3.12 asks for a visible suggestion to deload after two consecutive `Under` outcomes. FR-3.1b says `none` "must not be
+second-guessed by any 'we recommend a deload' nag". *Assumption until then:* under `none` the suggestion offers to end
+the block early and never proposes a deload. Two failures in a row are still worth saying, but a deload is exactly what
+the user declined.
+
 ## Acceptance criteria
 - [ ] Fixture #1 (the user's 40 → 62.5 kg example) passes in every suite — `cargo test`, pytest through PyO3, and
       the app on the device through UniFFI
@@ -243,8 +283,9 @@ weighed are kept below because the reasoning is what a later stage will need:
       `3×6@40 → 3×7@40 → 3×8@40 → 3×6@42.5`
 - [ ] No generated weight is ever a non-multiple of the increment, over 10 000 random rules
 - [ ] Editing cycle 9's squat, then completing cycle 4, leaves cycle 9's edit untouched
-- [ ] A block of **9-day microcycles** generates correctly, and cycle 3 starts 18 days after
-      cycle 1 — no weekday assumption anywhere (INV-25)
+- [x] A block of **9-day microcycles** generates correctly, and cycle 3 starts 18 days after
+      cycle 1 — no weekday assumption anywhere (INV-25) — *stage 1: `generate.json` and `resolve_dates.json`, in
+      `cargo test` and pytest*
 - [ ] A block of mostly 7-day cycles with **one 5-day cycle** in the middle re-derives every
       later start date correctly, and refuses to move a completed cycle
 - [ ] The cycle view and the calendar view show the same sessions for the same block
@@ -265,8 +306,9 @@ weighed are kept below because the reasoning is what a later stage will need:
       the load actually achieved, not from cycle 1
 - [ ] A 24-cycle × 5-session block generates in < 500 ms on-device
 - [ ] The whole flow — build, generate, browse to the final cycle — works in airplane mode
-- [ ] `round_to_increment` in `nearest` mode sends a load exactly halfway between two steps to the
-      lighter one — 41.25 kg on a 2.5 kg grid gives 40 kg — identically in every suite
+- [x] `round_to_increment` in `nearest` mode sends a load exactly halfway between two steps to the
+      lighter one — 41.25 kg on a 2.5 kg grid gives 40 kg — identically in every suite — *`round_to_increment.json`
+      in `cargo test` and pytest, and on the Galaxy S21 FE through UniFFI (task 017's spike); ticked in stage 1*
 - [ ] With a strategy switched off by over-the-air configuration, its cycles stay as last
       projected, and the device still logs, records and syncs
 - [ ] A device below the minimum engine version does not re-project locally, shows the

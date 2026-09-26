@@ -7,13 +7,18 @@
 //! The boundary carries plain data — floats and a C-like enum — which is where PyO3 interop is
 //! pleasant rather than painful, and is the rule ADR-004 sets for keeping it that way.
 
+use std::collections::BTreeMap;
+
 use cyberathlete_core::{
-    LoggedSet, PersonalBests, PrAchievement, PrKind, RepsAtWeight, RoundingMode, SessionMetrics,
-    SetEntry, SetField, SetType, StandingRecord, Tracking,
+    CycleOneSet, DeloadPolicy, ENGINE_VERSION, EpochDay, ExerciseSpec, LengthOverride, LoadStep,
+    LoggedSet, MesocycleSpec, PersonalBests, PlannedExercise, PlannedMicrocycle, PlannedSession,
+    PlannedSet, PrAchievement, PrKind, RepsAtWeight, RoundingMode, Rule, SessionMetrics,
+    SessionSpec, SetEntry, SetField, SetType, StandingRecord, Strategy, Tracking,
     counted_set_count as core_counted_set_count, detect_prs as core_detect_prs, e1rm as core_e1rm,
-    e1rm_series as core_e1rm_series, is_counted_set as core_is_counted_set,
-    load_kg as core_load_kg, missing_for_completion as core_missing_for_completion,
-    personal_bests as core_personal_bests, round_to_increment as core_round_to_increment,
+    e1rm_series as core_e1rm_series, generate as core_generate,
+    is_counted_set as core_is_counted_set, load_kg as core_load_kg,
+    missing_for_completion as core_missing_for_completion, personal_bests as core_personal_bests,
+    resolve_dates as core_resolve_dates, round_to_increment as core_round_to_increment,
     session_metrics as core_session_metrics, standing_records as core_standing_records,
     volume_kg as core_volume_kg,
 };
@@ -118,6 +123,18 @@ impl From<PySetType> for SetType {
             PySetType::Drop => Self::Drop,
             PySetType::Backoff => Self::Backoff,
             PySetType::Amrap => Self::Amrap,
+        }
+    }
+}
+
+impl From<SetType> for PySetType {
+    fn from(set_type: SetType) -> Self {
+        match set_type {
+            SetType::Warmup => Self::Warmup,
+            SetType::Working => Self::Working,
+            SetType::Drop => Self::Drop,
+            SetType::Backoff => Self::Backoff,
+            SetType::Amrap => Self::Amrap,
         }
     }
 }
@@ -633,6 +650,448 @@ fn missing_for_completion(tracking: PyTracking, entry: PySetEntry) -> Option<&'s
     core_missing_for_completion(tracking.into(), &entry.into()).map(SetField::name)
 }
 
+// ── Progression (task 005) ────────────────────────────────────────────────────────────────────────
+//
+// The input records check themselves when Python builds them, so a rule with no step or a deload mode
+// the schema does not know is a `ValueError` at the call site, never a surprise deep inside a
+// projection. Each holds the core's own value once checked. The outputs are the core's rows, read-only.
+
+/// Which progression strategy a rule applies — the schema's `progression_strategy_enum`, the part of it
+/// stage 1 builds. `double_progression`, `percent_1rm` and `rir_autoregulated` arrive in stage 2.
+#[pyclass(
+    name = "ProgressionStrategy",
+    eq,
+    eq_int,
+    frozen,
+    from_py_object,
+    module = "cyberathlete_core"
+)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PyProgressionStrategy {
+    Fixed,
+    LinearLoad,
+}
+
+#[pymethods]
+impl PyProgressionStrategy {
+    /// The name this strategy carries in the database and the shared fixtures.
+    #[staticmethod]
+    fn from_name(name: &str) -> PyResult<Self> {
+        match name {
+            "fixed" => Ok(Self::Fixed),
+            "linear_load" => Ok(Self::LinearLoad),
+            _ => Err(PyValueError::new_err(format!(
+                "unknown or not yet built strategy {name:?}; stage 1 builds fixed and linear_load"
+            ))),
+        }
+    }
+
+    #[getter]
+    const fn name(&self) -> &'static str {
+        match self {
+            Self::Fixed => "fixed",
+            Self::LinearLoad => "linear_load",
+        }
+    }
+}
+
+/// One exercise's progression rule, resolved through FR-3.6's cascade. Mirrors [`Rule`], with the
+/// schema's two step columns in place of the core's `LoadStep`.
+#[pyclass(
+    name = "ProgressionRule",
+    frozen,
+    from_py_object,
+    module = "cyberathlete_core"
+)]
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PyProgressionRule {
+    rule: Rule,
+}
+
+#[pymethods]
+impl PyProgressionRule {
+    /// `linear_load` takes exactly one of `load_step_kg` and `load_step_bp`; `fixed` reads neither.
+    #[new]
+    #[pyo3(signature = (
+        strategy,
+        min_reps,
+        max_reps,
+        min_rir = 0,
+        max_rir = 4,
+        rounding = PyRoundingMode::Nearest,
+        load_step_kg = None,
+        load_step_bp = None,
+    ))]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "a record mirroring progression_rules column for column; Python names them at the call site"
+    )]
+    fn new(
+        strategy: PyProgressionStrategy,
+        min_reps: u32,
+        max_reps: u32,
+        min_rir: u32,
+        max_rir: u32,
+        rounding: PyRoundingMode,
+        load_step_kg: Option<f64>,
+        load_step_bp: Option<u32>,
+    ) -> PyResult<Self> {
+        let strategy = match (strategy, load_step_kg, load_step_bp) {
+            (PyProgressionStrategy::Fixed, _, _) => Strategy::Fixed,
+            (PyProgressionStrategy::LinearLoad, Some(kg), None) => {
+                Strategy::LinearLoad(LoadStep::Kg(kg))
+            }
+            (PyProgressionStrategy::LinearLoad, None, Some(bp)) => {
+                Strategy::LinearLoad(LoadStep::BasisPoints(bp))
+            }
+            (PyProgressionStrategy::LinearLoad, _, _) => {
+                return Err(PyValueError::new_err(
+                    "linear_load takes exactly one of load_step_kg and load_step_bp",
+                ));
+            }
+        };
+        Ok(Self {
+            rule: Rule {
+                strategy,
+                min_reps,
+                max_reps,
+                min_rir,
+                max_rir,
+                rounding: rounding.into(),
+            },
+        })
+    }
+}
+
+/// One set of cycle 1, as the user authored it. Mirrors [`CycleOneSet`].
+#[pyclass(
+    name = "CycleOneSet",
+    frozen,
+    get_all,
+    from_py_object,
+    module = "cyberathlete_core"
+)]
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PyCycleOneSet {
+    pub set_index: u32,
+    pub set_type: PySetType,
+    pub target_weight_kg: Option<f64>,
+    pub target_reps: Option<u32>,
+    pub target_rir: Option<u32>,
+}
+
+#[pymethods]
+impl PyCycleOneSet {
+    #[new]
+    #[pyo3(signature = (
+        set_index,
+        set_type,
+        target_weight_kg = None,
+        target_reps = None,
+        target_rir = None,
+    ))]
+    const fn new(
+        set_index: u32,
+        set_type: PySetType,
+        target_weight_kg: Option<f64>,
+        target_reps: Option<u32>,
+        target_rir: Option<u32>,
+    ) -> Self {
+        Self {
+            set_index,
+            set_type,
+            target_weight_kg,
+            target_reps,
+            target_rir,
+        }
+    }
+}
+
+impl From<PyCycleOneSet> for CycleOneSet {
+    fn from(set: PyCycleOneSet) -> Self {
+        Self {
+            set_index: set.set_index,
+            set_type: set.set_type.into(),
+            target_weight_kg: set.target_weight_kg,
+            target_reps: set.target_reps,
+            target_rir: set.target_rir,
+        }
+    }
+}
+
+/// One exercise of cycle 1, its rule and increment already resolved. Mirrors [`ExerciseSpec`].
+#[pyclass(
+    name = "ExerciseSpec",
+    frozen,
+    from_py_object,
+    module = "cyberathlete_core"
+)]
+#[derive(Debug, Clone, PartialEq)]
+pub struct PyExerciseSpec {
+    exercise: ExerciseSpec,
+}
+
+#[pymethods]
+impl PyExerciseSpec {
+    #[new]
+    fn new(
+        order_index: u32,
+        increment_kg: f64,
+        rule: PyProgressionRule,
+        sets: Vec<PyCycleOneSet>,
+    ) -> Self {
+        Self {
+            exercise: ExerciseSpec {
+                order_index,
+                increment_kg,
+                rule: rule.rule,
+                sets: sets.into_iter().map(Into::into).collect(),
+            },
+        }
+    }
+}
+
+/// One session of cycle 1. Mirrors [`SessionSpec`].
+#[pyclass(
+    name = "SessionSpec",
+    frozen,
+    from_py_object,
+    module = "cyberathlete_core"
+)]
+#[derive(Debug, Clone, PartialEq)]
+pub struct PySessionSpec {
+    session: SessionSpec,
+}
+
+#[pymethods]
+impl PySessionSpec {
+    #[new]
+    fn new(day_index: u32, order_index: u32, exercises: Vec<PyExerciseSpec>) -> Self {
+        Self {
+            session: SessionSpec {
+                day_index,
+                order_index,
+                exercises: exercises.into_iter().map(|it| it.exercise).collect(),
+            },
+        }
+    }
+}
+
+/// The mesocycle, as generation reads it — the `mesocycles` row's columns, plus the cycles whose length
+/// differs from the default and, for `manual`, the cycles flagged as deloads. Mirrors [`MesocycleSpec`].
+#[pyclass(
+    name = "MesocycleSpec",
+    frozen,
+    from_py_object,
+    module = "cyberathlete_core"
+)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PyMesocycleSpec {
+    mesocycle: MesocycleSpec,
+}
+
+#[pymethods]
+impl PyMesocycleSpec {
+    /// `start_day` is whole days since 1970-01-01; `app.domain.progression.epoch_day` makes one from a
+    /// `date`. The defaults are the schema's (03 §5).
+    #[new]
+    #[pyo3(signature = (
+        start_day,
+        num_microcycles,
+        default_length_days,
+        deload_mode,
+        deload_every_n_microcycles = None,
+        deload_final_cycle = false,
+        deload_cycles = Vec::new(),
+        length_overrides = BTreeMap::new(),
+        deload_set_bp = 5000,
+        deload_load_bp = 6000,
+        deload_rir_bump = 2,
+    ))]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "a record mirroring the mesocycles row column for column; Python names them at the call site"
+    )]
+    fn new(
+        start_day: EpochDay,
+        num_microcycles: u32,
+        default_length_days: u32,
+        deload_mode: &str,
+        deload_every_n_microcycles: Option<u32>,
+        deload_final_cycle: bool,
+        deload_cycles: Vec<u32>,
+        length_overrides: BTreeMap<u32, u32>,
+        deload_set_bp: u32,
+        deload_load_bp: u32,
+        deload_rir_bump: u32,
+    ) -> PyResult<Self> {
+        let deload = match (deload_mode, deload_every_n_microcycles) {
+            ("none", _) => DeloadPolicy::None,
+            ("every_n_microcycles", Some(every)) => DeloadPolicy::EveryN {
+                every,
+                final_cycle: deload_final_cycle,
+            },
+            ("every_n_microcycles", None) => {
+                return Err(PyValueError::new_err(
+                    "every_n_microcycles needs deload_every_n_microcycles",
+                ));
+            }
+            ("manual", _) => DeloadPolicy::Manual {
+                cycles: deload_cycles,
+            },
+            (other, _) => {
+                return Err(PyValueError::new_err(format!(
+                    "unknown deload mode {other:?}; expected none, every_n_microcycles or manual"
+                )));
+            }
+        };
+        Ok(Self {
+            mesocycle: MesocycleSpec {
+                start_day,
+                num_microcycles,
+                default_length_days,
+                length_overrides: length_overrides
+                    .into_iter()
+                    .map(|(cycle_number, length_days)| LengthOverride {
+                        cycle_number,
+                        length_days,
+                    })
+                    .collect(),
+                deload,
+                deload_set_bp,
+                deload_load_bp,
+                deload_rir_bump,
+            },
+        })
+    }
+}
+
+/// A generated `planned_sets` row. Mirrors [`PlannedSet`].
+#[pyclass(
+    name = "PlannedSet",
+    frozen,
+    get_all,
+    skip_from_py_object,
+    module = "cyberathlete_core"
+)]
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PyPlannedSet {
+    pub set_index: u32,
+    pub set_type: PySetType,
+    pub target_weight_kg: Option<f64>,
+    pub target_reps: Option<u32>,
+    pub target_rir: Option<u32>,
+    pub was_clamped: bool,
+}
+
+impl From<PlannedSet> for PyPlannedSet {
+    fn from(set: PlannedSet) -> Self {
+        Self {
+            set_index: set.set_index,
+            set_type: set.set_type.into(),
+            target_weight_kg: set.target_weight_kg,
+            target_reps: set.target_reps,
+            target_rir: set.target_rir,
+            was_clamped: set.was_clamped,
+        }
+    }
+}
+
+/// A generated `planned_exercises` row. Mirrors [`PlannedExercise`].
+#[pyclass(
+    name = "PlannedExercise",
+    frozen,
+    get_all,
+    skip_from_py_object,
+    module = "cyberathlete_core"
+)]
+#[derive(Debug, Clone, PartialEq)]
+pub struct PyPlannedExercise {
+    pub order_index: u32,
+    pub sets: Vec<PyPlannedSet>,
+}
+
+impl From<PlannedExercise> for PyPlannedExercise {
+    fn from(exercise: PlannedExercise) -> Self {
+        Self {
+            order_index: exercise.order_index,
+            sets: exercise.sets.into_iter().map(Into::into).collect(),
+        }
+    }
+}
+
+/// A generated `planned_sessions` row. Mirrors [`PlannedSession`].
+#[pyclass(
+    name = "PlannedSession",
+    frozen,
+    get_all,
+    skip_from_py_object,
+    module = "cyberathlete_core"
+)]
+#[derive(Debug, Clone, PartialEq)]
+pub struct PyPlannedSession {
+    pub day_index: u32,
+    pub order_index: u32,
+    pub exercises: Vec<PyPlannedExercise>,
+}
+
+impl From<PlannedSession> for PyPlannedSession {
+    fn from(session: PlannedSession) -> Self {
+        Self {
+            day_index: session.day_index,
+            order_index: session.order_index,
+            exercises: session.exercises.into_iter().map(Into::into).collect(),
+        }
+    }
+}
+
+/// A generated `microcycles` row. Mirrors [`PlannedMicrocycle`].
+#[pyclass(
+    name = "PlannedMicrocycle",
+    frozen,
+    get_all,
+    skip_from_py_object,
+    module = "cyberathlete_core"
+)]
+#[derive(Debug, Clone, PartialEq)]
+pub struct PyPlannedMicrocycle {
+    pub cycle_number: u32,
+    pub length_days: u32,
+    pub starts_on: EpochDay,
+    pub is_deload: bool,
+    pub engine_version: u32,
+    pub sessions: Vec<PyPlannedSession>,
+}
+
+impl From<PlannedMicrocycle> for PyPlannedMicrocycle {
+    fn from(cycle: PlannedMicrocycle) -> Self {
+        Self {
+            cycle_number: cycle.cycle_number,
+            length_days: cycle.length_days,
+            starts_on: cycle.starts_on,
+            is_deload: cycle.is_deload,
+            engine_version: cycle.engine_version,
+            sessions: cycle.sessions.into_iter().map(Into::into).collect(),
+        }
+    }
+}
+
+/// Microcycles 2..N from microcycle 1 (FR-3.3), dated and stamped with `ENGINE_VERSION`.
+#[pyfunction]
+fn generate(mesocycle: PyMesocycleSpec, cycle_one: Vec<PySessionSpec>) -> Vec<PyPlannedMicrocycle> {
+    let sessions: Vec<SessionSpec> = cycle_one.into_iter().map(|it| it.session).collect();
+    core_generate(&mesocycle.mesocycle, &sessions)
+        .into_iter()
+        .map(Into::into)
+        .collect()
+}
+
+/// The day each cycle starts on, walking the block from `start_day` (03 §5, INV-25).
+#[pyfunction]
+fn resolve_dates(start_day: EpochDay, length_days: Vec<u32>) -> Vec<EpochDay> {
+    core_resolve_dates(start_day, &length_days)
+}
+
 #[pymodule]
 fn _core(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<PyRoundingMode>()?;
@@ -660,5 +1119,19 @@ fn _core(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<PyTracking>()?;
     module.add_class::<PySetEntry>()?;
     module.add_function(wrap_pyfunction!(missing_for_completion, module)?)?;
+
+    module.add("ENGINE_VERSION", ENGINE_VERSION)?;
+    module.add_class::<PyProgressionStrategy>()?;
+    module.add_class::<PyProgressionRule>()?;
+    module.add_class::<PyCycleOneSet>()?;
+    module.add_class::<PyExerciseSpec>()?;
+    module.add_class::<PySessionSpec>()?;
+    module.add_class::<PyMesocycleSpec>()?;
+    module.add_class::<PyPlannedSet>()?;
+    module.add_class::<PyPlannedExercise>()?;
+    module.add_class::<PyPlannedSession>()?;
+    module.add_class::<PyPlannedMicrocycle>()?;
+    module.add_function(wrap_pyfunction!(generate, module)?)?;
+    module.add_function(wrap_pyfunction!(resolve_dates, module)?)?;
     Ok(())
 }

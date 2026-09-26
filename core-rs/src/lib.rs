@@ -18,7 +18,11 @@
 pub mod progression;
 pub mod strength;
 
-pub use progression::{RoundingMode, round_to_increment};
+pub use progression::{
+    CycleOneSet, DeloadPolicy, ENGINE_VERSION, EpochDay, ExerciseSpec, LengthOverride, LoadStep,
+    MesocycleSpec, PlannedExercise, PlannedMicrocycle, PlannedSession, PlannedSet, RoundingMode,
+    Rule, SessionSpec, Strategy, generate, resolve_dates, round_to_increment,
+};
 pub use strength::{
     LoggedSet, MAX_EFFECTIVE_REPS, PersonalBests, PrAchievement, PrKind, RepsAtWeight,
     SessionMetrics, SetEntry, SetField, SetType, StandingRecord, Tracking, counted_set_count,

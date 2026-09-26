@@ -21,7 +21,7 @@ when its own criteria are ticked. Tick the box here only then.
 | **Decisions** | 15 ADRs, **all now accepted**. [ADR-004](decisions/ADR-004.md)'s spike passed on 2026-09-18 and its outcome is recorded: **option B, the single Rust core**. Its four pre-launch conditions remain outstanding, in tasks 005 and 006 |
 | **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **7 complete** (001, 002, 011, 003, 019, 017, 004) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) is complete (2026-09-26)** — its last step re-aimed the live list's reveal when the list's height changes, and moved the rest onto the keypad's heading line while the keypad is open, after a short screen showed the two together left the list no room; proven on the phone at three screen heights and at 200 % font, which also found and fixed the header pushing *Encerrar* off the screen. **Next: the owner merges [PR #17](https://github.com/hiuriselzler/projeto_cyber/pull/17), then [task 005](tasks/005-strength-progression-planner.md), the progression planner — the reason the product exists.** Its nine stages are **proposed in the task file** (*Stages*): stage 0 updates the file for ADR-004's single Rust core, and **stage 1, the engine's foundation (`generate` for `linear_load` and `fixed`, deloads, dates, fixture #1), waits on five decisions**: property-testing under the `rand` ban, natural keys with ids minted outside the engine, what a deload prescribes, where the increment is resolved, and the input's shape. The next session starts with the plan-and-approval step on a branch cut from `main` after the merge. The phone is signed in to a throwaway local account, `stage8-device@example.com`, holding an open "Cinco por quatro" workout from the last step's pass. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done, and the zero-plural found on the phone is worth their attention — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
+| **Next action** | **[Task 005](tasks/005-strength-progression-planner.md), the progression planner, is in progress** on `feat/task-005-progression-planner`. Stages 0 and 1 are done (2026-09-26): the task file now follows ADR-004's option B, and the engine's foundation is built — `generate` for `linear_load` and `fixed`, the three deload policies, `resolve_dates`, fixture #1 (40 → 62.5 kg) and six properties, run in Rust and through PyO3. **Next: stage 2**, the other three v1 strategies — `double_progression`, `percent_1rm` and `rir_autoregulated` — with the per-set RIR ladder and the 10 000-rule property. It starts with the plan-and-approval step. **Two things for the owner from stage 1:** confirm the rule that a session past a shorter cycle's end moves to its last day, and note the open question, parked for stage 8, of whether FR-3.12's deload suggestion appears under `deload_mode = 'none'` (task file, stage 1). The phone is signed in to a throwaway local account, `stage8-device@example.com`, and is not needed until stage 4. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done, and the zero-plural found on the phone is worth their attention — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
 
 ### The decision that was open is closed — option B
 
@@ -222,8 +222,9 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
 #### ☐ 005 — Strength progression planner · **XL** · depends: 004 · blocks: 009, 010, 013, 014
 > **The reason the product exists.**
 > **In progress** on `feat/task-005-progression-planner` (started 2026-09-26). Its nine stages are in the task file.
-> Stage 0 is done, bringing the file up to date with ADR-004's option B. Stage 1, the engine's foundation, is under way
-> with all six of its decisions taken as recommended.
+> Stage 0 is done, bringing the file up to date with ADR-004's option B. **Stage 1, the engine's foundation, is built**
+> (2026-09-26): `generate` for `linear_load` and `fixed`, the three deload policies, `resolve_dates`, fixture #1 and
+> six properties, in Rust and through PyO3. Stage 2, the other three strategies, is next and gets its own plan first.
 - [ ] Engine: five v1 strategies (`cycle_pattern` is v2 — leave the arm unimplemented, not half-done)
 - [ ] Generation + reconciliation as one **pure, deterministic, idempotent** function, `now` a parameter
 - [ ] **Every projection stamped with `engine_version`; an older engine never re-projects a newer
@@ -241,8 +242,8 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
 - [ ] Plain post-session diff — the user must always see *why* a number changed
 - [ ] **Fixture #1 is the user's own 40 → 62.5 kg example.** If it disagrees with what they meant,
       that surfaces here, cheaply
-- [ ] `round_to_increment`: `nearest | down | up`, **a tie goes to the lighter load**, identical in every
-      suite ([ADR-010](decisions/ADR-010.md))
+- [x] `round_to_increment`: `nearest | down | up`, **a tie goes to the lighter load**, identical in every
+      suite ([ADR-010](decisions/ADR-010.md)) — proven by tasks 017 and 004, ticked in stage 1
 - [ ] **⚠ ADR-004's conditions, under option B:** a kill switch per strategy and for local re-projection,
       over the air; a minimum engine version that gates re-projection and nothing else
 
@@ -2396,3 +2397,25 @@ are gone. `generate` takes no `now`, because nothing it produces depends on the 
 
 - **INV-10's enforcement line changed**, under ADR-012's amendment as AGENTS.md requires. ADR-002 and ADR-012 were
   amended rather than joined by a new ADR. Counts unchanged: 49 documents, 15 ADRs.
+
+### 2026-09-26 — task 005 stage 1 built: the engine's foundation
+
+`generate` for `linear_load` and `fixed`, the three deload policies, `resolve_dates` and `ENGINE_VERSION = 1`, in
+`core-rs/src/progression/`, reached from the API through PyO3 and `app/domain/progression.py`. **Fixture #1 comes out
+as the owner's table:** 62.5 kg at cycle 11, and deloads of 1×6 at 30 kg and 37.5 kg.
+
+- **Proven:** nine `generate` cases and five `resolve_dates` cases in `cargo test` and pytest; Jest holds both files
+  to their own invariants. Six properties at 512 cases each: INV-02 in both unit systems after storage, INV-05, INV-25,
+  natural keys, INV-10 and `none`. Each gate was watched failing: a wrong load, a wrong date, an unrounded load, and an
+  unclamped deload RIR.
+- **Decided while building, for the owner to confirm:** a session past a shorter cycle's end moves to the cycle's last
+  day, after the sessions already there. Nothing is dropped.
+- **Found and corrected:** 01 FR-3.9 as first written kept warm-ups "as they are" through a deload, which would leave a
+  back-off set heavier than the working sets. They are kept, and deloaded like the rest.
+- **Found by shrinking:** a 1 lb increment at `numeric(10,6)` drifts 0.001 lb by 1 120 lb — invisible at the app's two
+  places. The property now asks what the user reads.
+- **Open, parked for stage 8:** whether FR-3.12's deload suggestion appears under `deload_mode = 'none'`, which FR-3.1b
+  says must not be second-guessed.
+- **Criteria ticked:** the 9-day block, and `round_to_increment`'s tie. Fixture #1 and the 2.5 % step wait for the
+  device half in stage 4.
+- No invariant changed and no ADR was added in this step. Counts unchanged: 49 documents, 15 ADRs.

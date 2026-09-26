@@ -1,0 +1,11 @@
+{
+  "function": "resolve_dates",
+  "spec": "03 §5: cycle 1 starts on start_date and each cycle starts exactly length_days after the one before (INV-25). A length outside 1-28 is clamped into it, so the walk never stalls.",
+  "cases": [
+    {"name": "9-day cycles: cycle 3 starts 18 days after cycle 1", "start_date": "2026-10-05", "length_days": [9, 9, 9], "expected": ["2026-10-05", "2026-10-14", "2026-10-23"]},
+    {"name": "one 5-day cycle among 7-day ones shifts every later start", "start_date": "2026-10-05", "length_days": [7, 7, 5, 7, 7], "expected": ["2026-10-05", "2026-10-12", "2026-10-19", "2026-10-24", "2026-10-31"]},
+    {"name": "a walk across a leap day", "start_date": "2028-02-20", "length_days": [9, 9], "expected": ["2028-02-20", "2028-02-29"]},
+    {"name": "a walk across a year end", "start_date": "2026-12-28", "length_days": [10, 10, 10], "expected": ["2026-12-28", "2027-01-07", "2027-01-17"]},
+    {"name": "a length outside 1-28 is clamped", "start_date": "2026-10-05", "length_days": [0, 40, 1], "expected": ["2026-10-05", "2026-10-06", "2026-11-03"]}
+  ]
+}

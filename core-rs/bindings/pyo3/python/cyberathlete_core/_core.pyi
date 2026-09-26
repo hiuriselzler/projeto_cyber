@@ -236,3 +236,158 @@ class SetEntry:
 def missing_for_completion(tracking: Tracking, entry: SetEntry) -> str | None:
     """The `set_logs` column — `reps`, `duration_s` or `distance_m` — a set of this mode is
     missing before it can be completed, or `None` if it holds what the mode needs (03 §4)."""
+
+# ── Progression (task 005) ───────────────────────────────────────────────────────────────────────
+
+ENGINE_VERSION: int
+"""The engine that stamps every microcycle it projects (INV-06). Not `core_version()`."""
+
+class ProgressionStrategy:
+    """The strategies stage 1 builds, from the schema's `progression_strategy_enum`."""
+
+    Fixed: ProgressionStrategy
+    LinearLoad: ProgressionStrategy
+
+    @staticmethod
+    def from_name(name: str) -> ProgressionStrategy:
+        """The strategy's name in the database. Raises `ValueError` for one not yet built."""
+
+    @property
+    def name(self) -> str:
+        """The inverse of `from_name`."""
+
+class ProgressionRule:
+    """One exercise's rule, resolved through FR-3.6's cascade by the caller.
+
+    `linear_load` takes exactly one of `load_step_kg` and `load_step_bp`, or raises `ValueError`.
+    """
+
+    def __init__(
+        self,
+        strategy: ProgressionStrategy,
+        min_reps: int,
+        max_reps: int,
+        min_rir: int = 0,
+        max_rir: int = 4,
+        rounding: RoundingMode = ...,
+        load_step_kg: float | None = None,
+        load_step_bp: int | None = None,
+    ) -> None: ...
+
+class CycleOneSet:
+    """One set of cycle 1, as the user authored it (FR-3.3)."""
+
+    def __init__(
+        self,
+        set_index: int,
+        set_type: SetType,
+        target_weight_kg: float | None = None,
+        target_reps: int | None = None,
+        target_rir: int | None = None,
+    ) -> None: ...
+    @property
+    def set_index(self) -> int: ...
+    @property
+    def set_type(self) -> SetType: ...
+    @property
+    def target_weight_kg(self) -> float | None: ...
+    @property
+    def target_reps(self) -> int | None: ...
+    @property
+    def target_rir(self) -> int | None: ...
+
+class ExerciseSpec:
+    """One exercise of cycle 1. `increment_kg` is INV-02's increment in the user's unit system,
+    already resolved, in exact kilograms."""
+
+    def __init__(
+        self,
+        order_index: int,
+        increment_kg: float,
+        rule: ProgressionRule,
+        sets: list[CycleOneSet],
+    ) -> None: ...
+
+class SessionSpec:
+    """One session of cycle 1, on a day index — never a weekday (INV-25)."""
+
+    def __init__(self, day_index: int, order_index: int, exercises: list[ExerciseSpec]) -> None: ...
+
+class MesocycleSpec:
+    """The mesocycle as generation reads it. `start_day` is whole days since 1970-01-01.
+
+    `deload_mode` is `none`, `every_n_microcycles` (which needs `deload_every_n_microcycles`) or
+    `manual` (which reads `deload_cycles`); anything else raises `ValueError`.
+    `length_overrides` maps a cycle number to the length it has instead of the default.
+    """
+
+    def __init__(
+        self,
+        start_day: int,
+        num_microcycles: int,
+        default_length_days: int,
+        deload_mode: str,
+        deload_every_n_microcycles: int | None = None,
+        deload_final_cycle: bool = False,
+        deload_cycles: list[int] = ...,
+        length_overrides: dict[int, int] = ...,
+        deload_set_bp: int = 5000,
+        deload_load_bp: int = 6000,
+        deload_rir_bump: int = 2,
+    ) -> None: ...
+
+class PlannedSet:
+    """A generated `planned_sets` row: origin `generated`, not pinned."""
+
+    @property
+    def set_index(self) -> int: ...
+    @property
+    def set_type(self) -> SetType: ...
+    @property
+    def target_weight_kg(self) -> float | None: ...
+    @property
+    def target_reps(self) -> int | None: ...
+    @property
+    def target_rir(self) -> int | None: ...
+    @property
+    def was_clamped(self) -> bool: ...
+
+class PlannedExercise:
+    """A generated `planned_exercises` row, named by its `order_index` in its session."""
+
+    @property
+    def order_index(self) -> int: ...
+    @property
+    def sets(self) -> list[PlannedSet]: ...
+
+class PlannedSession:
+    """A generated `planned_sessions` row, named by `(day_index, order_index)` in its cycle."""
+
+    @property
+    def day_index(self) -> int: ...
+    @property
+    def order_index(self) -> int: ...
+    @property
+    def exercises(self) -> list[PlannedExercise]: ...
+
+class PlannedMicrocycle:
+    """A generated `microcycles` row: status `projected`, `last_write_kind` `engine`."""
+
+    @property
+    def cycle_number(self) -> int: ...
+    @property
+    def length_days(self) -> int: ...
+    @property
+    def starts_on(self) -> int: ...
+    @property
+    def is_deload(self) -> bool: ...
+    @property
+    def engine_version(self) -> int: ...
+    @property
+    def sessions(self) -> list[PlannedSession]: ...
+
+def generate(mesocycle: MesocycleSpec, cycle_one: list[SessionSpec]) -> list[PlannedMicrocycle]:
+    """Microcycles 2..N from microcycle 1 (FR-3.3), dated and stamped with `ENGINE_VERSION`."""
+
+def resolve_dates(start_day: int, length_days: list[int]) -> list[int]:
+    """The day each cycle starts on, walking the block from `start_day` (03 §5, INV-25)."""

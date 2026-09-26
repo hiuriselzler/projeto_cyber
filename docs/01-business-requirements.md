@@ -256,7 +256,8 @@ it later is a strategy branch in the engine, not a migration.
   - The load is `round_to_increment(load × deload_load_bp, nearest)` (INV-02). The working-set count is
     multiplied by `deload_set_bp` with **a tie going to the fewer sets** — the rule ADR-010 gives loads, so 3 sets
     become 1 — and **never below one**, so a deload never removes an exercise. Warm-up, drop and back-off sets are
-    kept as they are.
+    not counted sets (INV-04), so the cut leaves them in place — but their loads and RIR are deloaded like every
+    other set's, or a back-off set would outweigh the working sets it follows.
   - The target RIR is raised by `deload_rir_bump` and **clamped into the rule's bounds** (INV-05); a clamped set
     is marked `was_clamped`, so the plan can say why it reads RIR 4 rather than 5.
   - Under `every_n_microcycles`, every N-th cycle is a deload, and "the final cycle too" adds the last cycle
