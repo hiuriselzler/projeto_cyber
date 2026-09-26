@@ -17,8 +17,9 @@ mod common;
 
 use common::{Block, block, stored};
 use cyberathlete_core::{
-    CycleStatus, ENGINE_VERSION, LoggedSet, PlanCycle, PlanExercise, PlanLog, PlanSession, PlanSet,
-    SessionSpec, SetOrigin, WriteKind, generate, reconcile,
+    CycleStatus, DeloadPolicy, ENGINE_VERSION, LoggedSet, PlanCycle, PlanExercise, PlanLog,
+    PlanSession, PlanSet, SessionSpec, SetOrigin, WriteKind, extend, generate, reconcile, relength,
+    shorten, switch_rule,
 };
 use proptest::prelude::*;
 
@@ -360,5 +361,118 @@ proptest! {
         let reconciled = reconcile(&block.mesocycle, &plan, &logs, today);
         prop_assert_eq!(reconciled.cycles, plan);
         prop_assert!(reconciled.outcomes.is_empty());
+    }
+}
+
+// ── Block edits (stage 3b) ───────────────────────────────────────────────────────────────────────
+
+fn without_final_cycle(mut block: Block) -> Block {
+    // `final_cycle` makes a different cycle the last deload in a longer block, which is the one way the
+    // two may rightly disagree before the first new cycle; everything else must agree.
+    if let DeloadPolicy::EveryN { final_cycle, .. } = &mut block.mesocycle.deload {
+        *final_cycle = false;
+    }
+    block
+}
+
+proptest! {
+    #![proptest_config(ProptestConfig::with_cases(256))]
+
+    /// Decision 1: a freshly generated block extended to `to` matches one generated that long, from the
+    /// first new cycle on — the extension lays out, rules and projects exactly as generation does.
+    #[test]
+    fn extending_a_generated_block_agrees_with_generating_it_longer(
+        block in block(2..=30).prop_map(without_final_cycle),
+        more in 1_u32..=12,
+    ) {
+        let count = block.mesocycle.num_microcycles;
+        let to = (count + more).min(52);
+        let plan = generated_plan(&block);
+        let extended = extend(&block.mesocycle, &plan, &[], i32::MIN, to).expect("an extension within 52 cycles");
+
+        let mut longer = block.clone();
+        longer.mesocycle.num_microcycles = to;
+        let generated = generated_plan(&longer);
+        let first_new = usize::try_from(count).unwrap_or(usize::MAX);
+        prop_assert_eq!(&extended[first_new..], &generated[first_new..]);
+    }
+
+    /// FR-3.1c: an extension changes nothing before its first new cycle, whatever the history — and the
+    /// plan it returns reconciles to a fixed point.
+    #[test]
+    fn an_extension_changes_nothing_before_it((block, bytes) in history(), more in 1_u32..=6) {
+        let (plan, logs, today) = with_history(generated_plan(&block), &mut Tape { bytes: &bytes, at: 0 });
+        let count = u32::try_from(plan.len()).unwrap_or(u32::MAX);
+        let Ok(extended) = extend(&block.mesocycle, &plan, &logs, today, (count + more).min(52)) else {
+            return Ok(());
+        };
+        prop_assert_eq!(&extended[..plan.len()], &plan[..]);
+        let once = reconcile(&block.mesocycle, &extended, &logs, today);
+        let twice = reconcile(&block.mesocycle, &once.cycles, &logs, today);
+        prop_assert_eq!(twice.cycles, once.cycles);
+    }
+
+    /// Decision 2 and INV-06: whatever a shorten drops was projected and unlogged; what it keeps is as it was.
+    #[test]
+    fn a_shorten_drops_only_what_never_started((block, bytes) in history(), to in 2_u32..=20) {
+        let (plan, logs, _) = with_history(generated_plan(&block), &mut Tape { bytes: &bytes, at: 0 });
+        let Ok(shortened) = shorten(&plan, &logs, to) else { return Ok(()) };
+        let keep = shortened.cycles.len();
+        prop_assert_eq!(&shortened.cycles[..], &plan[..keep]);
+        for dropped in &plan[keep..] {
+            prop_assert_eq!(dropped.status, CycleStatus::Projected);
+            prop_assert!(!logs.iter().any(|log| log.cycle_number == dropped.cycle_number));
+        }
+        let numbers: Vec<u32> = plan[keep..].iter().map(|it| it.cycle_number).collect();
+        prop_assert_eq!(shortened.dropped, numbers);
+    }
+
+    /// FR-3.1a, INV-25, INV-06: a length change touches the cycle it names and the starts after it, keeps
+    /// every date contiguous, moves no cycle that has started, and changes no prescription.
+    #[test]
+    fn a_relength_moves_only_later_starts_and_keeps_dates_contiguous(
+        (block, bytes) in history(),
+        pick in any::<prop::sample::Index>(),
+        days in 1_u32..=28,
+    ) {
+        let (plan, logs, _) = with_history(generated_plan(&block), &mut Tape { bytes: &bytes, at: 0 });
+        let at = pick.index(plan.len());
+        let Ok(edited) = relength(&plan, &logs, plan[at].cycle_number, days) else { return Ok(()) };
+        prop_assert_eq!(&edited[..at], &plan[..at]);
+        prop_assert_eq!(edited[at].length_days, days);
+        for (before, after) in plan.iter().zip(&edited) {
+            prop_assert_eq!(&after.sessions, &before.sessions);
+            if after.starts_on != before.starts_on {
+                prop_assert!(matches!(before.status, CycleStatus::Projected | CycleStatus::Locked));
+                prop_assert!(!logs.iter().any(|log| log.cycle_number == before.cycle_number));
+            }
+        }
+        for pair in edited.windows(2) {
+            prop_assert_eq!(
+                i64::from(pair[1].starts_on),
+                i64::from(pair[0].starts_on) + i64::from(pair[0].length_days)
+            );
+        }
+    }
+
+    /// FR-3.6a: a switch changes a rule only where the engine may write, and what it returns is already a
+    /// fixed point of reconciliation.
+    #[test]
+    fn a_switch_touches_only_projected_cycles_and_reconciles_to_a_fixed_point(
+        (block, bytes) in history(),
+        from in 1_u32..=20,
+    ) {
+        let (plan, logs, today) = with_history(generated_plan(&block), &mut Tape { bytes: &bytes, at: 0 });
+        let rule = plan[0].sessions[0].exercises[0].rule.clone();
+        let Ok(switched) = switch_rule(&block.mesocycle, &plan, &logs, today, "ex0", 0, from, &rule) else {
+            return Ok(());
+        };
+        for (before, after) in plan.iter().zip(&switched.cycles) {
+            if !rewritable(before, &logs) {
+                prop_assert_eq!(after, before);
+            }
+        }
+        let again = reconcile(&block.mesocycle, &switched.cycles, &logs, today);
+        prop_assert_eq!(again.cycles, switched.cycles);
     }
 }

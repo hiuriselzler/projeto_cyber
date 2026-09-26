@@ -22,8 +22,9 @@ pub use progression::{
     CycleOneSet, CycleStatus, DeloadPolicy, ENGINE_VERSION, EpochDay, ExerciseSpec, FailurePolicy,
     LengthOverride, LoadStep, MesocycleSpec, Outcome, PlanCycle, PlanExercise, PlanLog,
     PlanSession, PlanSet, PlannedExercise, PlannedMicrocycle, PlannedSession, PlannedSet,
-    Reconciled, RirMode, RoundingMode, Rule, SessionSpec, SetOrigin, SlotOutcome, Strategy,
-    WriteKind, classify, generate, reconcile, resolve_dates, round_to_increment,
+    Reconciled, Refusal, RefusalReason, RirMode, RoundingMode, Rule, SessionSpec, SetOrigin,
+    Shortened, SlotOutcome, Strategy, WriteKind, classify, extend, generate, reconcile, relength,
+    resolve_dates, round_to_increment, shorten, switch_rule,
 };
 pub use strength::{
     LoggedSet, MAX_EFFECTIVE_REPS, PersonalBests, PrAchievement, PrKind, RepsAtWeight,

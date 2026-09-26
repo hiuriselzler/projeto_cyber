@@ -15,6 +15,9 @@ arithmetic (INV-10). Import it from here, never `cyberathlete_core` directly —
   followed to the planned row's natural key — with body weight on the set's date resolved, and each
   planned exercise's `exercise_id`, which the engine compares and never reads.
 
+**A block edit the engine refuses raises `PlanRefused`**, whose `args` are `(reason, cycle_number,
+day_index)` — enough for a router to answer 409 with the reason (task 005 stage 3b).
+
 **Dates cross the core as whole days since 1970-01-01** (task 005, stage 1, decision 6). The two
 helpers below are the only conversion, so a date is never an off-by-one between two call sites.
 """
@@ -35,6 +38,7 @@ from cyberathlete_core import (
     PlannedMicrocycle,
     PlannedSession,
     PlannedSet,
+    PlanRefused,
     PlanSession,
     PlanSet,
     ProgressionRule,
@@ -42,12 +46,17 @@ from cyberathlete_core import (
     Reconciled,
     SessionSpec,
     SetOrigin,
+    Shortened,
     SlotOutcome,
     WriteKind,
     classify,
+    extend,
     generate,
     reconcile,
+    relength,
     resolve_dates,
+    shorten,
+    switch_rule,
 )
 
 _EPOCH = date(1970, 1, 1)
@@ -73,6 +82,7 @@ __all__ = [
     "PlanCycle",
     "PlanExercise",
     "PlanLog",
+    "PlanRefused",
     "PlanSession",
     "PlanSet",
     "PlannedExercise",
@@ -84,12 +94,17 @@ __all__ = [
     "Reconciled",
     "SessionSpec",
     "SetOrigin",
+    "Shortened",
     "SlotOutcome",
     "WriteKind",
     "classify",
     "epoch_day",
+    "extend",
     "from_epoch_day",
     "generate",
     "reconcile",
+    "relength",
     "resolve_dates",
+    "shorten",
+    "switch_rule",
 ]

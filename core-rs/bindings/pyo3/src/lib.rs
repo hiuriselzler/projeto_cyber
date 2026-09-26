@@ -13,17 +13,20 @@ use cyberathlete_core::{
     CycleOneSet, CycleStatus, DeloadPolicy, ENGINE_VERSION, EpochDay, ExerciseSpec, FailurePolicy,
     LengthOverride, LoadStep, LoggedSet, MesocycleSpec, Outcome, PersonalBests, PlanCycle,
     PlanExercise, PlanLog, PlanSession, PlanSet, PlannedExercise, PlannedMicrocycle,
-    PlannedSession, PlannedSet, PrAchievement, PrKind, RepsAtWeight, RirMode, RoundingMode, Rule,
-    SessionMetrics, SessionSpec, SetEntry, SetField, SetOrigin, SetType, SlotOutcome,
-    StandingRecord, Strategy, Tracking, WriteKind, classify as core_classify,
-    counted_set_count as core_counted_set_count, detect_prs as core_detect_prs, e1rm as core_e1rm,
-    e1rm_series as core_e1rm_series, generate as core_generate,
-    is_counted_set as core_is_counted_set, load_kg as core_load_kg,
-    missing_for_completion as core_missing_for_completion, personal_bests as core_personal_bests,
-    reconcile as core_reconcile, resolve_dates as core_resolve_dates,
-    round_to_increment as core_round_to_increment, session_metrics as core_session_metrics,
-    standing_records as core_standing_records, volume_kg as core_volume_kg,
+    PlannedSession, PlannedSet, PrAchievement, PrKind, Refusal, RepsAtWeight, RirMode,
+    RoundingMode, Rule, SessionMetrics, SessionSpec, SetEntry, SetField, SetOrigin, SetType,
+    Shortened, SlotOutcome, StandingRecord, Strategy, Tracking, WriteKind,
+    classify as core_classify, counted_set_count as core_counted_set_count,
+    detect_prs as core_detect_prs, e1rm as core_e1rm, e1rm_series as core_e1rm_series,
+    extend as core_extend, generate as core_generate, is_counted_set as core_is_counted_set,
+    load_kg as core_load_kg, missing_for_completion as core_missing_for_completion,
+    personal_bests as core_personal_bests, reconcile as core_reconcile, relength as core_relength,
+    resolve_dates as core_resolve_dates, round_to_increment as core_round_to_increment,
+    session_metrics as core_session_metrics, shorten as core_shorten,
+    standing_records as core_standing_records, switch_rule as core_switch_rule,
+    volume_kg as core_volume_kg,
 };
+use pyo3::create_exception;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
@@ -1707,6 +1710,130 @@ fn reconcile(
     }
 }
 
+// ── Block edits (task 005 stage 3b) ──────────────────────────────────────────────────────────────
+
+create_exception!(
+    cyberathlete_core,
+    PlanRefused,
+    PyValueError,
+    "A block edit the engine refused. `args` is `(reason, cycle_number, day_index)`: the reason's name \
+     (`started`, `locked`, `history`, `session_does_not_fit`, `newer_engine`, `out_of_range`, \
+     `no_such_cycle`, `no_such_exercise`), the cycle that stopped it, and the session that would not fit."
+);
+
+fn refused(refusal: Refusal) -> PyErr {
+    PlanRefused::new_err((
+        refusal.reason.name(),
+        refusal.cycle_number,
+        refusal.day_index,
+    ))
+}
+
+fn plan_to_core(plan: Vec<PyPlanCycle>) -> Vec<PlanCycle> {
+    plan.into_iter().map(Into::into).collect()
+}
+
+fn logs_to_core(logs: Vec<PyPlanLog>) -> Vec<PlanLog> {
+    logs.into_iter().map(Into::into).collect()
+}
+
+fn plan_to_py(plan: Vec<PlanCycle>) -> Vec<PyPlanCycle> {
+    plan.into_iter().map(Into::into).collect()
+}
+
+/// What `shorten` returns. Mirrors [`Shortened`].
+#[pyclass(
+    name = "Shortened",
+    frozen,
+    get_all,
+    skip_from_py_object,
+    module = "cyberathlete_core"
+)]
+#[derive(Debug, Clone, PartialEq)]
+pub struct PyShortened {
+    pub cycles: Vec<PyPlanCycle>,
+    pub dropped: Vec<u32>,
+}
+
+/// Lengthen a block to `to` cycles, changing nothing before the first new one (FR-3.1c).
+#[pyfunction]
+fn extend(
+    mesocycle: PyMesocycleSpec,
+    plan: Vec<PyPlanCycle>,
+    logs: Vec<PyPlanLog>,
+    today: EpochDay,
+    to: u32,
+) -> PyResult<Vec<PyPlanCycle>> {
+    core_extend(
+        &mesocycle.mesocycle,
+        &plan_to_core(plan),
+        &logs_to_core(logs),
+        today,
+        to,
+    )
+    .map(plan_to_py)
+    .map_err(refused)
+}
+
+/// Shorten a block to `to` cycles; the dropped cycle numbers are for the caller to archive (INV-11).
+#[pyfunction]
+fn shorten(plan: Vec<PyPlanCycle>, logs: Vec<PyPlanLog>, to: u32) -> PyResult<PyShortened> {
+    core_shorten(&plan_to_core(plan), &logs_to_core(logs), to)
+        .map(|it: Shortened| PyShortened {
+            cycles: plan_to_py(it.cycles),
+            dropped: it.dropped,
+        })
+        .map_err(refused)
+}
+
+/// Give one cycle a length of `days`; every later start follows it (FR-3.1a).
+#[pyfunction]
+fn relength(
+    plan: Vec<PyPlanCycle>,
+    logs: Vec<PyPlanLog>,
+    cycle_number: u32,
+    days: u32,
+) -> PyResult<Vec<PyPlanCycle>> {
+    core_relength(&plan_to_core(plan), &logs_to_core(logs), cycle_number, days)
+        .map(plan_to_py)
+        .map_err(refused)
+}
+
+/// Put `rule` on one exercise from `from_cycle` on, and reconcile — the preview and the commit are this
+/// same call (FR-3.6a).
+#[pyfunction]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "reconcile's four arguments and the edit's four; Python names them at the call site"
+)]
+#[pyo3(signature = (mesocycle, plan, logs, today, exercise_id, occurrence, from_cycle, rule))]
+fn switch_rule(
+    mesocycle: PyMesocycleSpec,
+    plan: Vec<PyPlanCycle>,
+    logs: Vec<PyPlanLog>,
+    today: EpochDay,
+    exercise_id: &str,
+    occurrence: u32,
+    from_cycle: u32,
+    rule: PyProgressionRule,
+) -> PyResult<PyReconciled> {
+    core_switch_rule(
+        &mesocycle.mesocycle,
+        &plan_to_core(plan),
+        &logs_to_core(logs),
+        today,
+        exercise_id,
+        occurrence,
+        from_cycle,
+        &rule.rule,
+    )
+    .map(|reconciled| PyReconciled {
+        cycles: plan_to_py(reconciled.cycles),
+        outcomes: reconciled.outcomes.into_iter().map(Into::into).collect(),
+    })
+    .map_err(refused)
+}
+
 #[pymodule]
 fn _core(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<PyRoundingMode>()?;
@@ -1762,5 +1889,12 @@ fn _core(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<PyReconciled>()?;
     module.add_function(wrap_pyfunction!(classify, module)?)?;
     module.add_function(wrap_pyfunction!(reconcile, module)?)?;
+
+    module.add("PlanRefused", module.py().get_type::<PlanRefused>())?;
+    module.add_class::<PyShortened>()?;
+    module.add_function(wrap_pyfunction!(extend, module)?)?;
+    module.add_function(wrap_pyfunction!(shorten, module)?)?;
+    module.add_function(wrap_pyfunction!(relength, module)?)?;
+    module.add_function(wrap_pyfunction!(switch_rule, module)?)?;
     Ok(())
 }

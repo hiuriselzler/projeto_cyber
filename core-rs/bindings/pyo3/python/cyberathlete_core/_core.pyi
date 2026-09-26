@@ -652,3 +652,50 @@ def reconcile(
     Only projected cycles with nothing logged are rewritten; a user's rows are kept; a plan holding
     a newer engine's cycle comes back exactly as given (INV-06, FR-3.14).
     """
+
+# ── Block edits (task 005 stage 3b) ──────────────────────────────────────────────────────────────
+
+class PlanRefused(ValueError):
+    """A block edit the engine refused. `args` is `(reason, cycle_number, day_index)`.
+
+    `reason` is `started`, `locked`, `history`, `session_does_not_fit`, `newer_engine`,
+    `out_of_range`, `no_such_cycle` or `no_such_exercise`; `cycle_number` names the cycle that
+    stopped it, and `day_index` the session that would not fit.
+    """
+
+class Shortened:
+    """What `shorten` returns: the cycles kept, and the numbers of those dropped, to archive."""
+
+    @property
+    def cycles(self) -> list[PlanCycle]: ...
+    @property
+    def dropped(self) -> list[int]: ...
+
+def extend(
+    mesocycle: MesocycleSpec, plan: list[PlanCycle], logs: list[PlanLog], today: int, to: int
+) -> list[PlanCycle]:
+    """Lengthen a block to `to` cycles, changing nothing before the first new one (FR-3.1c).
+    Raises `PlanRefused`."""
+
+def shorten(plan: list[PlanCycle], logs: list[PlanLog], to: int) -> Shortened:
+    """Shorten a block to `to` cycles, dropping only projected cycles with nothing logged.
+    Raises `PlanRefused`."""
+
+def relength(
+    plan: list[PlanCycle], logs: list[PlanLog], cycle_number: int, days: int
+) -> list[PlanCycle]:
+    """Give one cycle a length of `days`; every later start follows it (FR-3.1a).
+    Raises `PlanRefused`."""
+
+def switch_rule(
+    mesocycle: MesocycleSpec,
+    plan: list[PlanCycle],
+    logs: list[PlanLog],
+    today: int,
+    exercise_id: str,
+    occurrence: int,
+    from_cycle: int,
+    rule: ProgressionRule,
+) -> Reconciled:
+    """Put `rule` on one exercise from `from_cycle` on, and reconcile (FR-3.6a). The preview and
+    the commit are this same call. Raises `PlanRefused`."""

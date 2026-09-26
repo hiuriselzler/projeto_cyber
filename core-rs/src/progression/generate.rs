@@ -107,28 +107,42 @@ fn length_of(spec: &MesocycleSpec, cycle: u32) -> u32 {
 /// a shorter cycle compresses the training, it does not quietly remove some (INV-25). A session on day 0,
 /// which the schema's CHECK forbids, is read as day 1.
 fn lay_out<'a>(sessions: &[&'a SessionSpec], length: u32) -> Vec<(u32, u32, &'a SessionSpec)> {
-    let day = |session: &SessionSpec| session.day_index.max(1);
-    let mut next_on_last_day = sessions
+    let keys: Vec<(u32, u32)> = sessions
         .iter()
-        .filter(|session| day(session) == length)
-        .map(|session| session.order_index.saturating_add(1))
-        .max()
-        .unwrap_or(0);
-
-    let mut placed: Vec<(u32, u32, &SessionSpec)> = sessions
-        .iter()
-        .map(|&session| {
-            if day(session) <= length {
-                (day(session), session.order_index, session)
-            } else {
-                let order = next_on_last_day;
-                next_on_last_day = next_on_last_day.saturating_add(1);
-                (length, order, session)
-            }
-        })
+        .map(|session| (session.day_index, session.order_index))
+        .collect();
+    let mut placed: Vec<(u32, u32, &SessionSpec)> = place(&keys, length)
+        .into_iter()
+        .zip(sessions)
+        .map(|((day_index, order_index), &session)| (day_index, order_index, session))
         .collect();
     placed.sort_by_key(|&(day_index, order_index, _)| (day_index, order_index));
     placed
+}
+
+/// The `(day_index, order_index)` each session key takes in a cycle of `length` days, in the order given
+/// — the rule [`lay_out`] states, shared with `extend` so a block extended later is laid out exactly as
+/// one generated that long.
+pub(super) fn place(keys: &[(u32, u32)], length: u32) -> Vec<(u32, u32)> {
+    let day = |(day_index, _): (u32, u32)| day_index.max(1);
+    let mut next_on_last_day = keys
+        .iter()
+        .filter(|&&key| day(key) == length)
+        .map(|&(_, order_index)| order_index.saturating_add(1))
+        .max()
+        .unwrap_or(0);
+
+    keys.iter()
+        .map(|&key| {
+            if day(key) <= length {
+                (day(key), key.1)
+            } else {
+                let order = next_on_last_day;
+                next_on_last_day = next_on_last_day.saturating_add(1);
+                (length, order)
+            }
+        })
+        .collect()
 }
 
 fn prescribe_session(

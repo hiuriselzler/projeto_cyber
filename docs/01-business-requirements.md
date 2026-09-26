@@ -131,6 +131,21 @@ This section is the core of the product. Read it carefully; disagreement here is
   microcycles only, and refuses to drop a `completed` or `in_progress` one (INV-06).
   **Changing a microcycle's length re-projects only the microcycles that have not started**, and
   shifts the start dates of everything after it.
+  - *Exactly how* (settled 2026-09-26, [task 005](tasks/005-strength-progression-planner.md) stage 3b). A cycle has
+    **started** when it is `in_progress`, `completed` or `skipped`, or holds a logged set whatever its status says.
+  - **Extending** appends cycles laid out from cycle 1's structure, each exercise on its latest rule, dated by the
+    default length and any override, flagged by the deload policy for the new cycles only, and projected from each
+    exercise's anchor. Nothing before them changes.
+  - **Shortening** drops trailing cycles only if none has started and none is locked — the user unlocks a pinned
+    cycle first. It never goes below 2 cycles, and a kept cycle's deload flag is not changed.
+  - **A cycle's length** may change unless the cycle is `completed` or `skipped`. The current cycle may change — the
+    travel case. It is refused if a later cycle that would move has started, or if a session would fall past the
+    new end (03 §5's trigger rule; the user moves the session first). Locked later cycles move with the rest, as the
+    user's own write, and no load changes.
+  - **Switching a strategy mid-block** (FR-3.6a) puts the new rule on the exercise's projected cycles with nothing
+    logged, and re-projects from the load actually achieved; the preview is the same computation, not saved.
+  - A plan stamped by a newer engine refuses an extension or a switch, which project, and allows a shortening or a
+    length change, which do not.
 - **FR-3.2** A mesocycle contains **microcycles**; each microcycle contains **planned sessions**
   (assigned to a **day index**, 1..cycle length); each session contains **planned exercises**;
   each planned exercise contains **planned sets** carrying a target weight, target reps, and

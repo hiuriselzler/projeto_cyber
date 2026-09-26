@@ -140,7 +140,7 @@ no phone.
 | **1** | **The engine's foundation:** the plan's types, `resolve_dates`, `ENGINE_VERSION`, `generate` for `linear_load` and `fixed`, the three deload policies, the property-test harness, **fixture #1** | ☑ |
 | **2** | The other three v1 strategies — `double_progression`, `percent_1rm` (total, via `baseline_e1rm_kg`), `rir_autoregulated` — and the per-set RIR ladder, clamped and marked (INV-05) | ☑ |
 | **3a** | `classify` and `reconcile`: the INV-06 guard, the older engine yielding, outcomes and `failure_policy`, user edits and pins surviving (FR-3.14) | ☑ |
-| **3b** | Block edits: extending and shortening a block, a cycle's length changing with date re-derivation, a strategy switched mid-block from the load achieved (FR-3.6a) with its preview | ☐ |
+| **3b** | Block edits: extending and shortening a block, a cycle's length changing with date re-derivation, a strategy switched mid-block from the load achieved (FR-3.6a) with its preview | ☑ |
 | **4** | Persistence and API (Phase B): the batched insert on both sides, the endpoints, reconciliation on workout completion; the engine reaches the app through UniFFI (the WSL2 loop in [06 §1](../06-operations.md)) | ☐ |
 | **5** | The engine safety controls: the per-strategy kill switch and the minimum engine version | ☐ |
 | **6** | The mesocycle builder, with the whole block previewed before it is committed — device pass | ☐ |
@@ -481,6 +481,96 @@ the table is read*, and into FR-3.11.
   representation for it — a pinned tombstone, say — before it ships.
 - *Counts:* 95 core unit tests, 5 fixture tests, 12 properties; 55 pytest; 183 Jest checks on the fixture files.
 
+**Stage 3b — block edits. Proposed and approved 2026-09-26, every decision as recommended; built the same day (below
+the decisions).** Four pure functions in `core-rs/src/progression/`, each returning the
+edited plan or a typed refusal, and never a half-edited one:
+- `extend(mesocycle, plan, logs, today, to)` — FR-3.1c;
+- `shorten(plan, to)` — FR-3.1c;
+- `relength(plan, cycle, days)` — FR-3.1a and 03 §5 *Dates are derived*;
+- `switch_rule(mesocycle, plan, logs, today, exercise, from_cycle, rule)` — FR-3.6a; its **preview** is the same call,
+  not persisted.
+
+The wrappers archive what a shorten drops (INV-11) and persist the rest in stage 4.
+
+*Stage 3b would close:*
+- the 5-day cycle criterion — later dates re-derived, and a completed cycle refused;
+- extending 12 → 18 changing nothing before cycle 13, and shortening refusing to drop a completed cycle;
+- a switch to `double_progression` in cycle 5 continuing from the load achieved.
+
+*Its properties:*
+- extending a generated block agrees with generating the longer block, from the first new cycle on;
+- an extension changes nothing before the first new cycle;
+- a relength moves only later cycles, and keeps every date contiguous;
+- a refusal leaves nothing half-done;
+- reconciling after any edit is still idempotent.
+
+Stage 3b carries seven decisions, each the owner's, each with a recommendation:
+
+1. **What an extension appends.** **Recommended:** new cycles laid out from **cycle 1's structure**, by stage 1's rule
+   for a shorter cycle. Each exercise takes the rule, increment and body weight of **its latest row**, so a strategy
+   switched mid-block carries forward. Lengths come from the default and any override; deload flags from the
+   policy, for the new cycles only. Their prescriptions come from the same walk as `reconcile`, so they step from
+   each exercise's anchor. Nothing before them changes — not even the old last cycle's final-cycle deload flag. The
+   alternative, copying the last working cycle, would carry a one-off short cycle's compressed layout into every new
+   one.
+2. **Shortening.** **Recommended:** it drops trailing cycles and refuses if any of them is not a projected cycle with
+   nothing logged. **A locked cycle is refused too**: the user unlocks it first, since a pin means "the engine keeps
+   its hands off". Never below 2 cycles (FR-3.1). No existing flag changes, so the new last cycle does not become a
+   deload under `final_cycle`. It returns the kept plan and the dropped cycle numbers, for the wrapper to archive.
+3. **Changing one cycle's length.** Every later cycle's start shifts. **Recommended refusals:**
+   - the cycle itself is `completed` or `skipped` — its length is history;
+   - a cycle that would move has started (`in_progress`, `completed`, `skipped`, or holding a log);
+   - the new length is outside 1–28;
+   - **a session would fall past the new end.** This is 03 §5's trigger rule; the user moves that session first,
+     which stage 7's editor offers.
+
+   Moving a session needs the wrapper to know which row moved, and the engine speaks natural keys, so it refuses
+   rather than guesses.
+
+   Allowed: an `in_progress` cycle's own length — the travel case, where this cycle becomes 5 days — and moving a
+   **locked** later cycle, because the move is the user's own action. Every cycle it changes is written as
+   `last_write_kind = 'user'`, and no load changes: a cycle's length is not a progression step.
+4. **Switching strategy mid-block** (FR-3.6a). **Recommended:** `switch_rule` puts the new rule on one exercise's
+   rows in every projected cycle with nothing logged from `from_cycle` on, and reconciles. Because every exercise
+   already projects from its anchor, the new strategy starts **from the load actually achieved** with no special
+   case. Locked and started cycles keep their rule. The preview is the same call, not persisted.
+5. **Refusals are typed.** A `Refusal` names its reason and the cycle; PyO3 raises a `PlanRefused` exception (a
+   `ValueError`) carrying both, so the API can answer 409 with a reason rather than parse a message.
+6. **A newer engine's stamp.** **Recommended:** `extend` and `switch_rule` project, so they refuse on a plan holding
+   a newer stamp, as `reconcile` yields. `shorten` and `relength` project nothing — they are the user's own edits to
+   rows and dates — and are allowed.
+7. **"Shift the block" after a missed session** (01 §3.4). **Recommended: decided in stage 8**, where `Missed` is shown
+   and the user chooses. It is either lengthening the missed cycle with `relength`, or something new; the choice
+   belongs with the screen that asks.
+
+**Stage 3b — built 2026-09-26.** The rules are written into [01 FR-3.1c](../01-business-requirements.md).
+- *Code:* a new `core-rs/src/progression/edits.rs` holds `extend`, `shorten`, `relength` and `switch_rule`, with
+  `Refusal` / `RefusalReason` and `Shortened`. Stage 1's rule for fitting sessions into a shorter cycle became a shared
+  `place` function, so an extension is laid out exactly as generation lays a cycle out. PyO3 exposes the four
+  functions and a `PlanRefused` exception (a `ValueError`) whose `args` are `(reason, cycle_number, day_index)`.
+- *Fixtures:* `edits.json`, 18 cases:
+  - the owner's block extended 12 → 18; an extension carrying a mid-block switch; a newer stamp; past 52 cycles;
+  - shortening 6 → 4; refused on a completed cycle, on a locked one, and below 2 cycles;
+  - one 5-day cycle moving a locked cycle with it; the in-progress travel case;
+  - length changes refused: history, a completed later cycle, a session past the new end, 29 days;
+  - `linear_load` → `double_progression` at cycle 5 from the 50 kg actually lifted; a switch keeping a locked
+    cycle's rule; a newer stamp; an unknown exercise.
+- *Properties* (in `reconcile_properties.rs`, over random histories):
+  - extending a generated block agrees with generating it longer, from the first new cycle on;
+  - an extension changes nothing before it;
+  - a shorten drops only what never started;
+  - a relength moves only later starts and keeps dates contiguous;
+  - a switch touches only projected cycles and returns a reconciliation fixed point.
+
+  Three deliberate breaks each failed a property: a shorten dropping started cycles, a relength moving them, and an
+  extension copying the last cycle instead of cycle 1.
+- **A consequence to know about.** Extending a block changes `rir_autoregulated`'s descent — the RIR now reaches
+  `rir_end` at the new last working cycle — but "nothing before them changes" holds. So the projected cycles before
+  the extension keep the old descent until the next reconciliation re-projects them. The extension's own cycles
+  already follow the new one. The same is true of any projected cycle made stale by a log the plan was not yet
+  reconciled against: an extension adds cycles; it does not reconcile the old ones.
+- *Counts:* 95 core unit tests, 6 fixture tests, 17 properties; 74 pytest; 237 Jest checks on the fixture files.
+
 ## Acceptance criteria
 - [ ] Fixture #1 (the user's 40 → 62.5 kg example) passes in every suite — `cargo test`, pytest through PyO3, and
       the app on the device through UniFFI
@@ -499,8 +589,9 @@ the table is read*, and into FR-3.11.
 - [x] A block of **9-day microcycles** generates correctly, and cycle 3 starts 18 days after
       cycle 1 — no weekday assumption anywhere (INV-25) — *stage 1: `generate.json` and `resolve_dates.json`, in
       `cargo test` and pytest*
-- [ ] A block of mostly 7-day cycles with **one 5-day cycle** in the middle re-derives every
-      later start date correctly, and refuses to move a completed cycle
+- [x] A block of mostly 7-day cycles with **one 5-day cycle** in the middle re-derives every
+      later start date correctly, and refuses to move a completed cycle — *stage 1 (generation) and stage 3b
+      (`relength`), in `edits.json` and a property*
 - [ ] The cycle view and the calendar view show the same sessions for the same block
 - [x] Completing a cycle with all targets met advances the next cycle; missing reps applies
       `failure_policy` instead — *stage 3a: `reconcile.json`, all three policies*
@@ -515,10 +606,10 @@ the table is read*, and into FR-3.11.
       newer one, and the newer engine re-projects the cycle's other rows from that edit (FR-3.14) — *stage 3a*
 - [ ] A 24-cycle block with `deload_mode = 'none'` generates 24 working cycles and never inserts
       a deload or nags about one
-- [ ] Extending a 12-cycle block to 18 appends projected cycles and changes nothing before them;
-      shortening it refuses to drop a completed cycle (FR-3.1c, INV-06)
-- [ ] Switching an exercise from `linear_load` to `double_progression` in cycle 5 continues from
-      the load actually achieved, not from cycle 1
+- [x] Extending a 12-cycle block to 18 appends projected cycles and changes nothing before them;
+      shortening it refuses to drop a completed cycle (FR-3.1c, INV-06) — *stage 3b: `edits.json` and properties*
+- [x] Switching an exercise from `linear_load` to `double_progression` in cycle 5 continues from
+      the load actually achieved, not from cycle 1 — *stage 3b: `edits.json`, from the 50 kg lifted in cycle 4*
 - [ ] A 24-cycle × 5-session block generates in < 500 ms on-device
 - [ ] The whole flow — build, generate, browse to the final cycle — works in airplane mode
 - [x] `round_to_increment` in `nearest` mode sends a load exactly halfway between two steps to the

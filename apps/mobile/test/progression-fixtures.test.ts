@@ -6,6 +6,7 @@
  * are held to the invariants they claim to illustrate, so a fixture that contradicts its own rule — a load off the
  * grid, a session past its cycle's end, a date that skips — fails before it reaches Rust, Python or a phone.
  */
+import editsFixture from '@cyberathlete/shared/fixtures/edits.json';
 import generateFixture from '@cyberathlete/shared/fixtures/generate.json';
 import reconcileFixture from '@cyberathlete/shared/fixtures/reconcile.json';
 import datesFixture from '@cyberathlete/shared/fixtures/resolve_dates.json';
@@ -337,6 +338,86 @@ describe('reconcile.json', () => {
             expect(set.target_rir).toBeLessThanOrEqual(exercise.rule.max_rir);
           }
         }
+      }
+    });
+  });
+});
+const REFUSALS = [
+  'newer_engine',
+  'started',
+  'locked',
+  'history',
+  'session_does_not_fit',
+  'out_of_range',
+  'no_such_cycle',
+  'no_such_exercise',
+];
+
+interface EditCase {
+  op: string;
+  name: string;
+  plan: PlanCycle[];
+  logs: { cycle_number: number }[];
+  args: { to?: number; cycle_number?: number; days?: number; from_cycle?: number };
+  expected: {
+    cycles?: PlanCycle[];
+    dropped?: number[];
+    refusal?: { reason: string; cycle_number: number | null; day_index: number | null };
+  };
+}
+
+const editCases = editsFixture.cases as EditCase[];
+
+describe('edits.json', () => {
+  describe.each(editCases.map((it) => [it.name, it] as const))('%s', (_name, fixtureCase) => {
+    const { op, plan, logs, expected } = fixtureCase;
+    const logged = new Set(logs.map((log) => log.cycle_number));
+    const started = (cycle: PlanCycle) =>
+      !['projected', 'locked'].includes(cycle.status) || logged.has(cycle.cycle_number);
+
+    it('names an op the engine has, and expects either a plan or a refusal', () => {
+      expect(['extend', 'shorten', 'relength', 'switch_rule']).toContain(op);
+      expect(expected.cycles === undefined).toBe(expected.refusal !== undefined);
+      if (expected.refusal) expect(REFUSALS).toContain(expected.refusal.reason);
+    });
+
+    it('keeps every date contiguous and every cycle number in sequence (INV-25)', () => {
+      const cycles = expected.cycles ?? [];
+      cycles.forEach((cycle, at) => expect(cycle.cycle_number).toBe(at + 1));
+      for (let at = 1; at < cycles.length; at += 1) {
+        const previous = cycles[at - 1];
+        const current = cycles[at];
+        if (!previous || !current) continue;
+        expect(day(current.starts_on) - day(previous.starts_on)).toBe(previous.length_days);
+      }
+    });
+
+    it('drops, moves or rewrites nothing that has started (INV-06)', () => {
+      const cycles = expected.cycles;
+      if (!cycles) return;
+      if (op === 'extend') expect(cycles.slice(0, plan.length)).toEqual(plan);
+      if (op === 'shorten') {
+        expect(cycles).toEqual(plan.slice(0, cycles.length));
+        expect(expected.dropped).toEqual(plan.slice(cycles.length).map((it) => it.cycle_number));
+        for (const dropped of plan.slice(cycles.length)) {
+          expect(dropped.status).toBe('projected');
+          expect(started(dropped)).toBe(false);
+        }
+      }
+      if (op === 'relength') {
+        plan.forEach((before, at) => {
+          const after = cycles[at];
+          if (!after) throw new Error('a cycle went missing');
+          expect(after.sessions).toEqual(before.sessions);
+          if (after.starts_on !== before.starts_on) expect(started(before)).toBe(false);
+        });
+      }
+      if (op === 'switch_rule') {
+        plan.forEach((before, at) => {
+          if (before.status !== 'projected' || logged.has(before.cycle_number)) {
+            expect(cycles[at]).toEqual(before);
+          }
+        });
       }
     });
   });

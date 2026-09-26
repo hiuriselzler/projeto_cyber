@@ -3,7 +3,9 @@
 //!
 //! Stages 1 and 2 build [`generate`] for the five v1 strategies, the three deload policies, the per-set
 //! RIR ladder and [`resolve_dates`]; stage 3a builds [`classify`] and [`reconcile`], which re-projects a
-//! plan from what was logged. Block edits — extending, shortening, a cycle's length — are stage 3b's.
+//! plan from what was logged; stage 3b builds the block edits — [`extend`], [`shorten`], [`relength`] and
+//! [`switch_rule`].
+//! [switch_rule].
 //!
 //! **What this module does not know, deliberately.** No ids: the engine names a row by its place in the
 //! plan and the wrappers mint the UUIDv7s ([ADR-002](../../../docs/decisions/ADR-002.md) § Amendment
@@ -13,6 +15,7 @@
 mod classify;
 mod dates;
 mod deload;
+mod edits;
 mod generate;
 mod plan;
 mod reconcile;
@@ -22,6 +25,7 @@ mod strategies;
 pub use classify::classify;
 pub use dates::{EpochDay, MAX_LENGTH_DAYS, MIN_LENGTH_DAYS, resolve_dates};
 pub use deload::deload_schedule;
+pub use edits::{Refusal, RefusalReason, Shortened, extend, relength, shorten, switch_rule};
 pub use generate::generate;
 pub use plan::{
     CycleOneSet, CycleStatus, DeloadPolicy, ExerciseSpec, FailurePolicy, LengthOverride, LoadStep,

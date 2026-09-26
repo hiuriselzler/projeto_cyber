@@ -23,6 +23,7 @@ from app.domain.progression import (
     PlanExercise,
     PlanLog,
     PlannedMicrocycle,
+    PlanRefused,
     PlanSession,
     PlanSet,
     ProgressionRule,
@@ -32,10 +33,14 @@ from app.domain.progression import (
     WriteKind,
     classify,
     epoch_day,
+    extend,
     from_epoch_day,
     generate,
     reconcile,
+    relength,
     resolve_dates,
+    shorten,
+    switch_rule,
 )
 from app.domain.rounding import RoundingMode
 from app.domain.strength import LoggedSet, SetType
@@ -463,3 +468,68 @@ def test_classify_reads_the_table_through_the_binding() -> None:
 def test_an_unknown_failure_policy_is_refused() -> None:
     with pytest.raises(ValueError, match="unknown failure_policy"):
         ProgressionRule(ProgressionStrategy.Fixed, min_reps=5, max_reps=5, failure_policy="deload")
+
+
+# ── block edits (stage 3b) ────────────────────────────────────────────────────────────────────────
+
+EDITS = load_fixture("edits")["cases"]
+
+
+def _edit(case: dict[str, Any]) -> dict[str, Any]:
+    """Run one edit through the binding and describe what came back in the fixture's own terms."""
+    mesocycle = _mesocycle(case["mesocycle"])
+    plan = _plan(case["plan"])
+    logs = _logs(case["logs"])
+    today = epoch_day(date.fromisoformat(case["today"]))
+    args = case["args"]
+    try:
+        if case["op"] == "extend":
+            return {"cycles": extend(mesocycle, plan, logs, today, args["to"])}
+        if case["op"] == "shorten":
+            shortened = shorten(plan, logs, args["to"])
+            return {"cycles": shortened.cycles, "dropped": shortened.dropped}
+        if case["op"] == "relength":
+            return {"cycles": relength(plan, logs, args["cycle_number"], args["days"])}
+        switched = switch_rule(
+            mesocycle,
+            plan,
+            logs,
+            today,
+            args["exercise_id"],
+            args["occurrence"],
+            args["from_cycle"],
+            _rule(args["rule"]),
+        )
+        return {"cycles": switched.cycles, "outcomes": switched.outcomes}
+    except PlanRefused as refused:
+        reason, cycle_number, day_index = refused.args
+        return {"refusal": {"reason": reason, "cycle_number": cycle_number, "day_index": day_index}}
+
+
+@pytest.mark.parametrize("case", EDITS, ids=[case["name"] for case in EDITS])
+def test_every_edit_case_agrees(case: dict[str, Any]) -> None:
+    got = _edit(case)
+    expected = case["expected"]
+    if "refusal" in expected:
+        assert got == {"refusal": expected["refusal"]}
+        return
+
+    assert "refusal" not in got, got
+    assert [_cycle_as_fixture(it) for it in got["cycles"]] == _without_rules(expected["cycles"])
+    assert got.get("dropped") == expected.get("dropped")
+    if "outcomes" in expected:
+        assert [
+            {
+                "cycle_number": it.cycle_number,
+                "exercise_id": it.exercise_id,
+                "occurrence": it.occurrence,
+                "outcome": it.outcome.name,
+                "open_loop": it.open_loop,
+            }
+            for it in got["outcomes"]
+        ] == expected["outcomes"]
+
+
+def test_a_refusal_is_a_value_error_carrying_its_reason() -> None:
+    # A router catches `ValueError` today and can narrow to `PlanRefused` for its 409.
+    assert issubclass(PlanRefused, ValueError)

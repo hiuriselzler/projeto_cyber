@@ -11,8 +11,9 @@
 use cyberathlete_core::{
     CycleOneSet, CycleStatus, DeloadPolicy, ENGINE_VERSION, EpochDay, ExerciseSpec, FailurePolicy,
     LengthOverride, LoadStep, LoggedSet, MesocycleSpec, Outcome, PlanCycle, PlanExercise, PlanLog,
-    PlanSession, PlanSet, PlannedMicrocycle, PlannedSet, RirMode, RoundingMode, Rule, SessionSpec,
-    SetOrigin, SetType, SlotOutcome, Strategy, WriteKind, generate, reconcile, resolve_dates,
+    PlanSession, PlanSet, PlannedMicrocycle, PlannedSet, Refusal, RirMode, RoundingMode, Rule,
+    SessionSpec, SetOrigin, SetType, SlotOutcome, Strategy, WriteKind, extend, generate, reconcile,
+    relength, resolve_dates, shorten, switch_rule,
 };
 use serde::Deserialize;
 
@@ -689,5 +690,179 @@ fn every_reconcile_case_agrees() {
             "case {:?}: not idempotent",
             case.name
         );
+    }
+}
+
+// ── block edits (stage 3b) ───────────────────────────────────────────────────────────────────────
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct EditCase {
+    op: String,
+    name: String,
+    mesocycle: FixtureMesocycle,
+    today: String,
+    plan: Vec<FixturePlanCycle>,
+    logs: Vec<FixturePlanLog>,
+    args: EditArgs,
+    expected: EditExpected,
+    #[allow(dead_code, reason = "prose for the reader; nothing to assert against")]
+    note: Option<String>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct EditArgs {
+    to: Option<u32>,
+    cycle_number: Option<u32>,
+    days: Option<u32>,
+    exercise_id: Option<String>,
+    occurrence: Option<u32>,
+    from_cycle: Option<u32>,
+    rule: Option<FixtureRule>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct EditExpected {
+    cycles: Option<Vec<FixturePlanCycle>>,
+    dropped: Option<Vec<u32>>,
+    outcomes: Option<Vec<FixtureOutcome>>,
+    refusal: Option<FixtureRefusal>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct FixtureRefusal {
+    reason: String,
+    cycle_number: Option<u32>,
+    day_index: Option<u32>,
+}
+
+/// What an edit produced, reduced to what every op's expectation can say.
+struct EditResult {
+    cycles: Vec<PlanCycle>,
+    dropped: Option<Vec<u32>>,
+    outcomes: Option<Vec<SlotOutcome>>,
+}
+
+fn run_edit(case: &EditCase) -> Result<EditResult, Refusal> {
+    let mesocycle = build_mesocycle(&case.mesocycle);
+    let plan = build_plan(&case.plan);
+    let logs = build_logs(&case.logs);
+    let today = epoch_day(&case.today);
+    let args = &case.args;
+    let required = |value: Option<u32>, what: &str| {
+        value.unwrap_or_else(|| panic!("case {:?} needs {what}", case.name))
+    };
+    match case.op.as_str() {
+        "extend" => {
+            extend(&mesocycle, &plan, &logs, today, required(args.to, "to")).map(|cycles| {
+                EditResult {
+                    cycles,
+                    dropped: None,
+                    outcomes: None,
+                }
+            })
+        }
+        "shorten" => shorten(&plan, &logs, required(args.to, "to")).map(|it| EditResult {
+            cycles: it.cycles,
+            dropped: Some(it.dropped),
+            outcomes: None,
+        }),
+        "relength" => relength(
+            &plan,
+            &logs,
+            required(args.cycle_number, "cycle_number"),
+            required(args.days, "days"),
+        )
+        .map(|cycles| EditResult {
+            cycles,
+            dropped: None,
+            outcomes: None,
+        }),
+        "switch_rule" => switch_rule(
+            &mesocycle,
+            &plan,
+            &logs,
+            today,
+            args.exercise_id
+                .as_deref()
+                .expect("switch_rule names an exercise"),
+            required(args.occurrence, "occurrence"),
+            required(args.from_cycle, "from_cycle"),
+            &build_rule(args.rule.as_ref().expect("switch_rule carries a rule")),
+        )
+        .map(|it| EditResult {
+            cycles: it.cycles,
+            dropped: None,
+            outcomes: Some(it.outcomes),
+        }),
+        other => panic!("unknown op {other:?}"),
+    }
+}
+
+#[test]
+fn every_edit_case_agrees() {
+    let fixture: Fixture<EditCase> = load("edits.json");
+    assert!(!fixture.cases.is_empty(), "the fixture must hold cases");
+
+    for case in &fixture.cases {
+        let result = run_edit(case);
+        match (&case.expected.refusal, result) {
+            (Some(want), Err(got)) => {
+                assert_eq!(
+                    got.reason.name(),
+                    want.reason,
+                    "case {:?}: reason",
+                    case.name
+                );
+                assert_eq!(
+                    got.cycle_number, want.cycle_number,
+                    "case {:?}: cycle",
+                    case.name
+                );
+                assert_eq!(got.day_index, want.day_index, "case {:?}: day", case.name);
+            }
+            (Some(want), Ok(_)) => panic!(
+                "case {:?}: expected a refusal, {:?}",
+                case.name, want.reason
+            ),
+            (None, Err(got)) => panic!("case {:?}: refused, {got:?}", case.name),
+            (None, Ok(got)) => {
+                let expected =
+                    build_plan(case.expected.cycles.as_deref().expect("expected cycles"));
+                assert_eq!(
+                    got.cycles.len(),
+                    expected.len(),
+                    "case {:?}: cycle count",
+                    case.name
+                );
+                for (got, want) in got.cycles.iter().zip(&expected) {
+                    assert_eq!(
+                        got, want,
+                        "case {:?}, cycle {}",
+                        case.name, want.cycle_number
+                    );
+                }
+                assert_eq!(
+                    got.dropped, case.expected.dropped,
+                    "case {:?}: dropped",
+                    case.name
+                );
+                let outcomes = case.expected.outcomes.as_ref().map(|list| {
+                    list.iter()
+                        .map(|it| SlotOutcome {
+                            cycle_number: it.cycle_number,
+                            exercise_id: it.exercise_id.clone(),
+                            occurrence: it.occurrence,
+                            outcome: Outcome::from_name(&it.outcome).expect("a known outcome"),
+                            open_loop: it.open_loop,
+                        })
+                        .collect::<Vec<_>>()
+                });
+                assert_eq!(got.outcomes, outcomes, "case {:?}: outcomes", case.name);
+            }
+        }
     }
 }
