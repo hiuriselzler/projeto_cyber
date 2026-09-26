@@ -201,7 +201,9 @@ app mid-workout must lose nothing.
 sync will thrash forever.
 
 *Enforced:* the core crate depends on no I/O, no clock, and no RNG — `#![forbid(unsafe_code)]`;
-`cargo deny` bans I/O, clock and RNG **crates** such as `rand`; and clippy's `disallowed-methods` bans
+`cargo deny` bans I/O, clock and RNG **crates** such as `rand` from everything the library links — a test
+harness, never linked into it, is outside that graph ([ADR-012](decisions/ADR-012.md) § Amendment 2026-09-26);
+and clippy's `disallowed-methods` bans
 `std::time::SystemTime::now`, because `cargo deny` inspects dependencies, not standard-library calls.
 "Now" is always passed in as a parameter. If [ADR-004](decisions/ADR-004.md) is rejected and the domain
 stays duplicated in Python and TypeScript, each copy needs two gates, because an import rule sees imports

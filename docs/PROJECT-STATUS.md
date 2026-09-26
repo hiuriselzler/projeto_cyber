@@ -16,7 +16,7 @@ when its own criteria are ticked. Tick the box here only then.
 | | |
 |---|---|
 | **Phase** | **Tasks 001, 002, 011, 003, 019, 017 and 004 complete.** The schema exists in Postgres and SQLite, seeded and enforcing itself; the design system exists in `src/ui/`, token-driven and tested in both languages, both unit systems and both themes; accounts, sessions and the privacy key exist on both sides, with row-level security proven under the API's own role; a user can delete their account, from the app or the web; and [ADR-004](decisions/ADR-004.md) has its answer — **option B, the single Rust core**, proven through both bindings on the device. **The core loop exists** ([task 004](tasks/004-exercise-catalog-and-logging.md)): the seeded catalog, the set row, routines, the rest timer, set types, every tracking mode, the finish flow with its records, history and charts, and the API's mirror endpoints — offline, on the phone (*updated 2026-09-26*) |
-| **Repository** | Private GitHub repository `hiuriselzler/projeto_cyber`. `main` holds the documentation and tasks 001, 002, 011, 003, 019 and 017, each merged by pull request (#1; #5; #7 and #8; #9; #11; #16); each further piece arrives the same way, with CI green before merge. Task 004 is on `feat/task-004-catalog-and-logging`, in **[PR #17](https://github.com/hiuriselzler/projeto_cyber/pull/17)** (opened 2026-09-24 as a draft; the last step pushed 2026-09-26 and the PR marked ready once CI is green), **waiting for the owner to merge** |
+| **Repository** | Private GitHub repository `hiuriselzler/projeto_cyber`. `main` holds the documentation and tasks 001, 002, 011, 003, 019, 017 and 004, each merged by pull request (#1; #5; #7 and #8; #9; #11; #16; #17, merged 2026-09-26); each further piece arrives the same way, with CI green before merge. Task 005 is on `feat/task-005-progression-planner` |
 | **Docs** | 49 files, internally consistent, all cross-links resolving |
 | **Decisions** | 15 ADRs, **all now accepted**. [ADR-004](decisions/ADR-004.md)'s spike passed on 2026-09-18 and its outcome is recorded: **option B, the single Rust core**. Its four pre-launch conditions remain outstanding, in tasks 005 and 006 |
 | **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **7 complete** (001, 002, 011, 003, 019, 017, 004) |
@@ -221,8 +221,9 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
 
 #### ☐ 005 — Strength progression planner · **XL** · depends: 004 · blocks: 009, 010, 013, 014
 > **The reason the product exists.**
-> **Not started.** Its stages are proposed in the task file (2026-09-26): stage 0 catches the file up with ADR-004's
-> option B, and stage 1, the engine's foundation, carries five decisions awaiting the owner.
+> **In progress** on `feat/task-005-progression-planner` (started 2026-09-26). Its nine stages are in the task file.
+> Stage 0 is done, bringing the file up to date with ADR-004's option B. Stage 1, the engine's foundation, is under way
+> with all six of its decisions taken as recommended.
 - [ ] Engine: five v1 strategies (`cycle_pattern` is v2 — leave the arm unimplemented, not half-done)
 - [ ] Generation + reconciliation as one **pure, deterministic, idempotent** function, `now` a parameter
 - [ ] **Every projection stamped with `engine_version`; an older engine never re-projects a newer
@@ -558,6 +559,7 @@ nothing itself ([task 004](tasks/004-exercise-catalog-and-logging.md) § Scope).
 | 2026-09-25 | Task 004 stage 8: every mirror write is a `PUT` of the aggregate resolved row by row, a row left out is kept (02 §5, §7); the completion rule moves into the core; a global answers a write as a stranger's row does; the records cache rebuilds per exercise inside the write, under a per-user lock. **Task 019 amended:** a session's end keeps the account's local row, which the device's training cascades from — see the dated entry below |
 | 2026-09-25 | Closing task 004 planned: the weighted pull-up ticked on its proofs (device half → OQ 18); the rest notification's timing moved to OQ 13; a development-only ✓ timer for latency under the rest bar; `Sheet`'s exit animation moved to § Gaps; the 30 taps counted on a 5 × 4 routine — see the dated entry below |
 | 2026-09-25 | ✓ latency judged on a **production bundle** with the rest bar running, not on the development build or a synthetic loop; the live workout's set rows **memoized** (the app's first `memo`) with stable handlers, after a profile showed every ✓ re-rendering all twenty — see the dated entry below |
+| 2026-09-26 | **Task 005 started.** Stage 0 brings the task file up to date with option B; stage 1's six decisions were taken as recommended: `proptest` with dev-dependencies outside `cargo deny`'s graph ([ADR-012](decisions/ADR-012.md) amended, INV-10's enforcement line with it); natural keys in the engine, ids minted by the wrappers ([ADR-002](decisions/ADR-002.md) amended); a deload multiplies the last working prescription and consumes no step (01 FR-3.9); the wrappers resolve the increment; plain records shaped like the rows; dates as whole days since 1970 — see the dated entry below |
 | 2026-09-26 | **Task 004 complete.** The live list's reveal aims again when its height changes; **with the keypad open the rest is a countdown on the keypad's heading line and the bar is not drawn** (07 §6) — on a 533 dp screen the two together left the list no height; the short screen judged by the field being edited — see the dated entry below |
 
 ### 2026-09-08 — documentation reconciliation pass
@@ -2363,3 +2365,34 @@ marked ready for the owner to merge once CI is green.
 (stages 1–3, pure Rust, no phone), then persistence, the safety controls and three screen stages each ending on the
 phone. Stage 1 carries five decisions for the owner. The one found by reading the gates rather than the requirements:
 **`core-rs/deny.toml` bans `rand` and checks dev-dependencies too, so `proptest` cannot be added as things stand.**
+
+### 2026-09-26 — task 005 started: the docs catch up, and stage 1's six decisions
+
+The owner merged [PR #17](https://github.com/hiuriselzler/projeto_cyber/pull/17), and
+`feat/task-005-progression-planner` was cut from the `main` that resulted. The owner took every recommendation.
+
+**Stage 0 — the task file catches up with option B.** Criteria that said "identically in Python and TypeScript" now
+say *every suite*: `cargo test`, pytest through PyO3, and the app on the device through UniFFI. Jest cannot load the
+core, so it checks the fixtures' shape. The fixtures live flat in `packages/shared/fixtures/`. The *(option B)* markers
+are gone. `generate` takes no `now`, because nothing it produces depends on the day it runs.
+
+**Stage 1's decisions**, each recorded where it will be looked for:
+1. **`proptest`, with dev-dependencies outside `cargo deny`'s graph** — [ADR-012](decisions/ADR-012.md) § Amendment
+   2026-09-26, and INV-10's enforcement line, which now says the crate ban covers what the library links. Proven
+   both ways before it was written down: `rand` as a library dependency still fails `cargo deny check bans`;
+   `proptest` as a dev-dependency passes.
+2. **The engine speaks natural keys; the wrappers mint ids** — [ADR-002](decisions/ADR-002.md) § Amendment 2026-09-26.
+3. **A deload multiplies each set's last working prescription and consumes no step** — [01 FR-3.9](01-business-requirements.md).
+   Sets × 5000 bp with a tie to the fewer and never below one, so 3 become 1; RIR + 2, clamped and marked. **Added
+   when it was taken:** `was_clamped` now means *the engine bent a generated target to fit its rule*, not only a
+   per-set ladder's sum ([03 §5](03-database-schema.md)).
+4. **The wrappers resolve the increment** and pass one exact `increment_kg` per exercise; the engine knows no units.
+5. **Plain records shaped like the rows**, each carrying its natural key.
+6. **Dates cross the core as whole days since 1970-01-01.** Found while planning: `deny.toml` bans the date crates
+   along with the clock, and `resolve_dates` only ever adds days.
+
+**Fixture #1 as confirmed:** 40 kg 3×6 at RIR 3, +2.5 kg per working cycle, deloads at 6 and 12 of 1×6 at 30 kg and
+37.5 kg, RIR 4 (clamped from 5) — and 62.5 kg at cycle 11.
+
+- **INV-10's enforcement line changed**, under ADR-012's amendment as AGENTS.md requires. ADR-002 and ADR-012 were
+  amended rather than joined by a new ADR. Counts unchanged: 49 documents, 15 ADRs.

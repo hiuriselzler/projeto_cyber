@@ -248,6 +248,21 @@ it later is a strategy branch in the engine, not a migration.
   mesocycle. Under policy `none` no microcycle is ever a deload and the engine must not insert one.
   A deload microcycle may also be given a **different length** from the rest of the block, which is
   a common and legitimate way to programme one.
+  - *Exactly what a deload prescribes* (settled 2026-09-26, [task 005](tasks/005-strength-progression-planner.md)):
+    it multiplies **each set's last working prescription** — the cycle before it, or the last one that was not a
+    deload — and **does not consume a progression step**, so the cycle after it resumes one step past the last
+    working cycle. That is what the worked example in [00](00-project-context.md) already says: 50 kg at cycle 5,
+    **30 kg** at cycle 6, **52.5 kg** at cycle 7.
+  - The load is `round_to_increment(load × deload_load_bp, nearest)` (INV-02). The working-set count is
+    multiplied by `deload_set_bp` with **a tie going to the fewer sets** — the rule ADR-010 gives loads, so 3 sets
+    become 1 — and **never below one**, so a deload never removes an exercise. Warm-up, drop and back-off sets are
+    kept as they are.
+  - The target RIR is raised by `deload_rir_bump` and **clamped into the rule's bounds** (INV-05); a clamped set
+    is marked `was_clamped`, so the plan can say why it reads RIR 4 rather than 5.
+  - Under `every_n_microcycles`, every N-th cycle is a deload, and "the final cycle too" adds the last cycle
+    when N does not already land on it. Cycle 1 is never a deload: it is the user's own baseline (FR-3.3).
+  - A deload applies to every exercise in the cycle, `fixed` ones included: `fixed` holds the progression still,
+    and the deload is the cycle's, not the exercise's.
 - **FR-3.10** Every generated load must be rounded to a **liftable** value for that exercise's
   equipment (INV-02). 41.6667 kg must never reach the screen.
 

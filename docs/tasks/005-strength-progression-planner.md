@@ -18,23 +18,25 @@ Implements [01 §3](../01-business-requirements.md) on the storage model of
 
 ### Phase A — the engine (build this first, and alone)
 
-The progression core, in whichever form [ADR-004](../decisions/ADR-004.md)'s task-017 spike
-settled on — one Rust crate, or Python mirrored in TypeScript. **Pure: no I/O, no clock, no
-randomness** (INV-10). `now` is a parameter.
-
-> That decision is already made by the time this task starts ([task 017](017-local-toolchain-device-spike.md)
-> is not complete until ADR-004 has a recorded outcome, and task 004 waits for it). Do not reopen it here.
+The progression core, in the single Rust crate `core-rs` that [ADR-004](../decisions/ADR-004.md) settled on
+(option B, 2026-09-18), beside the existing `round_to_increment` in `core-rs/src/progression/`. **Pure: no I/O,
+no clock, no randomness** (INV-10). `now` is a parameter wherever a function needs one. The server reaches it
+through PyO3 (`app/domain/`), the app through UniFFI (`src/domain/`); both wrappers hold no logic.
 
 ```
-generate(mesocycle_spec, cycle1, rules, now)  -> planned microcycles 2..N
+generate(mesocycle_spec, cycle_one)           -> planned microcycles 2..N, dated and stamped
 reconcile(plan, logs, now)                    -> re-projected plan
 classify(planned_exercise, logs)              -> Exceeded | Met | Under | Missed
 round_to_increment(weight_kg, increment_kg, mode)
                                               -> the ONLY rounding (INV-02); nearest | down | up,
                                                  a tie goes to the lighter load (ADR-010)
-resolve_dates(mesocycle)                      -> starts_on for every cycle, walking length_days
+resolve_dates(start_day, length_days[])       -> starts_on for every cycle, walking length_days
 ENGINE_VERSION                                -> integer; bumped exactly when a fixture's output changes
 ```
+
+`generate` takes no `now`: nothing it produces depends on the day it runs. `reconcile` does, to know which
+cycles have started. **Dates cross the core as whole days since 1970-01-01** (`i32`) — `deny.toml` bans the
+date crates with the clock, and a date here is only ever a start plus a number of days (stage 1, decision 6).
 
 **Five strategies in v1** per [01 §3.2](../01-business-requirements.md): `linear_load`,
 `double_progression`, `percent_1rm`, `rir_autoregulated`, `fixed`. The user picks; there is no
@@ -69,7 +71,9 @@ Non-negotiable properties, tested as properties over randomised inputs, not just
 - **dates are contiguous**: each cycle starts exactly `length_days` after the previous one, for
   every mix of cycle lengths.
 
-Shared fixtures in `packages/shared/fixtures/progression/`, run by both suites. **The user's own
+Shared fixtures in `packages/shared/fixtures/`, flat beside task 004's, run by every suite: `cargo test`
+directly, pytest through PyO3, and the app on the device through UniFFI. Jest cannot load the core
+(`apps/mobile/test/strength-fixtures.test.ts` says why), so it holds the files to their own shape. **The user's own
 example is fixture #1**: 40 kg, 3×6, 2.5 kg step, 12 microcycles, deloads at 6 and 12 → 62.5 kg
 at cycle 11. If that fixture disagrees with what the user meant, this is where it surfaces, cheaply.
 
@@ -88,9 +92,10 @@ at cycle 11. If that fixture disagrees with what the user meant, this is where i
 - Reconciliation triggers on workout completion, both locally and server-side; because it is
   idempotent, firing twice is harmless.
 
-### Engine safety controls — [ADR-004](../decisions/ADR-004.md)'s conditions, under option B
+### Engine safety controls — [ADR-004](../decisions/ADR-004.md)'s conditions 1 and 4
 Required before the first user who is not the developer, and built here because they live in the
-`src/domain/` wrapper. Under option A the engine itself ships over the air and these are not needed.
+`src/domain/` wrapper. The engine is native code and cannot be patched over the air; these are what can be
+changed over the air instead.
 - **Kill switch.** Each progression strategy, and local re-projection as a whole, can be switched off
   by configuration delivered over the air. A switched-off strategy leaves its cycles as last projected
   and defers to the server's projection; logging, history, recording and sync are untouched.
@@ -121,8 +126,9 @@ Required before the first user who is not the developer, and built here because 
 
 ## Stages
 
-> **Proposed 2026-09-26, at the end of task 004; not started.** A plan, to be re-cut here whenever a stage learns
-> something — task 004's lesson was that a decomposition living only in a conversation is lost with it.
+> **Proposed 2026-09-26, at the end of task 004; started 2026-09-26** on `feat/task-005-progression-planner`, cut from
+> the `main` that merged PR #17. A plan, to be re-cut here whenever a stage learns something — task 004's lesson was
+> that a decomposition living only in a conversation is lost with it.
 
 Each stage ends green on what CI runs, and **every stage that builds a screen ends on the phone** too: every device
 pass in task 004 found a defect that `tsc`, ESLint and a green Jest suite had missed. Stages 1–3 are pure Rust and need
@@ -130,7 +136,7 @@ no phone.
 
 | # | What it lands | State |
 |---|---|---|
-| **0** | The task file catches up with [ADR-004](../decisions/ADR-004.md)'s option B — see below | ☐ |
+| **0** | The task file catches up with [ADR-004](../decisions/ADR-004.md)'s option B — see below | ☑ |
 | **1** | **The engine's foundation:** the plan's types, `resolve_dates`, `ENGINE_VERSION`, `generate` for `linear_load` and `fixed`, the three deload policies, the property-test harness, **fixture #1** | ☐ |
 | **2** | The other three v1 strategies — `double_progression`, `percent_1rm` (total, via `baseline_e1rm_kg`), `rir_autoregulated` — and the per-set RIR ladder, clamped and marked (INV-05) | ☐ |
 | **3** | `classify` and `reconcile`: the INV-06 guard, the older engine yielding, user edits and pins surviving (FR-3.14), a strategy switched from the load achieved (FR-3.6a), extending and shortening a block, and date re-derivation | ☐ |
@@ -140,20 +146,23 @@ no phone.
 | **7** | The cycle view and the calendar view, which must agree, and editing a future cycle — device pass | ☐ |
 | **8** | Today's session pre-filled from the plan, the after-session diff, the deload suggestion, adherence and the RIR trend chart; the 500 ms and airplane-mode criteria; the closing pass | ☐ |
 
-**Before stage 0:** the owner merges [PR #17](https://github.com/hiuriselzler/projeto_cyber/pull/17) (task 004), and the
-branch `feat/task-005-progression-planner` is cut from the `main` that results. If PR #17 is still open when the
-session starts, that is the first question to ask, before any change.
+**Before stage 0:** the owner merged [PR #17](https://github.com/hiuriselzler/projeto_cyber/pull/17) (task 004) on
+2026-09-26, and `feat/task-005-progression-planner` was cut from the `main` that resulted.
 
-**Stage 0 — the docs catch up** *(the same move as task 004's stage 0).* This file was written before
+**Stage 0 — the docs catch up** *(the same move as task 004's stage 0). Done 2026-09-26.* This file was written before
 [ADR-004](../decisions/ADR-004.md) answered **option B**, so:
 - Criteria that say "identically in Python and TypeScript" become **the Rust core, run by all three suites through its
   bindings**: `cargo test` directly, pytest through PyO3, and the app on the device through UniFFI. Jest cannot load the
   core (`apps/mobile/test/strength-fixtures.test.ts` says why), so it checks the fixture files' shape instead.
 - The fixtures live flat in `packages/shared/fixtures/` like task 004's, not in a `progression/` folder.
 - Phase A's "in whichever form the spike settled on" and the *(option B)* markers become plain statements.
+- Stage 1's six decisions are recorded where they belong: decision 1 in [ADR-012](../decisions/ADR-012.md) § Amendment
+  2026-09-26 and INV-10's enforcement line; decision 2 in [ADR-002](../decisions/ADR-002.md) § Amendment 2026-09-26;
+  decision 3 in [01 FR-3.9](../01-business-requirements.md) and `was_clamped` in [03 §5](../03-database-schema.md);
+  decisions 4–6 here and in PROJECT-STATUS's decision log.
 
-**Stage 1 — the engine's foundation, proposed.** Pure Rust in `core-rs/src/progression/`, beside the existing
-`round_to_increment`.
+**Stage 1 — the engine's foundation. Planned and approved 2026-09-26, every decision as recommended.** Pure Rust in
+`core-rs/src/progression/`, beside the existing `round_to_increment`.
 - *What it builds:* the input and output types; `resolve_dates` (each cycle starts `length_days` after the one
   before, for any mix of lengths); `ENGINE_VERSION = 1`; `generate` for `linear_load` (step in kg, or in basis points of
   cycle 1's load) and `fixed`; deload policies `none`, `every_n_microcycles` (with or without the final cycle) and
@@ -169,7 +178,8 @@ session starts, that is the first question to ask, before any change.
 - *Bindings:* stage 1 exposes `generate` through **PyO3** (cheap, and CI runs it); UniFFI waits for stage 4, when the app
   first calls the engine, so the WSL2 rebuild happens once rather than every stage.
 
-Stage 1 carries five decisions, each the owner's, each with a recommendation:
+Stage 1 carried six decisions, each the owner's. **All six were taken as recommended on 2026-09-26**; the options
+weighed are kept below because the reasoning is what a later stage will need:
 
 1. **How to property-test under INV-10's gate.** `core-rs/deny.toml` bans `rand`, and cargo-deny checks dev-dependencies
    unless told otherwise, so `proptest`, which depends on `rand`, would fail `cargo deny check`. The options are:
@@ -194,6 +204,9 @@ Stage 1 carries five decisions, each the owner's, each with a recommendation:
    (INV-05); and sets × 5000 bp with **ties to the lighter**, the same rule ADR-010 gives loads, so 3 sets become 1.
    The alternative for sets is ties to the heavier (3 → 2), a gentler deload at the cost of a second rounding rule. The
    owner confirms, and fixture #1 is then written with its deload cycles spelled out.
+   **Added when it was taken:** a deload's RIR that had to be clamped is marked `was_clamped` too, not only a per-set
+   ladder's sum, so the plan can always say why a number reads as it does. The flag's meaning widens to *the engine
+   bent this set's target to fit its rule* ([03 §5](../03-database-schema.md)).
 4. **Where the increment is resolved.** INV-02 resolves it as exercise override → modality default for the user's unit
    system → 2.5 kg / 5 lb, which means reading tables. **Recommended:** the wrappers resolve it and pass one exact
    `increment_kg` per planned exercise; the engine never knows about units or modalities. That keeps unit handling
@@ -201,17 +214,30 @@ Stage 1 carries five decisions, each the owner's, each with a recommendation:
 5. **The input's shape.** **Recommended:** plain records shaped like the rows, one level each: mesocycle spec →
    microcycles → sessions → exercises → sets, plus the rules. Each carries its natural key, status, origin, pin and
    `engine_version`, so a fixture reads as the plan it describes and each wrapper is a thin mapper. `perceived_fatigue`
-   is **not** in them (INV-03).
+   is **not** in them (INV-03). *As built in stage 1:* `generate`'s input carries only what generation reads — the
+   spec and cycle 1's sessions, with each exercise's resolved rule and increment inline — and its output carries the
+   natural keys and `engine_version`. Status, origin and pin arrive on the plan `reconcile` reads, in stage 3.
+6. **How dates cross the core** *(found while planning; not in the original five).* `deny.toml` bans `chrono` and
+   `time` with the clock. **Recommended:** a date crosses as an `i32` count of days since 1970-01-01, and each wrapper
+   converts it to and from its own `date`. `resolve_dates` only ever adds days, so integers are exact and there is no
+   calendar code in the core to get wrong.
 
-*What only the owner can do:* confirm fixture #1 reads as they meant it, including decision 3's deload loads. That is
-the cheapest point in the task to find out it doesn't.
+**Fixture #1, as the owner confirmed it** — a `linear_load` rule with a 2.5 kg step, reps bounded 6–6, RIR bounded
+0–4, a target of RIR 3, and `every_n_microcycles` with N = 6:
+
+| Cycle | 1 | 2 | 3 | 4 | 5 | **6** | 7 | 8 | 9 | 10 | 11 | **12** |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Prescription | 3×6 @ 40 | 42.5 | 45 | 47.5 | 50 | **1×6 @ 30, RIR 4\*** | 52.5 | 55 | 57.5 | 60 | **62.5** | **1×6 @ 37.5, RIR 4\*** |
+
+\* 3 + 2 = 5, clamped to the rule's maximum of 4 and marked `was_clamped`. Every working cycle is 3×6 at RIR 3.
 
 ## Acceptance criteria
-- [ ] Fixture #1 (the user's 40 → 62.5 kg example) passes identically in Python and TypeScript
+- [ ] Fixture #1 (the user's 40 → 62.5 kg example) passes in every suite — `cargo test`, pytest through PyO3, and
+      the app on the device through UniFFI
 - [ ] A per-set ladder `[2, 1, 0]` on a rule with `max_rir = 3` produces RIR `3, 3, 3` marked
       clamped at target 3, and `3, 2, 1` unclamped at target 1 (FR-3.8a)
 - [ ] A 2.5 % step (`load_step_bp = 250`) from a 140 kg squat prescribes **142.5 kg** — the former
-      two-decimal fraction, stored as 3 %, gave 145 kg — and Python and TypeScript agree on every
+      two-decimal fraction, stored as 3 %, gave 145 kg — and every suite agrees on every
       percentage-derived load in the fixture set
 - [ ] Double progression with range 6–8 and a 2.5 kg step produces
       `3×6@40 → 3×7@40 → 3×8@40 → 3×6@42.5`
@@ -241,9 +267,9 @@ the cheapest point in the task to find out it doesn't.
 - [ ] The whole flow — build, generate, browse to the final cycle — works in airplane mode
 - [ ] `round_to_increment` in `nearest` mode sends a load exactly halfway between two steps to the
       lighter one — 41.25 kg on a 2.5 kg grid gives 40 kg — identically in every suite
-- [ ] *(option B)* With a strategy switched off by over-the-air configuration, its cycles stay as last
+- [ ] With a strategy switched off by over-the-air configuration, its cycles stay as last
       projected, and the device still logs, records and syncs
-- [ ] *(option B)* A device below the minimum engine version does not re-project locally, shows the
+- [ ] A device below the minimum engine version does not re-project locally, shows the
       server's projection, and is blocked from nothing else
 
 ## Notes and risks

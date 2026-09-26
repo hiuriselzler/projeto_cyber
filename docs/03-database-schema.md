@@ -517,7 +517,9 @@ planned_sets (
   target_min_reps  smallint NULL,         -- shown as a range for double_progression
   target_max_reps  smallint NULL,
   target_rir       smallint NULL CHECK (BETWEEN 0 AND 10),
-  was_clamped      boolean NOT NULL DEFAULT false,   -- a per_set RIR sum was clamped into bounds (INV-05)
+  was_clamped      boolean NOT NULL DEFAULT false,
+      -- the engine bent a generated target to fit its rule (INV-05): a per_set RIR sum, a deload's raised RIR,
+      -- or a target carried from cycle 1 outside the rule's bounds, clamped into them (task 005, 2026-09-26)
   origin           set_origin_enum NOT NULL DEFAULT 'generated',  -- generated | user_edited
   is_pinned        boolean NOT NULL DEFAULT false,   -- FR-3.14: engine must not touch
   ‹sync›,
