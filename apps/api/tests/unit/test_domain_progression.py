@@ -39,6 +39,7 @@ from app.domain.progression import (
     reconcile,
     relength,
     resolve_dates,
+    settle_statuses,
     shorten,
     switch_rule,
 )
@@ -488,6 +489,8 @@ def _edit(case: dict[str, Any]) -> dict[str, Any]:
         if case["op"] == "shorten":
             shortened = shorten(plan, logs, args["to"])
             return {"cycles": shortened.cycles, "dropped": shortened.dropped}
+        if case["op"] == "settle_statuses":
+            return {"cycles": settle_statuses(plan, logs, today)}
         if case["op"] == "relength":
             return {"cycles": relength(plan, logs, args["cycle_number"], args["days"])}
         switched = switch_rule(

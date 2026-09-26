@@ -22,9 +22,9 @@ use cyberathlete_core::{
     load_kg as core_load_kg, missing_for_completion as core_missing_for_completion,
     personal_bests as core_personal_bests, reconcile as core_reconcile, relength as core_relength,
     resolve_dates as core_resolve_dates, round_to_increment as core_round_to_increment,
-    session_metrics as core_session_metrics, shorten as core_shorten,
-    standing_records as core_standing_records, switch_rule as core_switch_rule,
-    volume_kg as core_volume_kg,
+    session_metrics as core_session_metrics, settle_statuses as core_settle_statuses,
+    shorten as core_shorten, standing_records as core_standing_records,
+    switch_rule as core_switch_rule, volume_kg as core_volume_kg,
 };
 use pyo3::create_exception;
 use pyo3::exceptions::PyValueError;
@@ -1834,6 +1834,21 @@ fn switch_rule(
     .map_err(refused)
 }
 
+/// Move each cycle's status on from the logs, as of `today` — the first half of the re-projection
+/// entry point, *settle, then reconcile, then write* (task 005 stage 4a).
+#[pyfunction]
+fn settle_statuses(
+    plan: Vec<PyPlanCycle>,
+    logs: Vec<PyPlanLog>,
+    today: EpochDay,
+) -> Vec<PyPlanCycle> {
+    plan_to_py(core_settle_statuses(
+        &plan_to_core(plan),
+        &logs_to_core(logs),
+        today,
+    ))
+}
+
 #[pymodule]
 fn _core(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<PyRoundingMode>()?;
@@ -1896,5 +1911,6 @@ fn _core(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_function(wrap_pyfunction!(shorten, module)?)?;
     module.add_function(wrap_pyfunction!(relength, module)?)?;
     module.add_function(wrap_pyfunction!(switch_rule, module)?)?;
+    module.add_function(wrap_pyfunction!(settle_statuses, module)?)?;
     Ok(())
 }

@@ -55,6 +55,7 @@ from cyberathlete_core import (
     reconcile,
     relength,
     resolve_dates,
+    settle_statuses,
     shorten,
     switch_rule,
 )
@@ -105,6 +106,7 @@ __all__ = [
     "reconcile",
     "relength",
     "resolve_dates",
+    "settle_statuses",
     "shorten",
     "switch_rule",
 ]

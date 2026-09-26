@@ -699,3 +699,7 @@ def switch_rule(
 ) -> Reconciled:
     """Put `rule` on one exercise from `from_cycle` on, and reconcile (FR-3.6a). The preview and
     the commit are this same call. Raises `PlanRefused`."""
+
+def settle_statuses(plan: list[PlanCycle], logs: list[PlanLog], today: int) -> list[PlanCycle]:
+    """Move each cycle's status on from the logs, as of `today`: the first logged set starts a
+    cycle, and its last session or its last day completes it. Locked and skipped never move."""

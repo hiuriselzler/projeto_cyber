@@ -20,6 +20,7 @@ mod generate;
 mod plan;
 mod reconcile;
 mod rounding;
+mod status;
 mod strategies;
 
 pub use classify::classify;
@@ -35,6 +36,7 @@ pub use plan::{
 };
 pub use reconcile::reconcile;
 pub use rounding::{RoundingMode, round_to_increment};
+pub use status::settle_statuses;
 
 /// The version of the engine that stamps every microcycle it projects (INV-06,
 /// [ADR-004](../../../docs/decisions/ADR-004.md)).

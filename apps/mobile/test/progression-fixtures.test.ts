@@ -376,7 +376,7 @@ describe('edits.json', () => {
       !['projected', 'locked'].includes(cycle.status) || logged.has(cycle.cycle_number);
 
     it('names an op the engine has, and expects either a plan or a refusal', () => {
-      expect(['extend', 'shorten', 'relength', 'switch_rule']).toContain(op);
+      expect(['extend', 'shorten', 'relength', 'switch_rule', 'settle_statuses']).toContain(op);
       expect(expected.cycles === undefined).toBe(expected.refusal !== undefined);
       if (expected.refusal) expect(REFUSALS).toContain(expected.refusal.reason);
     });

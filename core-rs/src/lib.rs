@@ -24,7 +24,7 @@ pub use progression::{
     PlanSession, PlanSet, PlannedExercise, PlannedMicrocycle, PlannedSession, PlannedSet,
     Reconciled, Refusal, RefusalReason, RirMode, RoundingMode, Rule, SessionSpec, SetOrigin,
     Shortened, SlotOutcome, Strategy, WriteKind, classify, extend, generate, reconcile, relength,
-    resolve_dates, round_to_increment, shorten, switch_rule,
+    resolve_dates, round_to_increment, settle_statuses, shorten, switch_rule,
 };
 pub use strength::{
     LoggedSet, MAX_EFFECTIVE_REPS, PersonalBests, PrAchievement, PrKind, RepsAtWeight,

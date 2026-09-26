@@ -13,7 +13,7 @@ use cyberathlete_core::{
     LengthOverride, LoadStep, LoggedSet, MesocycleSpec, Outcome, PlanCycle, PlanExercise, PlanLog,
     PlanSession, PlanSet, PlannedMicrocycle, PlannedSet, Refusal, RirMode, RoundingMode, Rule,
     SessionSpec, SetOrigin, SetType, SlotOutcome, Strategy, WriteKind, extend, generate, reconcile,
-    relength, resolve_dates, shorten, switch_rule,
+    relength, resolve_dates, settle_statuses, shorten, switch_rule,
 };
 use serde::Deserialize;
 
@@ -797,6 +797,11 @@ fn run_edit(case: &EditCase) -> Result<EditResult, Refusal> {
             cycles: it.cycles,
             dropped: None,
             outcomes: Some(it.outcomes),
+        }),
+        "settle_statuses" => Ok(EditResult {
+            cycles: settle_statuses(&plan, &logs, today),
+            dropped: None,
+            outcomes: None,
         }),
         other => panic!("unknown op {other:?}"),
     }

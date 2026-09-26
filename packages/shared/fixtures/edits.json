@@ -23,7 +23,7 @@
           "starts_on": "2026-10-05",
           "length_days": 7,
           "is_deload": false,
-          "status": "completed",
+          "status": "projected",
           "engine_version": 1,
           "last_write_kind": "engine",
           "sessions": [
@@ -364,7 +364,7 @@
             "starts_on": "2026-10-05",
             "length_days": 7,
             "is_deload": false,
-            "status": "completed",
+            "status": "projected",
             "engine_version": 1,
             "last_write_kind": "engine",
             "sessions": [
@@ -1135,7 +1135,7 @@
           "starts_on": "2026-10-05",
           "length_days": 7,
           "is_deload": false,
-          "status": "completed",
+          "status": "projected",
           "engine_version": 1,
           "last_write_kind": "engine",
           "sessions": [
@@ -1242,7 +1242,7 @@
           "starts_on": "2026-10-05",
           "length_days": 7,
           "is_deload": false,
-          "status": "completed",
+          "status": "projected",
           "engine_version": 1,
           "last_write_kind": "engine",
           "sessions": [
@@ -4391,7 +4391,7 @@
           "starts_on": "2026-10-05",
           "length_days": 7,
           "is_deload": false,
-          "status": "completed",
+          "status": "projected",
           "engine_version": 1,
           "last_write_kind": "engine",
           "sessions": [
@@ -4503,7 +4503,7 @@
           "starts_on": "2026-10-05",
           "length_days": 7,
           "is_deload": false,
-          "status": "completed",
+          "status": "projected",
           "engine_version": 1,
           "last_write_kind": "engine",
           "sessions": [
@@ -4592,6 +4592,664 @@
       },
       "expected": {
         "refusal": {"reason": "no_such_exercise", "cycle_number": null, "day_index": null}
+      }
+    },
+    {
+      "op": "settle_statuses",
+      "name": "a cycle's first logged set starts it, and its last session completes it",
+      "note": "Stage 4a decision 2. Cycle 1 holds one session, and it is logged: projected -> in_progress -> completed in one settling, written as the user's. Cycle 2, untouched, stays projected.",
+      "mesocycle": {
+        "start_date": "2026-10-05",
+        "num_microcycles": 3,
+        "default_length_days": 7,
+        "length_overrides": [],
+        "deload": {"mode": "none"},
+        "deload_set_bp": 5000,
+        "deload_load_bp": 6000,
+        "deload_rir_bump": 2
+      },
+      "today": "2026-10-06",
+      "plan": [
+        {
+          "cycle_number": 1,
+          "starts_on": "2026-10-05",
+          "length_days": 7,
+          "is_deload": false,
+          "status": "projected",
+          "engine_version": 1,
+          "last_write_kind": "engine",
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "exercise_id": "squat",
+                  "increment_kg": 2.5,
+                  "rule": {"strategy": "linear_load", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 6, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+                  "uses_bodyweight": false,
+                  "body_weight_kg": null,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 40, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false, "origin": "generated", "is_pinned": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 2,
+          "starts_on": "2026-10-12",
+          "length_days": 7,
+          "is_deload": false,
+          "status": "projected",
+          "engine_version": 1,
+          "last_write_kind": "engine",
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "exercise_id": "squat",
+                  "increment_kg": 2.5,
+                  "rule": {"strategy": "linear_load", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 6, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+                  "uses_bodyweight": false,
+                  "body_weight_kg": null,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 42.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false, "origin": "generated", "is_pinned": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 3,
+          "starts_on": "2026-10-19",
+          "length_days": 7,
+          "is_deload": false,
+          "status": "projected",
+          "engine_version": 1,
+          "last_write_kind": "engine",
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "exercise_id": "squat",
+                  "increment_kg": 2.5,
+                  "rule": {"strategy": "linear_load", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 6, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+                  "uses_bodyweight": false,
+                  "body_weight_kg": null,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 45, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false, "origin": "generated", "is_pinned": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "logs": [
+        {
+          "cycle_number": 1,
+          "day_index": 1,
+          "session_order_index": 0,
+          "exercise_order_index": 0,
+          "set_index": 0,
+          "set": {"set_type": "working", "is_completed": true, "weight_kg": 40, "reps": 6, "rir": 3, "uses_bodyweight": false, "body_weight_kg": null, "is_deload": false}
+        }
+      ],
+      "args": {},
+      "expected": {
+        "cycles": [
+          {
+            "cycle_number": 1,
+            "starts_on": "2026-10-05",
+            "length_days": 7,
+            "is_deload": false,
+            "status": "completed",
+            "engine_version": 1,
+            "last_write_kind": "user",
+            "sessions": [
+              {
+                "day_index": 1,
+                "order_index": 0,
+                "exercises": [
+                  {
+                    "order_index": 0,
+                    "exercise_id": "squat",
+                    "increment_kg": 2.5,
+                    "rule": {"strategy": "linear_load", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 6, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+                    "uses_bodyweight": false,
+                    "body_weight_kg": null,
+                    "sets": [
+                      {"set_index": 0, "set_type": "working", "target_weight_kg": 40, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false, "origin": "generated", "is_pinned": false}
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "cycle_number": 2,
+            "starts_on": "2026-10-12",
+            "length_days": 7,
+            "is_deload": false,
+            "status": "projected",
+            "engine_version": 1,
+            "last_write_kind": "engine",
+            "sessions": [
+              {
+                "day_index": 1,
+                "order_index": 0,
+                "exercises": [
+                  {
+                    "order_index": 0,
+                    "exercise_id": "squat",
+                    "increment_kg": 2.5,
+                    "rule": {"strategy": "linear_load", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 6, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+                    "uses_bodyweight": false,
+                    "body_weight_kg": null,
+                    "sets": [
+                      {"set_index": 0, "set_type": "working", "target_weight_kg": 42.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false, "origin": "generated", "is_pinned": false}
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "cycle_number": 3,
+            "starts_on": "2026-10-19",
+            "length_days": 7,
+            "is_deload": false,
+            "status": "projected",
+            "engine_version": 1,
+            "last_write_kind": "engine",
+            "sessions": [
+              {
+                "day_index": 1,
+                "order_index": 0,
+                "exercises": [
+                  {
+                    "order_index": 0,
+                    "exercise_id": "squat",
+                    "increment_kg": 2.5,
+                    "rule": {"strategy": "linear_load", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 6, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+                    "uses_bodyweight": false,
+                    "body_weight_kg": null,
+                    "sets": [
+                      {"set_index": 0, "set_type": "working", "target_weight_kg": 45, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false, "origin": "generated", "is_pinned": false}
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "op": "settle_statuses",
+      "name": "a cycle under way completes once its last day has passed",
+      "note": "Cycle 1 runs 2026-10-05 to 10-11; on 10-12 it is completed, logged or not.",
+      "mesocycle": {
+        "start_date": "2026-10-05",
+        "num_microcycles": 3,
+        "default_length_days": 7,
+        "length_overrides": [],
+        "deload": {"mode": "none"},
+        "deload_set_bp": 5000,
+        "deload_load_bp": 6000,
+        "deload_rir_bump": 2
+      },
+      "today": "2026-10-12",
+      "plan": [
+        {
+          "cycle_number": 1,
+          "starts_on": "2026-10-05",
+          "length_days": 7,
+          "is_deload": false,
+          "status": "in_progress",
+          "engine_version": 1,
+          "last_write_kind": "engine",
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "exercise_id": "squat",
+                  "increment_kg": 2.5,
+                  "rule": {"strategy": "linear_load", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 6, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+                  "uses_bodyweight": false,
+                  "body_weight_kg": null,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 40, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false, "origin": "generated", "is_pinned": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 2,
+          "starts_on": "2026-10-12",
+          "length_days": 7,
+          "is_deload": false,
+          "status": "projected",
+          "engine_version": 1,
+          "last_write_kind": "engine",
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "exercise_id": "squat",
+                  "increment_kg": 2.5,
+                  "rule": {"strategy": "linear_load", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 6, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+                  "uses_bodyweight": false,
+                  "body_weight_kg": null,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 42.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false, "origin": "generated", "is_pinned": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 3,
+          "starts_on": "2026-10-19",
+          "length_days": 7,
+          "is_deload": false,
+          "status": "projected",
+          "engine_version": 1,
+          "last_write_kind": "engine",
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "exercise_id": "squat",
+                  "increment_kg": 2.5,
+                  "rule": {"strategy": "linear_load", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 6, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+                  "uses_bodyweight": false,
+                  "body_weight_kg": null,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 45, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false, "origin": "generated", "is_pinned": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "logs": [],
+      "args": {},
+      "expected": {
+        "cycles": [
+          {
+            "cycle_number": 1,
+            "starts_on": "2026-10-05",
+            "length_days": 7,
+            "is_deload": false,
+            "status": "completed",
+            "engine_version": 1,
+            "last_write_kind": "user",
+            "sessions": [
+              {
+                "day_index": 1,
+                "order_index": 0,
+                "exercises": [
+                  {
+                    "order_index": 0,
+                    "exercise_id": "squat",
+                    "increment_kg": 2.5,
+                    "rule": {"strategy": "linear_load", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 6, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+                    "uses_bodyweight": false,
+                    "body_weight_kg": null,
+                    "sets": [
+                      {"set_index": 0, "set_type": "working", "target_weight_kg": 40, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false, "origin": "generated", "is_pinned": false}
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "cycle_number": 2,
+            "starts_on": "2026-10-12",
+            "length_days": 7,
+            "is_deload": false,
+            "status": "projected",
+            "engine_version": 1,
+            "last_write_kind": "engine",
+            "sessions": [
+              {
+                "day_index": 1,
+                "order_index": 0,
+                "exercises": [
+                  {
+                    "order_index": 0,
+                    "exercise_id": "squat",
+                    "increment_kg": 2.5,
+                    "rule": {"strategy": "linear_load", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 6, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+                    "uses_bodyweight": false,
+                    "body_weight_kg": null,
+                    "sets": [
+                      {"set_index": 0, "set_type": "working", "target_weight_kg": 42.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false, "origin": "generated", "is_pinned": false}
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "cycle_number": 3,
+            "starts_on": "2026-10-19",
+            "length_days": 7,
+            "is_deload": false,
+            "status": "projected",
+            "engine_version": 1,
+            "last_write_kind": "engine",
+            "sessions": [
+              {
+                "day_index": 1,
+                "order_index": 0,
+                "exercises": [
+                  {
+                    "order_index": 0,
+                    "exercise_id": "squat",
+                    "increment_kg": 2.5,
+                    "rule": {"strategy": "linear_load", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 6, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+                    "uses_bodyweight": false,
+                    "body_weight_kg": null,
+                    "sets": [
+                      {"set_index": 0, "set_type": "working", "target_weight_kg": 45, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false, "origin": "generated", "is_pinned": false}
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "op": "settle_statuses",
+      "name": "locked and skipped are the user's, nothing moves backwards, and a missed cycle stays projected",
+      "note": "Cycle 1 completed stays completed; cycle 2 locked and cycle 3 skipped hold logs and do not move; cycle 4, past with nothing logged, was missed — it stays projected, the engine's to rewrite.",
+      "mesocycle": {
+        "start_date": "2026-10-05",
+        "num_microcycles": 4,
+        "default_length_days": 7,
+        "length_overrides": [],
+        "deload": {"mode": "none"},
+        "deload_set_bp": 5000,
+        "deload_load_bp": 6000,
+        "deload_rir_bump": 2
+      },
+      "today": "2026-12-01",
+      "plan": [
+        {
+          "cycle_number": 1,
+          "starts_on": "2026-10-05",
+          "length_days": 7,
+          "is_deload": false,
+          "status": "completed",
+          "engine_version": 1,
+          "last_write_kind": "engine",
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "exercise_id": "squat",
+                  "increment_kg": 2.5,
+                  "rule": {"strategy": "linear_load", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 6, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+                  "uses_bodyweight": false,
+                  "body_weight_kg": null,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 40, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false, "origin": "generated", "is_pinned": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 2,
+          "starts_on": "2026-10-12",
+          "length_days": 7,
+          "is_deload": false,
+          "status": "locked",
+          "engine_version": 1,
+          "last_write_kind": "engine",
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "exercise_id": "squat",
+                  "increment_kg": 2.5,
+                  "rule": {"strategy": "linear_load", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 6, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+                  "uses_bodyweight": false,
+                  "body_weight_kg": null,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 42.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false, "origin": "generated", "is_pinned": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 3,
+          "starts_on": "2026-10-19",
+          "length_days": 7,
+          "is_deload": false,
+          "status": "skipped",
+          "engine_version": 1,
+          "last_write_kind": "engine",
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "exercise_id": "squat",
+                  "increment_kg": 2.5,
+                  "rule": {"strategy": "linear_load", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 6, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+                  "uses_bodyweight": false,
+                  "body_weight_kg": null,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 45, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false, "origin": "generated", "is_pinned": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 4,
+          "starts_on": "2026-10-26",
+          "length_days": 7,
+          "is_deload": false,
+          "status": "projected",
+          "engine_version": 1,
+          "last_write_kind": "engine",
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "exercise_id": "squat",
+                  "increment_kg": 2.5,
+                  "rule": {"strategy": "linear_load", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 6, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+                  "uses_bodyweight": false,
+                  "body_weight_kg": null,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 47.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false, "origin": "generated", "is_pinned": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "logs": [
+        {
+          "cycle_number": 2,
+          "day_index": 1,
+          "session_order_index": 0,
+          "exercise_order_index": 0,
+          "set_index": 0,
+          "set": {"set_type": "working", "is_completed": true, "weight_kg": 42.5, "reps": 6, "rir": 3, "uses_bodyweight": false, "body_weight_kg": null, "is_deload": false}
+        },
+        {
+          "cycle_number": 3,
+          "day_index": 1,
+          "session_order_index": 0,
+          "exercise_order_index": 0,
+          "set_index": 0,
+          "set": {"set_type": "working", "is_completed": true, "weight_kg": 45, "reps": 6, "rir": 3, "uses_bodyweight": false, "body_weight_kg": null, "is_deload": false}
+        }
+      ],
+      "args": {},
+      "expected": {
+        "cycles": [
+          {
+            "cycle_number": 1,
+            "starts_on": "2026-10-05",
+            "length_days": 7,
+            "is_deload": false,
+            "status": "completed",
+            "engine_version": 1,
+            "last_write_kind": "engine",
+            "sessions": [
+              {
+                "day_index": 1,
+                "order_index": 0,
+                "exercises": [
+                  {
+                    "order_index": 0,
+                    "exercise_id": "squat",
+                    "increment_kg": 2.5,
+                    "rule": {"strategy": "linear_load", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 6, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+                    "uses_bodyweight": false,
+                    "body_weight_kg": null,
+                    "sets": [
+                      {"set_index": 0, "set_type": "working", "target_weight_kg": 40, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false, "origin": "generated", "is_pinned": false}
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "cycle_number": 2,
+            "starts_on": "2026-10-12",
+            "length_days": 7,
+            "is_deload": false,
+            "status": "locked",
+            "engine_version": 1,
+            "last_write_kind": "engine",
+            "sessions": [
+              {
+                "day_index": 1,
+                "order_index": 0,
+                "exercises": [
+                  {
+                    "order_index": 0,
+                    "exercise_id": "squat",
+                    "increment_kg": 2.5,
+                    "rule": {"strategy": "linear_load", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 6, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+                    "uses_bodyweight": false,
+                    "body_weight_kg": null,
+                    "sets": [
+                      {"set_index": 0, "set_type": "working", "target_weight_kg": 42.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false, "origin": "generated", "is_pinned": false}
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "cycle_number": 3,
+            "starts_on": "2026-10-19",
+            "length_days": 7,
+            "is_deload": false,
+            "status": "skipped",
+            "engine_version": 1,
+            "last_write_kind": "engine",
+            "sessions": [
+              {
+                "day_index": 1,
+                "order_index": 0,
+                "exercises": [
+                  {
+                    "order_index": 0,
+                    "exercise_id": "squat",
+                    "increment_kg": 2.5,
+                    "rule": {"strategy": "linear_load", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 6, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+                    "uses_bodyweight": false,
+                    "body_weight_kg": null,
+                    "sets": [
+                      {"set_index": 0, "set_type": "working", "target_weight_kg": 45, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false, "origin": "generated", "is_pinned": false}
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "cycle_number": 4,
+            "starts_on": "2026-10-26",
+            "length_days": 7,
+            "is_deload": false,
+            "status": "projected",
+            "engine_version": 1,
+            "last_write_kind": "engine",
+            "sessions": [
+              {
+                "day_index": 1,
+                "order_index": 0,
+                "exercises": [
+                  {
+                    "order_index": 0,
+                    "exercise_id": "squat",
+                    "increment_kg": 2.5,
+                    "rule": {"strategy": "linear_load", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 6, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+                    "uses_bodyweight": false,
+                    "body_weight_kg": null,
+                    "sets": [
+                      {"set_index": 0, "set_type": "working", "target_weight_kg": 47.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false, "origin": "generated", "is_pinned": false}
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       }
     }
   ]
