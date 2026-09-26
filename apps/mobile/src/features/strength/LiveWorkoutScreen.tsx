@@ -36,6 +36,7 @@ import { PastWorkoutSheet } from './PastWorkoutSheet';
 import { RestTimerBar } from './RestTimerBar';
 import { SetEditor } from './SetEditor';
 import { SetTypeSheet } from './SetTypeSheet';
+import { timeTick } from './tickTiming';
 import { useLiveWorkout, useSignedInUserId } from './useLiveWorkout';
 
 /** Which column of `set_logs` each editable field of the row writes. */
@@ -168,7 +169,7 @@ export function LiveWorkoutScreen() {
           return;
         }
       }
-      const fresh = workout.setCompleted(setLogId, isCompleted);
+      const fresh = timeTick(() => workout.setCompleted(setLogId, isCompleted));
       if (!isCompleted || fresh === null) return;
       const next = nextFocus(fresh, setLogId);
       if (next === null) {

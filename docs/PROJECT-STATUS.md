@@ -21,7 +21,7 @@ when its own criteria are ticked. Tick the box here only then.
 | **Decisions** | 15 ADRs, **all now accepted**. [ADR-004](decisions/ADR-004.md)'s spike passed on 2026-09-18 and its outcome is recorded: **option B, the single Rust core**. Its four pre-launch conditions remain outstanding, in tasks 005 and 006 |
 | **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **6 complete** (001, 002, 011, 003, 019, 017) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) — the core loop, in progress since 2026-09-19. Stages 0–8 are built.** Stage 8 (2026-09-25) built the mirror endpoints for exercises, routines and workouts and moved the completion rule into the core. Its device pass found a data loss: a refused refresh ended the phone's session, and ending it deleted the account's row, which cascaded through every set on the device. **Fixed the same evening and proven on the phone** — a session's end now keeps the row (task 019 amended), a lint fence refuses deleting it, and the integration suite runs in its own database. The resumed pass ticked **pounds end to end** and **a hidden exercise's history**. **Next: *Closing task 004*, proposed in the task file and waiting on five decisions** (tick the weighted pull-up on its core and API proofs; defer the rest notification's timing to open question 13; a development-only timer for ✓ latency under a running rest bar; move `Sheet`'s exit animation to § Gaps; a five-exercise routine for the 30-tap count — each with a recommendation). Then the owner's checks at the phone — TalkBack, a full workout in airplane mode, the 30 taps, the 200 % font check in pounds, stage 4's accessibility pass — and [PR #17](https://github.com/hiuriselzler/projeto_cyber/pull/17) marked ready. The phone is signed in to a throwaway local account, `stage8-device@example.com`; its earlier history is gone. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done, and the zero-plural found on the phone is worth their attention — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
+| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) — the core loop, in progress since 2026-09-19. Stages 0–8 are built.** Stage 8 (2026-09-25) built the mirror endpoints for exercises, routines and workouts and moved the completion rule into the core. Its device pass found a data loss: a refused refresh ended the phone's session, and ending it deleted the account's row, which cascaded through every set on the device. **Fixed the same evening and proven on the phone** — a session's end now keeps the row (task 019 amended), a lint fence refuses deleting it, and the integration suite runs in its own database. The resumed pass ticked **pounds end to end** and **a hidden exercise's history**. **Next: *Closing task 004*, planned 2026-09-25 with its five decisions taken** — the weighted pull-up ticked on its proofs, the rest notification's timing moved to open question 13, `Sheet`'s exit animation moved to § Gaps, and the development-only ✓ timer built (`src/features/strength/tickTiming.ts`, logging to logcat). What remains is the owner's checks at the phone — TalkBack, a full workout in airplane mode, the 30 taps, the 200 % font check in pounds, stage 4's accessibility pass — and [PR #17](https://github.com/hiuriselzler/projeto_cyber/pull/17) marked ready. The phone is signed in to a throwaway local account, `stage8-device@example.com`; its earlier history is gone. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done, and the zero-plural found on the phone is worth their attention — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
 
 ### The decision that was open is closed — option B
 
@@ -469,6 +469,12 @@ These are real blockers scattered across the docs. Nothing will surface them at 
 - [ ] **Typed routes are not a CI gate.** `.expo/types/router.d.ts` is gitignored and generated only by `expo start`, so
       CI's `tsc` accepts any `href` while a developer's `tsc` checks against whatever stale copy they last generated
       (found in task 004 stage 5, 2026-09-23). Generate it in CI before `tsc`, or accept that routes are unchecked
+- [ ] **`Sheet` has no exit animation** — lost in task 004 stage 3's repair and moved here when task 004 closed
+      (2026-09-25). A fix needs one state write as `visible` turns false, which is either the original render-phase
+      defect or `react-hooks/set-state-in-effect`, rightly an error here. The way through is a different mechanism —
+      the caller driving the transition, or `react-native-reanimated`'s `exiting` animations, already a dependency —
+      never an `eslint-disable`. The attempt and why it was reverted: [task 004](tasks/004-exercise-catalog-and-logging.md)
+      § *Found on the device, and not yet fixed*
 
 ### Standing review checklist
 - [ ] Every PR touching entitlements is checked against INV-26
@@ -494,7 +500,7 @@ None are blocking; each has a stated assumption that will be built unless correc
 | 7 | The Android application id. **Permanent after the first Play Store upload** | `com.cyberathlete.app`, a placeholder in `apps/mobile/app.json` | Before the first Play upload |
 | 8 | Android backups: the generated manifest has `allowBackup="true"`, so local data — raw GPS points included — would reach device backups | Unchanged for now | Before [task 007](tasks/007-cardio-recording.md) |
 | 12 | Which address the per-IP rate limits count ([04 §5](04-security-and-auth.md)). The API reads the socket's peer, `request.client.host`; behind a hosting platform's proxy that is the proxy for everyone, so registration would allow 5 an hour across all users | The client address comes from the platform's forwarded header, trusted only when the request arrives from the platform's own proxy — configured once the host is chosen ([05 §5](05-integrations.md)) | Before the first deploy |
-| 13 | Is a rest notification ~22–40 s late with the screen off acceptable, or does the app ask for `SCHEDULE_EXACT_ALARM`? One clean sample on the S21 FE: ~39 s on a 2:00 rest | Inexact alarms; the on-screen timer and its haptic are exact | Before launch, with more samples ([task 004](tasks/004-exercise-catalog-and-logging.md)) |
+| 13 | Is a rest notification ~22–40 s late with the screen off acceptable, or does the app ask for `SCHEDULE_EXACT_ALARM`? One clean sample on the S21 FE: ~39 s on a 2:00 rest | Inexact alarms; the on-screen timer and its haptic are exact. **Task 004's "on time" criterion moved here** when it closed (2026-09-25): arrival with the screen off is proven there, timing is decided here | Before launch, with more samples ([task 004](tasks/004-exercise-catalog-and-logging.md)) |
 | 14 | A target time or distance on a routine exercise — a schema addition | None: holds and carries get sets and rest, and pre-fill from last time | Task 005, where prescriptions live |
 | 15 | Personal records for time and distance — longest hold, farthest carry | Not built; such sets count as sets, with zero tonnage. **Half settled 2026-09-24:** a *loaded* carry takes a heaviest-weight record from its load — found on the phone, and **kept by the owner's decision**, since the heaviest carry is a real record and the earlier "no PR" was the doc's error. A hold takes nothing. Longest hold and farthest carry remain unbuilt. **Deferred 2026-09-25** (task 004 stage 7, decision 6): new record kinds are an enum migration, core kinds and a summary change; history lists each session's time and distance meanwhile | [Task 010](tasks/010-unified-calendar-and-analytics.md) |
 | 16 | Short imperial distances in feet or yards (sleds are often yards in US gyms) | Feet, following ADR-008's m/ft pair | The imperial pass of task 004's device checks |
@@ -545,6 +551,7 @@ nothing itself ([task 004](tasks/004-exercise-catalog-and-logging.md) § Scope).
 | 2026-09-24 | Four decisions after the device passes: a loaded carry keeps its heaviest-weight record (OQ 15, half settled); the user's own exercises are marked "Seu"/"Yours"; the summary groups records by exercise; the set row reflows, and on a short screen the keypad reveals the field being edited (07 §6's open question closed) |
 | 2026-09-25 | Task 004 stage 7 planned: charts on `react-native-svg` (02 §4 changed); the records rebuild one user at a time; `personal_records` keyed per load for reps; the core's `standing_records()` says where a record came from; open question 15 moved to task 010 — see the dated entry below |
 | 2026-09-25 | Task 004 stage 8: every mirror write is a `PUT` of the aggregate resolved row by row, a row left out is kept (02 §5, §7); the completion rule moves into the core; a global answers a write as a stranger's row does; the records cache rebuilds per exercise inside the write, under a per-user lock. **Task 019 amended:** a session's end keeps the account's local row, which the device's training cascades from — see the dated entry below |
+| 2026-09-25 | Closing task 004 planned: the weighted pull-up ticked on its proofs (device half → OQ 18); the rest notification's timing moved to OQ 13; a development-only ✓ timer for latency under the rest bar; `Sheet`'s exit animation moved to § Gaps; the 30 taps counted on a 5 × 4 routine — see the dated entry below |
 
 ### 2026-09-08 — documentation reconciliation pass
 
@@ -2264,5 +2271,22 @@ CI was green on all five jobs at `ed121e7`, the suite running in its own databas
 
 **Still open:** TalkBack, the full workout in airplane mode, the 30-tap count and the 200 % imperial check need the
 owner at the phone. The task file's *Closing task 004* proposes how to finish, with five decisions.
+
+- No invariant changed and no ADR was added. Counts unchanged: 49 documents, 15 ADRs.
+
+### 2026-09-25 — closing task 004 planned: five decisions, no new stage
+
+The owner took each recommendation in the task file's *Closing task 004*. What is left is a check, a tick or a
+deferral, and one small development-only instrument:
+- **The weighted pull-up is ticked on its proofs.** The core gives 123.3 kg and NULL with no body weight. The server
+  weighs a pull-up at the body weight on its workout's day, not today's. The device's query is pinned to the same rule.
+  The device half waits for open question 18, since nothing in the app writes a body weight.
+- **The rest notification's timing moves to open question 13.** Arrival with the screen off was proven in stage 5.
+- **✓ latency under a ticking rest bar** gets a development-only timer on the live screen: the write and re-read, and
+  the time to the next frame. It is read from logcat, and it stays in the code for task 005 to measure again.
+- **`Sheet`'s exit animation moves to § Gaps.** The ✓'s accessible name is left to the TalkBack pass. The dev client's
+  *Tools* button and a sign-out console error are development-only, and are closed with no action.
+- **The 30 taps are counted on a routine of five exercises × four sets** built beforehand, so the count measures
+  logging and not setup.
 
 - No invariant changed and no ADR was added. Counts unchanged: 49 documents, 15 ADRs.

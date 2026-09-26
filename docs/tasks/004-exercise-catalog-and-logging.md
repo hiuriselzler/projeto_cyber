@@ -382,7 +382,7 @@ and the in-transaction rebuild · 8e the OpenAPI export, shared types and docs �
 device pass, then PR #17 marked ready. **8a–8f built and 8g part-run on 2026-09-25** (`706005e`, `21b6c71`, `ed121e7`;
 CI green on all five jobs at `ed121e7`); the pass found the sign-out data loss recorded below, fixed the same evening.
 
-**Closing task 004 — proposed 2026-09-25, not started.** Everything left is a check, a tick or a deferral: no stage 9 of
+**Closing task 004 — proposed 2026-09-25, planned the same day** (its five decisions follow the proposal). Everything left is a check, a tick or a deferral: no stage 9 of
 code. Written at the end of stage 8's session so the next one starts from here.
 
 - *What is left.* Three acceptance criteria are open — the airplane-mode workout, the weighted pull-up, the 30 taps — and
@@ -415,6 +415,26 @@ Five decisions are the owner's before the pass, each with a recommendation:
    of five exercises × four sets, built on the phone beforehand** so the count measures logging, not setup — taps counted
    from *Iniciar* to *Finalizar*, weights excluded as the criterion says.
 
+**Closing carries five decisions** *(2026-09-25, before the pass — the owner took each recommendation)*, recorded in
+PROJECT-STATUS's decision log:
+
+1. **The weighted pull-up is ticked on its proofs.** The core's `test_the_case_task_004_names` gives 123.3 kg, a
+   different e1RM for a different body weight, and NULL with none; the server's rebuild (`test_personal_records.py`)
+   weighs a pull-up at 70 kg — the entry on or before its workout's day — while today's is 80; and the device's query
+   is pinned to `measured_on <= local_date` (`qualified.test.ts`). **The device half waits for open question 18**:
+   nothing in the app writes a body weight.
+2. **The rest notification's timing moves to open question 13.** Arrival with the screen off is proven; whether to ask
+   for `SCHEDULE_EXACT_ALARM` is a launch decision, not task 004's.
+3. **✓ latency is measured by a development-only timer on the live screen** around the ✓'s write and re-read, and to
+   the next frame after it — an approximation of React's commit, not the paint. Logged under `__DEV__` and read from
+   logcat over ~20 real ticks with the rest bar running. It stays in the code, so the number can be taken again when
+   task 005 puts plan work on the same path.
+4. **The ✓'s accessible name is the TalkBack pass's to settle; `Sheet`'s exit animation moves to PROJECT-STATUS §
+   Gaps.** The development client's *Tools* button and the console error on signing out are development-only and are
+   closed with no action.
+5. **The 30 taps are counted on a routine of five exercises × four sets**, built on the phone beforehand, from
+   *Iniciar* to *Finalizar*, weights excluded.
+
 ## Acceptance criteria
 - [ ] A full workout can be logged start to finish in airplane mode. *(Stage 3 logged one set start to finish with
       no network involved, but airplane mode itself was not switched on, and "full" means routines, set types and
@@ -445,9 +465,12 @@ Five decisions are the owner's before the pass, each with a recommendation:
 - [x] The e1RM fixture produces identical results in Python and TypeScript — Rust and Python run the shared fixtures;
       the TypeScript half runs through the same core on the phone, where stage 6's finishes showed exactly the e1RMs
       Epley gives — 80 kg for 60 × 8 @ 2, 83,33 kg for 62,5 × 8 @ 2 — and none past 12 effective reps (2026-09-24)
-- [ ] A weighted pull-up at body weight 80 kg + 20 kg × 5 @ RIR 2 has an e1RM of **123.3 kg**
+- [x] A weighted pull-up at body weight 80 kg + 20 kg × 5 @ RIR 2 has an e1RM of **123.3 kg**
       (100 kg × (1 + 7/30)); logging a new body weight a week later leaves that e1RM unchanged; and with
-      no body weight logged by the set's date, its e1RM is NULL
+      no body weight logged by the set's date, its e1RM is NULL. *(Ticked 2026-09-25 on its proofs, closing decision
+      1: the core's `test_the_case_task_004_names`, the server's `test_personal_records.py` weighing a pull-up at the
+      body weight on its own day and not today's, and the device's `measured_on <= local_date` in `qualified.test.ts`.
+      **The device half waits for open question 18** — nothing in the app writes a body weight yet)*
 - [x] A pt-BR user finds the bench press by typing either *supino* or *bench* — proven against the **real**
       `en.json`/`pt-BR.json` catalogs in `catalogFilter.test.ts`, 2026-09-22, not a stub catalog
 - [x] A custom exercise named in Portuguese appears exactly as typed in an English UI — same suite, same date;
@@ -517,8 +540,8 @@ metric, dark — a development build carrying commit `228069e`, installed **over
       after two fixes found by this very check — below. Started, "Treino A" wrote exactly what 5a's rules predict: the bench's
       set 1 a warm-up 100 × 5 because last time's set 1 was one, set 3 falling back to set 2's 62,5 × 8 as a working set, the
       row's 8 reps from `target_min_reps` with no history, the rest and targets copied — and every RIR NULL)*
-- [ ] **The rest notification arrives with the screen off**, on time. **Arrives: yes, after a fix (below). On time: not
-      settled.** One clean screen-off delivery was **~39 s late** on a 2:00 rest, and the first alarm fired ~22 s late —
+- [x] **The rest notification arrives with the screen off**, on time. **Arrives: yes, after a fix (below). On time:
+      moved to open question 13 on 2026-09-25** (closing decision 2) — a launch decision, not this task's. One clean screen-off delivery was **~39 s late** on a 2:00 rest, and the first alarm fired ~22 s late —
       Android deferring a non-exact alarm. The timing runs after that were disturbed by hand on the phone and are not
       evidence either way, so they were abandoned at the owner's request; whether `SCHEDULE_EXACT_ALARM` is worth asking
       for is still open
@@ -627,9 +650,9 @@ three recorded)*
 - [x] **"0 série marcada"** in the finish sheet with nothing ticked — CLDR's Portuguese rule puts 0 with the singular, which
       reads wrong in Brazil, and the sentence beneath already says nothing was ticked. The count is no longer shown at
       zero. *Other `{count, plural}` messages can meet a zero too; the native-speaker review should look at them as a set*
-- [ ] **The development client's floating *Tools* button covers the right edge of *Encerrar*.** A tap there opens the dev
+- [x] **The development client's floating *Tools* button covers the right edge of *Encerrar*.** A tap there opens the dev
       menu. Development builds only, so not a product defect — but it is the workout's primary action, and it cost this
-      pass a tap
+      pass a tap. *Closed with no action, 2026-09-25 (closing decision 4): no release build carries the button*
 - [ ] **The ✓ has no accessible name of its own** in the tree: the row is one element carrying the sentence, and the ✓
       inside it is an unlabelled button. Whether TalkBack reaches it through the row is the open TalkBack criterion's to
       settle
@@ -686,9 +709,10 @@ value was predicted before the tap and read back from the phone's SQLite)*
       listed "Treino, 25/09/2026, 1 série contada, 500 lb" in the history
 - [ ] **Not run, and the owner's at the phone:** TalkBack (stages 3, 5, 6, 7), a full workout in airplane mode, the
       30-tap count, the 200 % font check in pounds, stage 4's accessibility pass, ✓ latency under a ticking rest bar
-- [ ] **A development-only console error on signing out**: *"Can't perform a React state update on a component that
+- [x] **A development-only console error on signing out**: *"Can't perform a React state update on a component that
       hasn't mounted yet"*, raised inside `expo-router`'s `ContextNavigator` as the session gate swapped to the sign-in
-      screen. Not the app's code by its stack, and harmless on screen; recorded rather than chased
+      screen. Not the app's code by its stack, and harmless on screen; recorded rather than chased. *Closed with no
+      action, 2026-09-25 (closing decision 4)*
 
 **Found by the stage 8 device pass** *(2026-09-25, on the Galaxy S21 FE — a development build with the regenerated core,
 `missing_for_completion` checked in both packaged libraries, installed over the previous build. The pass stopped here)*
@@ -721,7 +745,8 @@ value was predicted before the tap and read back from the phone's SQLite)*
       default scale — `40 kg × 6 RIR 7` misses one line by ~2 dp, and the realistic `100 kg × 12 RIR 10` misses it at
       every scale — so "always one line" needs something dropped from the row. Tightening the gap was tried on the
       phone and reverted: it wins the line at 0.86 and still loses at 1.0
-- [ ] **`Sheet` lost its exit animation** in the stage-3 repair ([ADR-014 § Amendment 2026-09-19](../decisions/ADR-014.md)).
+- [x] **Moved to PROJECT-STATUS § Gaps on 2026-09-25** (closing decision 4) — a design-system follow-up, not one of
+      this task's criteria. **`Sheet` lost its exit animation** in the stage-3 repair ([ADR-014 § Amendment 2026-09-19](../decisions/ADR-014.md)).
       **Attempted and reverted 2026-09-21, and the attempt is worth recording because it narrows the problem.**
       Keeping the sheet mounted through its fade needs one state write at the instant `visible` goes true → false.
       During render is the original defect. In an effect is `react-hooks/set-state-in-effect`, which is an **error**
