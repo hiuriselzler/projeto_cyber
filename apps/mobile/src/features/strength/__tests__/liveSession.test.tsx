@@ -1,6 +1,7 @@
 /**
- * The live session, finished off — task 004 stage 5b. The rest timer bar under a fake clock, the set-type sheet and
- * the exercise options sheet, in both languages, both unit systems and both themes.
+ * The live session, finished off — task 004 stage 5b. The rest timer bar under a fake clock — and, since the closing
+ * pass, its countdown on the keypad's heading line — the set-type sheet and the exercise options sheet, in both
+ * languages, both unit systems and both themes.
  *
  * `@/platform` is mocked so the haptic can be counted; `@/db/client` because the options sheet's rest choices reach
  * `@/db/routines`, and `expo-sqlite` cannot open under Node. Nothing here writes.
@@ -14,7 +15,8 @@ import type { LiveExercise, LiveSet, LiveWorkout } from '@/db/strength';
 import { restOverTap } from '@/platform';
 
 import { ExerciseOptionsSheet } from '../ExerciseOptionsSheet';
-import { RestTimerBar } from '../RestTimerBar';
+import { RestCountdown, RestTimerBar } from '../RestTimerBar';
+import { SetEditor } from '../SetEditor';
 import { SetTypeSheet } from '../SetTypeSheet';
 
 jest.mock('@/db/client', () => ({ db: {}, sqlite: {} }));
@@ -143,6 +145,61 @@ describe.each(MATRIX)('$locale, $unitSystem, $preference', (setting) => {
       await fireEvent.press(screen.getByText('+15 s'));
       await fireEvent.press(screen.getByText(pt ? 'Pular' : 'Skip'));
       expect([onLess, onMore, onSkip].map((fn) => fn.mock.calls.length)).toEqual([1, 1, 1]);
+    });
+  });
+
+  describe('the rest on the keypad’s heading line (07 §6, task 004’s closing pass)', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+      jest.setSystemTime(T0 + 10_000);
+      jest.mocked(restOverTap).mockClear();
+    });
+    afterEach(() => jest.useRealTimers());
+
+    function editing(workout: LiveWorkout, skippedRest: string | null = null) {
+      return (
+        <SetEditor
+          field="weight"
+          draft=""
+          rir={null}
+          onDraftChange={noop}
+          onValueChange={noop}
+          onRirChange={noop}
+          onDone={noop}
+          onHeightChange={noop}
+          aside={<RestCountdown workout={workout} skippedRest={skippedRest} />}
+        />
+      );
+    }
+
+    it('counts down beside the field’s name, in tabular figures, with no controls to grow the line', async () => {
+      await renderUi(editing(resting(30)), setting);
+      expect(screen.getByText(pt ? 'Carga' : 'Weight')).toBeOnTheScreen();
+      expect(screen.getByText('0:20')).toHaveStyle({ fontVariant: ['tabular-nums'] });
+      expect(screen.getByLabelText(pt ? 'Descanso, faltam 0:20' : 'Rest, 0:20 left')).toBeOnTheScreen();
+      expect(screen.queryByText('−15 s')).toBeNull();
+      expect(screen.queryByText(pt ? 'Pular' : 'Skip')).toBeNull();
+
+      await act(() => jest.advanceTimersByTime(10_000));
+      expect(screen.getByText('0:10')).toBeOnTheScreen();
+    });
+
+    it('is felt once at the end, then leaves the heading alone', async () => {
+      await renderUi(editing(resting(30)), setting);
+      await act(() => jest.advanceTimersByTime(20_250));
+      expect(restOverTap).toHaveBeenCalledTimes(1);
+      expect(screen.queryByText(pt ? 'Descanso' : 'Rest')).toBeNull();
+      expect(screen.getByText(pt ? 'Carga' : 'Weight')).toBeOnTheScreen();
+    });
+
+    it('draws nothing when the exercise has no rest', async () => {
+      await renderUi(editing(resting(null)), setting);
+      expect(screen.queryByText(pt ? 'Descanso' : 'Rest')).toBeNull();
+    });
+
+    it('draws nothing once that set’s rest was skipped', async () => {
+      await renderUi(editing(resting(30), 'A1'), setting);
+      expect(screen.queryByText('0:20')).toBeNull();
     });
   });
 

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -27,6 +28,8 @@ export interface SetEditorProps {
   readonly onRirChange: (value: number | null) => void;
   readonly onDone: () => void;
   readonly onHeightChange: (height: number) => void;
+  /** Set at the end of the heading line — the rest countdown while one runs (07 §6). It must hold the line's height. */
+  readonly aside?: ReactNode;
 }
 
 const HEADING: Record<SetRowField, string> = {
@@ -66,6 +69,7 @@ export function SetEditor({
   onRirChange,
   onDone,
   onHeightChange,
+  aside,
 }: SetEditorProps) {
   const { colors } = useTheme();
   const { unitSystem } = useLocale();
@@ -81,9 +85,12 @@ export function SetEditor({
       onLayout={(event) => onHeightChange(event.nativeEvent.layout.height)}
       style={[styles.editor, { backgroundColor: colors.bgSurface, borderTopColor: colors.borderSubtle }]}
     >
-      <AppText variant="label" tone="textSecondary" style={styles.heading}>
-        {t(HEADING[field])}
-      </AppText>
+      <View style={styles.heading}>
+        <AppText variant="label" tone="textSecondary">
+          {t(HEADING[field])}
+        </AppText>
+        {aside}
+      </View>
       {field === 'rir' ? (
         <View style={styles.chips}>
           <RirChips value={rir} onChange={onRirChange} />
@@ -116,6 +123,13 @@ function wholeNumber(value: number | null): number | null {
 
 const styles = StyleSheet.create({
   editor: { borderTopWidth: sizes.edgeHairline },
-  heading: { paddingHorizontal: space[4], paddingTop: space[2] },
+  heading: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: space[2],
+    paddingHorizontal: space[4],
+    paddingTop: space[2],
+  },
   chips: { padding: space[2] },
 });

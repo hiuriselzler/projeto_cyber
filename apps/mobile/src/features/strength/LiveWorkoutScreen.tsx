@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { readExercise } from '@/db/catalog';
@@ -15,7 +15,6 @@ import {
   AppText,
   Button,
   EmptyState,
-  offsetToReveal,
   Screen,
   secondsToTimeDigits,
   shortDistanceForKeypad,
@@ -32,11 +31,13 @@ import { ExerciseOptionsSheet } from './ExerciseOptionsSheet';
 import { ExercisePicker } from './ExercisePicker';
 import { FinishSheet } from './FinishSheet';
 import { nextFocus, tickCounts } from './liveFlow';
-import { PastWorkoutSheet } from './PastWorkoutSheet';import { RestTimerBar } from './RestTimerBar';
+import { PastWorkoutSheet } from './PastWorkoutSheet';
+import { RestCountdown, RestTimerBar } from './RestTimerBar';
 import { SetEditor } from './SetEditor';
 import { SetTypeSheet } from './SetTypeSheet';
 import { timeTick } from './tickTiming';
 import { useLiveWorkout, useSignedInUserId } from './useLiveWorkout';
+import { useRowReveal } from './useRowReveal';
 import { useStableHandler } from './useStableHandler';
 
 /** Which column of `set_logs` each editable field of the row writes. */
@@ -116,31 +117,13 @@ export function LiveWorkoutScreen() {
    */
   const [editorHeight, setEditorHeight] = useState(0);
 
-  const scroll = useRef<ScrollView>(null);
-  const scrollOffset = useRef(0);
-  const viewportHeight = useRef(0);
-  const editorHeightRef = useRef(0);
-  // Where each set row sits in the list's content coordinates: its block's top plus its own offset within the block.
-  const blockTops = useRef(new Map<string, number>());
-  const rowBoxes = useRef(new Map<string, { blockId: string; top: number; height: number }>());
-
-  const reveal = useCallback((setLogId: string) => {
-    const box = rowBoxes.current.get(setLogId);
-    const blockTop = box === undefined ? undefined : blockTops.current.get(box.blockId);
-    if (box === undefined || blockTop === undefined) return;
-    const rowTop = blockTop + box.top;
-    scroll.current?.scrollTo({
-      y: offsetToReveal({
-        rowTop,
-        rowBottom: rowTop + box.height,
-        scrollOffset: scrollOffset.current,
-        viewportHeight: viewportHeight.current,
-        keypadHeight: editorHeightRef.current,
-        margin: space[2],
-      }),
-      animated: true,
-    });
-  }, []);
+  // Taken apart here: the rules of React read an object that carries a ref as a ref, and its handlers with it.
+  const { scroll, reveal, blockLayout, rowLayout, scrolled, dragged, viewportLayout, keypadLayout } = useRowReveal();
+  // A closed keypad covers nothing. Without this a reveal kept aiming above the last keypad's height long after it
+  // closed, moving the list further than the row needed (found in task 004's closing pass).
+  useLayoutEffect(() => {
+    if (editing === null) keypadLayout(0);
+  }, [editing, keypadLayout]);
 
   const startEditing = useCallback(
     (setLogId: string, field: SetRowField, set: LiveSet | undefined) => {
@@ -190,11 +173,6 @@ export function LiveWorkoutScreen() {
     startEditing(setLogId, field, workout.workout === null ? undefined : findSet(workout.workout, setLogId));
   });
 
-  /** Where a row sits in its block — refs only, so stable as written. */
-  const rowLayout = useCallback((blockId: string, setLogId: string, top: number, height: number) => {
-    rowBoxes.current.set(setLogId, { blockId, top, height });
-  }, []);
-
   if (userId === null) {
     return <Screen />;
   }
@@ -233,12 +211,16 @@ export function LiveWorkoutScreen() {
   return (
     <Screen>
       <View style={styles.header}>
-        <AppText variant="title">{live.title}</AppText>
+        {/* The title gives way, never the button: at 200 % font it pushed *Encerrar* off the screen (closing pass). */}
+        <AppText variant="title" style={styles.title}>
+          {live.title}
+        </AppText>
         <Button variant="secondary" label={t('workout.finish')} onPress={() => setFinishing(true)} />
       </View>
 
-      {/* Nobody is resting for a set done yesterday: a past workout has no timer (task 004 stage 6, decision 4). */}
-      {workout.pastEnd === null ? (
+      {/* Nobody is resting for a set done yesterday: a past workout has no timer (task 004 stage 6, decision 4). With the
+          keypad open the rest is on its heading line instead, and the list keeps the bar's height (07 §6). */}
+      {workout.pastEnd === null && editing === null ? (
         <RestTimerBar
           workout={live}
           skippedRest={workout.skippedRest}
@@ -251,12 +233,9 @@ export function LiveWorkoutScreen() {
       <ScrollView
         ref={scroll}
         scrollEventThrottle={16}
-        onScroll={(event) => {
-          scrollOffset.current = event.nativeEvent.contentOffset.y;
-        }}
-        onLayout={(event) => {
-          viewportHeight.current = event.nativeEvent.layout.height;
-        }}
+        onScroll={(event) => scrolled(event.nativeEvent.contentOffset.y)}
+        onScrollBeginDrag={dragged}
+        onLayout={(event) => viewportLayout(event.nativeEvent.layout.height)}
         contentContainerStyle={[styles.list, editing === null ? null : { paddingBottom: editorHeight + space[6] }]}
       >
         {live.exercises.length === 0 ? (
@@ -265,7 +244,7 @@ export function LiveWorkoutScreen() {
           live.exercises.map((exercise) => (
             <View
               key={exercise.id}
-              onLayout={(event) => blockTops.current.set(exercise.id, event.nativeEvent.layout.y)}
+              onLayout={(event) => blockLayout(exercise.id, event.nativeEvent.layout.y)}
             >
               <ExerciseBlockFor
                 userId={userId}
@@ -296,8 +275,9 @@ export function LiveWorkoutScreen() {
             onValueChange={(value) => workout.writeField(editing.setLogId, COLUMN[editing.field], value)}
             onRirChange={(value) => workout.writeField(editing.setLogId, 'rir', value)}
             onDone={() => setEditing(null)}
+            aside={workout.pastEnd === null ? <RestCountdown workout={live} skippedRest={workout.skippedRest} /> : null}
             onHeightChange={(height) => {
-              editorHeightRef.current = height;
+              keypadLayout(height);
               // Guarded so a layout pass that reports the same height cannot bounce the padding and re-enter layout.
               setEditorHeight((current) => (current === height ? current : height));
               reveal(editing.setLogId);
@@ -535,6 +515,7 @@ function rirOf(live: { readonly exercises: readonly { readonly sets: readonly { 
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space[2], padding: space[4] },
+  title: { flexShrink: 1 },
   actions: { gap: space[3] },
   list: { padding: space[4], gap: space[6], paddingBottom: space[12] },
   // Over the list, not beside it: `offsetToReveal`'s geometry assumes the keypad covers the bottom of the viewport.
