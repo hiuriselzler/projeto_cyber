@@ -71,7 +71,8 @@ export async function restoreSession(services: AccountServices): Promise<Session
 
 /**
  * The server ended this device's session — the device was signed out elsewhere, the password was reset, or the account
- * was deleted. The session is already gone; the privacy key and the account's row follow it (task 019).
+ * was deleted. The session is already gone and the privacy key follows it (task 019); the account's row and the
+ * training it anchors stay on the device (task 004 stage 8).
  */
 export async function forgetEndedSession(services: AccountServices): Promise<void> {
   await forgetHere(services).catch(() => undefined);
@@ -364,13 +365,15 @@ async function endHere(services: AccountServices): Promise<void> {
   setSessionState({ status: 'signed-out' });
 }
 
-/** What this device holds of the account once its session is over: the privacy key, and the account's row. */
+/**
+ * What this device lets go of once its session is over: the privacy key. The tokens went with the session.
+ *
+ * **Not the account's row** (task 004 stage 8, amending task 019's decision). Every workout and set on the device
+ * cascades from it, and until task 006 syncs them the device holds the only copy — deleting it is how the stage 8 device
+ * pass lost a phone's whole history to a refresh the server refused.
+ */
 async function forgetHere(services: AccountServices): Promise<void> {
-  const state = getSessionState();
   await services.keys.forget();
-  if (state.status === 'signed-in') {
-    services.accounts.forget(state.account.id);
-  }
 }
 
 function toWire(wrapped: WrappedPrivacyKey) {

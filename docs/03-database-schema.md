@@ -352,7 +352,9 @@ INDEX (planned_set_id) WHERE planned_set_id IS NOT NULL
 
 **Note:** `weight_kg`/`reps`/`rir` are all nullable because a set exists (pre-filled from the
 plan) before it is performed. `is_completed = true` requires the fields its `tracking` mode needs
-— enforced in the service layer, not the DB, because the requirement depends on the exercise.
+— enforced in the service layer, not the DB, because the requirement depends on the exercise. The rule itself is
+the core's `missing_for_completion()`, called by the phone's ✓ and by the API's workout write alike
+([task 004](tasks/004-exercise-catalog-and-logging.md) stage 8).
 
 **`completed_at` is when the set was done, and `updated_at` is when the row was written.** They usually
 coincide, and they diverge on a workout logged retroactively (FR-2.13): its sets carry the workout's

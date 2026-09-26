@@ -164,8 +164,18 @@ analytics/   volume by muscle, RIR trend, zone distribution, totals
 sync/        pull (changes since cursor), push (batched upsert)
 ```
 
-**Sync is the primary write path.** The per-entity POST/PATCH endpoints exist for correctness and
-for future clients, but the mobile app writes almost exclusively through `sync/push`.
+**Sync is the primary write path.** The per-entity endpoints exist for correctness and for future
+clients, but the mobile app writes almost exclusively through `sync/push`.
+
+**What `exercises/`, `routines/` and `workouts/` are** ([task 004](tasks/004-exercise-catalog-and-logging.md)
+stage 8). Each is `GET` a keyset-paged list, `GET /{id}` the aggregate, and `PUT /{id}` the aggregate — an exercise
+with its secondary muscles, a routine with its exercises, a workout with its exercises and their sets — applied in
+one transaction. Every row in the document resolves by itself, by §7's rule: absent is created, a newer `updated_at`
+wins, an equal or older one changes nothing, and a row left out of the document is kept. So a retry is a no-op, a
+set is never dropped, and archiving travels as `deleted_at`. Someone else's row is `404` to read and
+`409 id_unavailable` to write, and a global exercise answers a write exactly as a stranger's does. A workout write
+that changes a finished workout rebuilds that user's `personal_records` for the exercises it touched, in the same
+transaction, under a per-user advisory lock.
 
 ## 6. Recording pipeline (cardio)
 

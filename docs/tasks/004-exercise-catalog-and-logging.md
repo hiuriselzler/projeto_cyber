@@ -98,7 +98,7 @@ Jest tests, and none was findable without a device.
 | **5c** | The `duration` and `distance_duration` tracking modes — the set row that logs them, and the create form offering them | ☑ 2026-09-23, device pass not yet run |
 | **6** | The finish flow — PR detection and its celebration, perceived fatigue, notes, retroactive logging | ☑ 2026-09-24, device pass run the same evening (TalkBack not) |
 | **7** | History and per-exercise charts; `personal_records` as a cache, with its rebuild command | ☑ 2026-09-25, device pass run the same evening (imperial and TalkBack not) |
-| **8** | The API mirror endpoints, and the closing device pass over the whole loop | ☐ proposed 2026-09-25 — **five decisions open**, below |
+| **8** | The API mirror endpoints, and the closing device pass over the whole loop | ☐ built 2026-09-25; the device pass stopped at a data loss, fixed the same evening, and resumes with the phone signed in again |
 
 **Stage 4 carries three decisions the catalog screen forces**, recorded in PROJECT-STATUS's decision
 log on 2026-09-21 and repeated here because the code reads this file:
@@ -307,8 +307,8 @@ PROJECT-STATUS's decision log:
 sets — each over what counts (INV-04) and in one crossing of the boundary per exercise. Deload sets are charted normally
 (INV-08 excludes them from records only).
 
-**Stage 8 — proposed 2026-09-25, not started. Five decisions are the owner's before any code**, each with the
-recommendation made at the time. Written at the end of stage 7's session so the next one starts from here.
+**Stage 8 — proposed 2026-09-25, planned the same day.** The proposal below is kept as written; the decisions as taken
+follow it, three of them adjusted by reading the proposal against 02 §7, 03 §11 and the code.
 
 - *What exists.* `/api/v1/workouts` has `POST` (idempotent by the client's id) and `GET /{id}` for the workout row only,
   from task 003. There is no `exercises/` or `routines/` route. The models, RLS policies and the scoped repository base
@@ -346,6 +346,40 @@ recommendation made at the time. Written at the end of stage 7's session so the 
    tcp:8000`). The product's own settings screen is not in any task yet — worth an open question in PROJECT-STATUS.
 
 The closing device pass needs the local stack up, which stage 7 showed takes Docker Desktop started first (06 §1).
+
+**Stage 8 carries six decisions** *(2026-09-25, before the code — the owner took each recommendation, adjustments
+included)*, recorded in PROJECT-STATUS's decision log:
+
+1. **Every write is a `PUT` of the whole aggregate, applied as an upsert.** `PUT /exercises/{id}` (with its secondary
+   muscles), `PUT /routines/{id}` (with its exercises) and `PUT /workouts/{id}` (with its exercises and their sets), each
+   in one transaction. *Adjusted:* `workout_exercises`, `set_logs` and `routine_exercises` are sync roots in their own
+   right (03 §11), and 02 §7 says a set present on either side is never dropped — so **a row absent from the document is
+   left as it is**, and removal travels as `deleted_at` (INV-11). Each row resolves by 02 §7's rule, the newer
+   `updated_at` winning and a tie or an older one changing nothing, on **the client's** timestamps: stage 6 made
+   `updated_at` the real moment of the write, and a server clock would overwrite that fact. A child cannot move to
+   another parent. `POST /workouts` (task 003) is retired in favour of the `PUT` — nothing in the app called it — and its
+   two proofs, ownership and the deleted account's `401`, move onto the `PUT`.
+2. **"A completed set has its mode's fields" lives in the core**, as `missing_for_completion` in `core-rs/src/strength/`,
+   with a shared fixture, called by `src/domain/` on the phone and by the workout service on the server. `src/db` loses
+   its copy. The server answers `422` naming the field.
+3. **Globals on the server.** `GET /exercises` lists the global catalog and the user's own rows; a fork is an ordinary
+   create with `forked_from_id`. *Adjusted:* a write to a global answers **`409 id_unavailable`** — the answer a `PUT` to
+   someone else's id already gets, since it collides on a key the user cannot see — so a global and a stranger's row are
+   indistinguishable, which is what "as if it were someone else's" means for a write. Reads of someone else's row stay
+   `404`. Hiding a global stays device-local (stage 4) and has no server form.
+4. **The records cache is rebuilt in the same transaction as a workout write** that finishes a workout or changes a
+   finished one. *Adjusted:* only **the exercises that write touches**, before and after it — records are per exercise,
+   and a whole-history fold on every `PUT` grows with the user's history. The user's writes are serialised by a
+   transaction-level advisory lock, because the rebuild deletes and re-inserts and two concurrent finishes would
+   otherwise collide on `personal_records`' unique indexes. `python -m app.jobs.rebuild_records` stays as the repair.
+5. **The imperial pass runs from a unit-system and language switch on the diagnostics screen**, calling `updateAccount`
+   against the local API. The product's settings screen stays open question 19.
+6. **Out of scope:** history, record and analytics reads on the server (the app reads its own SQLite, ADR-001), and
+   `sync/` (task 006). Lists are keyset-paged, newest first.
+
+**Built in this order:** 8a the core predicate, bindings regenerated in WSL2 · 8b exercises · 8c routines · 8d workouts
+and the in-transaction rebuild · 8e the OpenAPI export, shared types and docs · 8f the diagnostics switch · 8g the closing
+device pass, then PR #17 marked ready.
 
 ## Acceptance criteria
 - [ ] A full workout can be logged start to finish in airplane mode. *(Stage 3 logged one set start to finish with
@@ -596,6 +630,28 @@ from the pulled SQLite copy before the screen was opened)*
       sheet, in a new message. There a zero could be hidden; here it is the information, so the message has an explicit
       `=0` case in both languages: "nenhuma série contada", "no counted sets". *The native-speaker review should look at
       every `{count, plural}` message for the same thing*
+
+**Found by the stage 8 device pass** *(2026-09-25, on the Galaxy S21 FE — a development build with the regenerated core,
+`missing_for_completion` checked in both packaged libraries, installed over the previous build. The pass stopped here)*
+- [x] **⚠ Ending a session deleted every set on the device.** `forgetLocalAccount` (`src/db/account.ts`) deletes the
+      account's `users` row when a session ends, and every training table references `users` with `ON DELETE CASCADE`,
+      which bites since stage 3 turned `PRAGMA foreign_keys` on. Its comment says a device holds no training data before
+      task 006, which has been false since stage 3. **What set it off:** the diagnostics switch's first `PATCH /auth/me`
+      needed a refresh, the local API refused the token with `401`, the session ended, and the phone's database was
+      left with 201 catalog rows and **0 users, 0 workouts, 0 sets, 0 routines** — every earlier pass's record, with no
+      server copy to restore. For a real user before task 006 the same path is a password change or a *sign out
+      everywhere* from another device. **Fixed the same evening, by the owner's decision:** a session's end takes the
+      tokens and the privacy key and nothing else — the account's row, and the training it anchors, stay. This amends
+      task 019's "the device erases the privacy key and the account's local row"; what a device keeps for good once an
+      account is gone is still task 006's. `forgetLocalAccount` is gone, the account services have no `forget`, and a new
+      lint fence, `account-row-deletion`, refuses `delete(users)` and an SQL delete on `users` anywhere in the app, with
+      two known-bad fixtures. The phone's lost history is not recoverable
+- [x] **The integration suite emptied the development database.** It ran against the same local Postgres the API
+      serves, and the readiness test migrates down and back up, so every account created before a test run was
+      gone afterwards. All 97 users present were under a day old, and the phone's account was not among them, which is
+      why its refresh token was refused. **Fixed:** the suite now creates `<name>_test` beside the database its URLs
+      name, grants it from `infra/postgres/roles.sql`'s own per-database half, and points every URL there — locally and in
+      CI alike. A full run left the development database's 97 users exactly as they were
 
 **Found on the device, and not yet fixed**
 - [x] **The set row reflows at font scale 0.86** — *half answered 2026-09-21, and the half that was a defect is

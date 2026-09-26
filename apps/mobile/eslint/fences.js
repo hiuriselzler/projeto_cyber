@@ -173,6 +173,23 @@ const fences = [
       },
     ],
   },
+  {
+    // Task 004 stage 8 device pass: a refresh the server refused ended the session, the session's end deleted the
+    // account's `users` row, and `ON DELETE CASCADE` took every workout and set on the phone with it — the only copy,
+    // until task 006 syncs. The account flows' tests fake the store and cannot see a cascade; this fence can.
+    id: 'account-row-deletion',
+    allowedIn: [],
+    reason:
+      "the account's users row anchors every workout and set on the device by ON DELETE CASCADE, and nothing may delete it (task 004 stage 8)",
+    syntax: [
+      {
+        selector: "CallExpression[callee.property.name='delete'] > Identifier.arguments[name='users']",
+        what: 'delete(users)',
+      },
+      { selector: 'Literal[value=/\\bdelete\\s+from\\s+["`]?users\\b/i]', what: 'an SQL delete on users' },
+      { selector: 'TemplateElement[value.raw=/\\bdelete\\s+from\\s+["`]?users\\b/i]', what: 'an SQL delete on users' },
+    ],
+  },
 ];
 
 /** Rules that apply inside the named folders only, on top of the fences. */

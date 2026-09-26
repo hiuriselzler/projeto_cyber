@@ -12,17 +12,17 @@ import {
   type PreparedPrivacyKey,
   type WrappedPrivacyKey,
 } from '@/crypto';
-import { forgetLocalAccount, readLocalAccount, saveLocalAccount, type LocalAccount } from '@/db/account';
+import { readLocalAccount, saveLocalAccount, type LocalAccount } from '@/db/account';
 import { SessionClient, secureSessionStore, type ApiClient, type SessionStore } from '@/sync';
 
 export interface AccountServices {
   readonly api: ApiClient;
   readonly session: SessionClient;
   readonly store: SessionStore;
+  /** Saved and read, never deleted: the row anchors the device's training data (task 004 stage 8, `src/db/account`). */
   readonly accounts: {
     save(account: LocalAccount, nowMs: number): void;
     read(id: string): LocalAccount | null;
-    forget(id: string): void;
   };
   readonly keys: {
     prepareNew(password: string): Promise<PreparedPrivacyKey>;
@@ -40,7 +40,7 @@ export function createAccountServices(api: ApiClient): AccountServices {
     api,
     session: new SessionClient(api, secureSessionStore),
     store: secureSessionStore,
-    accounts: { save: saveLocalAccount, read: readLocalAccount, forget: forgetLocalAccount },
+    accounts: { save: saveLocalAccount, read: readLocalAccount },
     keys: {
       prepareNew: prepareNewPrivacyKey,
       unwrap: unwrapPrivacyKey,

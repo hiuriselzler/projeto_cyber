@@ -115,7 +115,10 @@ one real delete in a product where nothing else with history is ever deleted (IN
 - **Decided with the project owner before building:** other devices stay signed in; when a session ends on a device —
   a sign-out, a reset, or a refresh the server refuses, as it does once the account is gone — the device erases the
   privacy key and the account's local row, and what it keeps of training data is [task 006](006-sync-layer.md)'s to
-  settle; a pending deletion shows on the home route, with a "Delete account" link there until a settings screen exists;
+  settle; *(amended 2026-09-25, [task 004](004-exercise-catalog-and-logging.md) stage 8: the account's local row now
+  **stays**. Every workout and set on the device cascades from it, so erasing it erased the device's whole training
+  history — the only copy until task 006 — and a refused refresh did exactly that to a phone. The privacy key and the
+  tokens still go)* a pending deletion shows on the home route, with a "Delete account" link there until a settings screen exists;
   and dates are written in numbers, in each language's order.
 - **A second request keeps the first date** and sends no second email. Cancelling with nothing pending answers `204`
   and sends nothing.

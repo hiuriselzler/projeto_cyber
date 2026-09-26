@@ -126,6 +126,10 @@ What it cost to learn, each once:
   is listed in PROJECT-STATUS § Gaps).
 - **The integration suite needs Docker Desktop running** before `docker compose up -d` at the repository root; it does
   not start with Windows. Without it the integration tests skip locally, and CI is the only run.
+- **The integration suite runs in its own database**, `cyberathlete_test`, created beside the development one on first
+  use and granted from `infra/postgres/roles.sql` (task 004 stage 8). Until then it ran in the development database and
+  its readiness test migrated that down and back up — every run deleted the accounts a phone signs in with, and a phone
+  whose refresh is refused signs out.
 
 **Reaching the API from the phone:** over USB with `adb reverse`, so the device's `localhost` is this
 machine's. Debug builds may use `http://` to `localhost` and nothing else; release builds allow no
@@ -268,6 +272,10 @@ finished sets through the core's `standing_records()` and replaces that user's r
 user's own scope — same role, same refusal as the daily command. It is safe to repeat: a second run writes the same
 rows. **One user at a time, deliberately**: rebuilding everyone would need an unscoped function on
 [ADR-011](decisions/ADR-011.md)'s allowlist, and nothing needs that until the server holds sets (task 006).
+
+**Since stage 8 the cache is kept current without it**: a `PUT /workouts/{id}` that changes a finished workout rebuilds
+the exercises that workout touches, in the same transaction. The command is the repair for a cache that was damaged
+some other way, and it takes the same per-user write lock as the `PUT`, so running it while the user syncs is safe.
 
 ## 6. Backups and recovery
 

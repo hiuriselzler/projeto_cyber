@@ -15,13 +15,13 @@ when its own criteria are ticked. Tick the box here only then.
 
 | | |
 |---|---|
-| **Phase** | **Tasks 001, 002, 011, 003, 019 and 017 complete; [task 004](tasks/004-exercise-catalog-and-logging.md) in progress.** The schema exists in Postgres and SQLite, seeded and enforcing itself; the design system exists in `src/ui/`, token-driven and tested in both languages, both unit systems and both themes; accounts, sessions and the privacy key exist on both sides, with row-level security proven under the API's own role; a user can delete their account, from the app or the web; and [ADR-004](decisions/ADR-004.md) has its answer — **option B, the single Rust core**, proven through both bindings on the device. Task 004 has stages 0–7 built — the core's first residents, the seeded catalog, the set row, the catalog screen, routines, the rest timer, set types, every tracking mode, the finish flow with its records, and the history with its charts and the server's records cache — with stage 8 to go (*updated 2026-09-25*) |
+| **Phase** | **Tasks 001, 002, 011, 003, 019 and 017 complete; [task 004](tasks/004-exercise-catalog-and-logging.md) in progress.** The schema exists in Postgres and SQLite, seeded and enforcing itself; the design system exists in `src/ui/`, token-driven and tested in both languages, both unit systems and both themes; accounts, sessions and the privacy key exist on both sides, with row-level security proven under the API's own role; a user can delete their account, from the app or the web; and [ADR-004](decisions/ADR-004.md) has its answer — **option B, the single Rust core**, proven through both bindings on the device. Task 004 has stages 0–8 built — the core's first residents, the seeded catalog, the set row, the catalog screen, routines, the rest timer, set types, every tracking mode, the finish flow with its records, the history with its charts and the server's records cache, and the API's mirror endpoints — with stage 8's closing device pass to finish (*updated 2026-09-25*) |
 | **Repository** | Private GitHub repository `hiuriselzler/projeto_cyber`. `main` holds the documentation and tasks 001, 002, 011, 003, 019 and 017, each merged by pull request (#1; #5; #7 and #8; #9; #11; #16); each further piece arrives the same way, with CI green before merge. Task 004 is on `feat/task-004-catalog-and-logging`, in **draft [PR #17](https://github.com/hiuriselzler/projeto_cyber/pull/17)** (opened 2026-09-24, green on all five jobs as of `d6354d3`, stage 7), to be marked ready when stage 8 is done |
 | **Docs** | 49 files, internally consistent, all cross-links resolving |
 | **Decisions** | 15 ADRs, **all now accepted**. [ADR-004](decisions/ADR-004.md)'s spike passed on 2026-09-18 and its outcome is recorded: **option B, the single Rust core**. Its four pre-launch conditions remain outstanding, in tasks 005 and 006 |
 | **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **6 complete** (001, 002, 011, 003, 019, 017) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) — the core loop, in progress since 2026-09-19. Stages 0–7 are built; stage 8 remains** (the API mirror endpoints and the closing device pass over the whole loop). **Next: stage 8, proposed in the task file and waiting on five decisions** (the shape of the workout write, where the completed-set predicate lives, globals on the server, when the records cache rebuilds, and how the imperial pass runs — each with a recommendation). Stage 7 — history, three charts, the records cache and its rebuild — was built and on the phone on 2026-09-25: every number matched a prediction made from the phone's own database, and the pass found and fixed an axis label under the line, a label over the readout at 200 % font, and "0 série contada". The branch is in draft [PR #17](https://github.com/hiuriselzler/projeto_cyber/pull/17), green on all five jobs. **Still open on the device:** TalkBack (stages 3, 5, 6 and 7), the imperial pass (stage 7's display half with it), hiding an exercise with history and reopening it, ✓ latency under a ticking rest bar, stage 4's own accessibility and font-scale pass, the imperial half of the 200 % font check, and `Sheet`'s lost exit animation, which needs a `reanimated`-based fix. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done, and the zero-plural found on the phone is worth their attention — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
+| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) — the core loop, in progress since 2026-09-19. Stages 0–8 are built; stage 8's closing device pass remains.** Stage 8 (2026-09-25) built the mirror endpoints for exercises, routines and workouts and moved the completion rule into the core. Its device pass stopped at a data loss: a refused refresh ended the phone's session, and ending it deleted the account's row, which cascaded through every set on the device. **Fixed the same evening** — a session's end now keeps the row (task 019 amended), a lint fence refuses deleting it, and the integration suite no longer empties the development database. **Next: the rest of the device pass**, which needs the phone signed in again against the local API and some data logged afresh, then [PR #17](https://github.com/hiuriselzler/projeto_cyber/pull/17) marked ready. **Still open on the device:** TalkBack (stages 3, 5, 6 and 7), the imperial pass (stage 7's display half with it), hiding an exercise with history and reopening it, ✓ latency under a ticking rest bar, stage 4's own accessibility and font-scale pass, the imperial half of the 200 % font check, and `Sheet`'s lost exit animation, which needs a `reanimated`-based fix. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done, and the zero-plural found on the phone is worth their attention — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
 
 ### The decision that was open is closed — option B
 
@@ -213,7 +213,8 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
 - [ ] **Every mutation writes to SQLite synchronously** (INV-09) — no React state is the only copy
 - [ ] History, charts, PR detection; `e1rm()` and `is_counted_set()` implemented **once** — *built, stages 1, 6 and 7;
       ticked with the task's own criteria*
-- [ ] Mirror API endpoints so task 006 has something to sync against
+- [ ] Mirror API endpoints so task 006 has something to sync against — *built, stage 8 (2026-09-25); ticked with the
+      task's own criteria*
 
 #### ☐ 005 — Strength progression planner · **XL** · depends: 004 · blocks: 009, 010, 013, 014
 > **The reason the product exists.**
@@ -543,6 +544,7 @@ nothing itself ([task 004](tasks/004-exercise-catalog-and-logging.md) § Scope).
 | 2026-09-24 | Task 004 stage 6 planned: the previous bests folded in the core; a record is the current best; a past workout's `completed_at` is its chosen end while `updated_at` stays real — see the dated entry below |
 | 2026-09-24 | Four decisions after the device passes: a loaded carry keeps its heaviest-weight record (OQ 15, half settled); the user's own exercises are marked "Seu"/"Yours"; the summary groups records by exercise; the set row reflows, and on a short screen the keypad reveals the field being edited (07 §6's open question closed) |
 | 2026-09-25 | Task 004 stage 7 planned: charts on `react-native-svg` (02 §4 changed); the records rebuild one user at a time; `personal_records` keyed per load for reps; the core's `standing_records()` says where a record came from; open question 15 moved to task 010 — see the dated entry below |
+| 2026-09-25 | Task 004 stage 8: every mirror write is a `PUT` of the aggregate resolved row by row, a row left out is kept (02 §5, §7); the completion rule moves into the core; a global answers a write as a stranger's row does; the records cache rebuilds per exercise inside the write, under a per-user lock. **Task 019 amended:** a session's end keeps the account's local row, which the device's training cascades from — see the dated entry below |
 
 ### 2026-09-08 — documentation reconciliation pass
 
@@ -2215,5 +2217,41 @@ list has them. The two worth naming:
 - Hiding an exercise with history and reopening it.
 
 Jest covers each of them. After the fixes: 1298 Jest tests, and CI green on `d6354d3`.
+
+- No invariant changed and no ADR was added. Counts unchanged: 49 documents, 15 ADRs.
+
+### 2026-09-25 — task 004 stage 8 built, and a device pass that stopped at a data loss
+
+Stage 8's six decisions are in the task file. The owner took each recommendation, including three adjustments made by
+reading the proposal against 02 §7, 03 §11 and the code:
+- A `PUT` never drops a row left out of the document, because 02 §7 says a set present on either side survives.
+- A write to a global answers `409`, which is what a stranger's id already got.
+- The records rebuild covers only the exercises the write touched, under a per-user advisory lock.
+
+**Built:**
+- The core gains `missing_for_completion`, through both bindings and a shared fixture. The phone's ✓ and the API's
+  `422 set_missing_<field>` are now the same function.
+- `GET` list, `GET /{id}` and `PUT /{id}` for exercises, routines and workouts. Task 003's `POST /workouts` is retired,
+  and its proofs moved to the `PUT`.
+- A units and language switch on the diagnostics screen, calling `updateAccount`.
+
+Also 21 new API integration tests. The concurrent-finishes test failed three runs out of three with the lock removed,
+so it tests the lock and not the timing.
+
+**The device pass found a data loss, and stopped there.** The diagnostics switch's first `PATCH /auth/me` needed a
+refresh, and the local API refused it: the integration suite had emptied the development database, and the phone's
+account with it. The session ended. Ending it deleted the account's device row, and `ON DELETE CASCADE`, live since
+stage 3 turned `PRAGMA foreign_keys` on, took every workout, set and routine on the phone. Every earlier pass's record
+is gone, with no server copy.
+
+**Decided and fixed the same evening:**
+- **A session's end keeps the account's row.** The tokens and the privacy key go and the training stays. This amends
+  task 019. `forgetLocalAccount` is removed, and a lint fence, `account-row-deletion`, refuses any deletion of a
+  `users` row in the app, with two known-bad fixtures.
+- **The integration suite has its own database**, `cyberathlete_test`, granted from `roles.sql`'s own per-database
+  half, locally and in CI. A full run left the development database's users as they were.
+
+**The pass is not finished.** It needs the phone signed in again and some data rebuilt. TalkBack, the full workout in
+airplane mode, counting the 30 taps and the 200 % imperial check need the owner at the phone.
 
 - No invariant changed and no ADR was added. Counts unchanged: 49 documents, 15 ADRs.

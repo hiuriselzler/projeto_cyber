@@ -130,10 +130,6 @@ function fakes(respond: (request: ApiRequest) => ApiResponse, options: { offline
         saved.push(account);
       },
       read: (id) => saved.find((account) => account.id === id) ?? null,
-      forget: (id) => {
-        events.push('account forgotten');
-        saved.splice(0, saved.length, ...saved.filter((account) => account.id !== id));
-      },
     },
     keys: {
       prepareNew: async (password): Promise<PreparedPrivacyKey> => {
@@ -261,13 +257,15 @@ describe('the account flows', () => {
       expect(getSessionState().status).toBe('signed-in');
     });
 
-    it('signs this device out after a reset, keeping no old key and no account row', async () => {
-      const { services, events } = fakes(() => ({ status: 204, body: '' }));
+    it('signs this device out after a reset, keeping no old key — and keeping the account row its sets hang from', async () => {
+      const { services, events, saved } = fakes(() => ({ status: 204, body: '' }));
+      saved.push(ACCOUNT);
       setSessionState({ status: 'signed-in', account: ACCOUNT });
 
       await confirmPasswordReset(services, { token: 'reset-token-0123456789', newPassword: PASSWORD });
 
-      expect(events).toEqual(['key prepared under the password', 'session ended', 'key forgotten', 'account forgotten']);
+      expect(events).toEqual(['key prepared under the password', 'session ended', 'key forgotten']);
+      expect(saved).toEqual([ACCOUNT]);
       expect(getSessionState()).toEqual({ status: 'signed-out' });
     });
   });
@@ -310,15 +308,16 @@ describe('the account flows', () => {
       expect(getSessionState()).toEqual({ status: 'signed-in', account: ACCOUNT });
     });
 
-    it('forgets the key and the account’s row when the server ends the session, as it does for a deleted account', async () => {
+    it('forgets the key and keeps the account’s row when the server ends the session (task 004 stage 8)', async () => {
+      // The refusal that emptied the stage 8 phone: the session ends, and every set on the device hangs from this row.
       const { services, events, saved } = fakes(() => ({ status: 204, body: '' }));
       saved.push(ACCOUNT);
       setSessionState({ status: 'signed-in', account: ACCOUNT });
 
       await forgetEndedSession(services);
 
-      expect(events).toEqual(['key forgotten', 'account forgotten']);
-      expect(saved).toEqual([]);
+      expect(events).toEqual(['key forgotten']);
+      expect(saved).toEqual([ACCOUNT]);
       expect(getSessionState()).toEqual({ status: 'signed-out' });
     });
   });
@@ -329,7 +328,7 @@ describe('the account flows', () => {
 
     await signOut(services);
 
-    expect(events).toEqual(['session ended', 'key forgotten', 'account forgotten']);
+    expect(events).toEqual(['session ended', 'key forgotten']);
     expect(getSessionState()).toEqual({ status: 'signed-out' });
   });
 });
