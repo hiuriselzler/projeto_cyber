@@ -22,7 +22,7 @@ This is the real order.
 | 5 | [019 Account deletion](019-account-deletion.md) | M | A legal and a store requirement. Needed only 003 and no administrator rights, so it went ahead while 017 waited for them. **Complete** |
 | 6 | [017 Local toolchain, device and core spike](017-local-toolchain-device-spike.md) | L | Everything that needs administrator rights, and every check only a phone can settle. **Must come before 004** — it held the [ADR-004](../decisions/ADR-004.md) Rust spike, a 2-day go/no-go. **Complete** |
 | 7 | [004 Catalog and logging](004-exercise-catalog-and-logging.md) | XL | The core loop. Usable, offline, local-only. **Complete** (2026-09-26) |
-| 8 | [005 Progression planner](005-strength-progression-planner.md) | XL | The reason the product exists |
+| 8 | [005 Progression planner](005-strength-progression-planner.md) | XL | The reason the product exists. **Next** — stages proposed 2026-09-26 |
 | 9 | [006 Sync layer](006-sync-layer.md) | L | Turns on multi-device. The hardest task |
 | 10 | [007 Sport profiles + GPS](007-cardio-recording.md) | XL | The framework, then run/ride/walk |
 | 11 | [008 Non-GPS sports](008-non-gps-sports.md) | M | Pool swim, treadmill, indoor bike. Proves the framework |

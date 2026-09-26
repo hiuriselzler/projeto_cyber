@@ -119,6 +119,93 @@ Required before the first user who is not the developer, and built here because 
 - **RIR trend chart** (FR-2.17): average logged RIR per exercise per microcycle. A block where
   cycle 8 looks like cycle 1 is not progressing, and the app should say so plainly.
 
+## Stages
+
+> **Proposed 2026-09-26, at the end of task 004; not started.** A plan, to be re-cut here whenever a stage learns
+> something — task 004's lesson was that a decomposition living only in a conversation is lost with it.
+
+Each stage ends green on what CI runs, and **every stage that builds a screen ends on the phone** too: every device
+pass in task 004 found a defect that `tsc`, ESLint and a green Jest suite had missed. Stages 1–3 are pure Rust and need
+no phone.
+
+| # | What it lands | State |
+|---|---|---|
+| **0** | The task file catches up with [ADR-004](../decisions/ADR-004.md)'s option B — see below | ☐ |
+| **1** | **The engine's foundation:** the plan's types, `resolve_dates`, `ENGINE_VERSION`, `generate` for `linear_load` and `fixed`, the three deload policies, the property-test harness, **fixture #1** | ☐ |
+| **2** | The other three v1 strategies — `double_progression`, `percent_1rm` (total, via `baseline_e1rm_kg`), `rir_autoregulated` — and the per-set RIR ladder, clamped and marked (INV-05) | ☐ |
+| **3** | `classify` and `reconcile`: the INV-06 guard, the older engine yielding, user edits and pins surviving (FR-3.14), a strategy switched from the load achieved (FR-3.6a), extending and shortening a block, and date re-derivation | ☐ |
+| **4** | Persistence and API (Phase B): the batched insert on both sides, the endpoints, reconciliation on workout completion; the engine reaches the app through UniFFI (the WSL2 loop in [06 §1](../06-operations.md)) | ☐ |
+| **5** | The engine safety controls: the per-strategy kill switch and the minimum engine version | ☐ |
+| **6** | The mesocycle builder, with the whole block previewed before it is committed — device pass | ☐ |
+| **7** | The cycle view and the calendar view, which must agree, and editing a future cycle — device pass | ☐ |
+| **8** | Today's session pre-filled from the plan, the after-session diff, the deload suggestion, adherence and the RIR trend chart; the 500 ms and airplane-mode criteria; the closing pass | ☐ |
+
+**Before stage 0:** the owner merges [PR #17](https://github.com/hiuriselzler/projeto_cyber/pull/17) (task 004), and the
+branch `feat/task-005-progression-planner` is cut from the `main` that results. If PR #17 is still open when the
+session starts, that is the first question to ask, before any change.
+
+**Stage 0 — the docs catch up** *(the same move as task 004's stage 0).* This file was written before
+[ADR-004](../decisions/ADR-004.md) answered **option B**, so:
+- Criteria that say "identically in Python and TypeScript" become **the Rust core, run by all three suites through its
+  bindings**: `cargo test` directly, pytest through PyO3, and the app on the device through UniFFI. Jest cannot load the
+  core (`apps/mobile/test/strength-fixtures.test.ts` says why), so it checks the fixture files' shape instead.
+- The fixtures live flat in `packages/shared/fixtures/` like task 004's, not in a `progression/` folder.
+- Phase A's "in whichever form the spike settled on" and the *(option B)* markers become plain statements.
+
+**Stage 1 — the engine's foundation, proposed.** Pure Rust in `core-rs/src/progression/`, beside the existing
+`round_to_increment`.
+- *What it builds:* the input and output types; `resolve_dates` (each cycle starts `length_days` after the one
+  before, for any mix of lengths); `ENGINE_VERSION = 1`; `generate` for `linear_load` (step in kg, or in basis points of
+  cycle 1's load) and `fixed`; deload policies `none`, `every_n_microcycles` (with or without the final cycle) and
+  `manual`, applying the mesocycle's `deload_set_bp`, `deload_load_bp` and `deload_rir_bump`.
+- *The fixtures:* **#1, the owner's example** (40 kg, 3×6, 2.5 kg step, 12 cycles, deloads at 6 and 12 → 62.5 kg at
+  cycle 11); a 9-day block whose cycle 3 starts 18 days after cycle 1; a 7-day block with one 5-day cycle; and a
+  24-cycle `deload_mode = 'none'` block with no deload anywhere in it.
+- *The properties:* every load a multiple of its increment in both unit systems over 52 cycles (INV-02); every
+  `day_index` within its own cycle (INV-25); contiguous dates; the same output twice from the same input (INV-10).
+- *The criteria it closes:* fixture #1 · the 9-day block · the 24-cycle `none` block · `round_to_increment`'s tie (already
+  proven in task 004, ticked here) · the date half of the 5-day-cycle criterion. The 10 000-rule property waits for stage
+  2, when every strategy that generates a load exists.
+- *Bindings:* stage 1 exposes `generate` through **PyO3** (cheap, and CI runs it); UniFFI waits for stage 4, when the app
+  first calls the engine, so the WSL2 rebuild happens once rather than every stage.
+
+Stage 1 carries five decisions, each the owner's, each with a recommendation:
+
+1. **How to property-test under INV-10's gate.** `core-rs/deny.toml` bans `rand`, and cargo-deny checks dev-dependencies
+   unless told otherwise, so `proptest`, which depends on `rand`, would fail `cargo deny check`. The options are:
+   - **Recommended:** `proptest` as a **dev-dependency**, with `exclude-dev = true` in `deny.toml`'s `[graph]`, and a
+     comment saying why. Dev-dependencies never reach the library the API and the app load. INV-10's call bans in
+     `clippy.toml` still cover the library, and `cargo deny` still covers every crate that ships. Proptest's
+     **shrinking** matters most exactly where this task is riskiest, regeneration against user edits: a failure comes
+     back as the smallest case that breaks, not a 24-cycle block.
+   - A hand-written seeded generator in the test tree: no crate and no gate change, but no shrinking.
+   - Hypothesis in pytest through PyO3: shrinking, but a new Python dependency, and the core's own suite would not hold
+     its own properties.
+2. **Identity: who mints the plan's ids.** `generate` creates ~1 500 rows, each needing a UUIDv7 (INV-16), and the
+   engine may use neither a clock nor randomness (INV-10). **Recommended:** the engine speaks **natural keys**, not
+   ids: (cycle index, day index, exercise order, set index). The wrappers in `src/domain/` and `app/domain/` mint ids
+   for new rows, and `reconcile` matches existing rows by natural key, so a row keeps its id, its `user_edited` origin
+   and its pin through every re-projection. The alternative, passing a pool of pre-minted ids into the engine, makes
+   the engine's output depend on the pool's order, which is an idempotence hazard for no gain.
+3. **What a deload cycle prescribes, and whether it advances the load.** Fixture #1 already implies half the answer:
+   62.5 kg at cycle 11 needs cycle 7 to resume at 52.5 kg, one step past cycle 5's 50 kg. **The deload does not consume
+   a step.** **Recommended** for the other half: the deload multiplies **the last working prescription** (cycle 6 =
+   50 kg × 6000 bp = 30 kg, through `round_to_increment`, `nearest`); target RIR + 2, **clamped into the rule's bounds**
+   (INV-05); and sets × 5000 bp with **ties to the lighter**, the same rule ADR-010 gives loads, so 3 sets become 1.
+   The alternative for sets is ties to the heavier (3 → 2), a gentler deload at the cost of a second rounding rule. The
+   owner confirms, and fixture #1 is then written with its deload cycles spelled out.
+4. **Where the increment is resolved.** INV-02 resolves it as exercise override → modality default for the user's unit
+   system → 2.5 kg / 5 lb, which means reading tables. **Recommended:** the wrappers resolve it and pass one exact
+   `increment_kg` per planned exercise; the engine never knows about units or modalities. That keeps unit handling
+   out of the core, where INV-01 says it does not belong.
+5. **The input's shape.** **Recommended:** plain records shaped like the rows, one level each: mesocycle spec →
+   microcycles → sessions → exercises → sets, plus the rules. Each carries its natural key, status, origin, pin and
+   `engine_version`, so a fixture reads as the plan it describes and each wrapper is a thin mapper. `perceived_fatigue`
+   is **not** in them (INV-03).
+
+*What only the owner can do:* confirm fixture #1 reads as they meant it, including decision 3's deload loads. That is
+the cheapest point in the task to find out it doesn't.
+
 ## Acceptance criteria
 - [ ] Fixture #1 (the user's 40 → 62.5 kg example) passes identically in Python and TypeScript
 - [ ] A per-set ladder `[2, 1, 0]` on a rule with `max_rir = 3` produces RIR `3, 3, 3` marked

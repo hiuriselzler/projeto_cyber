@@ -21,7 +21,7 @@ when its own criteria are ticked. Tick the box here only then.
 | **Decisions** | 15 ADRs, **all now accepted**. [ADR-004](decisions/ADR-004.md)'s spike passed on 2026-09-18 and its outcome is recorded: **option B, the single Rust core**. Its four pre-launch conditions remain outstanding, in tasks 005 and 006 |
 | **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **7 complete** (001, 002, 011, 003, 019, 017, 004) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) is complete (2026-09-26)** — its last step re-aimed the live list's reveal when the list's height changes, and moved the rest onto the keypad's heading line while the keypad is open, after a short screen showed the two together left the list no room; proven on the phone at three screen heights and at 200 % font, which also found and fixed the header pushing *Encerrar* off the screen. **Next: the owner merges [PR #17](https://github.com/hiuriselzler/projeto_cyber/pull/17); then [task 005](tasks/005-strength-progression-planner.md), the progression planner — the reason the product exists — planned before any code**, with ADR-004's kill switch and minimum engine version among its criteria. The phone is signed in to a throwaway local account, `stage8-device@example.com`, holding an open "Cinco por quatro" workout from the last step's pass. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done, and the zero-plural found on the phone is worth their attention — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
+| **Next action** | **[Task 004](tasks/004-exercise-catalog-and-logging.md) is complete (2026-09-26)** — its last step re-aimed the live list's reveal when the list's height changes, and moved the rest onto the keypad's heading line while the keypad is open, after a short screen showed the two together left the list no room; proven on the phone at three screen heights and at 200 % font, which also found and fixed the header pushing *Encerrar* off the screen. **Next: the owner merges [PR #17](https://github.com/hiuriselzler/projeto_cyber/pull/17), then [task 005](tasks/005-strength-progression-planner.md), the progression planner — the reason the product exists.** Its nine stages are **proposed in the task file** (*Stages*): stage 0 updates the file for ADR-004's single Rust core, and **stage 1, the engine's foundation (`generate` for `linear_load` and `fixed`, deloads, dates, fixture #1), waits on five decisions**: property-testing under the `rand` ban, natural keys with ids minted outside the engine, what a deload prescribes, where the increment is resolved, and the input's shape. The next session starts with the plan-and-approval step on a branch cut from `main` after the merge. The phone is signed in to a throwaway local account, `stage8-device@example.com`, holding an open "Cinco por quatro" workout from the last step's pass. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done, and the zero-plural found on the phone is worth their attention — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
 
 ### The decision that was open is closed — option B
 
@@ -221,6 +221,8 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
 
 #### ☐ 005 — Strength progression planner · **XL** · depends: 004 · blocks: 009, 010, 013, 014
 > **The reason the product exists.**
+> **Not started.** Its stages are proposed in the task file (2026-09-26): stage 0 catches the file up with ADR-004's
+> option B, and stage 1, the engine's foundation, carries five decisions awaiting the owner.
 - [ ] Engine: five v1 strategies (`cycle_pattern` is v2 — leave the arm unimplemented, not half-done)
 - [ ] Generation + reconciliation as one **pure, deterministic, idempotent** function, `now` a parameter
 - [ ] **Every projection stamped with `engine_version`; an older engine never re-projects a newer
@@ -2356,3 +2358,8 @@ marked ready for the owner to merge once CI is green.
 
 - No invariant changed and no ADR was added: a layout change inside one feature, and a design rule restated in 07 §6.
   Counts unchanged: 49 documents, 15 ADRs.
+
+**Task 005 proposed the same day**, in its task file's new *Stages* section: nine stages, the engine alone and first
+(stages 1–3, pure Rust, no phone), then persistence, the safety controls and three screen stages each ending on the
+phone. Stage 1 carries five decisions for the owner. The one found by reading the gates rather than the requirements:
+**`core-rs/deny.toml` bans `rand` and checks dev-dependencies too, so `proptest` cannot be added as things stand.**
