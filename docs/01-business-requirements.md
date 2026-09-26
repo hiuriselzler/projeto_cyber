@@ -131,6 +131,21 @@ This section is the core of the product. Read it carefully; disagreement here is
   microcycles only, and refuses to drop a `completed` or `in_progress` one (INV-06).
   **Changing a microcycle's length re-projects only the microcycles that have not started**, and
   shifts the start dates of everything after it.
+  - *Exactly how* (settled 2026-09-26, [task 005](tasks/005-strength-progression-planner.md) stage 3b). A cycle has
+    **started** when it is `in_progress`, `completed` or `skipped`, or holds a logged set whatever its status says.
+  - **Extending** appends cycles laid out from cycle 1's structure, each exercise on its latest rule, dated by the
+    default length and any override, flagged by the deload policy for the new cycles only, and projected from each
+    exercise's anchor. Nothing before them changes.
+  - **Shortening** drops trailing cycles only if none has started and none is locked — the user unlocks a pinned
+    cycle first. It never goes below 2 cycles, and a kept cycle's deload flag is not changed.
+  - **A cycle's length** may change unless the cycle is `completed` or `skipped`. The current cycle may change — the
+    travel case. It is refused if a later cycle that would move has started, or if a session would fall past the
+    new end (03 §5's trigger rule; the user moves the session first). Locked later cycles move with the rest, as the
+    user's own write, and no load changes.
+  - **Switching a strategy mid-block** (FR-3.6a) puts the new rule on the exercise's projected cycles with nothing
+    logged, and re-projects from the load actually achieved; the preview is the same computation, not saved.
+  - A plan stamped by a newer engine refuses an extension or a switch, which project, and allows a shortening or a
+    length change, which do not.
 - **FR-3.2** A mesocycle contains **microcycles**; each microcycle contains **planned sessions**
   (assigned to a **day index**, 1..cycle length); each session contains **planned exercises**;
   each planned exercise contains **planned sets** carrying a target weight, target reps, and
@@ -196,6 +211,28 @@ special case for the empty block.
 (e.g. cycle 1 @ RIR 3 → final cycle @ RIR 0/1) while load climbs; the actual RIR logged last
 cycle determines how big this cycle's jump is. See §3.4.
 
+**Exactly what (b)–(d) generate** (settled 2026-09-26, [task 005](tasks/005-strength-progression-planner.md) stage 2).
+Generation is **open-loop**: with no logs yet, each strategy projects as if every working cycle were `Met`, and a deload
+consumes no step of any of them (FR-3.9). What logged performance changes is reconciliation's (§3.4).
+- **`double_progression` moves the exercise as one.** Each working cycle, every counted set below `max_reps` gains
+  `rep_step` reps, **stopping at the top** — a step never overshoots into load. When every counted set is at the top, the
+  load takes one step and every counted set drops back to `min_reps`. Warm-up, drop and back-off sets hold their reps,
+  and their loads follow the exercise's steps. The load rounds by the rule's `rounding`. A `load_step_bp` is a share of
+  the load it steps from — cycle 1's in a fresh block, the latest anchor's after reconciliation (§3.4) — as for
+  `linear_load`. Each counted set carries the range as `target_min_reps`/`target_max_reps`.
+- **`percent_1rm`:** every counted set prescribes `baseline_e1rm_kg × wave`, the wave tiled across the working cycles
+  with cycle 1 at its first value; warm-up, drop and back-off sets are held as authored; an empty wave holds cycle 1's
+  loads. On a **bodyweight exercise** the prescription is the *added* load, `baseline × wave − body weight`, never below
+  zero; with no body weight logged, cycle 1's loads are held rather than guessed (INV-07). *Accepted cost:* a pyramid of
+  different working loads is not expressible under `percent_1rm` in v1.
+- **`rir_autoregulated`:** the load climbs by the rule's step each working cycle, and the counted sets' target RIR moves
+  from `rir_start` at cycle 1 to `rir_end` at the last working cycle in whole reps, **a tie rounding to the higher RIR**.
+  With no `rir_start` cycle 1's RIRs are held; with no `rir_end` the target holds at `rir_start`.
+- **The per-set ladder** (FR-3.8a) applies wherever a strategy moves the exercise's target RIR — in v1,
+  `rir_autoregulated`. The other four hold RIR constant, so cycle 1's per-set RIRs, which already hold the ladder as the
+  user wrote it, are held and clamped. Offsets go to counted sets in `set_index` order; a set past the end of the ladder
+  takes 0; an offset may be negative.
+
 **(e) `cycle_pattern`** — **v2, not v1.** The user defines a repeating pattern of microcycles and
 the engine tiles it across the block. A pattern step is a multiplier or delta applied to the running
 baseline:
@@ -248,6 +285,22 @@ it later is a strategy branch in the engine, not a migration.
   mesocycle. Under policy `none` no microcycle is ever a deload and the engine must not insert one.
   A deload microcycle may also be given a **different length** from the rest of the block, which is
   a common and legitimate way to programme one.
+  - *Exactly what a deload prescribes* (settled 2026-09-26, [task 005](tasks/005-strength-progression-planner.md)):
+    it multiplies **each set's last working prescription** — the cycle before it, or the last one that was not a
+    deload — and **does not consume a progression step**, so the cycle after it resumes one step past the last
+    working cycle. That is what the worked example in [00](00-project-context.md) already says: 50 kg at cycle 5,
+    **30 kg** at cycle 6, **52.5 kg** at cycle 7.
+  - The load is `round_to_increment(load × deload_load_bp, nearest)` (INV-02). The working-set count is
+    multiplied by `deload_set_bp` with **a tie going to the fewer sets** — the rule ADR-010 gives loads, so 3 sets
+    become 1 — and **never below one**, so a deload never removes an exercise. Warm-up, drop and back-off sets are
+    not counted sets (INV-04), so the cut leaves them in place — but their loads and RIR are deloaded like every
+    other set's, or a back-off set would outweigh the working sets it follows.
+  - The target RIR is raised by `deload_rir_bump` and **clamped into the rule's bounds** (INV-05); a clamped set
+    is marked `was_clamped`, so the plan can say why it reads RIR 4 rather than 5.
+  - Under `every_n_microcycles`, every N-th cycle is a deload, and "the final cycle too" adds the last cycle
+    when N does not already land on it. Cycle 1 is never a deload: it is the user's own baseline (FR-3.3).
+  - A deload applies to every exercise in the cycle, `fixed` ones included: `fixed` holds the progression still,
+    and the deload is the cycle's, not the exercise's.
 - **FR-3.10** Every generated load must be rounded to a **liftable** value for that exercise's
   equipment (INV-02). 41.6667 kg must never reach the screen.
 
@@ -265,8 +318,31 @@ Outcome classification per planned exercise:
 | **Under** | any working set fell short of `min_reps`, or RIR was 0 when target ≥ 2 | Apply `failure_policy` |
 | **Missed** | session not logged at all | Shift the block, or skip — user's choice |
 
+**Exactly how the table is read** (settled 2026-09-26, [task 005](tasks/005-strength-progression-planner.md) stage 3a):
+- Only **counted sets** are judged (INV-04), each against the log matched to it through `planned_set_id`. Sets
+  logged against nothing and swapped exercises are recorded and never read (FR-3.16). A planned counted set with no
+  completed log, in a session that *was* logged, fell short.
+- **The table's gap is closed on the strict side:** reps below the target but at or above `min_reps` fit no row as
+  written. **`Met` needs every counted set at its target reps; anything short is `Under`**, so `failure_policy` decides
+  what happens next.
+- `Exceeded` needs every counted set at least two in reserve above its target RIR. A set with no logged RIR carries
+  no signal: it can never make an exercise `Exceeded`, and never `Under` by the RIR clause (INV-03).
+- `Missed` is a session whose day has passed with nothing logged. It changes nothing — the block continues as
+  projected, which is the "skip". "Shift the block" is a user action on dates, built with the block edits.
+- **What each outcome does.** `Met` takes one step from **the achieved state** — the loads actually lifted, and for
+  double progression the reps actually done — so a lifter who went heavier is followed. `Exceeded` takes two steps.
+  `percent_1rm` instead re-reads the session's best e1RM (INV-07), holding the last one when there is none and
+  saying so (FR-3.2c); the e1RM is carried by the engine, never written back to the rule.
+- **Deload cycles are never an anchor:** a logged deload is classified and reported, and the cycle after it still
+  resumes one step past the last working cycle (FR-3.9).
+- **A user's rows** (FR-3.14): a `user_edited` or pinned set is never changed, and its exercise's prescription in
+  that cycle becomes the baseline later cycles step from; a locked cycle is the baseline for all its exercises.
+
 - **FR-3.11** `failure_policy` per rule, one of: `hold` (repeat the same prescription),
   `repeat_cycle` (re-run the whole microcycle), `reduce_load` (back off by a configured %).
+  *`repeat_cycle`, exactly:* the next working cycle repeats the failed cycle's prescriptions for **every** exercise
+  in it, and no cycle is inserted, so the block keeps its length and end date. *`reduce_load`:* the prescription
+  repeated at `failure_load_bp` of its load.
 - **FR-3.12** Two consecutive `Under` outcomes on the same exercise must raise a visible
   suggestion to deload or end the block early. The app advises; it never silently rewrites a
   block out from under the user.

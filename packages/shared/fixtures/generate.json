@@ -1,0 +1,2876 @@
+{
+  "function": "generate",
+  "spec": "Task 005 stages 1 and 2: generate(mesocycle, cycle_one) -> microcycles 2..N, every one stamped with ENGINE_VERSION, for all five v1 strategies. Every rule column the engine reads is written out, null where the strategy does not read it. Dates are ISO here and whole days since 1970-01-01 in the core; each consumer converts. An expected load is target_weight_kg when it is an exact decimal, or target_weight_steps (x the exercise's increment, in the consumer's own arithmetic) when it is not. The output is compared whole: every cycle, session, exercise and set, in canonical order.",
+  "cases": [
+    {
+      "name": "fixture #1 — the owner's example: 40 kg 3x6 to 62.5 kg at cycle 11, deloads at 6 and 12",
+      "note": "00 § Worked example. A deload consumes no step: cycle 7 resumes one step past cycle 5. It prescribes the last working load x 6000 bp (50 -> 30, 62.5 -> 37.5), 3 sets x 5000 bp with a tie to the fewer (1 set), and RIR 3 + 2 = 5 clamped to the rule's 4 and marked (01 FR-3.9).",
+      "mesocycle": {
+        "start_date": "2026-10-05",
+        "num_microcycles": 12,
+        "default_length_days": 7,
+        "length_overrides": [],
+        "deload": {"mode": "every_n_microcycles", "every": 6, "final_cycle": false},
+        "deload_set_bp": 5000,
+        "deload_load_bp": 6000,
+        "deload_rir_bump": 2
+      },
+      "cycle_one": [
+        {
+          "day_index": 1,
+          "order_index": 0,
+          "exercises": [
+            {
+              "order_index": 0,
+              "increment_kg": 2.5,
+              "rule": {"strategy": "linear_load", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 6, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+              "uses_bodyweight": false,
+              "body_weight_kg": null,
+              "sets": [
+                {"set_index": 0, "set_type": "working", "target_weight_kg": 40, "target_reps": 6, "target_rir": 3},
+                {"set_index": 1, "set_type": "working", "target_weight_kg": 40, "target_reps": 6, "target_rir": 3},
+                {"set_index": 2, "set_type": "working", "target_weight_kg": 40, "target_reps": 6, "target_rir": 3}
+              ]
+            }
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "cycle_number": 2,
+          "starts_on": "2026-10-12",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 42.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 42.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false},
+                    {"set_index": 2, "set_type": "working", "target_weight_kg": 42.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 3,
+          "starts_on": "2026-10-19",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 45, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 45, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false},
+                    {"set_index": 2, "set_type": "working", "target_weight_kg": 45, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 4,
+          "starts_on": "2026-10-26",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 47.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 47.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false},
+                    {"set_index": 2, "set_type": "working", "target_weight_kg": 47.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 5,
+          "starts_on": "2026-11-02",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 50, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 50, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false},
+                    {"set_index": 2, "set_type": "working", "target_weight_kg": 50, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 6,
+          "starts_on": "2026-11-09",
+          "length_days": 7,
+          "is_deload": true,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 30, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 4, "was_clamped": true}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 7,
+          "starts_on": "2026-11-16",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 52.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 52.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false},
+                    {"set_index": 2, "set_type": "working", "target_weight_kg": 52.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 8,
+          "starts_on": "2026-11-23",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 55, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 55, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false},
+                    {"set_index": 2, "set_type": "working", "target_weight_kg": 55, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 9,
+          "starts_on": "2026-11-30",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 57.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 57.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false},
+                    {"set_index": 2, "set_type": "working", "target_weight_kg": 57.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 10,
+          "starts_on": "2026-12-07",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 60, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 60, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false},
+                    {"set_index": 2, "set_type": "working", "target_weight_kg": 60, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 11,
+          "starts_on": "2026-12-14",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 62.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 62.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false},
+                    {"set_index": 2, "set_type": "working", "target_weight_kg": 62.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 12,
+          "starts_on": "2026-12-21",
+          "length_days": 7,
+          "is_deload": true,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 37.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 4, "was_clamped": true}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a block of 9-day microcycles: cycle 3 starts 18 days after cycle 1",
+      "note": "INV-25. 2026-10-05, 2026-10-14, 2026-10-23: no weekday anywhere. Three sessions on days 1, 4 and 7 keep their day indices in every cycle.",
+      "mesocycle": {
+        "start_date": "2026-10-05",
+        "num_microcycles": 4,
+        "default_length_days": 9,
+        "length_overrides": [],
+        "deload": {"mode": "none"},
+        "deload_set_bp": 5000,
+        "deload_load_bp": 6000,
+        "deload_rir_bump": 2
+      },
+      "cycle_one": [
+        {
+          "day_index": 1,
+          "order_index": 0,
+          "exercises": [
+            {
+              "order_index": 0,
+              "increment_kg": 2.5,
+              "rule": {"strategy": "linear_load", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+              "uses_bodyweight": false,
+              "body_weight_kg": null,
+              "sets": [
+                {"set_index": 0, "set_type": "working", "target_weight_kg": 100, "target_reps": 5, "target_rir": 2}
+              ]
+            }
+          ]
+        },
+        {
+          "day_index": 4,
+          "order_index": 0,
+          "exercises": [
+            {
+              "order_index": 0,
+              "increment_kg": 1.25,
+              "rule": {"strategy": "linear_load", "load_step_kg": 1.25, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+              "uses_bodyweight": false,
+              "body_weight_kg": null,
+              "sets": [
+                {"set_index": 0, "set_type": "working", "target_weight_kg": 60, "target_reps": 5, "target_rir": 2}
+              ]
+            }
+          ]
+        },
+        {
+          "day_index": 7,
+          "order_index": 0,
+          "exercises": [
+            {
+              "order_index": 0,
+              "increment_kg": 2.5,
+              "rule": {"strategy": "fixed", "load_step_kg": null, "load_step_bp": null, "rep_step": 1, "min_reps": 8, "max_reps": 8, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+              "uses_bodyweight": false,
+              "body_weight_kg": null,
+              "sets": [
+                {"set_index": 0, "set_type": "working", "target_weight_kg": 50, "target_reps": 8, "target_rir": 2}
+              ]
+            }
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "cycle_number": 2,
+          "starts_on": "2026-10-14",
+          "length_days": 9,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 102.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            },
+            {
+              "day_index": 4,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 61.25, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            },
+            {
+              "day_index": 7,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 50, "target_reps": 8, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 3,
+          "starts_on": "2026-10-23",
+          "length_days": 9,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 105, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            },
+            {
+              "day_index": 4,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 62.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            },
+            {
+              "day_index": 7,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 50, "target_reps": 8, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 4,
+          "starts_on": "2026-11-01",
+          "length_days": 9,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 107.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            },
+            {
+              "day_index": 4,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 63.75, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            },
+            {
+              "day_index": 7,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 50, "target_reps": 8, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mostly 7-day cycles with one 5-day cycle: every later start shifts, and day 7's session moves to day 5",
+      "note": "FR-3.1a, INV-25. Starts 10-05, 10-12, 10-19, then 10-24 — five days later, not seven. A session past the end of the shorter cycle moves to its last day, after the session already there (order 1): nothing is dropped. Loads tell the sessions apart.",
+      "mesocycle": {
+        "start_date": "2026-10-05",
+        "num_microcycles": 5,
+        "default_length_days": 7,
+        "length_overrides": [
+          {"cycle_number": 3, "length_days": 5}
+        ],
+        "deload": {"mode": "none"},
+        "deload_set_bp": 5000,
+        "deload_load_bp": 6000,
+        "deload_rir_bump": 2
+      },
+      "cycle_one": [
+        {
+          "day_index": 1,
+          "order_index": 0,
+          "exercises": [
+            {
+              "order_index": 0,
+              "increment_kg": 2.5,
+              "rule": {"strategy": "fixed", "load_step_kg": null, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+              "uses_bodyweight": false,
+              "body_weight_kg": null,
+              "sets": [
+                {"set_index": 0, "set_type": "working", "target_weight_kg": 40, "target_reps": 5, "target_rir": 2}
+              ]
+            }
+          ]
+        },
+        {
+          "day_index": 3,
+          "order_index": 0,
+          "exercises": [
+            {
+              "order_index": 0,
+              "increment_kg": 2.5,
+              "rule": {"strategy": "fixed", "load_step_kg": null, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+              "uses_bodyweight": false,
+              "body_weight_kg": null,
+              "sets": [
+                {"set_index": 0, "set_type": "working", "target_weight_kg": 50, "target_reps": 5, "target_rir": 2}
+              ]
+            }
+          ]
+        },
+        {
+          "day_index": 5,
+          "order_index": 0,
+          "exercises": [
+            {
+              "order_index": 0,
+              "increment_kg": 2.5,
+              "rule": {"strategy": "fixed", "load_step_kg": null, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+              "uses_bodyweight": false,
+              "body_weight_kg": null,
+              "sets": [
+                {"set_index": 0, "set_type": "working", "target_weight_kg": 60, "target_reps": 5, "target_rir": 2}
+              ]
+            }
+          ]
+        },
+        {
+          "day_index": 7,
+          "order_index": 0,
+          "exercises": [
+            {
+              "order_index": 0,
+              "increment_kg": 2.5,
+              "rule": {"strategy": "fixed", "load_step_kg": null, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+              "uses_bodyweight": false,
+              "body_weight_kg": null,
+              "sets": [
+                {"set_index": 0, "set_type": "working", "target_weight_kg": 70, "target_reps": 5, "target_rir": 2}
+              ]
+            }
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "cycle_number": 2,
+          "starts_on": "2026-10-12",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 40, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            },
+            {
+              "day_index": 3,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 50, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            },
+            {
+              "day_index": 5,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 60, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            },
+            {
+              "day_index": 7,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 70, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 3,
+          "starts_on": "2026-10-19",
+          "length_days": 5,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 40, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            },
+            {
+              "day_index": 3,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 50, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            },
+            {
+              "day_index": 5,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 60, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            },
+            {
+              "day_index": 5,
+              "order_index": 1,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 70, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 4,
+          "starts_on": "2026-10-24",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 40, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            },
+            {
+              "day_index": 3,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 50, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            },
+            {
+              "day_index": 5,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 60, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            },
+            {
+              "day_index": 7,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 70, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 5,
+          "starts_on": "2026-10-31",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 40, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            },
+            {
+              "day_index": 3,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 50, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            },
+            {
+              "day_index": 5,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 60, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            },
+            {
+              "day_index": 7,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 70, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "24 cycles with deload_mode none: 24 working cycles and no deload anywhere",
+      "note": "FR-3.1b: 'none' is a first-class choice. 40 kg + 2.5 kg a cycle reaches 97.5 kg at cycle 24.",
+      "mesocycle": {
+        "start_date": "2026-10-05",
+        "num_microcycles": 24,
+        "default_length_days": 7,
+        "length_overrides": [],
+        "deload": {"mode": "none"},
+        "deload_set_bp": 5000,
+        "deload_load_bp": 6000,
+        "deload_rir_bump": 2
+      },
+      "cycle_one": [
+        {
+          "day_index": 1,
+          "order_index": 0,
+          "exercises": [
+            {
+              "order_index": 0,
+              "increment_kg": 2.5,
+              "rule": {"strategy": "linear_load", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 6, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+              "uses_bodyweight": false,
+              "body_weight_kg": null,
+              "sets": [
+                {"set_index": 0, "set_type": "working", "target_weight_kg": 40, "target_reps": 6, "target_rir": 3}
+              ]
+            }
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "cycle_number": 2,
+          "starts_on": "2026-10-12",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 42.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 3,
+          "starts_on": "2026-10-19",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 45.0, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 4,
+          "starts_on": "2026-10-26",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 47.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 5,
+          "starts_on": "2026-11-02",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 50.0, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 6,
+          "starts_on": "2026-11-09",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 52.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 7,
+          "starts_on": "2026-11-16",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 55.0, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 8,
+          "starts_on": "2026-11-23",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 57.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 9,
+          "starts_on": "2026-11-30",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 60.0, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 10,
+          "starts_on": "2026-12-07",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 62.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 11,
+          "starts_on": "2026-12-14",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 65.0, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 12,
+          "starts_on": "2026-12-21",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 67.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 13,
+          "starts_on": "2026-12-28",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 70.0, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 14,
+          "starts_on": "2027-01-04",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 72.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 15,
+          "starts_on": "2027-01-11",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 75.0, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 16,
+          "starts_on": "2027-01-18",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 77.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 17,
+          "starts_on": "2027-01-25",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 80.0, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 18,
+          "starts_on": "2027-02-01",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 82.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 19,
+          "starts_on": "2027-02-08",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 85.0, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 20,
+          "starts_on": "2027-02-15",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 87.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 21,
+          "starts_on": "2027-02-22",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 90.0, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 22,
+          "starts_on": "2027-03-01",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 92.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 23,
+          "starts_on": "2027-03-08",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 95.0, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 24,
+          "starts_on": "2027-03-15",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 97.5, "target_reps": 6, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a 2.5 % step (load_step_bp = 250) from a 140 kg squat prescribes 142.5 kg",
+      "note": "ADR-010 §3. A share of cycle 1's load per step, never compounded: 143.5 -> 142.5, 147 -> 147.5 (a tie would go lighter; 147 is 58.8 steps, nearer 59), 150.5 -> 150. The former 3 % gave 145.",
+      "mesocycle": {
+        "start_date": "2026-10-05",
+        "num_microcycles": 4,
+        "default_length_days": 7,
+        "length_overrides": [],
+        "deload": {"mode": "none"},
+        "deload_set_bp": 5000,
+        "deload_load_bp": 6000,
+        "deload_rir_bump": 2
+      },
+      "cycle_one": [
+        {
+          "day_index": 1,
+          "order_index": 0,
+          "exercises": [
+            {
+              "order_index": 0,
+              "increment_kg": 2.5,
+              "rule": {"strategy": "linear_load", "load_step_kg": null, "load_step_bp": 250, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+              "uses_bodyweight": false,
+              "body_weight_kg": null,
+              "sets": [
+                {"set_index": 0, "set_type": "working", "target_weight_kg": 140, "target_reps": 5, "target_rir": 2}
+              ]
+            }
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "cycle_number": 2,
+          "starts_on": "2026-10-12",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 142.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 3,
+          "starts_on": "2026-10-19",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 147.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 4,
+          "starts_on": "2026-10-26",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 150, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "every second cycle a deload, and the final cycle too",
+      "note": "FR-3.1b. Deloads at 2 and 4, and 5 because final_cycle is set and the beat misses it. Cycle 3 is one step past cycle 1 (105). A deload multiplies the last working cycle: 100 x 0.6 = 60; 105 x 0.6 = 63 -> 62.5, for cycle 4 and for cycle 5. Two working sets deload to one. No RIR target stays none (INV-03).",
+      "mesocycle": {
+        "start_date": "2026-10-05",
+        "num_microcycles": 5,
+        "default_length_days": 7,
+        "length_overrides": [],
+        "deload": {"mode": "every_n_microcycles", "every": 2, "final_cycle": true},
+        "deload_set_bp": 5000,
+        "deload_load_bp": 6000,
+        "deload_rir_bump": 2
+      },
+      "cycle_one": [
+        {
+          "day_index": 1,
+          "order_index": 0,
+          "exercises": [
+            {
+              "order_index": 0,
+              "increment_kg": 2.5,
+              "rule": {"strategy": "linear_load", "load_step_kg": 5, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+              "uses_bodyweight": false,
+              "body_weight_kg": null,
+              "sets": [
+                {"set_index": 0, "set_type": "working", "target_weight_kg": 100, "target_reps": 5, "target_rir": null},
+                {"set_index": 1, "set_type": "working", "target_weight_kg": 100, "target_reps": 5, "target_rir": null}
+              ]
+            }
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "cycle_number": 2,
+          "starts_on": "2026-10-12",
+          "length_days": 7,
+          "is_deload": true,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 60, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": null, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 3,
+          "starts_on": "2026-10-19",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 105, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": null, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 105, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": null, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 4,
+          "starts_on": "2026-10-26",
+          "length_days": 7,
+          "is_deload": true,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 62.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": null, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 5,
+          "starts_on": "2026-11-02",
+          "length_days": 7,
+          "is_deload": true,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 62.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": null, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a manual deload on a fixed exercise keeps the warm-up and half the working sets",
+      "note": "FR-3.5, FR-3.9. Fixed holds 60 kg; the deload is the cycle's, so it applies. Four working sets keep two; the warm-up is not a counted set, so it stays, deloaded like the rest: 20 x 0.6 = 12 -> 12.5; 60 x 0.6 = 36 -> 35. RIR 2 + 2 = 4 fits the rule, so nothing is clamped.",
+      "mesocycle": {
+        "start_date": "2026-10-05",
+        "num_microcycles": 3,
+        "default_length_days": 7,
+        "length_overrides": [],
+        "deload": {"mode": "manual", "cycles": [3]},
+        "deload_set_bp": 5000,
+        "deload_load_bp": 6000,
+        "deload_rir_bump": 2
+      },
+      "cycle_one": [
+        {
+          "day_index": 1,
+          "order_index": 0,
+          "exercises": [
+            {
+              "order_index": 0,
+              "increment_kg": 2.5,
+              "rule": {"strategy": "fixed", "load_step_kg": null, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+              "uses_bodyweight": false,
+              "body_weight_kg": null,
+              "sets": [
+                {"set_index": 0, "set_type": "warmup", "target_weight_kg": 20, "target_reps": 5, "target_rir": null},
+                {"set_index": 1, "set_type": "working", "target_weight_kg": 60, "target_reps": 5, "target_rir": 2},
+                {"set_index": 2, "set_type": "working", "target_weight_kg": 60, "target_reps": 5, "target_rir": 2},
+                {"set_index": 3, "set_type": "working", "target_weight_kg": 60, "target_reps": 5, "target_rir": 2},
+                {"set_index": 4, "set_type": "working", "target_weight_kg": 60, "target_reps": 5, "target_rir": 2}
+              ]
+            }
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "cycle_number": 2,
+          "starts_on": "2026-10-12",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "warmup", "target_weight_kg": 20, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": null, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 60, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 2, "set_type": "working", "target_weight_kg": 60, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 3, "set_type": "working", "target_weight_kg": 60, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 4, "set_type": "working", "target_weight_kg": 60, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 3,
+          "starts_on": "2026-10-19",
+          "length_days": 7,
+          "is_deload": true,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "warmup", "target_weight_kg": 12.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": null, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 35, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 4, "was_clamped": false},
+                    {"set_index": 2, "set_type": "working", "target_weight_kg": 35, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 4, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a target carried from cycle 1 outside its rule is clamped into it and marked",
+      "note": "INV-05: the engine never generates a set outside its rule. 10 reps on a 6-8 rule is 8; RIR 6 with a maximum of 4 is 4; was_clamped says why. Cycle 1 itself is the user's and is not rewritten.",
+      "mesocycle": {
+        "start_date": "2026-10-05",
+        "num_microcycles": 2,
+        "default_length_days": 7,
+        "length_overrides": [],
+        "deload": {"mode": "none"},
+        "deload_set_bp": 5000,
+        "deload_load_bp": 6000,
+        "deload_rir_bump": 2
+      },
+      "cycle_one": [
+        {
+          "day_index": 1,
+          "order_index": 0,
+          "exercises": [
+            {
+              "order_index": 0,
+              "increment_kg": 2.5,
+              "rule": {"strategy": "fixed", "load_step_kg": null, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 8, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+              "uses_bodyweight": false,
+              "body_weight_kg": null,
+              "sets": [
+                {"set_index": 0, "set_type": "working", "target_weight_kg": 40, "target_reps": 10, "target_rir": 6}
+              ]
+            }
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "cycle_number": 2,
+          "starts_on": "2026-10-12",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 40, "target_reps": 8, "target_min_reps": null, "target_max_reps": null, "target_rir": 4, "was_clamped": true}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "an imperial block stays on the 5 lb grid: 135 lb + 5 lb a cycle",
+      "note": "ADR-008, INV-02. 5 lb is stored as 2.267962 kg (numeric(10,6)) and 135 lb as 61.235 kg (numeric(9,4)). Expected loads are whole steps of the increment — 28, 29, 30, i.e. 140, 145 and 150 lb — written as steps because a product of 2.267962 has no short exact decimal.",
+      "mesocycle": {
+        "start_date": "2026-10-05",
+        "num_microcycles": 4,
+        "default_length_days": 7,
+        "length_overrides": [],
+        "deload": {"mode": "none"},
+        "deload_set_bp": 5000,
+        "deload_load_bp": 6000,
+        "deload_rir_bump": 2
+      },
+      "cycle_one": [
+        {
+          "day_index": 1,
+          "order_index": 0,
+          "exercises": [
+            {
+              "order_index": 0,
+              "increment_kg": 2.267962,
+              "rule": {"strategy": "linear_load", "load_step_kg": 2.267962, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+              "uses_bodyweight": false,
+              "body_weight_kg": null,
+              "sets": [
+                {"set_index": 0, "set_type": "working", "target_weight_kg": 61.235, "target_reps": 5, "target_rir": 2}
+              ]
+            }
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "cycle_number": 2,
+          "starts_on": "2026-10-12",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_steps": 28, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 3,
+          "starts_on": "2026-10-19",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_steps": 29, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 4,
+          "starts_on": "2026-10-26",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_steps": 30, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "double progression 6-8 with a 2.5 kg step: 3x6@40 -> 3x7@40 -> 3x8@40 -> 3x6@42.5",
+      "note": "01 §3.2 (b), task 005's criterion. The exercise moves as one: every set gains a rep until all are at the top, then the load steps and every set drops to the bottom. The range rides on each set.",
+      "mesocycle": {
+        "start_date": "2026-10-05",
+        "num_microcycles": 5,
+        "default_length_days": 7,
+        "length_overrides": [],
+        "deload": {"mode": "none"},
+        "deload_set_bp": 5000,
+        "deload_load_bp": 6000,
+        "deload_rir_bump": 2
+      },
+      "cycle_one": [
+        {
+          "day_index": 1,
+          "order_index": 0,
+          "exercises": [
+            {
+              "order_index": 0,
+              "increment_kg": 2.5,
+              "rule": {"strategy": "double_progression", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 8, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+              "uses_bodyweight": false,
+              "body_weight_kg": null,
+              "sets": [
+                {"set_index": 0, "set_type": "working", "target_weight_kg": 40, "target_reps": 6, "target_rir": 2},
+                {"set_index": 1, "set_type": "working", "target_weight_kg": 40, "target_reps": 6, "target_rir": 2},
+                {"set_index": 2, "set_type": "working", "target_weight_kg": 40, "target_reps": 6, "target_rir": 2}
+              ]
+            }
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "cycle_number": 2,
+          "starts_on": "2026-10-12",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 40, "target_reps": 7, "target_min_reps": 6, "target_max_reps": 8, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 40, "target_reps": 7, "target_min_reps": 6, "target_max_reps": 8, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 2, "set_type": "working", "target_weight_kg": 40, "target_reps": 7, "target_min_reps": 6, "target_max_reps": 8, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 3,
+          "starts_on": "2026-10-19",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 40, "target_reps": 8, "target_min_reps": 6, "target_max_reps": 8, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 40, "target_reps": 8, "target_min_reps": 6, "target_max_reps": 8, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 2, "set_type": "working", "target_weight_kg": 40, "target_reps": 8, "target_min_reps": 6, "target_max_reps": 8, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 4,
+          "starts_on": "2026-10-26",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 42.5, "target_reps": 6, "target_min_reps": 6, "target_max_reps": 8, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 42.5, "target_reps": 6, "target_min_reps": 6, "target_max_reps": 8, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 2, "set_type": "working", "target_weight_kg": 42.5, "target_reps": 6, "target_min_reps": 6, "target_max_reps": 8, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 5,
+          "starts_on": "2026-11-02",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 42.5, "target_reps": 7, "target_min_reps": 6, "target_max_reps": 8, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 42.5, "target_reps": 7, "target_min_reps": 6, "target_max_reps": 8, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 2, "set_type": "working", "target_weight_kg": 42.5, "target_reps": 7, "target_min_reps": 6, "target_max_reps": 8, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a rep step that would overshoot the top stops at it, and the load steps the cycle after",
+      "note": "Stage 2, decision 1. 8 + 3 = 11, then 12 rather than 14: the top is prescribed once before the load moves, and nothing is ever generated outside the range (INV-05).",
+      "mesocycle": {
+        "start_date": "2026-10-05",
+        "num_microcycles": 5,
+        "default_length_days": 7,
+        "length_overrides": [],
+        "deload": {"mode": "none"},
+        "deload_set_bp": 5000,
+        "deload_load_bp": 6000,
+        "deload_rir_bump": 2
+      },
+      "cycle_one": [
+        {
+          "day_index": 1,
+          "order_index": 0,
+          "exercises": [
+            {
+              "order_index": 0,
+              "increment_kg": 2.5,
+              "rule": {"strategy": "double_progression", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 3, "min_reps": 8, "max_reps": 12, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+              "uses_bodyweight": false,
+              "body_weight_kg": null,
+              "sets": [
+                {"set_index": 0, "set_type": "working", "target_weight_kg": 50, "target_reps": 8, "target_rir": 2}
+              ]
+            }
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "cycle_number": 2,
+          "starts_on": "2026-10-12",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 50, "target_reps": 11, "target_min_reps": 8, "target_max_reps": 12, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 3,
+          "starts_on": "2026-10-19",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 50, "target_reps": 12, "target_min_reps": 8, "target_max_reps": 12, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 4,
+          "starts_on": "2026-10-26",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 52.5, "target_reps": 8, "target_min_reps": 8, "target_max_reps": 12, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 5,
+          "starts_on": "2026-11-02",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 52.5, "target_reps": 11, "target_min_reps": 8, "target_max_reps": 12, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "double progression through a deload: the deload takes no step, and the reps resume",
+      "note": "FR-3.9. Cycle 3 deloads cycle 2's 3x7@40 to 1x7 at 25 kg (24 -> 25 on the grid), RIR 2 + 2 = 4. Cycle 4 continues from cycle 2: 8 reps, then cycle 5 steps the load.",
+      "mesocycle": {
+        "start_date": "2026-10-05",
+        "num_microcycles": 5,
+        "default_length_days": 7,
+        "length_overrides": [],
+        "deload": {"mode": "manual", "cycles": [3]},
+        "deload_set_bp": 5000,
+        "deload_load_bp": 6000,
+        "deload_rir_bump": 2
+      },
+      "cycle_one": [
+        {
+          "day_index": 1,
+          "order_index": 0,
+          "exercises": [
+            {
+              "order_index": 0,
+              "increment_kg": 2.5,
+              "rule": {"strategy": "double_progression", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 8, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+              "uses_bodyweight": false,
+              "body_weight_kg": null,
+              "sets": [
+                {"set_index": 0, "set_type": "working", "target_weight_kg": 40, "target_reps": 6, "target_rir": 2},
+                {"set_index": 1, "set_type": "working", "target_weight_kg": 40, "target_reps": 6, "target_rir": 2},
+                {"set_index": 2, "set_type": "working", "target_weight_kg": 40, "target_reps": 6, "target_rir": 2}
+              ]
+            }
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "cycle_number": 2,
+          "starts_on": "2026-10-12",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 40, "target_reps": 7, "target_min_reps": 6, "target_max_reps": 8, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 40, "target_reps": 7, "target_min_reps": 6, "target_max_reps": 8, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 2, "set_type": "working", "target_weight_kg": 40, "target_reps": 7, "target_min_reps": 6, "target_max_reps": 8, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 3,
+          "starts_on": "2026-10-19",
+          "length_days": 7,
+          "is_deload": true,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 25, "target_reps": 7, "target_min_reps": 6, "target_max_reps": 8, "target_rir": 4, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 4,
+          "starts_on": "2026-10-26",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 40, "target_reps": 8, "target_min_reps": 6, "target_max_reps": 8, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 40, "target_reps": 8, "target_min_reps": 6, "target_max_reps": 8, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 2, "set_type": "working", "target_weight_kg": 40, "target_reps": 8, "target_min_reps": 6, "target_max_reps": 8, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 5,
+          "starts_on": "2026-11-02",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 42.5, "target_reps": 6, "target_min_reps": 6, "target_max_reps": 8, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 42.5, "target_reps": 6, "target_min_reps": 6, "target_max_reps": 8, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 2, "set_type": "working", "target_weight_kg": 42.5, "target_reps": 6, "target_min_reps": 6, "target_max_reps": 8, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a percent_1rm wave of 70/75/80 % of a 120 kg e1RM, tiled across the block, with a deload",
+      "note": "01 §3.2 (c), stage 2 decision 2. Cycle 1 is the wave's first value; 90, 96 -> 95, then the deload at cycle 4 takes no wave step (95 x 0.6 = 57 -> 57.5, one set), and the wave resumes at 70 % (84 -> 85) and 75 % (90). The warm-up is held as authored, and deloaded like every set.",
+      "mesocycle": {
+        "start_date": "2026-10-05",
+        "num_microcycles": 6,
+        "default_length_days": 7,
+        "length_overrides": [],
+        "deload": {"mode": "every_n_microcycles", "every": 4, "final_cycle": false},
+        "deload_set_bp": 5000,
+        "deload_load_bp": 6000,
+        "deload_rir_bump": 2
+      },
+      "cycle_one": [
+        {
+          "day_index": 1,
+          "order_index": 0,
+          "exercises": [
+            {
+              "order_index": 0,
+              "increment_kg": 2.5,
+              "rule": {"strategy": "percent_1rm", "load_step_kg": null, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": [7000, 7500, 8000], "baseline_e1rm_kg": 120, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+              "uses_bodyweight": false,
+              "body_weight_kg": null,
+              "sets": [
+                {"set_index": 0, "set_type": "warmup", "target_weight_kg": 40, "target_reps": 5, "target_rir": null},
+                {"set_index": 1, "set_type": "working", "target_weight_kg": 85, "target_reps": 5, "target_rir": 2},
+                {"set_index": 2, "set_type": "working", "target_weight_kg": 85, "target_reps": 5, "target_rir": 2},
+                {"set_index": 3, "set_type": "working", "target_weight_kg": 85, "target_reps": 5, "target_rir": 2}
+              ]
+            }
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "cycle_number": 2,
+          "starts_on": "2026-10-12",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "warmup", "target_weight_kg": 40, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": null, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 90, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 2, "set_type": "working", "target_weight_kg": 90, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 3, "set_type": "working", "target_weight_kg": 90, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 3,
+          "starts_on": "2026-10-19",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "warmup", "target_weight_kg": 40, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": null, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 95, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 2, "set_type": "working", "target_weight_kg": 95, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 3, "set_type": "working", "target_weight_kg": 95, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 4,
+          "starts_on": "2026-10-26",
+          "length_days": 7,
+          "is_deload": true,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "warmup", "target_weight_kg": 25, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": null, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 57.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 4, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 5,
+          "starts_on": "2026-11-02",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "warmup", "target_weight_kg": 40, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": null, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 85, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 2, "set_type": "working", "target_weight_kg": 85, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 3, "set_type": "working", "target_weight_kg": 85, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 6,
+          "starts_on": "2026-11-09",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "warmup", "target_weight_kg": 40, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": null, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 90, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 2, "set_type": "working", "target_weight_kg": 90, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 3, "set_type": "working", "target_weight_kg": 90, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "percent_1rm on a bodyweight exercise prescribes the added load: e1RM x wave - body weight",
+      "note": "ADR-010 §1, stage 2 decision 3. An 80 kg lifter, e1RM 110 kg: 85 % is 93.5 kg, so 13.5 kg added -> 13.75 on a 1.25 kg grid; 80 % is 88 kg, so 8 kg added -> 7.5.",
+      "mesocycle": {
+        "start_date": "2026-10-05",
+        "num_microcycles": 3,
+        "default_length_days": 7,
+        "length_overrides": [],
+        "deload": {"mode": "none"},
+        "deload_set_bp": 5000,
+        "deload_load_bp": 6000,
+        "deload_rir_bump": 2
+      },
+      "cycle_one": [
+        {
+          "day_index": 1,
+          "order_index": 0,
+          "exercises": [
+            {
+              "order_index": 0,
+              "increment_kg": 1.25,
+              "rule": {"strategy": "percent_1rm", "load_step_kg": null, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": [8000, 8500], "baseline_e1rm_kg": 110, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+              "uses_bodyweight": true,
+              "body_weight_kg": 80,
+              "sets": [
+                {"set_index": 0, "set_type": "working", "target_weight_kg": 7.5, "target_reps": 5, "target_rir": 2},
+                {"set_index": 1, "set_type": "working", "target_weight_kg": 7.5, "target_reps": 5, "target_rir": 2},
+                {"set_index": 2, "set_type": "working", "target_weight_kg": 7.5, "target_reps": 5, "target_rir": 2}
+              ]
+            }
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "cycle_number": 2,
+          "starts_on": "2026-10-12",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 13.75, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 13.75, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 2, "set_type": "working", "target_weight_kg": 13.75, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 3,
+          "starts_on": "2026-10-19",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 7.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 7.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 2, "set_type": "working", "target_weight_kg": 7.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "percent_1rm on a bodyweight exercise with no body weight holds cycle 1's loads",
+      "note": "INV-07: no body weight, no guess. The strategy runs open-loop on cycle 1's added load (FR-3.2c).",
+      "mesocycle": {
+        "start_date": "2026-10-05",
+        "num_microcycles": 3,
+        "default_length_days": 7,
+        "length_overrides": [],
+        "deload": {"mode": "none"},
+        "deload_set_bp": 5000,
+        "deload_load_bp": 6000,
+        "deload_rir_bump": 2
+      },
+      "cycle_one": [
+        {
+          "day_index": 1,
+          "order_index": 0,
+          "exercises": [
+            {
+              "order_index": 0,
+              "increment_kg": 1.25,
+              "rule": {"strategy": "percent_1rm", "load_step_kg": null, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": [8000, 8500], "baseline_e1rm_kg": 110, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+              "uses_bodyweight": true,
+              "body_weight_kg": null,
+              "sets": [
+                {"set_index": 0, "set_type": "working", "target_weight_kg": 7.5, "target_reps": 5, "target_rir": 2},
+                {"set_index": 1, "set_type": "working", "target_weight_kg": 7.5, "target_reps": 5, "target_rir": 2},
+                {"set_index": 2, "set_type": "working", "target_weight_kg": 7.5, "target_reps": 5, "target_rir": 2}
+              ]
+            }
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "cycle_number": 2,
+          "starts_on": "2026-10-12",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 7.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 7.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 2, "set_type": "working", "target_weight_kg": 7.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 3,
+          "starts_on": "2026-10-19",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 7.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 7.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 2, "set_type": "working", "target_weight_kg": 7.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "percent_1rm never prescribes a negative added load",
+      "note": "A 100 kg lifter at 80 % of a 110 kg e1RM is 88 kg, 12 kg under body weight: the added load is 0.",
+      "mesocycle": {
+        "start_date": "2026-10-05",
+        "num_microcycles": 2,
+        "default_length_days": 7,
+        "length_overrides": [],
+        "deload": {"mode": "none"},
+        "deload_set_bp": 5000,
+        "deload_load_bp": 6000,
+        "deload_rir_bump": 2
+      },
+      "cycle_one": [
+        {
+          "day_index": 1,
+          "order_index": 0,
+          "exercises": [
+            {
+              "order_index": 0,
+              "increment_kg": 1.25,
+              "rule": {"strategy": "percent_1rm", "load_step_kg": null, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": [8000], "baseline_e1rm_kg": 110, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+              "uses_bodyweight": true,
+              "body_weight_kg": 100,
+              "sets": [
+                {"set_index": 0, "set_type": "working", "target_weight_kg": 0, "target_reps": 5, "target_rir": 2}
+              ]
+            }
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "cycle_number": 2,
+          "starts_on": "2026-10-12",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 0, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "rir_autoregulated descends from RIR 3 to 0 across the working cycles while the load climbs",
+      "note": "01 §3.2 (d), stage 2 decision 4. Six working cycles (1, 2, 3, 5, 6, 7): 3, 2.4, 1.8, 1.2, 0.6, 0 -> 3, 2, 2, 1, 1, 0. Deloads at 4 and 8 take no step: 105 x 0.6 -> 62.5 at RIR 4, 112.5 x 0.6 = 67.5 at RIR 2, one set each.",
+      "mesocycle": {
+        "start_date": "2026-10-05",
+        "num_microcycles": 8,
+        "default_length_days": 7,
+        "length_overrides": [],
+        "deload": {"mode": "every_n_microcycles", "every": 4, "final_cycle": false},
+        "deload_set_bp": 5000,
+        "deload_load_bp": 6000,
+        "deload_rir_bump": 2
+      },
+      "cycle_one": [
+        {
+          "day_index": 1,
+          "order_index": 0,
+          "exercises": [
+            {
+              "order_index": 0,
+              "increment_kg": 2.5,
+              "rule": {"strategy": "rir_autoregulated", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": 3, "rir_end": 0, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+              "uses_bodyweight": false,
+              "body_weight_kg": null,
+              "sets": [
+                {"set_index": 0, "set_type": "working", "target_weight_kg": 100, "target_reps": 5, "target_rir": 3},
+                {"set_index": 1, "set_type": "working", "target_weight_kg": 100, "target_reps": 5, "target_rir": 3}
+              ]
+            }
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "cycle_number": 2,
+          "starts_on": "2026-10-12",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 102.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 102.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 3,
+          "starts_on": "2026-10-19",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 105, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 105, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 4,
+          "starts_on": "2026-10-26",
+          "length_days": 7,
+          "is_deload": true,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 62.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 4, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 5,
+          "starts_on": "2026-11-02",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 107.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 1, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 107.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 1, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 6,
+          "starts_on": "2026-11-09",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 110, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 1, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 110, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 1, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 7,
+          "starts_on": "2026-11-16",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 112.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 0, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 112.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 0, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 8,
+          "starts_on": "2026-11-23",
+          "length_days": 7,
+          "is_deload": true,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 67.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a RIR exactly between two whole reps rounds to the higher",
+      "note": "Stage 2 decision 4: 3 -> 0 over three working cycles is 3, 1.5, 0, and 1.5 prescribes 2 — the side ADR-010's tie rule takes for loads.",
+      "mesocycle": {
+        "start_date": "2026-10-05",
+        "num_microcycles": 3,
+        "default_length_days": 7,
+        "length_overrides": [],
+        "deload": {"mode": "none"},
+        "deload_set_bp": 5000,
+        "deload_load_bp": 6000,
+        "deload_rir_bump": 2
+      },
+      "cycle_one": [
+        {
+          "day_index": 1,
+          "order_index": 0,
+          "exercises": [
+            {
+              "order_index": 0,
+              "increment_kg": 2.5,
+              "rule": {"strategy": "rir_autoregulated", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": 3, "rir_end": 0, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+              "uses_bodyweight": false,
+              "body_weight_kg": null,
+              "sets": [
+                {"set_index": 0, "set_type": "working", "target_weight_kg": 60, "target_reps": 5, "target_rir": 3}
+              ]
+            }
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "cycle_number": 2,
+          "starts_on": "2026-10-12",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 62.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "cycle_number": 3,
+          "starts_on": "2026-10-19",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 65, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 0, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a per-set ladder [2, 1, 0] with max_rir 3 at target 3 prescribes 3, 3, 3, the first two clamped",
+      "note": "FR-3.8a, ADR-010 §2, task 005's criterion. 5 and 4 are clamped to the rule's 3 and marked; the last set is 3 + 0 and is not.",
+      "mesocycle": {
+        "start_date": "2026-10-05",
+        "num_microcycles": 2,
+        "default_length_days": 7,
+        "length_overrides": [],
+        "deload": {"mode": "none"},
+        "deload_set_bp": 5000,
+        "deload_load_bp": 6000,
+        "deload_rir_bump": 2
+      },
+      "cycle_one": [
+        {
+          "day_index": 1,
+          "order_index": 0,
+          "exercises": [
+            {
+              "order_index": 0,
+              "increment_kg": 2.5,
+              "rule": {"strategy": "rir_autoregulated", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 3, "rir_mode": "per_set", "rir_offsets": [2, 1, 0], "rir_start": 3, "rir_end": 3, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+              "uses_bodyweight": false,
+              "body_weight_kg": null,
+              "sets": [
+                {"set_index": 0, "set_type": "working", "target_weight_kg": 60, "target_reps": 5, "target_rir": 3},
+                {"set_index": 1, "set_type": "working", "target_weight_kg": 60, "target_reps": 5, "target_rir": 3},
+                {"set_index": 2, "set_type": "working", "target_weight_kg": 60, "target_reps": 5, "target_rir": 3}
+              ]
+            }
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "cycle_number": 2,
+          "starts_on": "2026-10-12",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 62.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": true},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 62.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": true},
+                    {"set_index": 2, "set_type": "working", "target_weight_kg": 62.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "the same ladder at target 1 prescribes 3, 2, 1, none clamped",
+      "note": "FR-3.8a, task 005's criterion: the ladder fits inside the rule, so nothing bends.",
+      "mesocycle": {
+        "start_date": "2026-10-05",
+        "num_microcycles": 2,
+        "default_length_days": 7,
+        "length_overrides": [],
+        "deload": {"mode": "none"},
+        "deload_set_bp": 5000,
+        "deload_load_bp": 6000,
+        "deload_rir_bump": 2
+      },
+      "cycle_one": [
+        {
+          "day_index": 1,
+          "order_index": 0,
+          "exercises": [
+            {
+              "order_index": 0,
+              "increment_kg": 2.5,
+              "rule": {"strategy": "rir_autoregulated", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 3, "rir_mode": "per_set", "rir_offsets": [2, 1, 0], "rir_start": 1, "rir_end": 1, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+              "uses_bodyweight": false,
+              "body_weight_kg": null,
+              "sets": [
+                {"set_index": 0, "set_type": "working", "target_weight_kg": 60, "target_reps": 5, "target_rir": 3},
+                {"set_index": 1, "set_type": "working", "target_weight_kg": 60, "target_reps": 5, "target_rir": 2},
+                {"set_index": 2, "set_type": "working", "target_weight_kg": 60, "target_reps": 5, "target_rir": 1}
+              ]
+            }
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "cycle_number": 2,
+          "starts_on": "2026-10-12",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "working", "target_weight_kg": 62.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 62.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false},
+                    {"set_index": 2, "set_type": "working", "target_weight_kg": 62.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 1, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a ladder's offsets go to counted sets only; a negative sum is clamped; a set past the ladder takes 0",
+      "note": "Stage 2 decision 5. Target 2, ladder [1, -3]: the warm-up keeps no RIR; the working sets are 2 + 1 = 3, 2 - 3 = -1 clamped to 0 and marked, and 2 + 0 = 2.",
+      "mesocycle": {
+        "start_date": "2026-10-05",
+        "num_microcycles": 2,
+        "default_length_days": 7,
+        "length_overrides": [],
+        "deload": {"mode": "none"},
+        "deload_set_bp": 5000,
+        "deload_load_bp": 6000,
+        "deload_rir_bump": 2
+      },
+      "cycle_one": [
+        {
+          "day_index": 1,
+          "order_index": 0,
+          "exercises": [
+            {
+              "order_index": 0,
+              "increment_kg": 2.5,
+              "rule": {"strategy": "rir_autoregulated", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_set", "rir_offsets": [1, -3], "rir_start": 2, "rir_end": 2, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
+              "uses_bodyweight": false,
+              "body_weight_kg": null,
+              "sets": [
+                {"set_index": 0, "set_type": "warmup", "target_weight_kg": 30, "target_reps": 5, "target_rir": null},
+                {"set_index": 1, "set_type": "working", "target_weight_kg": 60, "target_reps": 5, "target_rir": 2},
+                {"set_index": 2, "set_type": "working", "target_weight_kg": 60, "target_reps": 5, "target_rir": 2},
+                {"set_index": 3, "set_type": "working", "target_weight_kg": 60, "target_reps": 5, "target_rir": 2}
+              ]
+            }
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "cycle_number": 2,
+          "starts_on": "2026-10-12",
+          "length_days": 7,
+          "is_deload": false,
+          "sessions": [
+            {
+              "day_index": 1,
+              "order_index": 0,
+              "exercises": [
+                {
+                  "order_index": 0,
+                  "sets": [
+                    {"set_index": 0, "set_type": "warmup", "target_weight_kg": 32.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": null, "was_clamped": false},
+                    {"set_index": 1, "set_type": "working", "target_weight_kg": 62.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 3, "was_clamped": false},
+                    {"set_index": 2, "set_type": "working", "target_weight_kg": 62.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 0, "was_clamped": true},
+                    {"set_index": 3, "set_type": "working", "target_weight_kg": 62.5, "target_reps": 5, "target_min_reps": null, "target_max_reps": null, "target_rir": 2, "was_clamped": false}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

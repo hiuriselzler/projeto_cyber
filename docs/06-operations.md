@@ -131,6 +131,24 @@ What it cost to learn, each once:
   its readiness test migrated that down and back up — every run deleted the accounts a phone signs in with, and a phone
   whose refresh is refused signs out.
 
+What task 005 stage 4a (2026-09-26) added:
+- **The whole WSL2 loop runs as one script, from PowerShell too**: `wsl.exe -d Ubuntu -- bash -lc "bash
+  /mnt/c/.../script.sh"`. The script cleans the clone (06 §1's `git checkout --` and `git clean` of the generated files),
+  runs `git fetch` and `git checkout -B <branch> origin/<branch>`, `pnpm install --frozen-lockfile`, `pnpm ubrn:android`,
+  copies the four generated files and three `.so` back, then runs the arm64 `assembleDebug`. It finishes by grepping
+  the packaged `.so` for each new `uniffi_cyberathlete_core_ffi_fn_func_<name>` symbol. The clone takes commits only,
+  so commit locally before running it.
+- **`uniffi::remote` exposes the core's own types** (UniFFI ≥ 0.28): redeclare the type field for field with
+  `#[uniffi::remote(Record)]` or `(Enum)` and nothing is mirrored by hand, since a declaration that drifts fails to
+  compile. A type shared with an older hand mirror must move to `remote` too, or two FFI types share one name. Enums
+  with data arrive in TypeScript as tagged classes (`new LoadStep.Kg(2.5)`, `.tag`, `.inner`); an `Option` field
+  arrives as an optional property, `undefined`, which `src/domain/marshal.ts` turns into `null`.
+- **PowerShell eats backticks in double-quoted strings.** `` `r `` and `` `a `` in a `.Replace()` argument became a
+  carriage return and a bell inside a doc comment and a docstring, and the Rust one would not compile. Edit source text
+  with the editor tool, or keep PowerShell strings single-quoted. Afterwards, scan edited files for control bytes.
+- **`Out-File -Encoding utf8` writes a byte-order mark** under Windows PowerShell 5.1, and a commit message written
+  that way starts with one. Write a message file with the editor tool and `git commit -F` it.
+
 What task 004 stage 8's pass (2026-09-25) added:
 - **Pull the database with `adb exec-out`, never `adb shell`.** `adb shell run-as … cat` goes through a terminal that
   rewrites line endings, and the copy reads as *"database disk image is malformed"* — which looks like corruption on the

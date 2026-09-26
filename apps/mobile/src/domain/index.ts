@@ -21,13 +21,16 @@ import {
   roundToIncrement,
   sessionMetrics as nativeSessionMetrics,
   SetField as NativeSetField,
-  SetType as NativeSetType,
   Tracking as NativeTracking,
   volumeKg as nativeVolumeKg,
-  type LoggedSet as NativeLoggedSet,
   type PersonalBests as NativePersonalBests,
   type PrAchievement as NativePrAchievement,
 } from '@cyberathlete/core-native';
+
+import { absent, present, toNativeLoggedSet as toNative, type LoggedSet } from './marshal';
+
+export type { LoggedSet, SetType } from './marshal';
+export * from './progression';
 
 export type RoundingMode = 'nearest' | 'down' | 'up';
 
@@ -44,17 +47,6 @@ export function roundLoadToIncrement(weightKg: number, incrementKg: number, mode
 
 // ── Strength (task 004) ──────────────────────────────────────────────────────────────────────────
 
-/** The five values of the schema's `set_type` column (03 §4). */
-export type SetType = 'warmup' | 'working' | 'drop' | 'backoff' | 'amrap';
-
-const NATIVE_SET_TYPE: Record<SetType, NativeSetType> = {
-  warmup: NativeSetType.Warmup,
-  working: NativeSetType.Working,
-  drop: NativeSetType.Drop,
-  backoff: NativeSetType.Backoff,
-  amrap: NativeSetType.Amrap,
-};
-
 /** The four values of the schema's `pr_kind` column (03 §4). */
 export type PrKind = 'max_weight' | 'best_e1rm' | 'max_reps_at_weight' | 'best_session_volume';
 
@@ -64,29 +56,6 @@ const PR_KIND_NAME = new Map<NativePrKind, PrKind>([
   [NativePrKind.MaxRepsAtWeight, 'max_reps_at_weight'],
   [NativePrKind.BestSessionVolume, 'best_session_volume'],
 ]);
-
-/**
- * One logged set, as the core wants it.
- *
- * `bodyWeightKg` and `isDeload` are already resolved by the caller: both are database reads, and
- * the core does none (INV-10). Body weight must be the latest entry **on or before this set's
- * `local_date`** — not today's, or every past pull-up's e1RM moves each time the user weighs in
- * (INV-07, INV-17).
- *
- * `rir: null` is "not recorded" and is never sent as 0 (INV-03). Weights are kilograms, always:
- * storage is SI and conversion belongs to `src/ui/`'s formatting module alone (INV-01).
- */
-export interface LoggedSet {
-  readonly setType: SetType;
-  readonly isCompleted: boolean;
-  /** Added load for a bodyweight exercise, total load for any other. */
-  readonly weightKg: number | null;
-  readonly reps: number | null;
-  readonly rir: number | null;
-  readonly usesBodyweight: boolean;
-  readonly bodyWeightKg: number | null;
-  readonly isDeload: boolean;
-}
 
 /** What an exercise's records stood at before the session being judged. */
 export interface PersonalBests {
@@ -105,33 +74,6 @@ export interface PrAchievement {
   readonly rir: number | null;
   /** Which set in the list handed in, by position. Null for a session total. */
   readonly setIndex: number | null;
-}
-
-/**
- * UniFFI renders a Rust `Option` as an optional property — `number | undefined` — while SQLite and
- * the rest of the app speak `null`. These two functions are the whole of that translation, and they
- * matter more than they look: INV-03 turns on "not recorded" staying distinguishable from 0, and a
- * `rir` that arrived back as `undefined` would slip past every `=== null` check written against it.
- */
-function absent<T>(value: T | null): T | undefined {
-  return value ?? undefined;
-}
-
-function present<T>(value: T | undefined): T | null {
-  return value ?? null;
-}
-
-function toNative(set: LoggedSet): NativeLoggedSet {
-  return {
-    setType: NATIVE_SET_TYPE[set.setType],
-    isCompleted: set.isCompleted,
-    weightKg: absent(set.weightKg),
-    reps: absent(set.reps),
-    rir: absent(set.rir),
-    usesBodyweight: set.usesBodyweight,
-    bodyWeightKg: absent(set.bodyWeightKg),
-    isDeload: set.isDeload,
-  };
 }
 
 function toNativeBests(bests: PersonalBests): NativePersonalBests {
