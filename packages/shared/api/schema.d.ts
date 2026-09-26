@@ -264,6 +264,97 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/exercises": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Exercises
+         * @description The global catalog and the user's own exercises, by id, a page at a time.
+         */
+        get: operations["list_exercises_api_v1_exercises_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/exercises/{exercise_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Exercise
+         * @description A global or one of the user's own. Someone else's answers 404, like an absent one (04 §4).
+         */
+        get: operations["get_exercise_api_v1_exercises__exercise_id__get"];
+        /**
+         * Put Exercise
+         * @description Creates or updates one of the user's own exercises (decision 3). The copy with the newer
+         *     `updated_at` wins; a global's id, like somebody else's, is `409 id_unavailable`.
+         */
+        put: operations["put_exercise_api_v1_exercises__exercise_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/routines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Routines
+         * @description The user's routines, without their exercises, by id, a page at a time.
+         */
+        get: operations["list_routines_api_v1_routines_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/routines/{routine_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Routine
+         * @description The routine and every exercise entry, archived ones included. 404 for someone else's.
+         */
+        get: operations["get_routine_api_v1_routines__routine_id__get"];
+        /**
+         * Put Routine
+         * @description Applies the document row by row — each row's newer `updated_at` wins, a row left out is
+         *     kept — and answers with the routine as stored (decision 1). Idempotent: resending changes
+         *     nothing.
+         */
+        put: operations["put_routine_api_v1_routines__routine_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/workouts": {
         parameters: {
             query?: never;
@@ -271,14 +362,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        put?: never;
         /**
-         * Log Workout
-         * @description Idempotent by the client's id (INV-16): the same workout sent twice answers 200 with the
-         *     stored one.
+         * List Workouts
+         * @description The user's workouts, without their exercises, newest start first, a page at a time.
          */
-        post: operations["log_workout_api_v1_workouts_post"];
+        get: operations["list_workouts_api_v1_workouts_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -294,10 +384,18 @@ export interface paths {
         };
         /**
          * Get Workout
-         * @description 404 for a workout that does not exist and for one that is somebody else's alike (04 §4).
+         * @description The workout, every exercise entry and every set, archived ones included. 404 for a workout
+         *     that does not exist and for one that is somebody else's alike (04 §4).
          */
         get: operations["get_workout_api_v1_workouts__workout_id__get"];
-        put?: never;
+        /**
+         * Put Workout
+         * @description Applies the document row by row — each row's newer `updated_at` wins, a row left out is
+         *     kept — and answers with the workout as stored (decision 1). Idempotent by the client's ids
+         *     (INV-16): resending changes nothing. A completed set without its mode's measure is
+         *     `422 set_missing_<field>` (decision 2).
+         */
+        put: operations["put_workout_api_v1_workouts__workout_id__put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -464,6 +562,127 @@ export interface components {
             /** Error */
             error: string;
         };
+        /** ExercisePage */
+        ExercisePage: {
+            /** Items */
+            items: components["schemas"]["ExerciseResponse"][];
+            /** Next */
+            next: string | null;
+        };
+        /**
+         * ExerciseResponse
+         * @description A global exercise carries a translation key and no name; the user's own carries a name and
+         *     no key (INV-27). `is_own` says which.
+         */
+        ExerciseResponse: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Default Max Reps */
+            default_max_reps: number | null;
+            /** Default Min Reps */
+            default_min_reps: number | null;
+            /** Deleted At */
+            deleted_at: string | null;
+            /** Forked From Id */
+            forked_from_id: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Is Own */
+            is_own: boolean;
+            /** Is Unilateral */
+            is_unilateral: boolean;
+            /** Load Increment Kg */
+            load_increment_kg: number | null;
+            /**
+             * Modality
+             * @enum {string}
+             */
+            modality: "barbell" | "dumbbell" | "machine" | "cable" | "bodyweight" | "band" | "other";
+            /** Name */
+            name: string | null;
+            /** Name Key */
+            name_key: string | null;
+            /** Notes */
+            notes: string | null;
+            /** Primary Muscle Id */
+            primary_muscle_id: number;
+            /** Secondary Muscle Ids */
+            secondary_muscle_ids: number[];
+            /**
+             * Tracking
+             * @enum {string}
+             */
+            tracking: "weight_reps" | "reps_only" | "duration" | "distance_duration";
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Uses Bodyweight */
+            uses_bodyweight: boolean;
+        };
+        /**
+         * ExerciseWrite
+         * @description One of the user's own exercises. The name is stored exactly as typed and never translated
+         *     (INV-27); a fork names the exercise it came from (stage 4).
+         */
+        ExerciseWrite: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Default Max Reps */
+            default_max_reps?: number | null;
+            /** Default Min Reps */
+            default_min_reps?: number | null;
+            /** Deleted At */
+            deleted_at?: string | null;
+            /** Forked From Id */
+            forked_from_id?: string | null;
+            /**
+             * Is Unilateral
+             * @default false
+             */
+            is_unilateral: boolean;
+            /** Load Increment Kg */
+            load_increment_kg?: number | null;
+            /**
+             * Modality
+             * @enum {string}
+             */
+            modality: "barbell" | "dumbbell" | "machine" | "cable" | "bodyweight" | "band" | "other";
+            /** Name */
+            name: string;
+            /** Notes */
+            notes?: string | null;
+            /** Primary Muscle Id */
+            primary_muscle_id: number;
+            /** Secondary Muscle Ids */
+            secondary_muscle_ids?: number[];
+            /**
+             * Tracking
+             * @default weight_reps
+             * @enum {string}
+             */
+            tracking: "weight_reps" | "reps_only" | "duration" | "distance_duration";
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /**
+             * Uses Bodyweight
+             * @default false
+             */
+            uses_bodyweight: boolean;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -584,6 +803,150 @@ export interface components {
              */
             unit_system: "metric" | "imperial";
         };
+        /**
+         * RoutineDocument
+         * @description A routine and its exercises. An exercise left out is kept, not removed: archiving travels
+         *     as its `deleted_at` (02 §7, INV-11).
+         */
+        RoutineDocument: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Deleted At */
+            deleted_at?: string | null;
+            /** Exercises */
+            exercises?: components["schemas"]["RoutineExerciseDocument"][];
+            /** Folder */
+            folder?: string | null;
+            /** Name */
+            name: string;
+            /** Notes */
+            notes?: string | null;
+            /**
+             * Order Index
+             * @default 0
+             */
+            order_index: number;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** RoutineExerciseDocument */
+        RoutineExerciseDocument: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Deleted At */
+            deleted_at?: string | null;
+            /**
+             * Exercise Id
+             * Format: uuid
+             */
+            exercise_id: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Notes */
+            notes?: string | null;
+            /** Order Index */
+            order_index: number;
+            /** Rest Seconds */
+            rest_seconds?: number | null;
+            /** Superset Group */
+            superset_group?: number | null;
+            /** Target Max Reps */
+            target_max_reps?: number | null;
+            /** Target Min Reps */
+            target_min_reps?: number | null;
+            /** Target Rir */
+            target_rir?: number | null;
+            /** Target Sets */
+            target_sets?: number | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** RoutinePage */
+        RoutinePage: {
+            /** Items */
+            items: components["schemas"]["RoutineSummary"][];
+            /** Next */
+            next: string | null;
+        };
+        /** RoutineResponse */
+        RoutineResponse: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Deleted At */
+            deleted_at?: string | null;
+            /** Exercises */
+            exercises?: components["schemas"]["RoutineExerciseDocument"][];
+            /** Folder */
+            folder?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Notes */
+            notes?: string | null;
+            /**
+             * Order Index
+             * @default 0
+             */
+            order_index: number;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * RoutineSummary
+         * @description A routine in a list, without its exercises.
+         */
+        RoutineSummary: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Deleted At */
+            deleted_at?: string | null;
+            /** Folder */
+            folder: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Notes */
+            notes: string | null;
+            /** Order Index */
+            order_index: number;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
         /** SessionResponse */
         SessionResponse: {
             /** Current */
@@ -602,6 +965,53 @@ export interface components {
              * Format: date-time
              */
             last_active_at: string;
+        };
+        /** SetDocument */
+        SetDocument: {
+            /** Completed At */
+            completed_at?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Deleted At */
+            deleted_at?: string | null;
+            /** Distance M */
+            distance_m?: number | null;
+            /** Duration S */
+            duration_s?: number | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Is Completed
+             * @default false
+             */
+            is_completed: boolean;
+            /** Planned Set Id */
+            planned_set_id?: string | null;
+            /** Reps */
+            reps?: number | null;
+            /** Rir */
+            rir?: number | null;
+            /** Set Index */
+            set_index: number;
+            /**
+             * Set Type
+             * @default working
+             * @enum {string}
+             */
+            set_type: "warmup" | "working" | "drop" | "backoff" | "amrap";
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Weight Kg */
+            weight_kg?: number | null;
         };
         /** SignedInResponse */
         SignedInResponse: {
@@ -663,13 +1073,24 @@ export interface components {
             /** Error Type */
             type: string;
         };
-        /** WorkoutCreate */
-        WorkoutCreate: {
+        /**
+         * WorkoutDocument
+         * @description A workout, its exercise entries and their sets. A row left out is kept, not removed:
+         *     archiving travels as its `deleted_at` (02 §7, INV-11). `local_date` and `tz` are the day and
+         *     zone it was recorded in, stored as facts (INV-17).
+         */
+        WorkoutDocument: {
             /**
-             * Id
-             * Format: uuid
+             * Created At
+             * Format: date-time
              */
-            id: string;
+            created_at: string;
+            /** Deleted At */
+            deleted_at?: string | null;
+            /** Ended At */
+            ended_at?: string | null;
+            /** Exercises */
+            exercises?: components["schemas"]["WorkoutExerciseDocument"][];
             /**
              * Local Date
              * Format: date
@@ -677,6 +1098,12 @@ export interface components {
             local_date: string;
             /** Notes */
             notes?: string | null;
+            /** Perceived Fatigue */
+            perceived_fatigue?: number | null;
+            /** Planned Session Id */
+            planned_session_id?: string | null;
+            /** Routine Id */
+            routine_id?: string | null;
             /**
              * Source
              * @default manual
@@ -692,9 +1119,126 @@ export interface components {
             title: string;
             /** Tz */
             tz: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** WorkoutExerciseDocument */
+        WorkoutExerciseDocument: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Deleted At */
+            deleted_at?: string | null;
+            /**
+             * Exercise Id
+             * Format: uuid
+             */
+            exercise_id: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Notes */
+            notes?: string | null;
+            /** Order Index */
+            order_index: number;
+            /** Planned Exercise Id */
+            planned_exercise_id?: string | null;
+            /** Rest Seconds */
+            rest_seconds?: number | null;
+            /** Sets */
+            sets?: components["schemas"]["SetDocument"][];
+            /** Superset Group */
+            superset_group?: number | null;
+            /** Target Max Reps */
+            target_max_reps?: number | null;
+            /** Target Min Reps */
+            target_min_reps?: number | null;
+            /** Target Rir */
+            target_rir?: number | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** WorkoutPage */
+        WorkoutPage: {
+            /** Items */
+            items: components["schemas"]["WorkoutSummary"][];
+            /** Next */
+            next: string | null;
         };
         /** WorkoutResponse */
         WorkoutResponse: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Deleted At */
+            deleted_at?: string | null;
+            /** Ended At */
+            ended_at?: string | null;
+            /** Exercises */
+            exercises?: components["schemas"]["WorkoutExerciseDocument"][];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Local Date
+             * Format: date
+             */
+            local_date: string;
+            /** Notes */
+            notes?: string | null;
+            /** Perceived Fatigue */
+            perceived_fatigue?: number | null;
+            /** Planned Session Id */
+            planned_session_id?: string | null;
+            /** Routine Id */
+            routine_id?: string | null;
+            /**
+             * Source
+             * @default manual
+             * @enum {string}
+             */
+            source: "manual" | "plan" | "routine";
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /** Title */
+            title: string;
+            /** Tz */
+            tz: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * WorkoutSummary
+         * @description A workout in a list, without its exercises.
+         */
+        WorkoutSummary: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Deleted At */
+            deleted_at?: string | null;
             /** Ended At */
             ended_at: string | null;
             /**
@@ -709,6 +1253,12 @@ export interface components {
             local_date: string;
             /** Notes */
             notes: string | null;
+            /** Perceived Fatigue */
+            perceived_fatigue: number | null;
+            /** Planned Session Id */
+            planned_session_id: string | null;
+            /** Routine Id */
+            routine_id: string | null;
             /**
              * Source
              * @enum {string}
@@ -723,6 +1273,11 @@ export interface components {
             title: string;
             /** Tz */
             tz: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
         };
     };
     responses: never;
@@ -1416,39 +1971,300 @@ export interface operations {
             };
         };
     };
-    log_workout_api_v1_workouts_post: {
+    list_exercises_api_v1_exercises_get: {
         parameters: {
-            query?: never;
+            query?: {
+                after?: string | null;
+                limit?: number;
+                include_archived?: boolean;
+            };
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["WorkoutCreate"];
-            };
-        };
+        requestBody?: never;
         responses: {
-            /** @description OK */
+            /** @description Successful Response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["WorkoutResponse"];
+                    "application/json": components["schemas"]["ExercisePage"];
                 };
             };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_exercise_api_v1_exercises__exercise_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                exercise_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
             /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExerciseResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_exercise_api_v1_exercises__exercise_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                exercise_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExerciseWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExerciseResponse"];
+                };
+            };
+            /** @description Created */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["WorkoutResponse"];
+                    "application/json": components["schemas"]["ExerciseResponse"];
                 };
             };
             /** @description Conflict */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_routines_api_v1_routines_get: {
+        parameters: {
+            query?: {
+                after?: string | null;
+                limit?: number;
+                include_archived?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutinePage"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_routine_api_v1_routines__routine_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                routine_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutineResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_routine_api_v1_routines__routine_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                routine_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoutineDocument"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutineResponse"];
+                };
+            };
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutineResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_workouts_api_v1_workouts_get: {
+        parameters: {
+            query?: {
+                before?: string | null;
+                limit?: number;
+                include_archived?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkoutPage"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1503,6 +2319,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_workout_api_v1_workouts__workout_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workout_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkoutDocument"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkoutResponse"];
+                };
+            };
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkoutResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };

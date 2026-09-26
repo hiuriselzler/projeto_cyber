@@ -11,12 +11,14 @@
 //! microcycle* and there are no microcycles until
 //! [task 005](../../../docs/tasks/005-strength-progression-planner.md); it arrives with them.
 
+mod completion;
 mod e1rm;
 mod metrics;
 mod prs;
 mod sets;
 mod volume;
 
+pub use completion::{SetEntry, SetField, Tracking, missing_for_completion};
 pub use e1rm::{MAX_EFFECTIVE_REPS, e1rm, e1rm_series, load_kg};
 pub use metrics::{SessionMetrics, session_metrics};
 pub use prs::{

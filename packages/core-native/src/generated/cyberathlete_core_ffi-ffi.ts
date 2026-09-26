@@ -74,6 +74,7 @@ interface NativeModuleInterface {
     ubrn_uniffi_cyberathlete_core_ffi_fn_func_e1rm_series(sets: Uint8Array, uniffi_out_err: UniffiRustCallStatus): Uint8Array;
     ubrn_uniffi_cyberathlete_core_ffi_fn_func_is_counted_set(set: Uint8Array, uniffi_out_err: UniffiRustCallStatus): number;
     ubrn_uniffi_cyberathlete_core_ffi_fn_func_load_kg(set: Uint8Array, uniffi_out_err: UniffiRustCallStatus): Uint8Array;
+    ubrn_uniffi_cyberathlete_core_ffi_fn_func_missing_for_completion(tracking: Uint8Array, entry: Uint8Array, uniffi_out_err: UniffiRustCallStatus): Uint8Array;
     ubrn_uniffi_cyberathlete_core_ffi_fn_func_personal_bests(sessions: Uint8Array, uniffi_out_err: UniffiRustCallStatus): Uint8Array;
     ubrn_uniffi_cyberathlete_core_ffi_fn_func_round_to_increment(weightKg: number, incrementKg: number, mode: Uint8Array, uniffi_out_err: UniffiRustCallStatus): number;
     ubrn_uniffi_cyberathlete_core_ffi_fn_func_session_metrics(sessions: Uint8Array, uniffi_out_err: UniffiRustCallStatus): Uint8Array;
@@ -87,6 +88,7 @@ interface NativeModuleInterface {
     ubrn_uniffi_cyberathlete_core_ffi_checksum_func_e1rm_series(): number;
     ubrn_uniffi_cyberathlete_core_ffi_checksum_func_is_counted_set(): number;
     ubrn_uniffi_cyberathlete_core_ffi_checksum_func_load_kg(): number;
+    ubrn_uniffi_cyberathlete_core_ffi_checksum_func_missing_for_completion(): number;
     ubrn_uniffi_cyberathlete_core_ffi_checksum_func_personal_bests(): number;
     ubrn_uniffi_cyberathlete_core_ffi_checksum_func_round_to_increment(): number;
     ubrn_uniffi_cyberathlete_core_ffi_checksum_func_session_metrics(): number;

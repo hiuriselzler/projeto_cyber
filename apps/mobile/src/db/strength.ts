@@ -279,29 +279,6 @@ export function completionPatch(isCompleted: boolean, now: number, doneAt: numbe
   return { isCompleted, completedAt: isCompleted ? doneAt : null, updatedAt: now };
 }
 
-/**
- * What a set of this tracking mode must hold before it can be completed, or null if it holds it — 03 §4's
- * "`is_completed = true` requires the fields its tracking mode needs, enforced in the service layer" (task 004 stage 5c).
- *
- * Reps for the two rep modes, the time for a hold, the distance for a carry. **Weight is never required**: blank is a
- * bodyweight set or a load not recorded, and both are real sets. Before this, the ✓ completed a row with nothing in it
- * — the stage 5 device pass ticked seven of them — and an empty "completed" set is a small lie every total then reads.
- */
-export function missingForCompletion(
-  tracking: Tracking,
-  set: Pick<LiveSet, 'reps' | 'durationS' | 'distanceM'>,
-): SetField | null {
-  switch (tracking) {
-    case 'weight_reps':
-    case 'reps_only':
-      return set.reps === null ? 'reps' : null;
-    case 'duration':
-      return set.durationS === null ? 'durationS' : null;
-    case 'distance_duration':
-      return set.distanceM === null ? 'distanceM' : null;
-  }
-}
-
 /** What editing one of the set row's numbers changes. Clearing a field writes null, never 0 (INV-03). */
 export function fieldPatch(field: SetField, value: number | null, now: number) {
   return { [field]: value, updatedAt: now } as Record<string, number | null>;

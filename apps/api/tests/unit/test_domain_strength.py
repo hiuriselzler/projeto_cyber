@@ -14,13 +14,16 @@ from app.domain.strength import (
     LoggedSet,
     PersonalBests,
     RepsAtWeight,
+    SetEntry,
     SetType,
+    Tracking,
     counted_set_count,
     detect_prs,
     e1rm,
     e1rm_series,
     is_counted_set,
     load_kg,
+    missing_for_completion,
     personal_bests,
     session_metrics,
     standing_records,
@@ -103,6 +106,23 @@ def test_every_shared_e1rm_case_agrees():
 def test_every_shared_is_counted_set_case_agrees():
     for case in load_fixture("is_counted_set")["cases"]:
         assert is_counted_set(_build(case["set"])) is case["expected"], case["name"]
+
+
+def test_every_shared_missing_for_completion_case_agrees():
+    """03 §4's completion rule — the phone's ✓ and the API's 422 are this one function (stage 8)."""
+    for case in load_fixture("missing_for_completion")["cases"]:
+        entry = SetEntry(
+            reps=case["set"].get("reps"),
+            duration_s=case["set"].get("duration_s"),
+            distance_m=case["set"].get("distance_m"),
+        )
+        tracking = Tracking.from_name(case["tracking"])
+        assert missing_for_completion(tracking, entry) == case["expected"], case["name"]
+
+
+def test_an_unknown_tracking_mode_is_refused_rather_than_guessed():
+    with pytest.raises(ValueError, match="unknown tracking mode"):
+        Tracking.from_name("pace")
 
 
 def test_every_shared_pr_detection_case_agrees():

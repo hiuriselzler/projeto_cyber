@@ -5,7 +5,8 @@ row, because a patch that misses a case is a cache that disagrees with its sourc
 notices.
 """
 
-from collections.abc import Sequence
+import uuid
+from collections.abc import Collection, Sequence
 
 from sqlalchemy import delete
 
@@ -23,11 +24,23 @@ class PersonalRecordRepository(ScopedRepository[PersonalRecord]):
         )
         return list((await self._session.execute(statement)).scalars())
 
-    async def replace_all(self, user_id: UserId, rows: Sequence[PersonalRecord]) -> None:
-        """Every row of `user_id`'s cache, and only theirs, becomes `rows` (INV-15)."""
+    async def replace(
+        self,
+        user_id: UserId,
+        rows: Sequence[PersonalRecord],
+        exercise_ids: Collection[uuid.UUID] | None = None,
+    ) -> None:
+        """`user_id`'s cache, and only theirs, becomes `rows` (INV-15) — all of it, or only the rows
+        of `exercise_ids` when given (task 004 stage 8). A row outside that scope is refused rather
+        than written, so a partial rebuild can never leave a stale row beside a fresh one."""
         for row in rows:
             if row.user_id != user_id:
                 raise ValueError("a personal record may only be written for the user it belongs to")
-        await self._session.execute(delete(PersonalRecord).where(PersonalRecord.user_id == user_id))
+            if exercise_ids is not None and row.exercise_id not in exercise_ids:
+                raise ValueError("a partial rebuild may only write the exercises it replaced")
+        statement = delete(PersonalRecord).where(PersonalRecord.user_id == user_id)
+        if exercise_ids is not None:
+            statement = statement.where(PersonalRecord.exercise_id.in_(exercise_ids))
+        await self._session.execute(statement)
         self._session.add_all(rows)
         await self._session.flush()

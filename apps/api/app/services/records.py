@@ -13,10 +13,12 @@ the workout's `ended_at`.
 
 One user at a time, inside that user's own scope (ADR-011). Rebuilding everyone would need an
 unscoped function on the allowlist, and nothing needs it until the server holds sets (task 006).
+Since stage 8 a workout write rebuilds the exercises it touched through `rebuild_records`, in its
+own transaction; `PersonalRecordsRebuild` is the whole-user repair behind the command.
 """
 
 import uuid
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Collection, Sequence
 from datetime import datetime
 from decimal import Decimal
 from itertools import groupby
@@ -30,6 +32,7 @@ from app.domain.strength import LoggedSet, SetType, standing_records
 from app.models.strength import PersonalRecord
 from app.repositories.personal_records import PersonalRecordRepository
 from app.repositories.strength_history import FinishedSet, StrengthHistoryRepository
+from app.repositories.writes import serialise_user_writes
 
 # `value` is numeric(12,4) and `weight_kg` numeric(9,4) (03 §4). An e1RM is not a finite decimal;
 # four places is what the column keeps, and rounding here, once, is what makes a second rebuild
@@ -97,7 +100,29 @@ def records_of(
     return rows
 
 
+async def rebuild_records(
+    session: AsyncSession,
+    user_id: UserId,
+    *,
+    computed_at: datetime,
+    exercise_ids: Collection[uuid.UUID] | None = None,
+) -> int:
+    """Replaces `user_id`'s cache — all of it, or `exercise_ids`' rows — with what their sets say
+    now, inside the caller's transaction, and returns how many of those records stand.
+
+    The caller's transaction is the point (task 004 stage 8, decision 4): a workout write rebuilds
+    the exercises it touched in the same transaction, so the cache is never stale by construction,
+    and the caller holds the user's write lock so two rebuilds never interleave.
+    """
+    sets = await StrengthHistoryRepository(session).finished_sets(user_id, exercise_ids)
+    rows = records_of(sets, user_id=user_id, computed_at=computed_at)
+    await PersonalRecordRepository(session).replace(user_id, rows, exercise_ids)
+    return len(rows)
+
+
 class PersonalRecordsRebuild:
+    """The repair: one user's whole cache, from the command line (06 §5)."""
+
     def __init__(self, sessions: async_sessionmaker[AsyncSession], *, clock: Clock) -> None:
         self._sessions = sessions
         self._clock = clock
@@ -107,7 +132,5 @@ class PersonalRecordsRebuild:
         how many records stand. Safe to repeat: a second run writes the same rows (INV-10)."""
         now = self._clock()
         async with user_transaction(self._sessions, user_id) as session:
-            sets = await StrengthHistoryRepository(session).finished_sets(user_id)
-            rows = records_of(sets, user_id=user_id, computed_at=now)
-            await PersonalRecordRepository(session).replace_all(user_id, rows)
-        return len(rows)
+            await serialise_user_writes(session, user_id)
+            return await rebuild_records(session, user_id, computed_at=now)

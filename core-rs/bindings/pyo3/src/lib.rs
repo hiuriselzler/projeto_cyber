@@ -9,9 +9,10 @@
 
 use cyberathlete_core::{
     LoggedSet, PersonalBests, PrAchievement, PrKind, RepsAtWeight, RoundingMode, SessionMetrics,
-    SetType, StandingRecord, counted_set_count as core_counted_set_count,
-    detect_prs as core_detect_prs, e1rm as core_e1rm, e1rm_series as core_e1rm_series,
-    is_counted_set as core_is_counted_set, load_kg as core_load_kg,
+    SetEntry, SetField, SetType, StandingRecord, Tracking,
+    counted_set_count as core_counted_set_count, detect_prs as core_detect_prs, e1rm as core_e1rm,
+    e1rm_series as core_e1rm_series, is_counted_set as core_is_counted_set,
+    load_kg as core_load_kg, missing_for_completion as core_missing_for_completion,
     personal_bests as core_personal_bests, round_to_increment as core_round_to_increment,
     session_metrics as core_session_metrics, standing_records as core_standing_records,
     volume_kg as core_volume_kg,
@@ -537,6 +538,101 @@ fn session_metrics(sessions: Vec<Vec<PyLoggedSet>>) -> Vec<PySessionMetrics> {
         .collect()
 }
 
+/// How an exercise is logged — the schema's `tracking_enum`. Mirrors [`Tracking`].
+#[pyclass(
+    name = "Tracking",
+    eq,
+    eq_int,
+    frozen,
+    from_py_object,
+    module = "cyberathlete_core"
+)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PyTracking {
+    WeightReps,
+    RepsOnly,
+    Duration,
+    DistanceDuration,
+}
+
+impl From<PyTracking> for Tracking {
+    fn from(tracking: PyTracking) -> Self {
+        match tracking {
+            PyTracking::WeightReps => Self::WeightReps,
+            PyTracking::RepsOnly => Self::RepsOnly,
+            PyTracking::Duration => Self::Duration,
+            PyTracking::DistanceDuration => Self::DistanceDuration,
+        }
+    }
+}
+
+#[pymethods]
+impl PyTracking {
+    /// The name this mode carries in the database and the shared fixtures.
+    #[staticmethod]
+    fn from_name(name: &str) -> PyResult<Self> {
+        match Tracking::from_name(name) {
+            Some(Tracking::WeightReps) => Ok(Self::WeightReps),
+            Some(Tracking::RepsOnly) => Ok(Self::RepsOnly),
+            Some(Tracking::Duration) => Ok(Self::Duration),
+            Some(Tracking::DistanceDuration) => Ok(Self::DistanceDuration),
+            None => Err(PyValueError::new_err(format!(
+                "unknown tracking mode {name:?}; expected weight_reps, reps_only, duration or distance_duration"
+            ))),
+        }
+    }
+
+    #[getter]
+    fn name(&self) -> &'static str {
+        Tracking::from(*self).name()
+    }
+}
+
+/// The measures a set row holds, as typed. Mirrors [`SetEntry`].
+#[pyclass(
+    name = "SetEntry",
+    frozen,
+    get_all,
+    from_py_object,
+    module = "cyberathlete_core"
+)]
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PySetEntry {
+    pub reps: Option<u32>,
+    pub duration_s: Option<u32>,
+    pub distance_m: Option<f64>,
+}
+
+#[pymethods]
+impl PySetEntry {
+    #[new]
+    #[pyo3(signature = (reps = None, duration_s = None, distance_m = None))]
+    const fn new(reps: Option<u32>, duration_s: Option<u32>, distance_m: Option<f64>) -> Self {
+        Self {
+            reps,
+            duration_s,
+            distance_m,
+        }
+    }
+}
+
+impl From<PySetEntry> for SetEntry {
+    fn from(entry: PySetEntry) -> Self {
+        Self {
+            reps: entry.reps,
+            duration_s: entry.duration_s,
+            distance_m: entry.distance_m,
+        }
+    }
+}
+
+/// The `set_logs` column a set is missing before it can be completed, or `None` (03 §4, task 004
+/// stage 8). Returned as the column's name, which is what an API error points at.
+#[pyfunction]
+fn missing_for_completion(tracking: PyTracking, entry: PySetEntry) -> Option<&'static str> {
+    core_missing_for_completion(tracking.into(), &entry.into()).map(SetField::name)
+}
+
 #[pymodule]
 fn _core(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<PyRoundingMode>()?;
@@ -561,5 +657,8 @@ fn _core(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_function(wrap_pyfunction!(standing_records, module)?)?;
     module.add_class::<PySessionMetrics>()?;
     module.add_function(wrap_pyfunction!(session_metrics, module)?)?;
+    module.add_class::<PyTracking>()?;
+    module.add_class::<PySetEntry>()?;
+    module.add_function(wrap_pyfunction!(missing_for_completion, module)?)?;
     Ok(())
 }

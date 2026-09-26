@@ -14,6 +14,9 @@ added.
 already resolved, because resolving either is a query and the core does no I/O. Body weight is the
 latest `body_weight_log` entry **on or before the set's `local_date`** — never today's, or every
 historical pull-up's e1RM would move each time the user weighed in (INV-07, INV-17).
+
+`missing_for_completion` is 03 §4's "a completed set holds the fields its tracking mode needs" — the
+rule the phone's ✓ applies, here so the API applies the same one (task 004 stage 8).
 """
 
 from cyberathlete_core import (
@@ -23,14 +26,17 @@ from cyberathlete_core import (
     PrKind,
     RepsAtWeight,
     SessionMetrics,
+    SetEntry,
     SetType,
     StandingRecord,
+    Tracking,
     counted_set_count,
     detect_prs,
     e1rm,
     e1rm_series,
     is_counted_set,
     load_kg,
+    missing_for_completion,
     personal_bests,
     session_metrics,
     standing_records,
@@ -44,14 +50,17 @@ __all__ = [
     "PrKind",
     "RepsAtWeight",
     "SessionMetrics",
+    "SetEntry",
     "SetType",
     "StandingRecord",
+    "Tracking",
     "counted_set_count",
     "detect_prs",
     "e1rm",
     "e1rm_series",
     "is_counted_set",
     "load_kg",
+    "missing_for_completion",
     "personal_bests",
     "session_metrics",
     "standing_records",

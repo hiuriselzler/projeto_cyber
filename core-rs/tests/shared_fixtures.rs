@@ -3,7 +3,8 @@
 //! `packages/shared/fixtures/` holds the same files the Python and TypeScript suites read:
 //! `round_to_increment.json` (INV-02), `e1rm.json` (INV-07), `is_counted_set.json` (INV-04),
 //! `pr_detection.json` (FR-2.15), `personal_bests.json` (FR-2.15, task 004 stage 6), and
-//! `session_metrics.json` and `standing_records.json` (FR-2.14–2.15, stage 7). Under
+//! `session_metrics.json` and `standing_records.json` (FR-2.14–2.15, stage 7), and
+//! `missing_for_completion.json` (03 §4, stage 8). Under
 //! ADR-004 option B all three runtimes reach one Rust
 //! implementation, so these prove **the bindings agree** rather than that two hand-written copies
 //! have not drifted — and they stay regression tests besides.
@@ -15,9 +16,9 @@
 //! load, a rep count — are exact and are written out.
 
 use cyberathlete_core::{
-    LoggedSet, PersonalBests, PrKind, RepsAtWeight, RoundingMode, SetType, detect_prs, e1rm,
-    is_counted_set, personal_bests, round_to_increment, session_metrics, standing_records,
-    volume_kg,
+    LoggedSet, PersonalBests, PrKind, RepsAtWeight, RoundingMode, SetEntry, SetType, Tracking,
+    detect_prs, e1rm, is_counted_set, missing_for_completion, personal_bests, round_to_increment,
+    session_metrics, standing_records, volume_kg,
 };
 use serde::Deserialize;
 
@@ -431,6 +432,41 @@ fn every_standing_records_case_agrees() {
             };
             assert_eq!(best, Some(held.record.value), "case {:?}", case.name);
         }
+    }
+}
+
+#[derive(Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+struct FixtureEntry {
+    reps: Option<u32>,
+    duration_s: Option<u32>,
+    distance_m: Option<f64>,
+}
+
+#[derive(Deserialize)]
+struct CompletionCase {
+    name: String,
+    tracking: String,
+    set: FixtureEntry,
+    expected: Option<String>,
+}
+
+#[test]
+fn every_missing_for_completion_case_agrees() {
+    let fixture: Fixture<CompletionCase> = load("missing_for_completion.json");
+    assert!(!fixture.cases.is_empty(), "the fixture must hold cases");
+
+    for case in &fixture.cases {
+        let tracking = Tracking::from_name(&case.tracking)
+            .unwrap_or_else(|| panic!("unknown tracking {:?} in {:?}", case.tracking, case.name));
+        let entry = SetEntry {
+            reps: case.set.reps,
+            duration_s: case.set.duration_s,
+            distance_m: case.set.distance_m,
+        };
+        let actual = missing_for_completion(tracking, &entry).map(|field| field.name());
+
+        assert_eq!(actual, case.expected.as_deref(), "case {:?}", case.name);
     }
 }
 

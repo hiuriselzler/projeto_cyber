@@ -200,3 +200,39 @@ class SessionMetrics:
 
 def session_metrics(sessions: list[list[LoggedSet]]) -> list[SessionMetrics]:
     """Per-session metrics over a whole history, in the order given."""
+
+class Tracking:
+    """How an exercise is logged — the schema's `tracking_enum` (03 §2, FR-2.3)."""
+
+    WeightReps: Tracking
+    RepsOnly: Tracking
+    Duration: Tracking
+    DistanceDuration: Tracking
+
+    @staticmethod
+    def from_name(name: str) -> Tracking:
+        """The mode's name in the database. Raises `ValueError` for anything else."""
+
+    @property
+    def name(self) -> str:
+        """The inverse of `from_name`."""
+
+class SetEntry:
+    """The measures a set row holds, as typed. `None` is nothing typed; 0 is a value."""
+
+    def __init__(
+        self,
+        reps: int | None = None,
+        duration_s: int | None = None,
+        distance_m: float | None = None,
+    ) -> None: ...
+    @property
+    def reps(self) -> int | None: ...
+    @property
+    def duration_s(self) -> int | None: ...
+    @property
+    def distance_m(self) -> float | None: ...
+
+def missing_for_completion(tracking: Tracking, entry: SetEntry) -> str | None:
+    """The `set_logs` column — `reps`, `duration_s` or `distance_m` — a set of this mode is
+    missing before it can be completed, or `None` if it holds what the mode needs (03 §4)."""

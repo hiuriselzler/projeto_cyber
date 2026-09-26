@@ -11,6 +11,7 @@
 import e1rmFixture from '@cyberathlete/shared/fixtures/e1rm.json';
 import countedFixture from '@cyberathlete/shared/fixtures/is_counted_set.json';
 import bestsFixture from '@cyberathlete/shared/fixtures/personal_bests.json';
+import completionFixture from '@cyberathlete/shared/fixtures/missing_for_completion.json';
 import prFixture from '@cyberathlete/shared/fixtures/pr_detection.json';
 import metricsFixture from '@cyberathlete/shared/fixtures/session_metrics.json';
 import standingFixture from '@cyberathlete/shared/fixtures/standing_records.json';
@@ -220,6 +221,39 @@ describe('the session_metrics fixture (task 004 stage 7)', () => {
         expect(want.best_e1rm.effective_reps).toBeLessThanOrEqual(MAX_EFFECTIVE_REPS);
       }
     });
+  });
+});
+
+describe('the missing_for_completion fixture (task 004 stage 8)', () => {
+  const TRACKING = ['weight_reps', 'reps_only', 'duration', 'distance_duration'];
+  // Pairs rather than an object literal: a `duration:` key reads to the design-token fence as an animation duration.
+  const REQUIRED = new Map([
+    ['weight_reps', 'reps'],
+    ['reps_only', 'reps'],
+    ['duration', 'duration_s'],
+    ['distance_duration', 'distance_m'],
+  ]);
+
+  it('names its function and has cases', () => {
+    expect(completionFixture.function).toBe('missing_for_completion');
+    expect(completionFixture.cases.length).toBeGreaterThan(0);
+  });
+
+  it.each(completionFixture.cases)('$name', ({ tracking, set, expected }) => {
+    expect(TRACKING).toContain(tracking);
+    // 03 §4 restated independently of the core: a mode is missing exactly its own measure, and only when it is absent.
+    const required = REQUIRED.get(tracking) ?? '';
+    const present = (set as Record<string, number | null | undefined>)[required] != null;
+    expect(expected).toBe(present ? null : required);
+  });
+
+  it('covers every mode both empty and filled', () => {
+    // Adding a fifth mode without deciding what it requires should fail here, not on a ✓.
+    const seen = new Set(completionFixture.cases.map(({ tracking, expected }) => `${tracking}:${expected === null}`));
+    for (const tracking of TRACKING) {
+      expect(seen).toContain(`${tracking}:true`);
+      expect(seen).toContain(`${tracking}:false`);
+    }
   });
 });
 

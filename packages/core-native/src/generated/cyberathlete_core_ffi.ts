@@ -144,6 +144,26 @@ export function loadKg(set: LoggedSet): number | undefined {
     }
 
 /**
+ * The field a set is missing before it can be completed, or null (03 §4, task 004 stage 8).
+ */
+export function missingForCompletion(tracking: Tracking, entry: SetEntry): SetField | undefined {
+    const __rb: Uint8Array = uniffiCaller.rustCall(
+            /*caller:*/ (callStatus) => {
+                return nativeModule().ubrn_uniffi_cyberathlete_core_ffi_fn_func_missing_for_completion(
+        FfiConverterTypeTracking.lower(tracking, nativeModule().rustbuffer_alloc),
+        FfiConverterTypeSetEntry.lower(entry, nativeModule().rustbuffer_alloc),
+                callStatus);
+            },
+            /*liftString:*/ FfiConverterString.lift.bind(FfiConverterString),
+    );
+    try {
+        return FfiConverterOptionalTypeSetField.lift(__rb);
+    } finally {
+        nativeModule().rustbuffer_free(__rb);
+    }
+    }
+
+/**
  * An exercise's bests after a history of sessions, one workout's sets per session — the
  * `previous` for [`detect_prs`] (task 004 stage 6). The whole history crosses in one call.
  */
@@ -600,6 +620,56 @@ const FfiConverterTypeSessionMetrics = (() => {
 })();
 
 /**
+ * The measures a set row holds, as typed. Mirrors [`cyberathlete_core::SetEntry`].
+ */
+export type SetEntry = {
+    reps?: number,
+    durationS?: number,
+    distanceM?: number
+}
+
+/**
+ * Generated factory for {@link SetEntry} record objects.
+ */
+export const SetEntry = (() => {
+    const defaults = () => ({
+    });
+    const create = (() => {
+        return uniffiCreateRecord<SetEntry, ReturnType<typeof defaults>>(defaults);
+    })();
+    return Object.freeze({
+        create,
+        new: create,
+        defaults: () => Object.freeze(defaults()) as Partial<SetEntry>,
+    });
+})();
+
+const FfiConverterTypeSetEntry = (() => {
+    type TypeName = SetEntry;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            return {
+                reps: FfiConverterOptionalUInt32.readFromCursor(c), 
+                durationS: FfiConverterOptionalUInt32.readFromCursor(c), 
+                distanceM: FfiConverterOptionalFloat64.readFromCursor(c)
+            };
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            FfiConverterOptionalUInt32.writeIntoCursor(value.reps, c);
+            FfiConverterOptionalUInt32.writeIntoCursor(value.durationS, c);
+            FfiConverterOptionalFloat64.writeIntoCursor(value.distanceM, c);
+        }
+        allocationSize(value: TypeName): number {
+            return FfiConverterOptionalUInt32.allocationSize(value.reps) +
+             FfiConverterOptionalUInt32.allocationSize(value.durationS) +
+             FfiConverterOptionalFloat64.allocationSize(value.distanceM);
+            
+        }
+    };
+    return new FFIConverter();
+})();
+
+/**
  * A record still standing after a history, and the session that set it. Mirrors
  * [`cyberathlete_core::StandingRecord`].
  */
@@ -680,6 +750,77 @@ const FfiConverterTypeRoundingMode = (() => {
     return new FFIConverter();
 })();
 
+/**
+ * A field a set can be missing. Mirrors [`cyberathlete_core::SetField`].
+ */
+export enum SetField {
+    Reps,
+    DurationS,
+    DistanceM
+}
+
+const FfiConverterTypeSetField = (() => {
+    type TypeName = SetField;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            switch (c.readI32()) {
+                case 1: return SetField.Reps;
+                case 2: return SetField.DurationS;
+                case 3: return SetField.DistanceM;
+                default: throw new UniffiInternalError.UnexpectedEnumCase();
+            }
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            switch (value) {
+                case SetField.Reps: return c.writeI32(1);
+                case SetField.DurationS: return c.writeI32(2);
+                case SetField.DistanceM: return c.writeI32(3);
+            }
+        }
+        allocationSize(value: TypeName): number {
+            return 4;
+        }
+    }
+    return new FFIConverter();
+})();
+
+/**
+ * How an exercise is logged. Mirrors [`cyberathlete_core::Tracking`].
+ */
+export enum Tracking {
+    WeightReps,
+    RepsOnly,
+    Duration,
+    DistanceDuration
+}
+
+const FfiConverterTypeTracking = (() => {
+    type TypeName = Tracking;
+    class FFIConverter extends AbstractFfiConverterByteArray<TypeName> {
+        readFromCursor(c: Cursor): TypeName {
+            switch (c.readI32()) {
+                case 1: return Tracking.WeightReps;
+                case 2: return Tracking.RepsOnly;
+                case 3: return Tracking.Duration;
+                case 4: return Tracking.DistanceDuration;
+                default: throw new UniffiInternalError.UnexpectedEnumCase();
+            }
+        }
+        writeIntoCursor(value: TypeName, c: Cursor): void {
+            switch (value) {
+                case Tracking.WeightReps: return c.writeI32(1);
+                case Tracking.RepsOnly: return c.writeI32(2);
+                case Tracking.Duration: return c.writeI32(3);
+                case Tracking.DistanceDuration: return c.writeI32(4);
+            }
+        }
+        allocationSize(value: TypeName): number {
+            return 4;
+        }
+    }
+    return new FFIConverter();
+})();
+
 // Hermes (React Native ≥ 0.74) ships TextEncoder and encodeInto, but not
 // TextDecoder. For single-string decode (bytesToString), we polyfill via the
 // C++ string_from_buffer helper using a duck-typed object matching the
@@ -750,6 +891,9 @@ const FfiConverterSequenceTypePrAchievement = new FfiConverterArray(FfiConverter
 // FfiConverter for Array<number | undefined>
 const FfiConverterSequenceOptionalFloat64 = new FfiConverterArray(FfiConverterOptionalFloat64);
 
+// FfiConverter for SetField | undefined
+const FfiConverterOptionalTypeSetField = new FfiConverterOptional(FfiConverterTypeSetField);
+
 // FfiConverter for Array<Array<LoggedSet>>
 const FfiConverterSequenceSequenceTypeLoggedSet = new FfiConverterArray(FfiConverterSequenceTypeLoggedSet);
 
@@ -799,6 +943,9 @@ function uniffiEnsureInitialized() {
     if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_load_kg() !== 3428) {
         throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_load_kg");
     }
+    if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_missing_for_completion() !== 29972) {
+        throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_missing_for_completion");
+    }
     if (nativeModule().ubrn_uniffi_cyberathlete_core_ffi_checksum_func_personal_bests() !== 22176) {
         throw new UniffiInternalError.ApiChecksumMismatch("uniffi_cyberathlete_core_ffi_checksum_func_personal_bests");
     }
@@ -827,7 +974,10 @@ export default Object.freeze({
     FfiConverterTypeRepsAtWeight,
     FfiConverterTypeRoundingMode,
     FfiConverterTypeSessionMetrics,
+    FfiConverterTypeSetEntry,
+    FfiConverterTypeSetField,
     FfiConverterTypeSetType,
     FfiConverterTypeStandingRecord,
+    FfiConverterTypeTracking,
   }
 });

@@ -8,6 +8,7 @@ the second (ADR-011).
 """
 
 import uuid
+from collections.abc import Collection
 from datetime import datetime
 from typing import Any
 
@@ -21,6 +22,7 @@ from app.models.base import Base, SyncColumns
 class ScopedRepository[ModelT: Base]:
     model: type[ModelT]
     owner_column: str = "user_id"
+    id_column: str = "id"
 
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
@@ -34,6 +36,17 @@ class ScopedRepository[ModelT: Base]:
     async def get(self, user_id: UserId, row_id: uuid.UUID) -> ModelT | None:
         statement = self._owned(user_id).where(self._column("id") == row_id)
         return (await self._session.execute(statement)).scalar_one_or_none()
+
+    async def get_many(
+        self, user_id: UserId, row_ids: Collection[uuid.UUID]
+    ) -> dict[uuid.UUID, ModelT]:
+        """The user's rows among `row_ids`, by id. An id that is absent or someone else's is simply
+        not in the result."""
+        if not row_ids:
+            return {}
+        statement = self._owned(user_id).where(self._column(self.id_column).in_(row_ids))
+        rows = (await self._session.execute(statement)).scalars()
+        return {getattr(row, self.id_column): row for row in rows}
 
     async def add(self, user_id: UserId, row: ModelT) -> ModelT:
         """Inserts a row for `user_id`, and only for it: a client chooses an id, never an owner.

@@ -21,7 +21,7 @@ pub mod strength;
 pub use progression::{RoundingMode, round_to_increment};
 pub use strength::{
     LoggedSet, MAX_EFFECTIVE_REPS, PersonalBests, PrAchievement, PrKind, RepsAtWeight,
-    SessionMetrics, SetType, StandingRecord, counted_set_count, detect_prs, e1rm, e1rm_series,
-    is_counted_set, is_counted_type, load_kg, personal_bests, session_metrics, standing_records,
-    volume_kg,
+    SessionMetrics, SetEntry, SetField, SetType, StandingRecord, Tracking, counted_set_count,
+    detect_prs, e1rm, e1rm_series, is_counted_set, is_counted_type, load_kg,
+    missing_for_completion, personal_bests, session_metrics, standing_records, volume_kg,
 };

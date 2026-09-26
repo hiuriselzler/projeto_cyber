@@ -57,6 +57,76 @@ def new_device_id() -> str:
     return uuid.uuid4().hex
 
 
+# ── Documents for the stage-8 mirror endpoints ────────────────────────────────────────────────────
+
+# 2026-09-25 18:00 in São Paulo. Fixed, so a test's `updated_at` arithmetic is plain to read.
+WRITTEN = datetime(2026, 9, 25, 21, 0, tzinfo=UTC)
+
+
+def stamps(written: datetime = WRITTEN, *, deleted: datetime | None = None) -> dict[str, Any]:
+    return {
+        "created_at": WRITTEN.isoformat(),
+        "updated_at": written.isoformat(),
+        "deleted_at": None if deleted is None else deleted.isoformat(),
+    }
+
+
+def set_body(index: int = 1, written: datetime = WRITTEN, **fields: Any) -> dict[str, Any]:
+    body: dict[str, Any] = {
+        "id": str(uuid.uuid4()),
+        "set_index": index,
+        "set_type": "working",
+        "weight_kg": 100.0,
+        "reps": 5,
+        "rir": 2,
+        "is_completed": True,
+        "completed_at": WRITTEN.isoformat(),
+        **stamps(written),
+    }
+    body.update(fields)
+    return body
+
+
+def entry_body(
+    exercise_id: uuid.UUID | str,
+    sets: list[dict[str, Any]] | None = None,
+    *,
+    order: int = 0,
+    written: datetime = WRITTEN,
+    **fields: Any,
+) -> dict[str, Any]:
+    body: dict[str, Any] = {
+        "id": str(uuid.uuid4()),
+        "exercise_id": str(exercise_id),
+        "order_index": order,
+        "sets": sets or [],
+        **stamps(written),
+    }
+    body.update(fields)
+    return body
+
+
+def workout_body(
+    entries: list[dict[str, Any]] | None = None,
+    *,
+    ended: bool = False,
+    written: datetime = WRITTEN,
+    **fields: Any,
+) -> dict[str, Any]:
+    started = WRITTEN - timedelta(hours=1)
+    body: dict[str, Any] = {
+        "title": "Push A",
+        "started_at": started.isoformat(),
+        "ended_at": WRITTEN.isoformat() if ended else None,
+        "local_date": "2026-09-25",
+        "tz": "America/Sao_Paulo",
+        "exercises": entries or [],
+        **stamps(written),
+    }
+    body.update(fields)
+    return body
+
+
 def bearer(access_token: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {access_token}"}
 
@@ -144,16 +214,19 @@ class Api:
         return await self.client.post(f"{API}/auth/refresh", json={"refresh_token": refresh_token})
 
     async def log_workout(self, device: Device, workout_id: str | None = None) -> httpx.Response:
-        return await self.client.post(
-            f"{API}/workouts",
-            headers=bearer(device.access_token),
-            json={
-                "id": workout_id or str(uuid.uuid4()),
-                "title": "Push A",
-                "started_at": self.clock.now.isoformat(),
-                "local_date": self.clock.now.date().isoformat(),
-                "tz": "America/Sao_Paulo",
-            },
+        """An empty workout, through the `PUT` that retired task 003's `POST` (task 004 stage 8)."""
+        return await self.put(device, "workouts", workout_id or str(uuid.uuid4()), workout_body())
+
+    async def put(
+        self, device: Device, resource: str, row_id: str, body: dict[str, Any]
+    ) -> httpx.Response:
+        return await self.client.put(
+            f"{API}/{resource}/{row_id}", headers=bearer(device.access_token), json=body
+        )
+
+    async def get(self, device: Device, path: str, **params: Any) -> httpx.Response:
+        return await self.client.get(
+            f"{API}/{path}", headers=bearer(device.access_token), params=params
         )
 
     def mail_to(self, address: str, kind: str | None = None) -> list[EmailMessage]:

@@ -27,6 +27,13 @@ class InvalidRequestError(ServiceError):
     code = "invalid_request"
 
 
+class UnprocessableError(ServiceError):
+    """Well-formed, but not something that can be stored: a reference to a row the user cannot see,
+    a completed set without its mode's measure, a name already taken (task 004 stage 8)."""
+
+    code = "unprocessable"
+
+
 class UnauthenticatedError(ServiceError):
     """No usable access token."""
 

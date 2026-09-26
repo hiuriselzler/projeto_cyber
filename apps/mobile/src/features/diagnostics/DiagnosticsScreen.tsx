@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { useState, type ReactNode } from 'react';
-import { Button, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useState } from 'react';
+import { Button, ScrollView, StyleSheet, TextInput } from 'react-native';
 
 import {
   checkLanAddressRefused,
@@ -24,6 +24,8 @@ import { roundLoadToIncrement } from '@/domain';
 import { describePlatform } from '@/platform';
 import { SegmentedControl, useTheme, type SegmentedOption, type ThemePreference } from '@/ui';
 
+import { AccountPreferences } from './AccountPreferences';
+import { Check } from './Check';
 import { useDiagnosticsStore } from './store';
 
 /** Developer-facing, so written out rather than translated (ADR-014). */
@@ -172,22 +174,13 @@ export function DiagnosticsScreen() {
         value={theme.preference}
         onChange={theme.setPreference}
       />
-    </ScrollView>
-  );
-}
 
-function Check({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <View style={styles.check}>
-      <Text style={styles.title}>{title}</Text>
-      <Text selectable>{children}</Text>
-    </View>
+      <AccountPreferences />
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { padding: 16, gap: 12 },
-  check: { gap: 4 },
-  title: { fontWeight: 'bold' },
   input: { borderWidth: 1, padding: 8 },
 });

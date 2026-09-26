@@ -16,6 +16,7 @@ Unticked rows and warm-ups come through: what counts is the core's question (INV
 """
 
 import uuid
+from collections.abc import Collection
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -57,10 +58,14 @@ class StrengthHistoryRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def finished_sets(self, user_id: UserId) -> list[FinishedSet]:
+    async def finished_sets(
+        self, user_id: UserId, exercise_ids: Collection[uuid.UUID] | None = None
+    ) -> list[FinishedSet]:
         """Every live set of the user's finished workouts, grouped by exercise, each exercise's
         workouts oldest first, each workout's sets in the order they were logged — the order
-        `standing_records` credits the earliest by."""
+        `standing_records` credits the earliest by. Only `exercise_ids`' sets, when given: records
+        are per exercise, so a write that touched two exercises needs those two folded again and
+        nothing else (task 004 stage 8)."""
         body_weight = (
             select(BodyWeightLog.weight_kg)
             .where(
@@ -111,6 +116,8 @@ class StrengthHistoryRepository:
                 SetLog.set_index,
             )
         )
+        if exercise_ids is not None:
+            statement = statement.where(WorkoutExercise.exercise_id.in_(exercise_ids))
         rows = (await self._session.execute(statement)).all()
         return [
             FinishedSet(

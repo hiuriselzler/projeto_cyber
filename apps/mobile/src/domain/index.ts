@@ -14,12 +14,15 @@ import {
   e1rmSeries as nativeE1rmSeries,
   isCountedSet as nativeIsCountedSet,
   loadKg as nativeLoadKg,
+  missingForCompletion as nativeMissingForCompletion,
   personalBests as nativePersonalBests,
   PrKind as NativePrKind,
   RoundingMode as NativeRoundingMode,
   roundToIncrement,
   sessionMetrics as nativeSessionMetrics,
+  SetField as NativeSetField,
   SetType as NativeSetType,
+  Tracking as NativeTracking,
   volumeKg as nativeVolumeKg,
   type LoggedSet as NativeLoggedSet,
   type PersonalBests as NativePersonalBests,
@@ -244,4 +247,46 @@ export function sessionMetrics(sessions: readonly (readonly LoggedSet[])[]): Ses
     volumeKg: present(metrics.volumeKg),
     countedSets: metrics.countedSets,
   }));
+}
+
+/** The four values of the schema's `tracking` column (03 §2, FR-2.3). */
+export type Tracking = 'weight_reps' | 'reps_only' | 'duration' | 'distance_duration';
+
+const NATIVE_TRACKING: Record<Tracking, NativeTracking> = {
+  weight_reps: NativeTracking.WeightReps,
+  reps_only: NativeTracking.RepsOnly,
+  duration: NativeTracking.Duration,
+  distance_duration: NativeTracking.DistanceDuration,
+};
+
+/** A field a set can be missing before it is completed, named as the set row names it. */
+export type CompletionField = 'reps' | 'durationS' | 'distanceM';
+
+const COMPLETION_FIELD = new Map<NativeSetField, CompletionField>([
+  [NativeSetField.Reps, 'reps'],
+  [NativeSetField.DurationS, 'durationS'],
+  [NativeSetField.DistanceM, 'distanceM'],
+]);
+
+/**
+ * What a set of this tracking mode must hold before it can be completed, or null if it holds it — 03 §4's
+ * "`is_completed = true` requires the fields its tracking mode needs" (task 004 stages 5c and 8).
+ *
+ * Reps for the two rep modes, the time for a hold, the distance for a carry; **weight is never required**. The rule is
+ * the core's, so the ✓ on the phone and the API's `422` are one function, not two that agree until one changes.
+ */
+export function missingForCompletion(
+  tracking: Tracking,
+  set: { readonly reps: number | null; readonly durationS: number | null; readonly distanceM: number | null },
+): CompletionField | null {
+  const missing = nativeMissingForCompletion(NATIVE_TRACKING[tracking], {
+    reps: absent(set.reps),
+    durationS: absent(set.durationS),
+    distanceM: absent(set.distanceM),
+  });
+  if (missing === undefined) return null;
+  const field = COMPLETION_FIELD.get(missing);
+  // Unreachable while the binding and this map agree; throwing names the drift.
+  if (field === undefined) throw new Error(`unknown set field from the core: ${String(missing)}`);
+  return field;
 }

@@ -325,3 +325,65 @@ pub fn session_metrics(sessions: Vec<Vec<LoggedSet>>) -> Vec<SessionMetrics> {
         .map(Into::into)
         .collect()
 }
+
+/// How an exercise is logged. Mirrors [`cyberathlete_core::Tracking`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
+pub enum Tracking {
+    WeightReps,
+    RepsOnly,
+    Duration,
+    DistanceDuration,
+}
+
+impl From<Tracking> for cyberathlete_core::Tracking {
+    fn from(tracking: Tracking) -> Self {
+        match tracking {
+            Tracking::WeightReps => Self::WeightReps,
+            Tracking::RepsOnly => Self::RepsOnly,
+            Tracking::Duration => Self::Duration,
+            Tracking::DistanceDuration => Self::DistanceDuration,
+        }
+    }
+}
+
+/// A field a set can be missing. Mirrors [`cyberathlete_core::SetField`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
+pub enum SetField {
+    Reps,
+    DurationS,
+    DistanceM,
+}
+
+impl From<cyberathlete_core::SetField> for SetField {
+    fn from(field: cyberathlete_core::SetField) -> Self {
+        match field {
+            cyberathlete_core::SetField::Reps => Self::Reps,
+            cyberathlete_core::SetField::DurationS => Self::DurationS,
+            cyberathlete_core::SetField::DistanceM => Self::DistanceM,
+        }
+    }
+}
+
+/// The measures a set row holds, as typed. Mirrors [`cyberathlete_core::SetEntry`].
+#[derive(Debug, Clone, Copy, PartialEq, uniffi::Record)]
+pub struct SetEntry {
+    pub reps: Option<u32>,
+    pub duration_s: Option<u32>,
+    pub distance_m: Option<f64>,
+}
+
+impl From<SetEntry> for cyberathlete_core::SetEntry {
+    fn from(entry: SetEntry) -> Self {
+        Self {
+            reps: entry.reps,
+            duration_s: entry.duration_s,
+            distance_m: entry.distance_m,
+        }
+    }
+}
+
+/// The field a set is missing before it can be completed, or null (03 §4, task 004 stage 8).
+#[uniffi::export]
+pub fn missing_for_completion(tracking: Tracking, entry: SetEntry) -> Option<SetField> {
+    cyberathlete_core::missing_for_completion(tracking.into(), &entry.into()).map(Into::into)
+}

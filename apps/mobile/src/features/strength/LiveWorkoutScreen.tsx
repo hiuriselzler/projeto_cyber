@@ -4,13 +4,13 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { readExercise } from '@/db/catalog';
 import {
-  missingForCompletion,
   readPreviousPerformance,
   type LiveSet,
   type LiveWorkout,
   type SetField,
   type Tracking,
 } from '@/db/strength';
+import { missingForCompletion } from '@/domain';
 import {
   AppText,
   Button,
