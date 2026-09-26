@@ -92,13 +92,14 @@ Jest tests, and none was findable without a device.
 | **1** | `core-rs/src/strength/` gets its first real residents — `e1rm()`, `is_counted_set()`, `volume_kg()` — through both bindings, against the shared fixture | ☑ 2026-09-19 |
 | **2** | The catalog seeds itself from the committed `reference.json`, fingerprinted; the bilingual search matcher | ☑ 2026-09-19 |
 | **3** | **The set row** and the live workout, every mutation a synchronous SQLite write (INV-09); the minimum exercise picker | ☑ 2026-09-19, device pass part-run |
-| **4** | **The catalog screen** — browse, search, filter by muscle and modality; custom exercises; fork-on-edit of a global; archive that never orphans history | ☑ 2026-09-22, device pass not yet run |
+| **4** | **The catalog screen** — browse, search, filter by muscle and modality; custom exercises; fork-on-edit of a global; archive that never orphans history | ☑ 2026-09-22; accessibility and font-scale pass by the owner 2026-09-25 |
 | **5a** | Routines — build, edit, reorder, duplicate, folders, archive; supersets; start-from-routine pre-filling last-used weights and carrying the routine's targets and rest | ☑ 2026-09-23, device pass not yet run |
 | **5b** | The live session finished off — set types; the rest timer with haptics and its notification; ✓ advancing focus (superset-aware); removing and reordering exercises mid-session; reopening the workout in progress on relaunch | ☑ 2026-09-23, device pass part-run the same evening |
 | **5c** | The `duration` and `distance_duration` tracking modes — the set row that logs them, and the create form offering them | ☑ 2026-09-23, device pass not yet run |
 | **6** | The finish flow — PR detection and its celebration, perceived fatigue, notes, retroactive logging | ☑ 2026-09-24, device pass run the same evening (TalkBack not) |
 | **7** | History and per-exercise charts; `personal_records` as a cache, with its rebuild command | ☑ 2026-09-25, device pass run the same evening (imperial and TalkBack not) |
-| **8** | The API mirror endpoints, and the closing device pass over the whole loop | ☑ built 2026-09-25; device pass part-run — the data loss it found fixed and proven on the phone, the owner's checks left to *Closing task 004*, below |
+| **8** | The API mirror endpoints, and the closing device pass over the whole loop | ☑ built 2026-09-25; device pass run the same day — the data loss it found fixed and proven on the phone, the rest in *Closing task 004*, below |
+| **Closing** | The owner's device checks, the ✓ latency fix they led to, and the ticks that close the task | ☑ checks run 2026-09-25; one finding awaiting the owner's decision — *Closing task 004, the last step*, below |
 
 **Stage 4 carries three decisions the catalog screen forces**, recorded in PROJECT-STATUS's decision
 log on 2026-09-21 and repeated here because the code reads this file:
@@ -435,6 +436,32 @@ PROJECT-STATUS's decision log:
 5. **The 30 taps are counted on a routine of five exercises × four sets**, built on the phone beforehand, from
    *Iniciar* to *Finalizar*, weights excluded.
 
+**Closing task 004, the last step — proposed 2026-09-25, not started.** Written at the end of the closing session so the
+next one starts from here.
+
+- *What is done.* Every acceptance criterion and device check above is ticked or explicitly deferred. The airplane-mode
+  workout and ✓ latency were run in the closing pass (below); the 30 taps, TalkBack, the 200 % font check in pounds and
+  stage 4's accessibility pass by the owner at the phone. The ✓ latency check found the ✓ over budget on a production
+  bundle and it was fixed — every ✓ had re-rendered all twenty set rows (`a20b605`).
+- *What is left.* One finding from the closing pass, **the ✓ that starts the rest bar reveals against the viewport
+  before the bar** (the last open box in *Closing on the device*, below); then PROJECT-STATUS's task 004 box ticked,
+  CI green, and [PR #17](https://github.com/hiuriselzler/projeto_cyber/pull/17) marked ready for the owner to merge.
+  After that, [task 005](005-strength-progression-planner.md).
+- *The mechanism.* `reveal()` in `LiveWorkoutScreen` computes the scroll from `viewportHeight`, which the list's
+  `onLayout` updates. The first ✓ of a rest mounts `RestTimerBar` above the list in the same commit, so the viewport
+  shrinks by the bar's height *after* the reveal was aimed, and the list is pushed down under it: the next row lands
+  below the fold, or — with the keypad open — its lower half behind the keypad. Un-ticking back to no rest does the
+  opposite, harmlessly.
+
+One decision is the owner's, with a recommendation:
+
+1. **Fix it now, or record it.** Recommended: **fix it now, in this task** — 07 §6 says the keypad never covers the row
+   being edited, and this is the first ✓ of every rest. The fix is small: remember the row last revealed, and reveal it
+   again from the list's `onLayout` whenever the viewport's height changes. No data, no invariant, no new dependency.
+   The live screen cannot be rendered under Jest (it opens the database), so the proof is the phone: the first ✓ of a
+   rest with the keypad closed and with it open, on the tall screen and on the 1080×1600 short one, each next row fully
+   above the fold or the keypad. The alternative is a line in PROJECT-STATUS § Gaps and task 004 closed as it stands.
+
 ## Acceptance criteria
 - [x] A full workout can be logged start to finish in airplane mode. *(Stage 3 logged one set start to finish with
       no network involved, but airplane mode itself was not switched on, and "full" means routines, set types and
@@ -489,19 +516,24 @@ PROJECT-STATUS's decision log:
       exactly — and read back as "100 lb × 5" on the row, "500 lb" of volume and records of 100 lb in the summary, the
       same in the workout's detail, and charts with lb axes. The API keeps four places, 45.3592, which reads 100.0 lb at
       display precision — `test_strength_api.py`)*
-- [ ] Logging a 5-exercise, 20-set workout takes fewer than 30 taps beyond the weights themselves
+- [x] Logging a 5-exercise, 20-set workout takes fewer than 30 taps beyond the weights themselves. *(Done by the owner at
+      the phone, 2026-09-25, on the airplane-mode session's 5 × 4 routine — closing decision 5 — and confirmed in the
+      closing session; the count itself was not written down. An adb run of the same routine counted 24: Iniciar, 20 ✓,
+      Encerrar, Finalizar, Concluir)*
 
 **On a physical device** *(moved from [task 017](017-local-toolchain-device-spike.md) on 2026-09-16 — each needs the
 set-logging UI this task builds; `SetRow` and `NumericKeypad` existed from task 011 but no route rendered either)*
 
 > **First device pass run 2026-09-19**, stage 3, on a **Galaxy S21 FE (SM-G990E), Android 16, device locale pt-BR,
 > metric, dark theme, font scale 0.86**. What is ticked below was observed on that phone; what is not was not run.
-- [ ] The set row in Portuguese, **in pounds**, at 200 % system font size keeps every value readable and every
+- [x] The set row in Portuguese, **in pounds**, at 200 % system font size keeps every value readable and every
       control usable — reflowed, never truncated *(absorbs this task's earlier 200 %-font criterion)*.
       **The 200 % half is run and passes** (2026-09-21): at scale 2.0 in pt-BR the row reflows to two lines,
       `1 40 kg × 6` over `RIR 7`, with the ✓ anchored beside them at full size — nothing truncated, every target
       still 56 dp. **The imperial half is not run**: units come from the signed-in account and the API is not
-      running locally, so an imperial pass needs either the stack up or the cached `users` row flipped
+      running locally, so an imperial pass needs either the stack up or the cached `users` row flipped. **The imperial
+      half done by the owner at the phone, 2026-09-25**, on the imperial throwaway account, and confirmed in the closing
+      session; the observations were not written down
 - [x] The numeric keypad never covers the set row it is editing, on a short screen as well as a tall one —
       *tall screen: row at y 479–683, keypad from y 1282 on a 2340 px screen.* **Short screen run 2026-09-21 at
       1080×1600, and it failed: the keypad covered the edited row completely**, only the row's top border showing.
@@ -514,10 +546,12 @@ set-logging UI this task builds; `SetRow` and `NumericKeypad` existed from task 
       catalog in the picker sheet, 60 kg × 8 @ RIR 2 written and ticked, every value read back from SQLite. The
       *acceptance* criterion above stays open because "a full workout" means routines, set types and the finish flow,
       which are stages 5–6
-- [ ] TalkBack can complete a full set-logging flow (VoiceOver: [task 016](016-ios-platform.md)).
+- [x] TalkBack can complete a full set-logging flow (VoiceOver: [task 016](016-ios-platform.md)).
       **Partly:** the accessibility tree is right — the row is one element reading
       *"Série 1, 40 quilogramas, 6 repetições, RIR 7, concluída"*, `RIR 7` is `checked`, and the `5+` disclosure is
-      `selected` but **not** `checked`. Navigating it with TalkBack actually switched on is not done
+      `selected` but **not** `checked`. Navigating it with TalkBack actually switched on is not done. **Done by the owner
+      at the phone with TalkBack on, 2026-09-25**, confirmed in the closing session; the observations were not written
+      down
 - [x] **Foreign keys are actually enforced on the device** — `PRAGMA foreign_keys = ON` takes effect on the open
       connection, and a violating insert is rejected rather than accepted. *(Added 2026-09-19: SQLite defaults the
       pragma off, nothing had ever set it, and the device was ignoring all 58 of the schema's foreign keys.)*
@@ -566,7 +600,9 @@ metric, dark — a development build carrying commit `228069e`, installed **over
       *(2026-09-24: bench set 1 moved focus to the row's set 1 with no bar; the row's set 1 started one 1:30 rest and sent
       focus back to the bench's set 2; with the keypad open on the bench's set 2, its ✓ moved the keypad to the row's set 2
       weight, revealed above it, with no bar — mid-round)*
-- [ ] TalkBack reaches the set type through the row's "Change set type" action, and the timer bar reads its time left
+- [x] TalkBack reaches the set type through the row's "Change set type" action, and the timer bar reads its time left.
+      *(Done by the owner at the phone with TalkBack on, 2026-09-25, confirmed in the closing session; the observations
+      were not written down)*
 - [x] ✓ latency re-measured on a routine-started session, with the timer bar ticking beside the rows. *(2026-09-25, with
       closing decision 3's timer: over budget on the first measure, fixed, and re-measured — the closing pass below)*
 - [x] **5c on the phone** (2026-09-24): a plank's row is a time alone; its ✓ on an empty time opened the keypad on *Tempo*
@@ -632,9 +668,10 @@ so the phone kept its data. Every value below was read back from the phone's SQL
       showed — no bar, no *Pular*, and no alarm registered for the app. The set's `completed_at` read **19:30 on the 23rd**
       and its `updated_at` the real time; `local_date` 2026-09-23; after finishing `ended_at` read 19:30 and the device
       store was empty again. The exercise's note and rest were in `workout_exercises`
-- [ ] The summary with TalkBack on: the heading, each record as one element, *Done*; under reduce motion, no rise. *Not
+- [x] The summary with TalkBack on: the heading, each record as one element, *Done*; under reduce motion, no rise. *Not
       run: switching TalkBack on is a phone setting. The tree gives the heading its role; whether each record reads as
-      one element needs the screen reader itself*
+      one element needs the screen reader itself.* **Done by the owner at the phone, 2026-09-25**, confirmed in the
+      closing session; the observations were not written down
 - [x] *Stage 7's, recorded here so it is not lost:* nothing reopens an older summary until workout detail exists. Once
       it does, an old workout must name the same records, and none that a later workout has since beaten (decision 2).
       **On the phone, 2026-09-25:** the past workout of the 23rd names "Maior carga: 65 kg" and "Mais repetições com 65
@@ -660,9 +697,10 @@ three recorded)*
 - [x] **The development client's floating *Tools* button covers the right edge of *Encerrar*.** A tap there opens the dev
       menu. Development builds only, so not a product defect — but it is the workout's primary action, and it cost this
       pass a tap. *Closed with no action, 2026-09-25 (closing decision 4): no release build carries the button*
-- [ ] **The ✓ has no accessible name of its own** in the tree: the row is one element carrying the sentence, and the ✓
+- [x] **The ✓ has no accessible name of its own** in the tree: the row is one element carrying the sentence, and the ✓
       inside it is an unlabelled button. Whether TalkBack reaches it through the row is the open TalkBack criterion's to
-      settle
+      settle. *Settled by that criterion (closing decision 4): the owner's TalkBack pass, 2026-09-25, completed the
+      set-logging flow through the row, and no change was asked for*
 - [x] **A forked global and the global itself read identically in the picker** — "Abdominal bicicleta" twice, one of
       them the user's own copy. Stage 4's fork-on-edit, working as decided. **Decided 2026-09-24: mark it.** Every
       exercise of the user's own — a fork or one they made — carries "Seu"/"Yours" in the picker and in the catalog's
@@ -686,8 +724,9 @@ from the pulled SQLite copy before the screen was opened)*
       widest one. The phone's scale was restored to 0.86 afterwards
 - [x] **Imperial**: not run in stage 7. **Run in stage 8** (2026-09-25): after the switch, the history's axes read 90 / 100 /
       110 lb and 450 / 500 / 550 lb, and the readouts "25/09/2026 · 100 lb" and "· 500 lb"
-- [ ] **TalkBack** on the chart's adjustable actions: not run (a phone setting); the tree gives the plot `adjustable`
-      and the summary as its label
+- [x] **TalkBack** on the chart's adjustable actions: not run (a phone setting); the tree gives the plot `adjustable`
+      and the summary as its label. **Done by the owner at the phone, 2026-09-25**, confirmed in the closing session; the
+      observations were not written down
 
 **Found by the stage 7 device pass** *(2026-09-25 — all three fixed and verified on the phone)*
 - [x] **The oldest point ran through its own axis label.** The values sit on their gridlines at the left edge, and when
@@ -714,8 +753,9 @@ value was predicted before the tap and read back from the phone's SQLite)*
       15-minute access token left to run out, then a `PATCH` from the switch — the refresh answered `401` and the app
       signed out, exactly as before. **The phone kept 1 user row, 1 workout and its set, `45.359237 × 5`.** Signing back in
       listed "Treino, 25/09/2026, 1 série contada, 500 lb" in the history
-- [ ] **Not run, and the owner's at the phone:** TalkBack (stages 3, 5, 6, 7), a full workout in airplane mode, the
-      30-tap count, the 200 % font check in pounds, stage 4's accessibility pass, ✓ latency under a ticking rest bar
+- [x] **Not run, and the owner's at the phone:** TalkBack (stages 3, 5, 6, 7), a full workout in airplane mode, the
+      30-tap count, the 200 % font check in pounds, stage 4's accessibility pass, ✓ latency under a ticking rest bar.
+      *All run 2026-09-25 — airplane mode and ✓ latency in the closing pass below, the rest by the owner at the phone*
 - [x] **A development-only console error on signing out**: *"Can't perform a React state update on a component that
       hasn't mounted yet"*, raised inside `expo-router`'s `ContextNavigator` as the session gate swapped to the sign-in
       screen. Not the app's code by its stack, and harmless on screen; recorded rather than chased. *Closed with no
@@ -775,7 +815,7 @@ predicted before the tap and read back from the phone's SQLite and from logcat)*
       the same commit, so the list moves down by the bar's height after the reveal has been computed: the next row is left
       below the fold with the keypad closed, and half behind the keypad with it open — the edited field itself stays
       visible. Only the ✓ that starts a rest; later ✓s reveal correctly. Not caused by the fix above (the reveal is
-      untouched); found by it. *Open — the owner's decision*
+      untouched); found by it. *Open — the owner's decision, proposed in* Closing task 004, the last step *above*
 
 **Found on the device, and not yet fixed**
 - [x] **The set row reflows at font scale 0.86** — *half answered 2026-09-21, and the half that was a defect is
