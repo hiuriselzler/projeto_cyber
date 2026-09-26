@@ -267,7 +267,8 @@ class ProgressionRule:
     Raises `ValueError` for a rule that lacks what its strategy needs: `linear_load`,
     `double_progression` and `rir_autoregulated` take exactly one of `load_step_kg` and
     `load_step_bp`; `percent_1rm` needs `baseline_e1rm_kg`; `rir_mode` is `per_exercise` or
-    `per_set`, which reads `rir_offsets`.
+    `per_set`, which reads `rir_offsets`; `failure_policy` is `hold`, `repeat_cycle` or
+    `reduce_load`, which reads `failure_load_bp` (FR-3.11).
     """
 
     def __init__(
@@ -287,6 +288,8 @@ class ProgressionRule:
         rir_end: int | None = None,
         rir_mode: str = "per_exercise",
         rir_offsets: list[int] = ...,
+        failure_policy: str = "hold",
+        failure_load_bp: int = 9000,
     ) -> None: ...
 
 class CycleOneSet:
@@ -314,7 +317,8 @@ class CycleOneSet:
 class ExerciseSpec:
     """One exercise of cycle 1. `increment_kg` is INV-02's increment in the user's unit system,
     already resolved, in exact kilograms. `body_weight_kg` is the latest body weight, read only by
-    `percent_1rm` on a bodyweight exercise; `None` holds cycle 1's loads rather than guess (INV-07)."""
+    `percent_1rm` on a bodyweight exercise; `None` holds cycle 1's loads rather than guess
+    (INV-07)."""
 
     def __init__(
         self,
@@ -414,3 +418,237 @@ def generate(mesocycle: MesocycleSpec, cycle_one: list[SessionSpec]) -> list[Pla
 
 def resolve_dates(start_day: int, length_days: list[int]) -> list[int]:
     """The day each cycle starts on, walking the block from `start_day` (03 §5, INV-25)."""
+
+# ── Reconciliation (task 005 stage 3a) ───────────────────────────────────────────────────────────
+
+class CycleStatus:
+    """The schema's `cycle_status_enum`. The engine rewrites `Projected` cycles only (INV-06)."""
+
+    Projected: CycleStatus
+    Locked: CycleStatus
+    InProgress: CycleStatus
+    Completed: CycleStatus
+    Skipped: CycleStatus
+
+    @staticmethod
+    def from_name(name: str) -> CycleStatus:
+        """The status's name in the database. Raises `ValueError` for anything else."""
+
+    @property
+    def name(self) -> str:
+        """The inverse of `from_name`."""
+
+class WriteKind:
+    """The schema's `write_kind_enum`: who last changed a microcycle (02 §7)."""
+
+    Engine: WriteKind
+    User: WriteKind
+
+    @staticmethod
+    def from_name(name: str) -> WriteKind:
+        """The kind's name in the database. Raises `ValueError` for anything else."""
+
+    @property
+    def name(self) -> str:
+        """The inverse of `from_name`."""
+
+class SetOrigin:
+    """The schema's `set_origin_enum`: whether a planned set is the engine's or the user's."""
+
+    Generated: SetOrigin
+    UserEdited: SetOrigin
+
+    @staticmethod
+    def from_name(name: str) -> SetOrigin:
+        """The origin's name in the database. Raises `ValueError` for anything else."""
+
+    @property
+    def name(self) -> str:
+        """The inverse of `from_name`."""
+
+class Outcome:
+    """How a planned exercise went (01 §3.4)."""
+
+    Exceeded: Outcome
+    Met: Outcome
+    Under: Outcome
+    Missed: Outcome
+
+    @staticmethod
+    def from_name(name: str) -> Outcome:
+        """The outcome's name in the shared fixtures. Raises `ValueError` for anything else."""
+
+    @property
+    def name(self) -> str:
+        """The inverse of `from_name`."""
+
+class PlanSet:
+    """A `planned_sets` row. A `user_edited` or pinned row is never touched by the engine."""
+
+    def __init__(
+        self,
+        set_index: int,
+        set_type: SetType,
+        target_weight_kg: float | None = None,
+        target_reps: int | None = None,
+        target_min_reps: int | None = None,
+        target_max_reps: int | None = None,
+        target_rir: int | None = None,
+        was_clamped: bool = False,
+        origin: SetOrigin = ...,
+        is_pinned: bool = False,
+    ) -> None: ...
+    @property
+    def set_index(self) -> int: ...
+    @property
+    def set_type(self) -> SetType: ...
+    @property
+    def target_weight_kg(self) -> float | None: ...
+    @property
+    def target_reps(self) -> int | None: ...
+    @property
+    def target_min_reps(self) -> int | None: ...
+    @property
+    def target_max_reps(self) -> int | None: ...
+    @property
+    def target_rir(self) -> int | None: ...
+    @property
+    def was_clamped(self) -> bool: ...
+    @property
+    def origin(self) -> SetOrigin: ...
+    @property
+    def is_pinned(self) -> bool: ...
+
+class PlanExercise:
+    """A `planned_exercises` row with its rule, increment and body weight resolved.
+
+    `exercise_id` is opaque to the engine: two exercises are the same when their ids are equal.
+    """
+
+    def __init__(
+        self,
+        order_index: int,
+        exercise_id: str,
+        increment_kg: float,
+        rule: ProgressionRule,
+        sets: list[PlanSet],
+        uses_bodyweight: bool = False,
+        body_weight_kg: float | None = None,
+    ) -> None: ...
+    @property
+    def order_index(self) -> int: ...
+    @property
+    def exercise_id(self) -> str: ...
+    @property
+    def increment_kg(self) -> float: ...
+    @property
+    def rule(self) -> ProgressionRule: ...
+    @property
+    def uses_bodyweight(self) -> bool: ...
+    @property
+    def body_weight_kg(self) -> float | None: ...
+    @property
+    def sets(self) -> list[PlanSet]: ...
+
+class PlanSession:
+    """A `planned_sessions` row, named by `(day_index, order_index)` in its cycle."""
+
+    def __init__(self, day_index: int, order_index: int, exercises: list[PlanExercise]) -> None: ...
+    @property
+    def day_index(self) -> int: ...
+    @property
+    def order_index(self) -> int: ...
+    @property
+    def exercises(self) -> list[PlanExercise]: ...
+
+class PlanCycle:
+    """A `microcycles` row. `starts_on` is whole days since 1970-01-01."""
+
+    def __init__(
+        self,
+        cycle_number: int,
+        length_days: int,
+        starts_on: int,
+        is_deload: bool,
+        status: CycleStatus,
+        engine_version: int,
+        last_write_kind: WriteKind,
+        sessions: list[PlanSession],
+    ) -> None: ...
+    @property
+    def cycle_number(self) -> int: ...
+    @property
+    def length_days(self) -> int: ...
+    @property
+    def starts_on(self) -> int: ...
+    @property
+    def is_deload(self) -> bool: ...
+    @property
+    def status(self) -> CycleStatus: ...
+    @property
+    def engine_version(self) -> int: ...
+    @property
+    def last_write_kind(self) -> WriteKind: ...
+    @property
+    def sessions(self) -> list[PlanSession]: ...
+
+class PlanLog:
+    """A logged set on the planned set it was logged against — the planned set's natural key, found
+    through `set_logs.planned_set_id` (FR-3.15), and the set with its body weight resolved."""
+
+    def __init__(
+        self,
+        cycle_number: int,
+        day_index: int,
+        session_order_index: int,
+        exercise_order_index: int,
+        set_index: int,
+        set: LoggedSet,
+    ) -> None: ...
+    @property
+    def cycle_number(self) -> int: ...
+    @property
+    def day_index(self) -> int: ...
+    @property
+    def session_order_index(self) -> int: ...
+    @property
+    def exercise_order_index(self) -> int: ...
+    @property
+    def set_index(self) -> int: ...
+    @property
+    def set(self) -> LoggedSet: ...
+
+class SlotOutcome:
+    """An outcome `reconcile` acted on — what the after-session diff and FR-3.12 read."""
+
+    @property
+    def cycle_number(self) -> int: ...
+    @property
+    def exercise_id(self) -> str: ...
+    @property
+    def occurrence(self) -> int: ...
+    @property
+    def outcome(self) -> Outcome: ...
+    @property
+    def open_loop(self) -> bool:
+        """`percent_1rm` found no e1RM in the session and held the last one (FR-3.2c)."""
+
+class Reconciled:
+    """The whole plan re-projected, and the outcomes that moved it."""
+
+    @property
+    def cycles(self) -> list[PlanCycle]: ...
+    @property
+    def outcomes(self) -> list[SlotOutcome]: ...
+
+def classify(planned: list[PlanSet], logs: list[PlanLog]) -> Outcome:
+    """How one planned exercise went (01 §3.4). With nothing logged, `Missed`."""
+
+def reconcile(
+    mesocycle: MesocycleSpec, plan: list[PlanCycle], logs: list[PlanLog], today: int
+) -> Reconciled:
+    """Re-project the plan from what was logged, as of `today` (days since 1970-01-01).
+
+    Only projected cycles with nothing logged are rewritten; a user's rows are kept; a plan holding
+    a newer engine's cycle comes back exactly as given (INV-06, FR-3.14).
+    """

@@ -7,6 +7,7 @@
  * grid, a session past its cycle's end, a date that skips — fails before it reaches Rust, Python or a phone.
  */
 import generateFixture from '@cyberathlete/shared/fixtures/generate.json';
+import reconcileFixture from '@cyberathlete/shared/fixtures/reconcile.json';
 import datesFixture from '@cyberathlete/shared/fixtures/resolve_dates.json';
 
 /** FR-3.1a. There is no constant for 7: it is a default, never an assumption (INV-25). */
@@ -33,6 +34,8 @@ interface Rule {
   rir_end: number | null;
   percent_wave_bp: number[] | null;
   baseline_e1rm_kg: number | null;
+  failure_policy: string;
+  failure_load_bp: number | null;
   rounding: string;
 }
 
@@ -217,5 +220,124 @@ describe('resolve_dates.json', () => {
       const previous = fixtureCase.expected[index - 1] ?? '';
       expect(day(fixtureCase.expected[index] ?? '') - day(previous)).toBe(length);
     }
+  });
+});
+
+/** The engine these fixtures were written for (INV-06). */
+const ENGINE_VERSION = 1;
+const STATUSES = ['projected', 'locked', 'in_progress', 'completed', 'skipped'];
+const OUTCOMES = ['exceeded', 'met', 'under', 'missed'];
+
+interface PlanSet {
+  set_index: number;
+  set_type: string;
+  target_weight_kg: number | null;
+  target_reps: number | null;
+  target_min_reps: number | null;
+  target_max_reps: number | null;
+  target_rir: number | null;
+  was_clamped: boolean;
+  origin: string;
+  is_pinned: boolean;
+}
+
+interface PlanCycle {
+  cycle_number: number;
+  starts_on: string;
+  length_days: number;
+  is_deload: boolean;
+  status: string;
+  engine_version: number;
+  last_write_kind: string;
+  sessions: {
+    day_index: number;
+    order_index: number;
+    exercises: (Omit<CycleOneExercise, 'sets'> & { exercise_id: string; sets: PlanSet[] })[];
+  }[];
+}
+
+interface ReconcileCase {
+  name: string;
+  today: string;
+  plan: PlanCycle[];
+  logs: { cycle_number: number; set_index: number }[];
+  expected: {
+    cycles: PlanCycle[];
+    outcomes: { cycle_number: number; exercise_id: string; occurrence: number; outcome: string; open_loop: boolean }[];
+  };
+}
+
+const reconcileCases = reconcileFixture.cases as ReconcileCase[];
+
+/** Every set of a cycle, with the exercise it belongs to. */
+function setsOf(cycle: PlanCycle) {
+  return cycle.sessions.flatMap((session) =>
+    session.exercises.flatMap((exercise) => exercise.sets.map((set) => ({ exercise, set }))),
+  );
+}
+
+describe('reconcile.json', () => {
+  describe.each(reconcileCases.map((it) => [it.name, it] as const))('%s', (_name, fixtureCase) => {
+    const { plan, logs, expected } = fixtureCase;
+    const yields = plan.some((cycle) => cycle.engine_version > ENGINE_VERSION);
+    const logged = new Set(logs.map((log) => log.cycle_number));
+    const first = Math.min(...plan.map((cycle) => cycle.cycle_number));
+    const rewritable = (cycle: PlanCycle) =>
+      !yields && cycle.cycle_number !== first && cycle.status === 'projected' && !logged.has(cycle.cycle_number);
+
+    it('names only statuses, write kinds, origins and outcomes the schema has', () => {
+      for (const cycle of [...plan, ...expected.cycles]) {
+        expect(STATUSES).toContain(cycle.status);
+        expect(['engine', 'user']).toContain(cycle.last_write_kind);
+        for (const { set } of setsOf(cycle)) expect(['generated', 'user_edited']).toContain(set.origin);
+      }
+      for (const it of expected.outcomes) expect(OUTCOMES).toContain(it.outcome);
+    });
+
+    it('changes only projected cycles with nothing logged, and stamps each one it rewrites (INV-06)', () => {
+      expect(expected.cycles.map((it) => it.cycle_number)).toEqual(plan.map((it) => it.cycle_number));
+      plan.forEach((before, at) => {
+        const after = expected.cycles[at];
+        if (!after) throw new Error('a cycle went missing');
+        if (rewritable(before)) {
+          expect(after.engine_version).toBe(ENGINE_VERSION);
+          expect(after.last_write_kind).toBe('engine');
+        } else {
+          expect(after).toEqual(before);
+        }
+      });
+      if (yields) expect(expected.outcomes).toEqual([]);
+    });
+
+    it('keeps every user-edited or pinned row exactly (FR-3.14)', () => {
+      plan.forEach((before, at) => {
+        const after = expected.cycles[at];
+        if (!after) throw new Error('a cycle went missing');
+        const kept = setsOf(after).map((it) => it.set);
+        for (const { set } of setsOf(before)) {
+          if (set.origin === 'user_edited' || set.is_pinned) expect(kept).toContainEqual(set);
+        }
+      });
+    });
+
+    it('writes only liftable loads inside each rule (INV-02, INV-05)', () => {
+      for (const cycle of expected.cycles.filter((_, at) => plan[at] && rewritable(plan[at]))) {
+        for (const { exercise, set } of setsOf(cycle)) {
+          if (set.origin !== 'generated') continue;
+          if (set.target_weight_kg !== null) {
+            const steps = set.target_weight_kg / exercise.increment_kg;
+            expect(Math.abs(steps - Math.round(steps))).toBeLessThan(1e-9);
+          }
+          if (set.target_reps !== null) {
+            expect(set.target_reps).toBeGreaterThanOrEqual(exercise.rule.min_reps);
+            expect(set.target_reps).toBeLessThanOrEqual(exercise.rule.max_reps);
+          }
+          if (set.target_rir !== null) {
+            expect(set.target_rir).toBeGreaterThanOrEqual(exercise.rule.min_rir);
+            expect(set.target_rir).toBeLessThanOrEqual(exercise.rule.max_rir);
+          }
+        }
+      }
+    });
   });
 });

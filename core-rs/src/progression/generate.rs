@@ -5,15 +5,14 @@
 //! the plate grid. It is a pure function of its two arguments (INV-10) — it takes no `now`, because
 //! nothing it produces depends on the day it runs.
 
+use super::ENGINE_VERSION;
 use super::dates::{clamp_length, resolve_dates};
-use super::deload::deload_schedule;
+use super::deload::{deload_schedule, deload_sets};
 use super::plan::{
     ExerciseSpec, MAX_MICROCYCLES, MesocycleSpec, PlannedExercise, PlannedMicrocycle,
-    PlannedSession, PlannedSet, SessionSpec,
+    PlannedSession, SessionSpec,
 };
-use super::strategies::{Progress, clamp, working_sets};
-use super::{BASIS_POINTS, ENGINE_VERSION, RoundingMode, round_to_increment};
-use crate::strength::is_counted_type;
+use super::strategies::{Prescriber, Progress, project};
 
 /// Generate microcycles 2..N from microcycle 1.
 ///
@@ -62,8 +61,11 @@ pub fn generate(spec: &MesocycleSpec, cycle_one: &[SessionSpec]) -> Vec<PlannedM
         if !is_deload {
             step += 1;
         }
+        // Cycle 1 is every exercise's only anchor here, so steps and position are both the working
+        // cycles since it — the case `reconcile` must reproduce exactly when nothing else has happened.
         let at = Progress {
-            step,
+            steps: step,
+            position: step,
             working_cycles,
         };
         let deload = is_deload.then_some(spec);
@@ -139,94 +141,27 @@ fn prescribe_session(
     exercises
         .into_iter()
         .map(|exercise| {
-            let working = working_sets(exercise, at);
+            let prescriber = Prescriber::of_spec(exercise);
+            let working = project(prescriber, &exercise.sets, None, at);
             PlannedExercise {
                 order_index: exercise.order_index,
                 sets: match deload {
                     None => working,
-                    Some(spec) => deload_sets(exercise, working, spec),
+                    Some(spec) => deload_sets(prescriber, working, spec),
                 },
             }
         })
         .collect()
 }
 
-/// FR-3.9: a deload cycle, from the working prescription it multiplies.
-///
-/// Fewer working sets — `deload_set_bp` of them, a tie to the fewer, never below one — and every kept
-/// set's load cut to `deload_load_bp` and re-anchored with `nearest`, its RIR raised by
-/// `deload_rir_bump` and clamped into the rule (INV-05). Warm-up, drop and back-off sets are not counted
-/// sets (INV-04), so the reduction leaves them in place; their loads and RIR are deloaded like the rest.
-fn deload_sets(
-    exercise: &ExerciseSpec,
-    working: Vec<PlannedSet>,
-    spec: &MesocycleSpec,
-) -> Vec<PlannedSet> {
-    let rule = &exercise.rule;
-    let counted = working
-        .iter()
-        .filter(|set| is_counted_type(set.set_type))
-        .count();
-    let keep = deload_set_count(counted, spec.deload_set_bp);
-
-    let mut kept_counted = 0;
-    let mut sets = Vec::with_capacity(working.len());
-    for set in working {
-        if is_counted_type(set.set_type) {
-            if kept_counted == keep {
-                continue;
-            }
-            kept_counted += 1;
-        }
-        let target_weight_kg = set.target_weight_kg.map(|weight_kg| {
-            round_to_increment(
-                weight_kg * f64::from(spec.deload_load_bp) / f64::from(BASIS_POINTS),
-                exercise.increment_kg,
-                RoundingMode::Nearest,
-            )
-        });
-        let raised = set
-            .target_rir
-            .map(|rir| i64::from(rir) + i64::from(spec.deload_rir_bump));
-        let (target_rir, rir_clamped) = clamp(raised, rule.min_rir, rule.max_rir);
-        sets.push(PlannedSet {
-            target_weight_kg,
-            target_rir,
-            was_clamped: set.was_clamped || rir_clamped,
-            ..set
-        });
-    }
-    sets
-}
-
-/// How many of `counted` working sets a deload keeps: `set_bp` of them, a tie going to the fewer — the
-/// rule ADR-010 gives loads — and never below one, so a deload never removes an exercise. Never more
-/// than there were, whatever `set_bp` says. Integer arithmetic throughout (INV-10).
-fn deload_set_count(counted: usize, set_bp: u32) -> usize {
-    if counted == 0 {
-        return 0;
-    }
-    let scaled = u64::try_from(counted)
-        .unwrap_or(u64::MAX)
-        .saturating_mul(u64::from(set_bp));
-    let whole = scaled / u64::from(BASIS_POINTS);
-    let remainder = scaled % u64::from(BASIS_POINTS);
-    // `>`, not `>=`: exactly half a set goes to the fewer.
-    let rounded = if remainder * 2 > u64::from(BASIS_POINTS) {
-        whole + 1
-    } else {
-        whole
-    };
-    usize::try_from(rounded)
-        .unwrap_or(counted)
-        .clamp(1, counted)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::progression::RoundingMode;
+    use crate::progression::deload::deload_set_count;
     use crate::progression::plan::{
-        CycleOneSet, DeloadPolicy, LengthOverride, LoadStep, RirMode, Rule, Strategy,
+        CycleOneSet, DeloadPolicy, FailurePolicy, LengthOverride, LoadStep, PlannedSet, RirMode,
+        Rule, Strategy,
     };
     use crate::strength::SetType;
 
@@ -239,6 +174,7 @@ mod tests {
             max_rir: 4,
             rounding: RoundingMode::Nearest,
             rir_mode: RirMode::PerExercise,
+            failure_policy: FailurePolicy::Hold,
         }
     }
 

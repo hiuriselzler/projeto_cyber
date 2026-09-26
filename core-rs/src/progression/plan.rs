@@ -17,7 +17,7 @@
 
 use super::RoundingMode;
 use super::dates::EpochDay;
-use crate::strength::SetType;
+use crate::strength::{LoggedSet, SetType};
 
 /// The most microcycles a block may hold (FR-3.1).
 pub const MAX_MICROCYCLES: u32 = 52;
@@ -104,6 +104,20 @@ pub struct Rule {
     /// How a working load is rounded onto the plate grid (INV-02, ADR-010 § Amendment).
     pub rounding: RoundingMode,
     pub rir_mode: RirMode,
+    /// FR-3.11: what an `Under` outcome does to the next working cycle. Read by `reconcile` only.
+    pub failure_policy: FailurePolicy,
+}
+
+/// FR-3.11 — what reconciliation does after an `Under` outcome (task 005 stage 3, decision 4).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FailurePolicy {
+    /// Repeat the prescription.
+    Hold,
+    /// Repeat the failed cycle's prescriptions for **every** exercise in it, in the next working cycle.
+    /// No cycle is inserted, so the block keeps its length and its end date.
+    RepeatCycle,
+    /// Repeat the prescription at `load_bp` of its load (`failure_load_bp`, default 9000).
+    ReduceLoad { load_bp: u32 },
 }
 
 /// The deload policy, one of FR-3.1b's three modes. `None` is a real choice, not a missing setting.
@@ -235,4 +249,183 @@ pub struct PlannedMicrocycle {
     /// The engine that projected it — always [`ENGINE_VERSION`](super::ENGINE_VERSION) (INV-06).
     pub engine_version: u32,
     pub sessions: Vec<PlannedSession>,
+}
+
+// ── The plan as `reconcile` reads and writes it (stage 3a) ───────────────────────────────────────
+//
+// The rows of 03 §5 with everything the guard needs: a cycle's status, the engine that last projected
+// it and who last wrote it, and each set's origin and pin. Each exercise carries its rule, increment and
+// body weight as generation's do, plus its `exercise_id` — an opaque reference to the catalog, compared
+// and never interpreted, so the engine can tell "the same exercise" across cycles (stage 3, decision 2).
+
+/// `cycle_status_enum` — INV-06 lives here: the engine rewrites `Projected` cycles only.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CycleStatus {
+    Projected,
+    /// Pinned by the user; the engine never rewrites it.
+    Locked,
+    InProgress,
+    Completed,
+    Skipped,
+}
+
+/// `write_kind_enum` — who last changed a microcycle (02 §7).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WriteKind {
+    Engine,
+    User,
+}
+
+/// `set_origin_enum` — whether a planned set is the engine's or the user's (FR-3.14).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SetOrigin {
+    Generated,
+    UserEdited,
+}
+
+macro_rules! named {
+    ($kind:ident { $($variant:ident => $name:literal),+ $(,)? }) => {
+        impl $kind {
+            /// The name this value carries in the schema, the shared fixtures and both bindings.
+            #[must_use]
+            pub fn from_name(name: &str) -> Option<Self> {
+                match name {
+                    $($name => Some(Self::$variant),)+
+                    _ => None,
+                }
+            }
+
+            /// The inverse of `from_name`.
+            #[must_use]
+            pub const fn name(self) -> &'static str {
+                match self {
+                    $(Self::$variant => $name,)+
+                }
+            }
+        }
+    };
+}
+
+named!(CycleStatus {
+    Projected => "projected",
+    Locked => "locked",
+    InProgress => "in_progress",
+    Completed => "completed",
+    Skipped => "skipped",
+});
+named!(WriteKind { Engine => "engine", User => "user" });
+named!(SetOrigin { Generated => "generated", UserEdited => "user_edited" });
+
+/// A `planned_sets` row.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PlanSet {
+    pub set_index: u32,
+    pub set_type: SetType,
+    pub target_weight_kg: Option<f64>,
+    pub target_reps: Option<u32>,
+    pub target_min_reps: Option<u32>,
+    pub target_max_reps: Option<u32>,
+    pub target_rir: Option<u32>,
+    pub was_clamped: bool,
+    pub origin: SetOrigin,
+    /// FR-3.14: the engine never touches a pinned set.
+    pub is_pinned: bool,
+}
+
+impl PlanSet {
+    /// The user owns this row: the engine keeps it exactly, and projects later cycles from it.
+    #[must_use]
+    pub const fn is_users(&self) -> bool {
+        matches!(self.origin, SetOrigin::UserEdited) || self.is_pinned
+    }
+}
+
+/// A `planned_exercises` row, with what the engine reads already resolved by the wrapper.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PlanExercise {
+    pub order_index: u32,
+    /// `planned_exercises.exercise_id`, opaque: two exercises are the same when these are equal.
+    pub exercise_id: String,
+    pub increment_kg: f64,
+    /// The rule on this cycle's row — so a strategy switched mid-block applies from the cycle it is on.
+    pub rule: Rule,
+    pub uses_bodyweight: bool,
+    pub body_weight_kg: Option<f64>,
+    pub sets: Vec<PlanSet>,
+}
+
+/// A `planned_sessions` row.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PlanSession {
+    pub day_index: u32,
+    pub order_index: u32,
+    pub exercises: Vec<PlanExercise>,
+}
+
+/// A `microcycles` row.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PlanCycle {
+    pub cycle_number: u32,
+    pub length_days: u32,
+    pub starts_on: EpochDay,
+    pub is_deload: bool,
+    pub status: CycleStatus,
+    pub engine_version: u32,
+    pub last_write_kind: WriteKind,
+    pub sessions: Vec<PlanSession>,
+}
+
+/// One logged set, placed on the planned set it was logged against (FR-3.15): the wrapper follows
+/// `set_logs.planned_set_id` to the planned row and passes its natural key. A set logged against no
+/// planned set is a deviation — recorded, never read here (FR-3.16).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PlanLog {
+    pub cycle_number: u32,
+    /// The planned session's `(day_index, order_index)`.
+    pub day_index: u32,
+    pub session_order_index: u32,
+    /// The planned exercise's `order_index` within that session.
+    pub exercise_order_index: u32,
+    pub set_index: u32,
+    /// Task 004's logged set, with body weight on its date already resolved (INV-07).
+    pub set: LoggedSet,
+}
+
+/// 01 §3.4 — how a planned exercise went.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Outcome {
+    /// Every counted set met its target, each at least two reps in reserve above it.
+    Exceeded,
+    /// Every counted set met its target.
+    Met,
+    /// A counted set fell short, or went to failure when the target left two in reserve.
+    Under,
+    /// Its session's day has passed, and nothing in the session was logged.
+    Missed,
+}
+
+named!(Outcome {
+    Exceeded => "exceeded",
+    Met => "met",
+    Under => "under",
+    Missed => "missed",
+});
+
+/// An outcome `reconcile` acted on — what stage 8's after-session diff and FR-3.12's suggestion read.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SlotOutcome {
+    pub cycle_number: u32,
+    pub exercise_id: String,
+    /// Which occurrence of the exercise in its cycle, in canonical order — squat on day 1 is 0.
+    pub occurrence: u32,
+    pub outcome: Outcome,
+    /// `percent_1rm` found no e1RM in the session and held the last one (FR-3.2c, INV-07).
+    pub open_loop: bool,
+}
+
+/// What `reconcile` returns: the whole plan, and the outcomes it acted on.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Reconciled {
+    pub cycles: Vec<PlanCycle>,
+    pub outcomes: Vec<SlotOutcome>,
 }

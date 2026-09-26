@@ -2,28 +2,34 @@
 //! ends in — [task 005](../../../docs/tasks/005-strength-progression-planner.md).
 //!
 //! Stages 1 and 2 build [`generate`] for the five v1 strategies, the three deload policies, the per-set
-//! RIR ladder and [`resolve_dates`]. `classify` and `reconcile` arrive in stage 3.
+//! RIR ladder and [`resolve_dates`]; stage 3a builds [`classify`] and [`reconcile`], which re-projects a
+//! plan from what was logged. Block edits — extending, shortening, a cycle's length — are stage 3b's.
 //!
 //! **What this module does not know, deliberately.** No ids: the engine names a row by its place in the
 //! plan and the wrappers mint the UUIDv7s ([ADR-002](../../../docs/decisions/ADR-002.md) § Amendment
 //! 2026-09-26). No units and no modalities: each exercise arrives with its increment already resolved,
 //! in kilograms (INV-01, INV-02). No calendar: a date is a count of days (see [`resolve_dates`]).
 
+mod classify;
 mod dates;
 mod deload;
 mod generate;
 mod plan;
+mod reconcile;
 mod rounding;
 mod strategies;
 
+pub use classify::classify;
 pub use dates::{EpochDay, MAX_LENGTH_DAYS, MIN_LENGTH_DAYS, resolve_dates};
 pub use deload::deload_schedule;
 pub use generate::generate;
 pub use plan::{
-    CycleOneSet, DeloadPolicy, ExerciseSpec, LengthOverride, LoadStep, MAX_MICROCYCLES,
-    MesocycleSpec, PlannedExercise, PlannedMicrocycle, PlannedSession, PlannedSet, RirMode, Rule,
-    SessionSpec, Strategy,
+    CycleOneSet, CycleStatus, DeloadPolicy, ExerciseSpec, FailurePolicy, LengthOverride, LoadStep,
+    MAX_MICROCYCLES, MesocycleSpec, Outcome, PlanCycle, PlanExercise, PlanLog, PlanSession,
+    PlanSet, PlannedExercise, PlannedMicrocycle, PlannedSession, PlannedSet, Reconciled, RirMode,
+    Rule, SessionSpec, SetOrigin, SlotOutcome, Strategy, WriteKind,
 };
+pub use reconcile::reconcile;
 pub use rounding::{RoundingMode, round_to_increment};
 
 /// The version of the engine that stamps every microcycle it projects (INV-06,

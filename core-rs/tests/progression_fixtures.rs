@@ -9,9 +9,10 @@
 //! [`epoch_day`] is written out here — in the test binary, never in the library.
 
 use cyberathlete_core::{
-    CycleOneSet, DeloadPolicy, ENGINE_VERSION, EpochDay, ExerciseSpec, LengthOverride, LoadStep,
-    MesocycleSpec, PlannedMicrocycle, PlannedSet, RirMode, RoundingMode, Rule, SessionSpec,
-    SetType, Strategy, generate, resolve_dates,
+    CycleOneSet, CycleStatus, DeloadPolicy, ENGINE_VERSION, EpochDay, ExerciseSpec, FailurePolicy,
+    LengthOverride, LoadStep, LoggedSet, MesocycleSpec, Outcome, PlanCycle, PlanExercise, PlanLog,
+    PlanSession, PlanSet, PlannedMicrocycle, PlannedSet, RirMode, RoundingMode, Rule, SessionSpec,
+    SetOrigin, SetType, SlotOutcome, Strategy, WriteKind, generate, reconcile, resolve_dates,
 };
 use serde::Deserialize;
 
@@ -161,6 +162,8 @@ struct FixtureRule {
     rir_end: Option<u32>,
     percent_wave_bp: Option<Vec<u32>>,
     baseline_e1rm_kg: Option<f64>,
+    failure_policy: String,
+    failure_load_bp: Option<u32>,
     rounding: String,
 }
 
@@ -257,7 +260,16 @@ fn build_rule(rule: &FixtureRule) -> Rule {
         },
         other => panic!("unknown rir_mode {other:?}"),
     };
+    let failure_policy = match rule.failure_policy.as_str() {
+        "hold" => FailurePolicy::Hold,
+        "repeat_cycle" => FailurePolicy::RepeatCycle,
+        "reduce_load" => FailurePolicy::ReduceLoad {
+            load_bp: rule.failure_load_bp.unwrap_or(9000),
+        },
+        other => panic!("unknown failure_policy {other:?}"),
+    };
     Rule {
+        failure_policy,
         strategy,
         min_reps: rule.min_reps,
         max_reps: rule.max_reps,
@@ -437,4 +449,245 @@ fn fixture_one_reads_as_the_owner_s_table() {
         42.5, 45.0, 47.5, 50.0, 30.0, 52.5, 55.0, 57.5, 60.0, 62.5, 37.5,
     ];
     assert_eq!(loads, table.map(Some).to_vec());
+}
+
+// ── reconcile ────────────────────────────────────────────────────────────────────────────────────
+//
+// Each case is a small plan with its logs; the whole reconciled plan and the outcomes are compared, so a
+// cycle that should not have moved is caught moving.
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ReconcileCase {
+    name: String,
+    mesocycle: FixtureMesocycle,
+    today: String,
+    plan: Vec<FixturePlanCycle>,
+    logs: Vec<FixturePlanLog>,
+    expected: FixtureReconciled,
+    #[allow(dead_code, reason = "prose for the reader; nothing to assert against")]
+    note: Option<String>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct FixtureReconciled {
+    cycles: Vec<FixturePlanCycle>,
+    outcomes: Vec<FixtureOutcome>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct FixturePlanCycle {
+    cycle_number: u32,
+    starts_on: String,
+    length_days: u32,
+    is_deload: bool,
+    status: String,
+    engine_version: u32,
+    last_write_kind: String,
+    sessions: Vec<FixturePlanSession>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct FixturePlanSession {
+    day_index: u32,
+    order_index: u32,
+    exercises: Vec<FixturePlanExercise>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct FixturePlanExercise {
+    order_index: u32,
+    exercise_id: String,
+    increment_kg: f64,
+    rule: FixtureRule,
+    uses_bodyweight: bool,
+    body_weight_kg: Option<f64>,
+    sets: Vec<FixturePlanSet>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct FixturePlanSet {
+    set_index: u32,
+    set_type: String,
+    target_weight_kg: Option<f64>,
+    target_reps: Option<u32>,
+    target_min_reps: Option<u32>,
+    target_max_reps: Option<u32>,
+    target_rir: Option<u32>,
+    was_clamped: bool,
+    origin: String,
+    is_pinned: bool,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct FixturePlanLog {
+    cycle_number: u32,
+    day_index: u32,
+    session_order_index: u32,
+    exercise_order_index: u32,
+    set_index: u32,
+    set: FixtureLoggedSet,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct FixtureLoggedSet {
+    set_type: String,
+    is_completed: bool,
+    weight_kg: Option<f64>,
+    reps: Option<u32>,
+    rir: Option<u32>,
+    uses_bodyweight: bool,
+    body_weight_kg: Option<f64>,
+    is_deload: bool,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct FixtureOutcome {
+    cycle_number: u32,
+    exercise_id: String,
+    occurrence: u32,
+    outcome: String,
+    open_loop: bool,
+}
+
+fn build_plan(cycles: &[FixturePlanCycle]) -> Vec<PlanCycle> {
+    cycles
+        .iter()
+        .map(|cycle| PlanCycle {
+            cycle_number: cycle.cycle_number,
+            length_days: cycle.length_days,
+            starts_on: epoch_day(&cycle.starts_on),
+            is_deload: cycle.is_deload,
+            status: CycleStatus::from_name(&cycle.status)
+                .unwrap_or_else(|| panic!("unknown status {:?}", cycle.status)),
+            engine_version: cycle.engine_version,
+            last_write_kind: WriteKind::from_name(&cycle.last_write_kind)
+                .unwrap_or_else(|| panic!("unknown write kind {:?}", cycle.last_write_kind)),
+            sessions: cycle
+                .sessions
+                .iter()
+                .map(|session| PlanSession {
+                    day_index: session.day_index,
+                    order_index: session.order_index,
+                    exercises: session
+                        .exercises
+                        .iter()
+                        .map(|exercise| PlanExercise {
+                            order_index: exercise.order_index,
+                            exercise_id: exercise.exercise_id.clone(),
+                            increment_kg: exercise.increment_kg,
+                            rule: build_rule(&exercise.rule),
+                            uses_bodyweight: exercise.uses_bodyweight,
+                            body_weight_kg: exercise.body_weight_kg,
+                            sets: exercise
+                                .sets
+                                .iter()
+                                .map(|set| PlanSet {
+                                    set_index: set.set_index,
+                                    set_type: set_type(&set.set_type),
+                                    target_weight_kg: set.target_weight_kg,
+                                    target_reps: set.target_reps,
+                                    target_min_reps: set.target_min_reps,
+                                    target_max_reps: set.target_max_reps,
+                                    target_rir: set.target_rir,
+                                    was_clamped: set.was_clamped,
+                                    origin: SetOrigin::from_name(&set.origin).unwrap_or_else(
+                                        || panic!("unknown origin {:?}", set.origin),
+                                    ),
+                                    is_pinned: set.is_pinned,
+                                })
+                                .collect(),
+                        })
+                        .collect(),
+                })
+                .collect(),
+        })
+        .collect()
+}
+
+fn build_logs(logs: &[FixturePlanLog]) -> Vec<PlanLog> {
+    logs.iter()
+        .map(|log| PlanLog {
+            cycle_number: log.cycle_number,
+            day_index: log.day_index,
+            session_order_index: log.session_order_index,
+            exercise_order_index: log.exercise_order_index,
+            set_index: log.set_index,
+            set: LoggedSet {
+                set_type: set_type(&log.set.set_type),
+                is_completed: log.set.is_completed,
+                weight_kg: log.set.weight_kg,
+                reps: log.set.reps,
+                rir: log.set.rir,
+                uses_bodyweight: log.set.uses_bodyweight,
+                body_weight_kg: log.set.body_weight_kg,
+                is_deload: log.set.is_deload,
+            },
+        })
+        .collect()
+}
+
+#[test]
+fn every_reconcile_case_agrees() {
+    let fixture: Fixture<ReconcileCase> = load("reconcile.json");
+    assert!(!fixture.cases.is_empty(), "the fixture must hold cases");
+
+    for case in &fixture.cases {
+        let actual = reconcile(
+            &build_mesocycle(&case.mesocycle),
+            &build_plan(&case.plan),
+            &build_logs(&case.logs),
+            epoch_day(&case.today),
+        );
+        let expected = build_plan(&case.expected.cycles);
+
+        assert_eq!(
+            actual.cycles.len(),
+            expected.len(),
+            "case {:?}: cycle count",
+            case.name
+        );
+        for (got, want) in actual.cycles.iter().zip(&expected) {
+            assert_eq!(
+                got, want,
+                "case {:?}, cycle {}",
+                case.name, want.cycle_number
+            );
+        }
+        let outcomes: Vec<SlotOutcome> = case
+            .expected
+            .outcomes
+            .iter()
+            .map(|it| SlotOutcome {
+                cycle_number: it.cycle_number,
+                exercise_id: it.exercise_id.clone(),
+                occurrence: it.occurrence,
+                outcome: Outcome::from_name(&it.outcome)
+                    .unwrap_or_else(|| panic!("unknown outcome {:?}", it.outcome)),
+                open_loop: it.open_loop,
+            })
+            .collect();
+        assert_eq!(actual.outcomes, outcomes, "case {:?}: outcomes", case.name);
+
+        // INV-10: once more on its own output, with the same logs, changes nothing.
+        let again = reconcile(
+            &build_mesocycle(&case.mesocycle),
+            &actual.cycles,
+            &build_logs(&case.logs),
+            epoch_day(&case.today),
+        );
+        assert_eq!(
+            again.cycles, actual.cycles,
+            "case {:?}: not idempotent",
+            case.name
+        );
+    }
 }

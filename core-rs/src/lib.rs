@@ -19,9 +19,11 @@ pub mod progression;
 pub mod strength;
 
 pub use progression::{
-    CycleOneSet, DeloadPolicy, ENGINE_VERSION, EpochDay, ExerciseSpec, LengthOverride, LoadStep,
-    MesocycleSpec, PlannedExercise, PlannedMicrocycle, PlannedSession, PlannedSet, RirMode,
-    RoundingMode, Rule, SessionSpec, Strategy, generate, resolve_dates, round_to_increment,
+    CycleOneSet, CycleStatus, DeloadPolicy, ENGINE_VERSION, EpochDay, ExerciseSpec, FailurePolicy,
+    LengthOverride, LoadStep, MesocycleSpec, Outcome, PlanCycle, PlanExercise, PlanLog,
+    PlanSession, PlanSet, PlannedExercise, PlannedMicrocycle, PlannedSession, PlannedSet,
+    Reconciled, RirMode, RoundingMode, Rule, SessionSpec, SetOrigin, SlotOutcome, Strategy,
+    WriteKind, classify, generate, reconcile, resolve_dates, round_to_increment,
 };
 pub use strength::{
     LoggedSet, MAX_EFFECTIVE_REPS, PersonalBests, PrAchievement, PrKind, RepsAtWeight,

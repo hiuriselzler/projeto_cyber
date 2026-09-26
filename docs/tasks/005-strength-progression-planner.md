@@ -139,7 +139,8 @@ no phone.
 | **0** | The task file catches up with [ADR-004](../decisions/ADR-004.md)'s option B — see below | ☑ |
 | **1** | **The engine's foundation:** the plan's types, `resolve_dates`, `ENGINE_VERSION`, `generate` for `linear_load` and `fixed`, the three deload policies, the property-test harness, **fixture #1** | ☑ |
 | **2** | The other three v1 strategies — `double_progression`, `percent_1rm` (total, via `baseline_e1rm_kg`), `rir_autoregulated` — and the per-set RIR ladder, clamped and marked (INV-05) | ☑ |
-| **3** | `classify` and `reconcile`: the INV-06 guard, the older engine yielding, user edits and pins surviving (FR-3.14), a strategy switched from the load achieved (FR-3.6a), extending and shortening a block, and date re-derivation | ☐ |
+| **3a** | `classify` and `reconcile`: the INV-06 guard, the older engine yielding, outcomes and `failure_policy`, user edits and pins surviving (FR-3.14) | ☑ |
+| **3b** | Block edits: extending and shortening a block, a cycle's length changing with date re-derivation, a strategy switched mid-block from the load achieved (FR-3.6a) with its preview | ☐ |
 | **4** | Persistence and API (Phase B): the batched insert on both sides, the endpoints, reconciliation on workout completion; the engine reaches the app through UniFFI (the WSL2 loop in [06 §1](../06-operations.md)) | ☐ |
 | **5** | The engine safety controls: the per-strategy kill switch and the minimum engine version | ☐ |
 | **6** | The mesocycle builder, with the whole block previewed before it is committed — device pass | ☐ |
@@ -346,6 +347,140 @@ Stage 2 carries six decisions, each the owner's, each with a recommendation:
   rep step, and a negative added load.
 - *Counts:* 88 core unit tests, 4 fixture tests, 7 properties; 35 pytest; 111 Jest checks on the fixture files.
 
+**Stage 3 — `classify` and `reconcile`. Proposed and approved 2026-09-26, every decision as recommended: split into 3a
+and 3b; 3a built the same day (below the decisions).** The riskiest code in the task: a bug here silently
+destroys a user's deliberate changes (§ Notes and risks).
+
+*The model that makes it safe.* Generation already works as *cycle 1, plus N steps, rounded once*. Reconciliation
+generalises it: each exercise progresses from its latest **anchor**, and a projected cycle is the anchor plus the
+working steps since it, rounded once. An anchor is a prescription or performance that is fixed:
+- cycle 1;
+- a logged session, adjusted by its outcome;
+- a locked cycle;
+- a user-edited or pinned set.
+
+With no logs and no edits, the only anchor is cycle 1, so **reconciling a freshly generated plan must return it
+unchanged**. That becomes a property, and it is what stops the first reconciliation from rewriting a whole block.
+`generate` is rebuilt on the same machinery — each strategy as a state, a step and a prescription — so the two cannot
+drift apart.
+
+**Recommended split**, as task 004 split its stage 5 when one stage held too much:
+- **3a:** `classify`; `reconcile` with the INV-06 guard and the older engine yielding; outcomes applied, `failure_policy`
+  included; user edits and pins surviving.
+- **3b:** extending and shortening a block, a cycle's length changing with date re-derivation, and a strategy switched
+  mid-block with its preview. 3b gets its own plan after 3a lands.
+
+*Stage 3a would close:*
+- editing cycle 9's squat then completing cycle 4 leaves the edit untouched;
+- met targets advance the next cycle, missed reps apply `failure_policy`;
+- reconciliation never alters a `completed`, `in_progress` or `locked` cycle — the engine half; task 002's trigger is
+  the other half, already proven;
+- reconciling twice gives identical output;
+- the older engine yields;
+- a user edit made under an older engine survives a newer projection.
+
+Its properties: idempotence; only `projected` cycles differ; `user_edited` and pinned sets never change; reconciling
+a generated plan with no logs changes nothing; a plan holding any newer `engine_version` is returned unchanged.
+
+Stage 3a carries seven decisions, each the owner's, each with a recommendation:
+
+1. **Split stage 3 into 3a and 3b**, as above. **Recommended.**
+2. **How `reconcile` knows "the same exercise" from one cycle to the next.** Sessions can move within a shorter cycle,
+   and stage 7 will let a user add a session to one future cycle, so neither the session's natural key nor its position
+   is stable. **Recommended:** each planned exercise carries its `exercise_id` as an **opaque reference** the engine
+   compares and never interprets. An exercise's slot is its `exercise_id` plus which occurrence it is within its cycle,
+   in canonical order, so a squat on day 1 and a squat on day 4 are two slots. This is a reference to the catalog, not
+   an id the engine mints, so ADR-002's amendment is unchanged. The alternative, position alone, silently re-anchors
+   the wrong exercise the first time a cycle's structure is edited.
+3. **What `classify` counts** (01 §3.4). Only counted sets (INV-04), and only sets matched to a planned set through
+   `planned_set_id`. Extra sets and swapped exercises are recorded and never read (FR-3.16). A planned counted set with
+   no completed log, in a session that was logged, fell short. **The table has a gap**: reps below the target but
+   at or above `min_reps` fit no row. **Recommended: `Met` needs every counted set at its target reps; anything short is
+   `Under`.** So the rule's `failure_policy`, `hold` by default, applies — what a lifter does after a missed rep. The
+   alternative, only a set below `min_reps` counting as `Under`, would let the plan progress past a missed rep.
+   - `Exceeded`: every set met its target and every set's logged RIR is at least target + 2.
+   - `Under`, also: any set logged at RIR 0 when its target was 2 or more.
+   - A missing RIR is no signal: it can never make an outcome `Exceeded`, and never `Under` by the RIR clause (INV-03).
+   - `Missed`: a session whose date has passed — this is what `reconcile`'s `now` is for — with nothing logged.
+4. **What each outcome does next.** `Met` takes one step from **the achieved state**: the loads and reps actually
+   logged, which is how FR-3.6a's "from where the user actually is" works. `Exceeded` takes two steps. `Under`
+   applies `failure_policy`:
+   - `hold` repeats the prescription;
+   - `reduce_load` prescribes it at `failure_load_bp`;
+   - **`repeat_cycle` repeats the failed cycle's prescriptions for every exercise in it in the next working cycle**,
+     without inserting a cycle, so the block keeps its length and end date. Inserting one would move every later date
+     for one bad session.
+
+   Per strategy:
+   - a step is a load step for `linear_load` and `rir_autoregulated`, a rep step for `double_progression` (capped as
+     in stage 2), and nothing for `fixed`;
+   - `percent_1rm` instead **re-reads the best e1RM of the session's counted sets** (INV-07), so `Exceeded` needs no
+     second step. It holds the last one when the session yields none, running open-loop (FR-3.2c).
+   - That e1RM lives in the anchor, never written back to the rule, because a rule can be a shared preset.
+
+   `Missed` changes nothing: the block continues as projected, which is the "skip" of 01 §3.4. "Shift the block" is
+   a user action on dates and belongs with 3b.
+5. **User edits and pins** (FR-3.14). **Recommended:** a `user_edited` or pinned set is never changed. In the cycle
+   that holds it, its exercise's prescription as it now stands — edited rows as edited, the rest as projected — becomes
+   that exercise's anchor, assumed `Met`. The cycle's other rows are re-projected as usual. A locked cycle anchors every
+   exercise in it the same way.
+6. **The guard and the stamp** (INV-06, 02 §7).
+   - **If any cycle carries an `engine_version` above this engine's, the whole plan comes back unchanged**: the older
+     engine yields.
+   - Otherwise only `projected` cycles are rewritten, each stamped with `ENGINE_VERSION` and `last_write_kind =
+     'engine'`; their user-edited and pinned rows are untouched, as 02 §7 describes.
+   - **Belt and braces:** a cycle holding any logged set is treated as started even if its status still says
+     `projected`, so a lagging status can never let the engine rewrite a workout in flight.
+7. **The input and output.** Input: the mesocycle spec, every cycle as rows (status, `engine_version`,
+   `last_write_kind`, and sets carrying `origin` and `is_pinned`), each exercise with its rule, increment, body weight
+   and `exercise_id`. Logs are task 004's `LoggedSet`, keyed by the planned set's natural key, with body weight
+   already resolved for its date. Output: the whole plan, plus **the outcomes it acted on** — cycle, exercise slot,
+   outcome, and whether `percent_1rm` ran open-loop — which the after-session diff and FR-3.12's two-`Under`s
+   suggestion read in stage 8.
+
+**Stage 3a — built 2026-09-26.** The rules are written into [01 §3.4](../01-business-requirements.md) as *Exactly how
+the table is read*, and into FR-3.11.
+- *Code:*
+  - `core-rs/src/progression/` gains `classify.rs` and `reconcile.rs`.
+  - `strategies.rs` now prescribes from an **anchor** through one `project` function, which `generate` calls with
+    cycle 1 as the anchor. The deload arithmetic moved into `deload.rs` so both paths share it.
+  - `plan.rs` gains the plan as rows (`PlanCycle` down to `PlanSet`), the schema's status, write-kind and origin enums,
+    `PlanLog`, `Outcome`, `SlotOutcome` and `Reconciled`. `Rule` gains `failure_policy`.
+  - PyO3 exposes `classify` and `reconcile`, and the rule takes `failure_policy` and `failure_load_bp`.
+- *Fixtures:* `reconcile.json` holds 18 cases, each also reconciled a second time to prove idempotence:
+  - Met from the load lifted; Exceeded's two steps; Under under `hold` and under `reduce_load`;
+  - `repeat_cycle` holding a whole cycle; failure against a planned reserve; no RIR logged; a missed session;
+  - the cycle-9 criterion; a pin; a lock; an edit under an older engine; the older engine yielding;
+  - a logged set in a cycle still marked projected;
+  - `percent_1rm` re-reading its e1RM, and running open-loop;
+  - double progression from the reps done; a deload re-projected from the new last working cycle.
+
+  `generate.json` gains the two failure columns on every rule and no change of output.
+- *Properties:* `core-rs/tests/reconcile_properties.rs` runs over random blocks with random histories — started
+  cycles with random logs, locks, skips, user edits and pins, older stamps, stray logs, a random today. The generators
+  moved to `tests/common/` for both property files to share. The properties:
+  - reconciling a generated plan changes nothing;
+  - reconciling twice is reconciling once;
+  - only projected cycles with nothing logged differ, and a user's rows never do;
+  - what the engine writes is liftable and inside its rule;
+  - a newer stamp anywhere returns the plan as given.
+
+  Deliberately rewriting locked or completed cycles, dropping a user's rows, or lifting the version guard each
+  failed a property.
+- **Found by the properties, and fixed before commit:**
+  - *A deload after cycle 1 read cycle 1 differently in the two paths.* `generate` multiplies cycle 1 as the engine
+    reads it — on the grid, clamped, a double progression's range attached. `reconcile` multiplied the raw rows, so
+    a fresh plan with a deload at cycle 2 did not reconcile to itself. Shrinking cut it to a 2-cycle block.
+    `reconcile` now reads an exercise's first appearance as `generate` does, which changes no fixture.
+  - *A deload after a user's edit could repeat reps outside the rule*, because the deload copied the reps it
+    multiplied. It now clamps them too, and marks `was_clamped` (INV-05).
+- **Noted for stage 4:** the engine's output is idempotent. Stage 4 must write only the rows that changed, or
+  `updated_at` alone would make "byte-identical plan rows" false in the database.
+- **Noted for stage 7:** a user's *deletion* of a generated set in a projected cycle is not an edit the engine can
+  see, so reconciliation would regenerate the set. Editing a future cycle is stage 7's, which will need a
+  representation for it — a pinned tombstone, say — before it ships.
+- *Counts:* 95 core unit tests, 5 fixture tests, 12 properties; 55 pytest; 183 Jest checks on the fixture files.
+
 ## Acceptance criteria
 - [ ] Fixture #1 (the user's 40 → 62.5 kg example) passes in every suite — `cargo test`, pytest through PyO3, and
       the app on the device through UniFFI
@@ -359,22 +494,25 @@ Stage 2 carries six decisions, each the owner's, each with a recommendation:
       `3×6@40 → 3×7@40 → 3×8@40 → 3×6@42.5` — *stage 2: `generate.json` and a core unit test*
 - [x] No generated weight is ever a non-multiple of the increment, over 10 000 random rules — *stage 2:
       `no_load_is_ever_off_the_grid_over_ten_thousand_rules`, all five strategies*
-- [ ] Editing cycle 9's squat, then completing cycle 4, leaves cycle 9's edit untouched
+- [x] Editing cycle 9's squat, then completing cycle 4, leaves cycle 9's edit untouched — *stage 3a:
+      `reconcile.json`, and a property over random edits*
 - [x] A block of **9-day microcycles** generates correctly, and cycle 3 starts 18 days after
       cycle 1 — no weekday assumption anywhere (INV-25) — *stage 1: `generate.json` and `resolve_dates.json`, in
       `cargo test` and pytest*
 - [ ] A block of mostly 7-day cycles with **one 5-day cycle** in the middle re-derives every
       later start date correctly, and refuses to move a completed cycle
 - [ ] The cycle view and the calendar view show the same sessions for the same block
-- [ ] Completing a cycle with all targets met advances the next cycle; missing reps applies
-      `failure_policy` instead
-- [ ] Reconciliation never alters a `completed`, `in_progress` or `locked` cycle — asserted by the
-      DB trigger from task 002 as well as by the engine
-- [ ] Running reconciliation twice produces byte-identical plan rows
-- [ ] A plan projected at engine version N+1, reconciled by an engine at version N, is left
-      byte-identical — the older engine yields (INV-06)
-- [ ] A user edit to a projected cycle, made under an older engine, survives a projection from a
-      newer one, and the newer engine re-projects the cycle's other rows from that edit (FR-3.14)
+- [x] Completing a cycle with all targets met advances the next cycle; missing reps applies
+      `failure_policy` instead — *stage 3a: `reconcile.json`, all three policies*
+- [x] Reconciliation never alters a `completed`, `in_progress` or `locked` cycle — asserted by the
+      DB trigger from task 002 as well as by the engine — *the trigger proven in task 002's suite; the engine by
+      stage 3a's property over random histories*
+- [x] Running reconciliation twice produces byte-identical plan rows — *stage 3a: every `reconcile.json` case and a
+      property. Stage 4 must write only changed rows to keep it true in the database*
+- [x] A plan projected at engine version N+1, reconciled by an engine at version N, is left
+      byte-identical — the older engine yields (INV-06) — *stage 3a: `reconcile.json` and a property*
+- [x] A user edit to a projected cycle, made under an older engine, survives a projection from a
+      newer one, and the newer engine re-projects the cycle's other rows from that edit (FR-3.14) — *stage 3a*
 - [ ] A 24-cycle block with `deload_mode = 'none'` generates 24 working cycles and never inserts
       a deload or nags about one
 - [ ] Extending a 12-cycle block to 18 appends projected cycles and changes nothing before them;

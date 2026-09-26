@@ -1,4 +1,4 @@
-"""The Rust core's progression engine, called from Python — task 005 stage 1 on the server.
+"""The Rust core's progression engine, called from Python — task 005 on the server.
 
 These run the same `packages/shared/fixtures/` files the Rust suite reads, fixture #1 among them —
 the owner's 40 -> 62.5 kg example. Under ADR-004 option B the arithmetic is one implementation, so
@@ -15,19 +15,30 @@ import pytest
 from app.domain.progression import (
     ENGINE_VERSION,
     CycleOneSet,
+    CycleStatus,
     ExerciseSpec,
     MesocycleSpec,
+    Outcome,
+    PlanCycle,
+    PlanExercise,
+    PlanLog,
     PlannedMicrocycle,
+    PlanSession,
+    PlanSet,
     ProgressionRule,
     ProgressionStrategy,
     SessionSpec,
+    SetOrigin,
+    WriteKind,
+    classify,
     epoch_day,
     from_epoch_day,
     generate,
+    reconcile,
     resolve_dates,
 )
 from app.domain.rounding import RoundingMode
-from app.domain.strength import SetType
+from app.domain.strength import LoggedSet, SetType
 from tests.fixtures.loader import load_fixture
 
 
@@ -49,6 +60,8 @@ def _rule(spec: dict[str, Any]) -> ProgressionRule:
         rir_end=spec["rir_end"],
         rir_mode=spec["rir_mode"],
         rir_offsets=spec["rir_offsets"] or [],
+        failure_policy=spec["failure_policy"],
+        failure_load_bp=spec["failure_load_bp"],
     )
 
 
@@ -251,3 +264,202 @@ def test_cycle_pattern_is_refused_by_name_as_v2() -> None:
     # half-implemented.
     with pytest.raises(ValueError, match="v2"):
         ProgressionStrategy.from_name("cycle_pattern")
+
+
+# ── reconcile (stage 3a) ──────────────────────────────────────────────────────────────────────────
+
+
+def _plan(cycles: list[dict[str, Any]]) -> list[PlanCycle]:
+    return [
+        PlanCycle(
+            cycle_number=cycle["cycle_number"],
+            length_days=cycle["length_days"],
+            starts_on=epoch_day(date.fromisoformat(cycle["starts_on"])),
+            is_deload=cycle["is_deload"],
+            status=CycleStatus.from_name(cycle["status"]),
+            engine_version=cycle["engine_version"],
+            last_write_kind=WriteKind.from_name(cycle["last_write_kind"]),
+            sessions=[
+                PlanSession(
+                    day_index=session["day_index"],
+                    order_index=session["order_index"],
+                    exercises=[
+                        PlanExercise(
+                            order_index=exercise["order_index"],
+                            exercise_id=exercise["exercise_id"],
+                            increment_kg=exercise["increment_kg"],
+                            rule=_rule(exercise["rule"]),
+                            sets=[
+                                PlanSet(
+                                    set_index=s["set_index"],
+                                    set_type=SetType.from_name(s["set_type"]),
+                                    target_weight_kg=s["target_weight_kg"],
+                                    target_reps=s["target_reps"],
+                                    target_min_reps=s["target_min_reps"],
+                                    target_max_reps=s["target_max_reps"],
+                                    target_rir=s["target_rir"],
+                                    was_clamped=s["was_clamped"],
+                                    origin=SetOrigin.from_name(s["origin"]),
+                                    is_pinned=s["is_pinned"],
+                                )
+                                for s in exercise["sets"]
+                            ],
+                            uses_bodyweight=exercise["uses_bodyweight"],
+                            body_weight_kg=exercise["body_weight_kg"],
+                        )
+                        for exercise in session["exercises"]
+                    ],
+                )
+                for session in cycle["sessions"]
+            ],
+        )
+        for cycle in cycles
+    ]
+
+
+def _logs(logs: list[dict[str, Any]]) -> list[PlanLog]:
+    return [
+        PlanLog(
+            cycle_number=log["cycle_number"],
+            day_index=log["day_index"],
+            session_order_index=log["session_order_index"],
+            exercise_order_index=log["exercise_order_index"],
+            set_index=log["set_index"],
+            set=LoggedSet(
+                set_type=SetType.from_name(log["set"]["set_type"]),
+                is_completed=log["set"]["is_completed"],
+                weight_kg=log["set"]["weight_kg"],
+                reps=log["set"]["reps"],
+                rir=log["set"]["rir"],
+                uses_bodyweight=log["set"]["uses_bodyweight"],
+                body_weight_kg=log["set"]["body_weight_kg"],
+                is_deload=log["set"]["is_deload"],
+            ),
+        )
+        for log in logs
+    ]
+
+
+def _cycle_as_fixture(cycle: PlanCycle) -> dict[str, Any]:
+    """A reconciled cycle as plain data, every field a fixture writes except the rule: the engine
+    passes it through untouched, a `ProgressionRule` exposes none of its fields to Python, and the
+    Rust suite compares it whole."""
+    return {
+        "cycle_number": cycle.cycle_number,
+        "starts_on": from_epoch_day(cycle.starts_on).isoformat(),
+        "length_days": cycle.length_days,
+        "is_deload": cycle.is_deload,
+        "status": cycle.status.name,
+        "engine_version": cycle.engine_version,
+        "last_write_kind": cycle.last_write_kind.name,
+        "sessions": [
+            {
+                "day_index": session.day_index,
+                "order_index": session.order_index,
+                "exercises": [
+                    {
+                        "order_index": exercise.order_index,
+                        "exercise_id": exercise.exercise_id,
+                        "increment_kg": exercise.increment_kg,
+                        "uses_bodyweight": exercise.uses_bodyweight,
+                        "body_weight_kg": exercise.body_weight_kg,
+                        "sets": [
+                            {
+                                "set_index": s.set_index,
+                                "set_type": s.set_type.name,
+                                "target_weight_kg": s.target_weight_kg,
+                                "target_reps": s.target_reps,
+                                "target_min_reps": s.target_min_reps,
+                                "target_max_reps": s.target_max_reps,
+                                "target_rir": s.target_rir,
+                                "was_clamped": s.was_clamped,
+                                "origin": s.origin.name,
+                                "is_pinned": s.is_pinned,
+                            }
+                            for s in exercise.sets
+                        ],
+                    }
+                    for exercise in session.exercises
+                ],
+            }
+            for session in cycle.sessions
+        ],
+    }
+
+
+def _without_rules(cycles: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [
+        {
+            **cycle,
+            "sessions": [
+                {
+                    **session,
+                    "exercises": [
+                        {key: value for key, value in exercise.items() if key != "rule"}
+                        for exercise in session["exercises"]
+                    ],
+                }
+                for session in cycle["sessions"]
+            ],
+        }
+        for cycle in cycles
+    ]
+
+
+RECONCILE = load_fixture("reconcile")["cases"]
+
+
+@pytest.mark.parametrize("case", RECONCILE, ids=[case["name"] for case in RECONCILE])
+def test_every_reconcile_case_agrees(case: dict[str, Any]) -> None:
+    today = epoch_day(date.fromisoformat(case["today"]))
+    logs = _logs(case["logs"])
+    reconciled = reconcile(_mesocycle(case["mesocycle"]), _plan(case["plan"]), logs, today)
+
+    assert [_cycle_as_fixture(it) for it in reconciled.cycles] == _without_rules(
+        case["expected"]["cycles"]
+    )
+    assert [
+        {
+            "cycle_number": it.cycle_number,
+            "exercise_id": it.exercise_id,
+            "occurrence": it.occurrence,
+            "outcome": it.outcome.name,
+            "open_loop": it.open_loop,
+        }
+        for it in reconciled.outcomes
+    ] == case["expected"]["outcomes"]
+
+    # INV-10, through the binding: once more on its own output changes nothing.
+    again = reconcile(_mesocycle(case["mesocycle"]), reconciled.cycles, logs, today)
+    assert [_cycle_as_fixture(it) for it in again.cycles] == [
+        _cycle_as_fixture(it) for it in reconciled.cycles
+    ]
+
+
+def test_classify_reads_the_table_through_the_binding() -> None:
+    planned = [PlanSet(set_index=0, set_type=SetType.Working, target_reps=6, target_rir=3)]
+
+    def logged(reps: int, rir: int | None) -> list[PlanLog]:
+        return [
+            PlanLog(
+                cycle_number=1,
+                day_index=1,
+                session_order_index=0,
+                exercise_order_index=0,
+                set_index=0,
+                set=LoggedSet(
+                    set_type=SetType.Working, is_completed=True, weight_kg=40.0, reps=reps, rir=rir
+                ),
+            )
+        ]
+
+    assert classify(planned, []) == Outcome.Missed
+    assert classify(planned, logged(6, 3)) == Outcome.Met
+    assert classify(planned, logged(6, 5)) == Outcome.Exceeded
+    assert classify(planned, logged(5, 3)) == Outcome.Under
+    assert classify(planned, logged(6, None)) == Outcome.Met
+
+
+def test_an_unknown_failure_policy_is_refused() -> None:
+    with pytest.raises(ValueError, match="unknown failure_policy"):
+        ProgressionRule(ProgressionStrategy.Fixed, min_reps=5, max_reps=5, failure_policy="deload")

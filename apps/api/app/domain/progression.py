@@ -10,7 +10,10 @@ arithmetic (INV-10). Import it from here, never `cyberathlete_core` directly —
   default for the user's unit system, then 2.5 kg / 5 lb — in exact kilograms;
 - each exercise's **rule**, resolved through FR-3.6's cascade;
 - the **ids**: the engine names rows by their place in the plan, and the caller mints a UUIDv7 for
-  each row it creates (ADR-002 § Amendment 2026-09-26).
+  each row it creates (ADR-002 § Amendment 2026-09-26);
+- for `reconcile`, **each logged set placed on its planned set** — `set_logs.planned_set_id`
+  followed to the planned row's natural key — with body weight on the set's date resolved, and each
+  planned exercise's `exercise_id`, which the engine compares and never reads.
 
 **Dates cross the core as whole days since 1970-01-01** (task 005, stage 1, decision 6). The two
 helpers below are the only conversion, so a date is never an off-by-one between two call sites.
@@ -21,16 +24,29 @@ from datetime import date, timedelta
 from cyberathlete_core import (
     ENGINE_VERSION,
     CycleOneSet,
+    CycleStatus,
     ExerciseSpec,
     MesocycleSpec,
+    Outcome,
+    PlanCycle,
+    PlanExercise,
+    PlanLog,
     PlannedExercise,
     PlannedMicrocycle,
     PlannedSession,
     PlannedSet,
+    PlanSession,
+    PlanSet,
     ProgressionRule,
     ProgressionStrategy,
+    Reconciled,
     SessionSpec,
+    SetOrigin,
+    SlotOutcome,
+    WriteKind,
+    classify,
     generate,
+    reconcile,
     resolve_dates,
 )
 
@@ -50,17 +66,30 @@ def from_epoch_day(days: int) -> date:
 __all__ = [
     "ENGINE_VERSION",
     "CycleOneSet",
+    "CycleStatus",
     "ExerciseSpec",
     "MesocycleSpec",
+    "Outcome",
+    "PlanCycle",
+    "PlanExercise",
+    "PlanLog",
+    "PlanSession",
+    "PlanSet",
     "PlannedExercise",
     "PlannedMicrocycle",
     "PlannedSession",
     "PlannedSet",
     "ProgressionRule",
     "ProgressionStrategy",
+    "Reconciled",
     "SessionSpec",
+    "SetOrigin",
+    "SlotOutcome",
+    "WriteKind",
+    "classify",
     "epoch_day",
     "from_epoch_day",
     "generate",
+    "reconcile",
     "resolve_dates",
 ]

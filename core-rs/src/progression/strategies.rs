@@ -1,28 +1,75 @@
-//! 01 §3.2 — what each strategy prescribes for a working cycle.
+//! 01 §3.2 — what each strategy prescribes for a working cycle, from an **anchor**.
 //!
-//! One function per strategy, each from cycle 1's sets and the cycle's place in the block. **Open-loop**:
-//! there are no logs at generation, so each projects as if every working cycle were `Met`. A deload is
-//! not here — it multiplies whatever a strategy prescribed last ([`generate`](super::generate)).
+//! An anchor is the last fixed point an exercise's progression stands on: cycle 1 in a freshly generated
+//! block; after that, a logged session adjusted by its outcome, a locked cycle, or a user's edit (task 005
+//! stage 3). Every projection is *the anchor, plus the steps since it, rounded once* — so error never
+//! accumulates, and a block with no anchor but cycle 1 is exactly the block [`generate`](super::generate)
+//! wrote. Both `generate` and `reconcile` prescribe through [`project`] for that reason: they cannot drift.
+//!
+//! **Open-loop**: between anchors each strategy projects as if every working cycle were `Met`. A deload
+//! is not here — it multiplies whatever a strategy prescribed last ([`deload_sets`](super::deload)).
 //!
 //! Every load leaves through the rule's own rounding (INV-02), and every rep and RIR target through the
 //! clamp that marks `was_clamped` (INV-05). The rules each strategy follows are written out in 01 §3.2.
 
-use super::plan::{CycleOneSet, ExerciseSpec, LoadStep, PlannedSet, RirMode, Strategy};
+use super::plan::{
+    CycleOneSet, ExerciseSpec, LoadStep, PlanExercise, PlannedSet, RirMode, Rule, Strategy,
+};
 use super::{BASIS_POINTS, round_to_increment};
 use crate::strength::is_counted_type;
 
-/// Where a working cycle stands in its block.
+/// What prescribing an exercise reads besides its anchor: its rule, and what the wrapper resolved.
+#[derive(Debug, Clone, Copy)]
+pub(super) struct Prescriber<'a> {
+    pub rule: &'a Rule,
+    pub increment_kg: f64,
+    pub uses_bodyweight: bool,
+    pub body_weight_kg: Option<f64>,
+}
+
+impl<'a> Prescriber<'a> {
+    pub(super) const fn of_spec(exercise: &'a ExerciseSpec) -> Self {
+        Self {
+            rule: &exercise.rule,
+            increment_kg: exercise.increment_kg,
+            uses_bodyweight: exercise.uses_bodyweight,
+            body_weight_kg: exercise.body_weight_kg,
+        }
+    }
+
+    pub(super) const fn of_plan(exercise: &'a PlanExercise) -> Self {
+        Self {
+            rule: &exercise.rule,
+            increment_kg: exercise.increment_kg,
+            uses_bodyweight: exercise.uses_bodyweight,
+            body_weight_kg: exercise.body_weight_kg,
+        }
+    }
+}
+
+/// Where a working cycle stands relative to its exercise's anchor.
 #[derive(Debug, Clone, Copy)]
 pub(super) struct Progress {
-    /// Working cycles since cycle 1: cycle 1 is 0, and a deload does not count (01 FR-3.9).
-    pub step: u32,
+    /// Progression steps taken since the anchor: load steps, or rep steps for double progression. After
+    /// an `Exceeded` anchor the first cycle takes two; after `hold`, none.
+    pub steps: u32,
+    /// The cycle's place in the exercise's sequence — the wave's index for `percent_1rm`, the RIR descent's
+    /// for `rir_autoregulated`. Cycle 1 is 0; a deload does not count (01 FR-3.9); a held cycle repeats
+    /// the position it holds.
+    pub position: u32,
     /// Working cycles in the whole block, cycle 1 included — what `rir_autoregulated` descends across.
     pub working_cycles: u32,
 }
 
-/// Every set of `exercise` as a working cycle at `at` prescribes it, in `set_index` order.
-pub(super) fn working_sets(exercise: &ExerciseSpec, at: Progress) -> Vec<PlannedSet> {
-    let mut sets: Vec<&CycleOneSet> = exercise.sets.iter().collect();
+/// Every set of the anchor as a working cycle at `at` prescribes it, in `set_index` order. `e1rm_kg` is
+/// the latest e1RM `percent_1rm` has read from a log, if any; without one the rule's baseline stands.
+pub(super) fn project(
+    exercise: Prescriber<'_>,
+    anchor: &[CycleOneSet],
+    e1rm_kg: Option<f64>,
+    at: Progress,
+) -> Vec<PlannedSet> {
+    let mut sets: Vec<&CycleOneSet> = anchor.iter().collect();
     sets.sort_by_key(|set| set.set_index);
 
     match &exercise.rule.strategy {
@@ -33,17 +80,23 @@ pub(super) fn working_sets(exercise: &ExerciseSpec, at: Progress) -> Vec<Planned
         Strategy::LinearLoad(step) => sets
             .into_iter()
             .map(|set| {
-                let load = set.target_weight_kg.map(|kg| advance(kg, *step, at.step));
+                let load = set.target_weight_kg.map(|kg| advance(kg, *step, at.steps));
                 held(exercise, set, load)
             })
             .collect(),
         Strategy::DoubleProgression { step, rep_step } => {
-            double_progression(exercise, &sets, *step, *rep_step, at.step)
+            double_progression(exercise, &sets, *step, *rep_step, at.steps)
         }
         Strategy::Percent1rm {
             wave_bp,
             baseline_e1rm_kg,
-        } => percent_1rm(exercise, &sets, wave_bp, *baseline_e1rm_kg, at.step),
+        } => percent_1rm(
+            exercise,
+            &sets,
+            wave_bp,
+            e1rm_kg.unwrap_or(*baseline_e1rm_kg),
+            at.position,
+        ),
         Strategy::RirAutoregulated {
             step,
             rir_start,
@@ -52,8 +105,9 @@ pub(super) fn working_sets(exercise: &ExerciseSpec, at: Progress) -> Vec<Planned
     }
 }
 
-/// Cycle 1's load, `steps` load steps on — before rounding. A basis-point step is a share of cycle 1's
-/// load, so it adds a constant amount and never compounds.
+/// A load, `steps` load steps on — before rounding. A basis-point step is a share of the load it steps
+/// from — cycle 1's in a freshly generated block, the anchor's after one — so between anchors it adds a
+/// constant amount and never compounds.
 fn advance(weight_kg: f64, step: LoadStep, steps: u32) -> f64 {
     match step {
         // Plain multiply and add, never a fused `mul_add`: ADR-010 keeps load arithmetic to operations
@@ -74,8 +128,8 @@ const fn exact(value: u64) -> f64 {
     value as f64
 }
 
-/// A set carrying cycle 1's reps and RIR, with `load_kg` as its unrounded load.
-fn held(exercise: &ExerciseSpec, set: &CycleOneSet, load_kg: Option<f64>) -> PlannedSet {
+/// A set carrying the anchor's reps and RIR, with `load_kg` as its unrounded load.
+fn held(exercise: Prescriber<'_>, set: &CycleOneSet, load_kg: Option<f64>) -> PlannedSet {
     prescribed(
         exercise,
         set,
@@ -88,13 +142,13 @@ fn held(exercise: &ExerciseSpec, set: &CycleOneSet, load_kg: Option<f64>) -> Pla
 /// A set with its load rounded by the rule (INV-02) and its reps and RIR clamped into the rule and
 /// marked (INV-05). RIR arrives signed, because a ladder's offset may take it below zero before the clamp.
 fn prescribed(
-    exercise: &ExerciseSpec,
+    exercise: Prescriber<'_>,
     set: &CycleOneSet,
     load_kg: Option<f64>,
     reps: Option<u32>,
     rir: Option<i64>,
 ) -> PlannedSet {
-    let rule = &exercise.rule;
+    let rule = exercise.rule;
     let (target_reps, reps_clamped) = clamp(reps.map(i64::from), rule.min_reps, rule.max_reps);
     let (target_rir, rir_clamped) = clamp(rir, rule.min_rir, rule.max_rir);
     PlannedSet {
@@ -121,19 +175,20 @@ pub(super) fn clamp(value: Option<i64>, low: u32, high: u32) -> (Option<u32>, bo
     })
 }
 
-/// 01 §3.2 (b), decision 1 of stage 2: **the exercise moves as one.** Each working cycle, every counted
-/// set below the top of the range gains `rep_step` reps, stopping at the top; once every counted set is
-/// at the top, the load takes one step and every counted set drops back to the bottom. Warm-up, drop and
-/// back-off sets hold their reps, and their loads follow the exercise's steps. A counted set with no rep
-/// target starts at the bottom — this strategy owns the reps.
+/// 01 §3.2 (b), decision 1 of stage 2: **the exercise moves as one.** Each step, every counted set below
+/// the top of the range gains `rep_step` reps, stopping at the top; once every counted set is at the top,
+/// the load takes one step and every counted set drops back to the bottom. Warm-up, drop and back-off
+/// sets hold their reps, and their loads follow the exercise's steps. A counted set with no rep target
+/// starts at the bottom — this strategy owns the reps. The anchor's reps are where it starts, which is
+/// how a switch from another strategy continues from the reps actually done (FR-3.6a).
 fn double_progression(
-    exercise: &ExerciseSpec,
+    exercise: Prescriber<'_>,
     sets: &[&CycleOneSet],
     step: LoadStep,
     rep_step: u32,
-    at: u32,
+    steps: u32,
 ) -> Vec<PlannedSet> {
-    let rule = &exercise.rule;
+    let rule = exercise.rule;
     let bottom = rule.min_reps;
     let top = rule.max_reps.max(bottom);
     let mut reps: Vec<u32> = sets
@@ -143,7 +198,7 @@ fn double_progression(
         .collect();
 
     let mut load_steps = 0_u32;
-    for _ in 0..at {
+    for _ in 0..steps {
         if !reps.is_empty() && reps.iter().all(|&it| it >= top) {
             load_steps += 1;
             reps.fill(bottom);
@@ -172,26 +227,27 @@ fn double_progression(
         .collect()
 }
 
-/// 01 §3.2 (c), decisions 2 and 3 of stage 2. Every counted set prescribes `baseline × wave`, the wave
-/// tiled across the working cycles with cycle 1 at its first value; warm-up, drop and back-off sets are
-/// held as authored. An empty wave holds cycle 1's loads.
+/// 01 §3.2 (c), decisions 2 and 3 of stage 2. Every counted set prescribes `e1RM × wave`, the wave tiled
+/// by position with cycle 1 at its first value; warm-up, drop and back-off sets are held as the anchor
+/// has them. An empty wave holds the anchor's loads. The e1RM is the latest one read from a log, else
+/// the rule's baseline (stage 3, decision 4).
 ///
-/// **A bodyweight exercise** prescribes the *added* load: `baseline × wave − body weight`, never below
-/// zero. With no body weight, it holds cycle 1's loads rather than guess one (INV-07) — running
+/// **A bodyweight exercise** prescribes the *added* load: `e1RM × wave − body weight`, never below
+/// zero. With no body weight, it holds the anchor's loads rather than guess one (INV-07) — running
 /// open-loop, as FR-3.2c has it for a missing e1RM.
 fn percent_1rm(
-    exercise: &ExerciseSpec,
+    exercise: Prescriber<'_>,
     sets: &[&CycleOneSet],
     wave_bp: &[u32],
-    baseline_e1rm_kg: f64,
-    at: u32,
+    e1rm_kg: f64,
+    position: u32,
 ) -> Vec<PlannedSet> {
-    let share = usize::try_from(at)
+    let share = usize::try_from(position)
         .ok()
-        .and_then(|step| wave_bp.get(step % wave_bp.len().max(1)))
+        .and_then(|at| wave_bp.get(at % wave_bp.len().max(1)))
         .copied();
     let wave_load = share.and_then(|bp| {
-        let total_kg = baseline_e1rm_kg * f64::from(bp) / f64::from(BASIS_POINTS);
+        let total_kg = e1rm_kg * f64::from(bp) / f64::from(BASIS_POINTS);
         if exercise.uses_bodyweight {
             exercise
                 .body_weight_kg
@@ -214,10 +270,10 @@ fn percent_1rm(
 }
 
 /// 01 §3.2 (d), decisions 4 and 5 of stage 2. The load climbs a step each working cycle; the counted
-/// sets' target RIR descends from `rir_start` to `rir_end` across the working cycles, plus each set's
-/// offset under a per-set ladder, clamped and marked. Warm-up, drop and back-off sets keep cycle 1's RIR.
+/// sets' target RIR descends from `rir_start` to `rir_end` by position, plus each set's offset under a
+/// per-set ladder, clamped and marked. Warm-up, drop and back-off sets keep the anchor's RIR.
 fn rir_autoregulated(
-    exercise: &ExerciseSpec,
+    exercise: Prescriber<'_>,
     sets: &[&CycleOneSet],
     step: LoadStep,
     rir_start: Option<u32>,
@@ -228,7 +284,7 @@ fn rir_autoregulated(
         descend(
             start,
             rir_end.unwrap_or(start),
-            at.step,
+            at.position,
             at.working_cycles.saturating_sub(1),
         )
     });
@@ -237,14 +293,14 @@ fn rir_autoregulated(
         RirMode::PerSet { offsets } => offsets,
     };
 
-    let mut position = 0_usize;
+    let mut counted = 0_usize;
     sets.iter()
         .map(|set| {
-            let load = set.target_weight_kg.map(|kg| advance(kg, step, at.step));
+            let load = set.target_weight_kg.map(|kg| advance(kg, step, at.steps));
             let rir = match target {
                 Some(target) if is_counted_type(set.set_type) => {
-                    let offset = offsets.get(position).copied().unwrap_or(0);
-                    position += 1;
+                    let offset = offsets.get(counted).copied().unwrap_or(0);
+                    counted += 1;
                     Some(target + i64::from(offset))
                 }
                 _ => set.target_rir.map(i64::from),
@@ -254,7 +310,7 @@ fn rir_autoregulated(
         .collect()
 }
 
-/// The target RIR at working cycle `step` of `last`, moving from `start` to `end` in whole reps. Integer
+/// The target RIR at position `step` of `last`, moving from `start` to `end` in whole reps. Integer
 /// arithmetic (INV-10), and **a tie rounds to the higher RIR** — the side ADR-010's tie rule takes for
 /// loads: when the arithmetic cannot decide, the engine asks for less.
 fn descend(start: u32, end: u32, step: u32, last: u32) -> i64 {

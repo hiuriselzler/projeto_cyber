@@ -23,7 +23,7 @@
             {
               "order_index": 0,
               "increment_kg": 2.5,
-              "rule": {"strategy": "linear_load", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 6, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "rounding": "nearest"},
+              "rule": {"strategy": "linear_load", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 6, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
               "uses_bodyweight": false,
               "body_weight_kg": null,
               "sets": [
@@ -297,7 +297,7 @@
             {
               "order_index": 0,
               "increment_kg": 2.5,
-              "rule": {"strategy": "linear_load", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "rounding": "nearest"},
+              "rule": {"strategy": "linear_load", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
               "uses_bodyweight": false,
               "body_weight_kg": null,
               "sets": [
@@ -313,7 +313,7 @@
             {
               "order_index": 0,
               "increment_kg": 1.25,
-              "rule": {"strategy": "linear_load", "load_step_kg": 1.25, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "rounding": "nearest"},
+              "rule": {"strategy": "linear_load", "load_step_kg": 1.25, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
               "uses_bodyweight": false,
               "body_weight_kg": null,
               "sets": [
@@ -329,7 +329,7 @@
             {
               "order_index": 0,
               "increment_kg": 2.5,
-              "rule": {"strategy": "fixed", "load_step_kg": null, "load_step_bp": null, "rep_step": 1, "min_reps": 8, "max_reps": 8, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "rounding": "nearest"},
+              "rule": {"strategy": "fixed", "load_step_kg": null, "load_step_bp": null, "rep_step": 1, "min_reps": 8, "max_reps": 8, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
               "uses_bodyweight": false,
               "body_weight_kg": null,
               "sets": [
@@ -497,7 +497,7 @@
             {
               "order_index": 0,
               "increment_kg": 2.5,
-              "rule": {"strategy": "fixed", "load_step_kg": null, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "rounding": "nearest"},
+              "rule": {"strategy": "fixed", "load_step_kg": null, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
               "uses_bodyweight": false,
               "body_weight_kg": null,
               "sets": [
@@ -513,7 +513,7 @@
             {
               "order_index": 0,
               "increment_kg": 2.5,
-              "rule": {"strategy": "fixed", "load_step_kg": null, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "rounding": "nearest"},
+              "rule": {"strategy": "fixed", "load_step_kg": null, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
               "uses_bodyweight": false,
               "body_weight_kg": null,
               "sets": [
@@ -529,7 +529,7 @@
             {
               "order_index": 0,
               "increment_kg": 2.5,
-              "rule": {"strategy": "fixed", "load_step_kg": null, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "rounding": "nearest"},
+              "rule": {"strategy": "fixed", "load_step_kg": null, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
               "uses_bodyweight": false,
               "body_weight_kg": null,
               "sets": [
@@ -545,7 +545,7 @@
             {
               "order_index": 0,
               "increment_kg": 2.5,
-              "rule": {"strategy": "fixed", "load_step_kg": null, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "rounding": "nearest"},
+              "rule": {"strategy": "fixed", "load_step_kg": null, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
               "uses_bodyweight": false,
               "body_weight_kg": null,
               "sets": [
@@ -803,7 +803,7 @@
             {
               "order_index": 0,
               "increment_kg": 2.5,
-              "rule": {"strategy": "linear_load", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 6, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "rounding": "nearest"},
+              "rule": {"strategy": "linear_load", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 6, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
               "uses_bodyweight": false,
               "body_weight_kg": null,
               "sets": [
@@ -1297,7 +1297,7 @@
             {
               "order_index": 0,
               "increment_kg": 2.5,
-              "rule": {"strategy": "linear_load", "load_step_kg": null, "load_step_bp": 250, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "rounding": "nearest"},
+              "rule": {"strategy": "linear_load", "load_step_kg": null, "load_step_bp": 250, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
               "uses_bodyweight": false,
               "body_weight_kg": null,
               "sets": [
@@ -1391,7 +1391,7 @@
             {
               "order_index": 0,
               "increment_kg": 2.5,
-              "rule": {"strategy": "linear_load", "load_step_kg": 5, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "rounding": "nearest"},
+              "rule": {"strategy": "linear_load", "load_step_kg": 5, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
               "uses_bodyweight": false,
               "body_weight_kg": null,
               "sets": [
@@ -1507,7 +1507,7 @@
             {
               "order_index": 0,
               "increment_kg": 2.5,
-              "rule": {"strategy": "fixed", "load_step_kg": null, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "rounding": "nearest"},
+              "rule": {"strategy": "fixed", "load_step_kg": null, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
               "uses_bodyweight": false,
               "body_weight_kg": null,
               "sets": [
@@ -1591,7 +1591,7 @@
             {
               "order_index": 0,
               "increment_kg": 2.5,
-              "rule": {"strategy": "fixed", "load_step_kg": null, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 8, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "rounding": "nearest"},
+              "rule": {"strategy": "fixed", "load_step_kg": null, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 8, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
               "uses_bodyweight": false,
               "body_weight_kg": null,
               "sets": [
@@ -1645,7 +1645,7 @@
             {
               "order_index": 0,
               "increment_kg": 2.267962,
-              "rule": {"strategy": "linear_load", "load_step_kg": 2.267962, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "rounding": "nearest"},
+              "rule": {"strategy": "linear_load", "load_step_kg": 2.267962, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
               "uses_bodyweight": false,
               "body_weight_kg": null,
               "sets": [
@@ -1739,7 +1739,7 @@
             {
               "order_index": 0,
               "increment_kg": 2.5,
-              "rule": {"strategy": "double_progression", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 8, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "rounding": "nearest"},
+              "rule": {"strategy": "double_progression", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 8, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
               "uses_bodyweight": false,
               "body_weight_kg": null,
               "sets": [
@@ -1863,7 +1863,7 @@
             {
               "order_index": 0,
               "increment_kg": 2.5,
-              "rule": {"strategy": "double_progression", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 3, "min_reps": 8, "max_reps": 12, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "rounding": "nearest"},
+              "rule": {"strategy": "double_progression", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 3, "min_reps": 8, "max_reps": 12, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
               "uses_bodyweight": false,
               "body_weight_kg": null,
               "sets": [
@@ -1977,7 +1977,7 @@
             {
               "order_index": 0,
               "increment_kg": 2.5,
-              "rule": {"strategy": "double_progression", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 8, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "rounding": "nearest"},
+              "rule": {"strategy": "double_progression", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 6, "max_reps": 8, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
               "uses_bodyweight": false,
               "body_weight_kg": null,
               "sets": [
@@ -2099,7 +2099,7 @@
             {
               "order_index": 0,
               "increment_kg": 2.5,
-              "rule": {"strategy": "percent_1rm", "load_step_kg": null, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": [7000, 7500, 8000], "baseline_e1rm_kg": 120, "rounding": "nearest"},
+              "rule": {"strategy": "percent_1rm", "load_step_kg": null, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": [7000, 7500, 8000], "baseline_e1rm_kg": 120, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
               "uses_bodyweight": false,
               "body_weight_kg": null,
               "sets": [
@@ -2249,7 +2249,7 @@
             {
               "order_index": 0,
               "increment_kg": 1.25,
-              "rule": {"strategy": "percent_1rm", "load_step_kg": null, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": [8000, 8500], "baseline_e1rm_kg": 110, "rounding": "nearest"},
+              "rule": {"strategy": "percent_1rm", "load_step_kg": null, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": [8000, 8500], "baseline_e1rm_kg": 110, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
               "uses_bodyweight": true,
               "body_weight_kg": 80,
               "sets": [
@@ -2329,7 +2329,7 @@
             {
               "order_index": 0,
               "increment_kg": 1.25,
-              "rule": {"strategy": "percent_1rm", "load_step_kg": null, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": [8000, 8500], "baseline_e1rm_kg": 110, "rounding": "nearest"},
+              "rule": {"strategy": "percent_1rm", "load_step_kg": null, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": [8000, 8500], "baseline_e1rm_kg": 110, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
               "uses_bodyweight": true,
               "body_weight_kg": null,
               "sets": [
@@ -2409,7 +2409,7 @@
             {
               "order_index": 0,
               "increment_kg": 1.25,
-              "rule": {"strategy": "percent_1rm", "load_step_kg": null, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": [8000], "baseline_e1rm_kg": 110, "rounding": "nearest"},
+              "rule": {"strategy": "percent_1rm", "load_step_kg": null, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": null, "rir_end": null, "percent_wave_bp": [8000], "baseline_e1rm_kg": 110, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
               "uses_bodyweight": true,
               "body_weight_kg": 100,
               "sets": [
@@ -2463,7 +2463,7 @@
             {
               "order_index": 0,
               "increment_kg": 2.5,
-              "rule": {"strategy": "rir_autoregulated", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": 3, "rir_end": 0, "percent_wave_bp": null, "baseline_e1rm_kg": null, "rounding": "nearest"},
+              "rule": {"strategy": "rir_autoregulated", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": 3, "rir_end": 0, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
               "uses_bodyweight": false,
               "body_weight_kg": null,
               "sets": [
@@ -2643,7 +2643,7 @@
             {
               "order_index": 0,
               "increment_kg": 2.5,
-              "rule": {"strategy": "rir_autoregulated", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": 3, "rir_end": 0, "percent_wave_bp": null, "baseline_e1rm_kg": null, "rounding": "nearest"},
+              "rule": {"strategy": "rir_autoregulated", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_exercise", "rir_offsets": null, "rir_start": 3, "rir_end": 0, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
               "uses_bodyweight": false,
               "body_weight_kg": null,
               "sets": [
@@ -2717,7 +2717,7 @@
             {
               "order_index": 0,
               "increment_kg": 2.5,
-              "rule": {"strategy": "rir_autoregulated", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 3, "rir_mode": "per_set", "rir_offsets": [2, 1, 0], "rir_start": 3, "rir_end": 3, "percent_wave_bp": null, "baseline_e1rm_kg": null, "rounding": "nearest"},
+              "rule": {"strategy": "rir_autoregulated", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 3, "rir_mode": "per_set", "rir_offsets": [2, 1, 0], "rir_start": 3, "rir_end": 3, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
               "uses_bodyweight": false,
               "body_weight_kg": null,
               "sets": [
@@ -2775,7 +2775,7 @@
             {
               "order_index": 0,
               "increment_kg": 2.5,
-              "rule": {"strategy": "rir_autoregulated", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 3, "rir_mode": "per_set", "rir_offsets": [2, 1, 0], "rir_start": 1, "rir_end": 1, "percent_wave_bp": null, "baseline_e1rm_kg": null, "rounding": "nearest"},
+              "rule": {"strategy": "rir_autoregulated", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 3, "rir_mode": "per_set", "rir_offsets": [2, 1, 0], "rir_start": 1, "rir_end": 1, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
               "uses_bodyweight": false,
               "body_weight_kg": null,
               "sets": [
@@ -2833,7 +2833,7 @@
             {
               "order_index": 0,
               "increment_kg": 2.5,
-              "rule": {"strategy": "rir_autoregulated", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_set", "rir_offsets": [1, -3], "rir_start": 2, "rir_end": 2, "percent_wave_bp": null, "baseline_e1rm_kg": null, "rounding": "nearest"},
+              "rule": {"strategy": "rir_autoregulated", "load_step_kg": 2.5, "load_step_bp": null, "rep_step": 1, "min_reps": 5, "max_reps": 5, "min_rir": 0, "max_rir": 4, "rir_mode": "per_set", "rir_offsets": [1, -3], "rir_start": 2, "rir_end": 2, "percent_wave_bp": null, "baseline_e1rm_kg": null, "failure_policy": "hold", "failure_load_bp": 9000, "rounding": "nearest"},
               "uses_bodyweight": false,
               "body_weight_kg": null,
               "sets": [

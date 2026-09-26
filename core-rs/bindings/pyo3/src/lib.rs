@@ -10,17 +10,19 @@
 use std::collections::BTreeMap;
 
 use cyberathlete_core::{
-    CycleOneSet, DeloadPolicy, ENGINE_VERSION, EpochDay, ExerciseSpec, LengthOverride, LoadStep,
-    LoggedSet, MesocycleSpec, PersonalBests, PlannedExercise, PlannedMicrocycle, PlannedSession,
-    PlannedSet, PrAchievement, PrKind, RepsAtWeight, RirMode, RoundingMode, Rule, SessionMetrics,
-    SessionSpec, SetEntry, SetField, SetType, StandingRecord, Strategy, Tracking,
+    CycleOneSet, CycleStatus, DeloadPolicy, ENGINE_VERSION, EpochDay, ExerciseSpec, FailurePolicy,
+    LengthOverride, LoadStep, LoggedSet, MesocycleSpec, Outcome, PersonalBests, PlanCycle,
+    PlanExercise, PlanLog, PlanSession, PlanSet, PlannedExercise, PlannedMicrocycle,
+    PlannedSession, PlannedSet, PrAchievement, PrKind, RepsAtWeight, RirMode, RoundingMode, Rule,
+    SessionMetrics, SessionSpec, SetEntry, SetField, SetOrigin, SetType, SlotOutcome,
+    StandingRecord, Strategy, Tracking, WriteKind, classify as core_classify,
     counted_set_count as core_counted_set_count, detect_prs as core_detect_prs, e1rm as core_e1rm,
     e1rm_series as core_e1rm_series, generate as core_generate,
     is_counted_set as core_is_counted_set, load_kg as core_load_kg,
     missing_for_completion as core_missing_for_completion, personal_bests as core_personal_bests,
-    resolve_dates as core_resolve_dates, round_to_increment as core_round_to_increment,
-    session_metrics as core_session_metrics, standing_records as core_standing_records,
-    volume_kg as core_volume_kg,
+    reconcile as core_reconcile, resolve_dates as core_resolve_dates,
+    round_to_increment as core_round_to_increment, session_metrics as core_session_metrics,
+    standing_records as core_standing_records, volume_kg as core_volume_kg,
 };
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -759,6 +761,8 @@ impl PyProgressionRule {
         rir_end = None,
         rir_mode = "per_exercise",
         rir_offsets = Vec::new(),
+        failure_policy = "hold",
+        failure_load_bp = 9000,
     ))]
     #[expect(
         clippy::too_many_arguments,
@@ -780,7 +784,21 @@ impl PyProgressionRule {
         rir_end: Option<u32>,
         rir_mode: &str,
         rir_offsets: Vec<i32>,
+        failure_policy: &str,
+        failure_load_bp: u32,
     ) -> PyResult<Self> {
+        let failure_policy = match failure_policy {
+            "hold" => FailurePolicy::Hold,
+            "repeat_cycle" => FailurePolicy::RepeatCycle,
+            "reduce_load" => FailurePolicy::ReduceLoad {
+                load_bp: failure_load_bp,
+            },
+            other => {
+                return Err(PyValueError::new_err(format!(
+                    "unknown failure_policy {other:?}; expected hold, repeat_cycle or reduce_load"
+                )));
+            }
+        };
         let step = || load_step(strategy, load_step_kg, load_step_bp);
         let strategy = match strategy {
             PyProgressionStrategy::Fixed => Strategy::Fixed,
@@ -822,6 +840,7 @@ impl PyProgressionRule {
                 max_rir,
                 rounding: rounding.into(),
                 rir_mode,
+                failure_policy,
             },
         })
     }
@@ -1173,6 +1192,521 @@ fn resolve_dates(start_day: EpochDay, length_days: Vec<u32>) -> Vec<EpochDay> {
     core_resolve_dates(start_day, &length_days)
 }
 
+// ── Reconciliation (task 005 stage 3a) ───────────────────────────────────────────────────────────
+//
+// The plan as rows, both ways: `reconcile` reads it and hands it back. Each enum is the schema's, by
+// name, and each record converts to the core's and back with nothing decided on the way.
+
+/// A C-like mirror of one of the core's named enums, with `from_name` and `name` for the schema's text.
+macro_rules! py_enum {
+    ($py:ident, $name:literal, $core:ident { $($variant:ident),+ $(,)? }) => {
+        #[doc = concat!("Mirrors [`", stringify!($core), "`].")]
+        #[pyclass(name = $name, eq, eq_int, frozen, from_py_object, module = "cyberathlete_core")]
+        #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+        pub enum $py {
+            $($variant,)+
+        }
+
+        impl From<$py> for $core {
+            fn from(value: $py) -> Self {
+                match value {
+                    $($py::$variant => Self::$variant,)+
+                }
+            }
+        }
+
+        impl From<$core> for $py {
+            fn from(value: $core) -> Self {
+                match value {
+                    $($core::$variant => Self::$variant,)+
+                }
+            }
+        }
+
+        #[pymethods]
+        impl $py {
+            /// The name this value carries in the schema and the shared fixtures.
+            #[staticmethod]
+            fn from_name(name: &str) -> PyResult<Self> {
+                $core::from_name(name).map(Into::into).ok_or_else(|| {
+                    PyValueError::new_err(format!(concat!("unknown ", $name, " {:?}"), name))
+                })
+            }
+
+            #[getter]
+            fn name(&self) -> &'static str {
+                $core::from(*self).name()
+            }
+        }
+    };
+}
+
+py_enum!(
+    PyCycleStatus,
+    "CycleStatus",
+    CycleStatus {
+        Projected,
+        Locked,
+        InProgress,
+        Completed,
+        Skipped,
+    }
+);
+py_enum!(PyWriteKind, "WriteKind", WriteKind { Engine, User });
+py_enum!(
+    PySetOrigin,
+    "SetOrigin",
+    SetOrigin {
+        Generated,
+        UserEdited
+    }
+);
+py_enum!(
+    PyOutcome,
+    "Outcome",
+    Outcome {
+        Exceeded,
+        Met,
+        Under,
+        Missed,
+    }
+);
+
+/// A `planned_sets` row. Mirrors [`PlanSet`].
+#[pyclass(
+    name = "PlanSet",
+    frozen,
+    get_all,
+    from_py_object,
+    module = "cyberathlete_core"
+)]
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PyPlanSet {
+    pub set_index: u32,
+    pub set_type: PySetType,
+    pub target_weight_kg: Option<f64>,
+    pub target_reps: Option<u32>,
+    pub target_min_reps: Option<u32>,
+    pub target_max_reps: Option<u32>,
+    pub target_rir: Option<u32>,
+    pub was_clamped: bool,
+    pub origin: PySetOrigin,
+    pub is_pinned: bool,
+}
+
+#[pymethods]
+impl PyPlanSet {
+    #[new]
+    #[pyo3(signature = (
+        set_index,
+        set_type,
+        target_weight_kg = None,
+        target_reps = None,
+        target_min_reps = None,
+        target_max_reps = None,
+        target_rir = None,
+        was_clamped = false,
+        origin = PySetOrigin::Generated,
+        is_pinned = false,
+    ))]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "a record mirroring planned_sets column for column; Python names them at the call site"
+    )]
+    const fn new(
+        set_index: u32,
+        set_type: PySetType,
+        target_weight_kg: Option<f64>,
+        target_reps: Option<u32>,
+        target_min_reps: Option<u32>,
+        target_max_reps: Option<u32>,
+        target_rir: Option<u32>,
+        was_clamped: bool,
+        origin: PySetOrigin,
+        is_pinned: bool,
+    ) -> Self {
+        Self {
+            set_index,
+            set_type,
+            target_weight_kg,
+            target_reps,
+            target_min_reps,
+            target_max_reps,
+            target_rir,
+            was_clamped,
+            origin,
+            is_pinned,
+        }
+    }
+}
+
+impl From<PyPlanSet> for PlanSet {
+    fn from(set: PyPlanSet) -> Self {
+        Self {
+            set_index: set.set_index,
+            set_type: set.set_type.into(),
+            target_weight_kg: set.target_weight_kg,
+            target_reps: set.target_reps,
+            target_min_reps: set.target_min_reps,
+            target_max_reps: set.target_max_reps,
+            target_rir: set.target_rir,
+            was_clamped: set.was_clamped,
+            origin: set.origin.into(),
+            is_pinned: set.is_pinned,
+        }
+    }
+}
+
+impl From<PlanSet> for PyPlanSet {
+    fn from(set: PlanSet) -> Self {
+        Self {
+            set_index: set.set_index,
+            set_type: set.set_type.into(),
+            target_weight_kg: set.target_weight_kg,
+            target_reps: set.target_reps,
+            target_min_reps: set.target_min_reps,
+            target_max_reps: set.target_max_reps,
+            target_rir: set.target_rir,
+            was_clamped: set.was_clamped,
+            origin: set.origin.into(),
+            is_pinned: set.is_pinned,
+        }
+    }
+}
+
+/// A `planned_exercises` row with what the engine reads resolved. Mirrors [`PlanExercise`].
+#[pyclass(
+    name = "PlanExercise",
+    frozen,
+    get_all,
+    from_py_object,
+    module = "cyberathlete_core"
+)]
+#[derive(Debug, Clone, PartialEq)]
+pub struct PyPlanExercise {
+    pub order_index: u32,
+    pub exercise_id: String,
+    pub increment_kg: f64,
+    pub rule: PyProgressionRule,
+    pub uses_bodyweight: bool,
+    pub body_weight_kg: Option<f64>,
+    pub sets: Vec<PyPlanSet>,
+}
+
+#[pymethods]
+impl PyPlanExercise {
+    /// `exercise_id` is opaque to the engine: two exercises are the same when their ids are equal.
+    #[new]
+    #[pyo3(signature = (
+        order_index,
+        exercise_id,
+        increment_kg,
+        rule,
+        sets,
+        uses_bodyweight = false,
+        body_weight_kg = None,
+    ))]
+    const fn new(
+        order_index: u32,
+        exercise_id: String,
+        increment_kg: f64,
+        rule: PyProgressionRule,
+        sets: Vec<PyPlanSet>,
+        uses_bodyweight: bool,
+        body_weight_kg: Option<f64>,
+    ) -> Self {
+        Self {
+            order_index,
+            exercise_id,
+            increment_kg,
+            rule,
+            uses_bodyweight,
+            body_weight_kg,
+            sets,
+        }
+    }
+}
+
+impl From<PyPlanExercise> for PlanExercise {
+    fn from(exercise: PyPlanExercise) -> Self {
+        Self {
+            order_index: exercise.order_index,
+            exercise_id: exercise.exercise_id,
+            increment_kg: exercise.increment_kg,
+            rule: exercise.rule.rule,
+            uses_bodyweight: exercise.uses_bodyweight,
+            body_weight_kg: exercise.body_weight_kg,
+            sets: exercise.sets.into_iter().map(Into::into).collect(),
+        }
+    }
+}
+
+impl From<PlanExercise> for PyPlanExercise {
+    fn from(exercise: PlanExercise) -> Self {
+        Self {
+            order_index: exercise.order_index,
+            exercise_id: exercise.exercise_id,
+            increment_kg: exercise.increment_kg,
+            rule: PyProgressionRule {
+                rule: exercise.rule,
+            },
+            uses_bodyweight: exercise.uses_bodyweight,
+            body_weight_kg: exercise.body_weight_kg,
+            sets: exercise.sets.into_iter().map(Into::into).collect(),
+        }
+    }
+}
+
+/// A `planned_sessions` row. Mirrors [`PlanSession`].
+#[pyclass(
+    name = "PlanSession",
+    frozen,
+    get_all,
+    from_py_object,
+    module = "cyberathlete_core"
+)]
+#[derive(Debug, Clone, PartialEq)]
+pub struct PyPlanSession {
+    pub day_index: u32,
+    pub order_index: u32,
+    pub exercises: Vec<PyPlanExercise>,
+}
+
+#[pymethods]
+impl PyPlanSession {
+    #[new]
+    const fn new(day_index: u32, order_index: u32, exercises: Vec<PyPlanExercise>) -> Self {
+        Self {
+            day_index,
+            order_index,
+            exercises,
+        }
+    }
+}
+
+impl From<PyPlanSession> for PlanSession {
+    fn from(session: PyPlanSession) -> Self {
+        Self {
+            day_index: session.day_index,
+            order_index: session.order_index,
+            exercises: session.exercises.into_iter().map(Into::into).collect(),
+        }
+    }
+}
+
+impl From<PlanSession> for PyPlanSession {
+    fn from(session: PlanSession) -> Self {
+        Self {
+            day_index: session.day_index,
+            order_index: session.order_index,
+            exercises: session.exercises.into_iter().map(Into::into).collect(),
+        }
+    }
+}
+
+/// A `microcycles` row. Mirrors [`PlanCycle`].
+#[pyclass(
+    name = "PlanCycle",
+    frozen,
+    get_all,
+    from_py_object,
+    module = "cyberathlete_core"
+)]
+#[derive(Debug, Clone, PartialEq)]
+pub struct PyPlanCycle {
+    pub cycle_number: u32,
+    pub length_days: u32,
+    pub starts_on: EpochDay,
+    pub is_deload: bool,
+    pub status: PyCycleStatus,
+    pub engine_version: u32,
+    pub last_write_kind: PyWriteKind,
+    pub sessions: Vec<PyPlanSession>,
+}
+
+#[pymethods]
+impl PyPlanCycle {
+    #[new]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "a record mirroring microcycles column for column; Python names them at the call site"
+    )]
+    const fn new(
+        cycle_number: u32,
+        length_days: u32,
+        starts_on: EpochDay,
+        is_deload: bool,
+        status: PyCycleStatus,
+        engine_version: u32,
+        last_write_kind: PyWriteKind,
+        sessions: Vec<PyPlanSession>,
+    ) -> Self {
+        Self {
+            cycle_number,
+            length_days,
+            starts_on,
+            is_deload,
+            status,
+            engine_version,
+            last_write_kind,
+            sessions,
+        }
+    }
+}
+
+impl From<PyPlanCycle> for PlanCycle {
+    fn from(cycle: PyPlanCycle) -> Self {
+        Self {
+            cycle_number: cycle.cycle_number,
+            length_days: cycle.length_days,
+            starts_on: cycle.starts_on,
+            is_deload: cycle.is_deload,
+            status: cycle.status.into(),
+            engine_version: cycle.engine_version,
+            last_write_kind: cycle.last_write_kind.into(),
+            sessions: cycle.sessions.into_iter().map(Into::into).collect(),
+        }
+    }
+}
+
+impl From<PlanCycle> for PyPlanCycle {
+    fn from(cycle: PlanCycle) -> Self {
+        Self {
+            cycle_number: cycle.cycle_number,
+            length_days: cycle.length_days,
+            starts_on: cycle.starts_on,
+            is_deload: cycle.is_deload,
+            status: cycle.status.into(),
+            engine_version: cycle.engine_version,
+            last_write_kind: cycle.last_write_kind.into(),
+            sessions: cycle.sessions.into_iter().map(Into::into).collect(),
+        }
+    }
+}
+
+/// A logged set on the planned set it was logged against. Mirrors [`PlanLog`].
+#[pyclass(
+    name = "PlanLog",
+    frozen,
+    get_all,
+    from_py_object,
+    module = "cyberathlete_core"
+)]
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PyPlanLog {
+    pub cycle_number: u32,
+    pub day_index: u32,
+    pub session_order_index: u32,
+    pub exercise_order_index: u32,
+    pub set_index: u32,
+    pub set: PyLoggedSet,
+}
+
+#[pymethods]
+impl PyPlanLog {
+    /// The planned set's natural key — the wrapper follows `set_logs.planned_set_id` to it — and the
+    /// logged set, with body weight on its date already resolved.
+    #[new]
+    const fn new(
+        cycle_number: u32,
+        day_index: u32,
+        session_order_index: u32,
+        exercise_order_index: u32,
+        set_index: u32,
+        set: PyLoggedSet,
+    ) -> Self {
+        Self {
+            cycle_number,
+            day_index,
+            session_order_index,
+            exercise_order_index,
+            set_index,
+            set,
+        }
+    }
+}
+
+impl From<PyPlanLog> for PlanLog {
+    fn from(log: PyPlanLog) -> Self {
+        Self {
+            cycle_number: log.cycle_number,
+            day_index: log.day_index,
+            session_order_index: log.session_order_index,
+            exercise_order_index: log.exercise_order_index,
+            set_index: log.set_index,
+            set: log.set.into(),
+        }
+    }
+}
+
+/// An outcome `reconcile` acted on. Mirrors [`SlotOutcome`].
+#[pyclass(
+    name = "SlotOutcome",
+    frozen,
+    get_all,
+    skip_from_py_object,
+    module = "cyberathlete_core"
+)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PySlotOutcome {
+    pub cycle_number: u32,
+    pub exercise_id: String,
+    pub occurrence: u32,
+    pub outcome: PyOutcome,
+    pub open_loop: bool,
+}
+
+impl From<SlotOutcome> for PySlotOutcome {
+    fn from(outcome: SlotOutcome) -> Self {
+        Self {
+            cycle_number: outcome.cycle_number,
+            exercise_id: outcome.exercise_id,
+            occurrence: outcome.occurrence,
+            outcome: outcome.outcome.into(),
+            open_loop: outcome.open_loop,
+        }
+    }
+}
+
+/// What `reconcile` returns. Mirrors [`Reconciled`].
+#[pyclass(
+    name = "Reconciled",
+    frozen,
+    get_all,
+    skip_from_py_object,
+    module = "cyberathlete_core"
+)]
+#[derive(Debug, Clone, PartialEq)]
+pub struct PyReconciled {
+    pub cycles: Vec<PyPlanCycle>,
+    pub outcomes: Vec<PySlotOutcome>,
+}
+
+/// How one planned exercise went, from its planned sets and the sets logged against them (01 §3.4).
+#[pyfunction]
+fn classify(planned: Vec<PyPlanSet>, logs: Vec<PyPlanLog>) -> PyOutcome {
+    let planned: Vec<PlanSet> = planned.into_iter().map(Into::into).collect();
+    let logs: Vec<PlanLog> = logs.into_iter().map(Into::into).collect();
+    core_classify(&planned, &logs).into()
+}
+
+/// Re-project the plan from what was logged, as of `today` (days since 1970-01-01).
+#[pyfunction]
+fn reconcile(
+    mesocycle: PyMesocycleSpec,
+    plan: Vec<PyPlanCycle>,
+    logs: Vec<PyPlanLog>,
+    today: EpochDay,
+) -> PyReconciled {
+    let plan: Vec<PlanCycle> = plan.into_iter().map(Into::into).collect();
+    let logs: Vec<PlanLog> = logs.into_iter().map(Into::into).collect();
+    let reconciled = core_reconcile(&mesocycle.mesocycle, &plan, &logs, today);
+    PyReconciled {
+        cycles: reconciled.cycles.into_iter().map(Into::into).collect(),
+        outcomes: reconciled.outcomes.into_iter().map(Into::into).collect(),
+    }
+}
+
 #[pymodule]
 fn _core(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<PyRoundingMode>()?;
@@ -1214,5 +1748,19 @@ fn _core(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<PyPlannedMicrocycle>()?;
     module.add_function(wrap_pyfunction!(generate, module)?)?;
     module.add_function(wrap_pyfunction!(resolve_dates, module)?)?;
+
+    module.add_class::<PyCycleStatus>()?;
+    module.add_class::<PyWriteKind>()?;
+    module.add_class::<PySetOrigin>()?;
+    module.add_class::<PyOutcome>()?;
+    module.add_class::<PyPlanSet>()?;
+    module.add_class::<PyPlanExercise>()?;
+    module.add_class::<PyPlanSession>()?;
+    module.add_class::<PyPlanCycle>()?;
+    module.add_class::<PyPlanLog>()?;
+    module.add_class::<PySlotOutcome>()?;
+    module.add_class::<PyReconciled>()?;
+    module.add_function(wrap_pyfunction!(classify, module)?)?;
+    module.add_function(wrap_pyfunction!(reconcile, module)?)?;
     Ok(())
 }

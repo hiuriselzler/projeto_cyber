@@ -203,7 +203,8 @@ consumes no step of any of them (FR-3.9). What logged performance changes is rec
   `rep_step` reps, **stopping at the top** — a step never overshoots into load. When every counted set is at the top, the
   load takes one step and every counted set drops back to `min_reps`. Warm-up, drop and back-off sets hold their reps,
   and their loads follow the exercise's steps. The load rounds by the rule's `rounding`. A `load_step_bp` is a share of
-  cycle 1's load, as for `linear_load`. Each counted set carries the range as `target_min_reps`/`target_max_reps`.
+  the load it steps from — cycle 1's in a fresh block, the latest anchor's after reconciliation (§3.4) — as for
+  `linear_load`. Each counted set carries the range as `target_min_reps`/`target_max_reps`.
 - **`percent_1rm`:** every counted set prescribes `baseline_e1rm_kg × wave`, the wave tiled across the working cycles
   with cycle 1 at its first value; warm-up, drop and back-off sets are held as authored; an empty wave holds cycle 1's
   loads. On a **bodyweight exercise** the prescription is the *added* load, `baseline × wave − body weight`, never below
@@ -302,8 +303,31 @@ Outcome classification per planned exercise:
 | **Under** | any working set fell short of `min_reps`, or RIR was 0 when target ≥ 2 | Apply `failure_policy` |
 | **Missed** | session not logged at all | Shift the block, or skip — user's choice |
 
+**Exactly how the table is read** (settled 2026-09-26, [task 005](tasks/005-strength-progression-planner.md) stage 3a):
+- Only **counted sets** are judged (INV-04), each against the log matched to it through `planned_set_id`. Sets
+  logged against nothing and swapped exercises are recorded and never read (FR-3.16). A planned counted set with no
+  completed log, in a session that *was* logged, fell short.
+- **The table's gap is closed on the strict side:** reps below the target but at or above `min_reps` fit no row as
+  written. **`Met` needs every counted set at its target reps; anything short is `Under`**, so `failure_policy` decides
+  what happens next.
+- `Exceeded` needs every counted set at least two in reserve above its target RIR. A set with no logged RIR carries
+  no signal: it can never make an exercise `Exceeded`, and never `Under` by the RIR clause (INV-03).
+- `Missed` is a session whose day has passed with nothing logged. It changes nothing — the block continues as
+  projected, which is the "skip". "Shift the block" is a user action on dates, built with the block edits.
+- **What each outcome does.** `Met` takes one step from **the achieved state** — the loads actually lifted, and for
+  double progression the reps actually done — so a lifter who went heavier is followed. `Exceeded` takes two steps.
+  `percent_1rm` instead re-reads the session's best e1RM (INV-07), holding the last one when there is none and
+  saying so (FR-3.2c); the e1RM is carried by the engine, never written back to the rule.
+- **Deload cycles are never an anchor:** a logged deload is classified and reported, and the cycle after it still
+  resumes one step past the last working cycle (FR-3.9).
+- **A user's rows** (FR-3.14): a `user_edited` or pinned set is never changed, and its exercise's prescription in
+  that cycle becomes the baseline later cycles step from; a locked cycle is the baseline for all its exercises.
+
 - **FR-3.11** `failure_policy` per rule, one of: `hold` (repeat the same prescription),
   `repeat_cycle` (re-run the whole microcycle), `reduce_load` (back off by a configured %).
+  *`repeat_cycle`, exactly:* the next working cycle repeats the failed cycle's prescriptions for **every** exercise
+  in it, and no cycle is inserted, so the block keeps its length and end date. *`reduce_load`:* the prescription
+  repeated at `failure_load_bp` of its load.
 - **FR-3.12** Two consecutive `Under` outcomes on the same exercise must raise a visible
   suggestion to deload or end the block early. The app advises; it never silently rewrites a
   block out from under the user.

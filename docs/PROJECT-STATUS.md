@@ -21,7 +21,7 @@ when its own criteria are ticked. Tick the box here only then.
 | **Decisions** | 15 ADRs, **all now accepted**. [ADR-004](decisions/ADR-004.md)'s spike passed on 2026-09-18 and its outcome is recorded: **option B, the single Rust core**. Its four pre-launch conditions remain outstanding, in tasks 005 and 006 |
 | **Tasks** | 18 for v1 (Android) — one of them, task 018, drawn by hand rather than built — and 2 after launch — iOS platform, Coach tier. **7 complete** (001, 002, 011, 003, 019, 017, 004) |
 | **Platform** | **Android first**; iOS a structural addition ([ADR-009](decisions/ADR-009.md)) |
-| **Next action** | **[Task 005](tasks/005-strength-progression-planner.md), the progression planner, is in progress** on `feat/task-005-progression-planner`. Stages 0–2 are done (2026-09-26), on draft [PR #18](https://github.com/hiuriselzler/projeto_cyber/pull/18): the task file follows ADR-004's option B, and `generate` covers all five v1 strategies, the three deload policies and the per-set RIR ladder, with fixture #1 (40 → 62.5 kg), 21 shared cases and seven properties, including 10 000 random rules. Everything runs in Rust and through PyO3. **Next: stage 3**, `classify` and `reconcile` — the INV-06 guard, the older engine yielding, user edits and pins surviving, a strategy switched from the load achieved, extending and shortening a block, and date re-derivation. It starts with the plan-and-approval step. Parked for stage 8: whether FR-3.12's deload suggestion appears under `deload_mode = 'none'` (task file, stage 1). The phone is signed in to a throwaway local account, `stage8-device@example.com`, and is not needed until stage 4. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done, and the zero-plural found on the phone is worth their attention — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
+| **Next action** | **[Task 005](tasks/005-strength-progression-planner.md), the progression planner, is in progress** on `feat/task-005-progression-planner`. Stages 0, 1, 2 and 3a are done (2026-09-26), on draft [PR #18](https://github.com/hiuriselzler/projeto_cyber/pull/18), in Rust and through PyO3. `generate` covers all five v1 strategies. `reconcile` re-projects a plan from what was logged: it rewrites only projected cycles with nothing logged, keeps a user's edits and pins, applies `failure_policy`, and yields to a newer engine. Reconciling a freshly generated plan changes nothing, and that is a property. **Next: stage 3b**, the block edits — extending and shortening a block, a cycle's length with date re-derivation, a strategy switched mid-block with its preview. It starts with the plan-and-approval step. Parked for stage 8: whether FR-3.12's deload suggestion appears under `deload_mode = 'none'` (task file, stage 1). The phone is signed in to a throwaway local account, `stage8-device@example.com`, and is not needed until stage 4. Separately: a native speaker who trains reviews the Portuguese before launch — an AI pre-check is done, and the zero-plural found on the phone is worth their attention — and the project owner draws the mark, [task 018](tasks/018-brand-mark.md), whenever ready |
 
 ### The decision that was open is closed — option B
 
@@ -222,20 +222,24 @@ Numbered by when each task was *written*; ordered here by when it should be *bui
 #### ☐ 005 — Strength progression planner · **XL** · depends: 004 · blocks: 009, 010, 013, 014
 > **The reason the product exists.**
 > **In progress** on `feat/task-005-progression-planner` (started 2026-09-26). Its nine stages are in the task file.
-> Stage 0 is done, bringing the file up to date with ADR-004's option B. **Stages 1 and 2 are built** (2026-09-26):
-> `generate` for all five v1 strategies, the three deload policies, the per-set RIR ladder, `resolve_dates`, fixture #1
-> and 21 shared cases, and seven properties including 10 000 random rules — in Rust and through PyO3. Stage 3,
-> `classify` and `reconcile`, is next and gets its own plan first.
+> Stage 0 is done, bringing the file up to date with ADR-004's option B. **Stages 1, 2 and 3a are built** (2026-09-26),
+> in Rust and through PyO3:
+> - `generate` for all five v1 strategies, the three deload policies and the per-set RIR ladder;
+> - `classify` and `reconcile`, with the INV-06 guard, `failure_policy`, and a user's edits and pins kept.
+>
+> They are proven by fixture #1, 39 shared cases and twelve properties, among them 10 000 random rules and random
+> histories. Stage 3b, the block edits, is next and gets its own plan first.
 - [ ] Engine: five v1 strategies (`cycle_pattern` is v2 — leave the arm unimplemented, not half-done)
-- [ ] Generation + reconciliation as one **pure, deterministic, idempotent** function, `now` a parameter
+- [x] Generation + reconciliation as one **pure, deterministic, idempotent** function, `now` a parameter — stage 3a:
+      one `project` machinery for both, and reconciling a generated plan changes nothing
 - [ ] **Every projection stamped with `engine_version`; an older engine never re-projects a newer
       one's cycle**; user edits marked `last_write_kind = 'user'` (INV-06, ADR-004)
 - [ ] `percent_1rm` carries `baseline_e1rm_kg` so generation is **total**; holds the baseline and
       reports open-loop when a cycle yields no e1RM (FR-3.2c, INV-07)
 - [ ] **Per-set RIR = target + offset, clamped and marked `was_clamped`**; percentages in basis
       points; bodyweight e1RM over body weight on the set's date (ADR-010)
-- [ ] Property tests: liftable loads (INV-02) · bounds respected (INV-05) · idempotence (INV-10) ·
-      **only `projected` cycles ever differ** (INV-06) · `user_edited` / `is_pinned` never touched
+- [x] Property tests: liftable loads (INV-02) · bounds respected (INV-05) · idempotence (INV-10) ·
+      **only `projected` cycles ever differ** (INV-06) · `user_edited` / `is_pinned` never touched — stages 1–3a
 - [ ] Variable cycle lengths throughout — **no `7` as a constant anywhere** (INV-25)
 - [ ] Bulk generation as one batched insert (~1 500 rows), not a loop
 - [ ] Date re-derivation in one transaction when a cycle's `length_days` changes
@@ -561,6 +565,7 @@ nothing itself ([task 004](tasks/004-exercise-catalog-and-logging.md) § Scope).
 | 2026-09-25 | Task 004 stage 8: every mirror write is a `PUT` of the aggregate resolved row by row, a row left out is kept (02 §5, §7); the completion rule moves into the core; a global answers a write as a stranger's row does; the records cache rebuilds per exercise inside the write, under a per-user lock. **Task 019 amended:** a session's end keeps the account's local row, which the device's training cascades from — see the dated entry below |
 | 2026-09-25 | Closing task 004 planned: the weighted pull-up ticked on its proofs (device half → OQ 18); the rest notification's timing moved to OQ 13; a development-only ✓ timer for latency under the rest bar; `Sheet`'s exit animation moved to § Gaps; the 30 taps counted on a 5 × 4 routine — see the dated entry below |
 | 2026-09-25 | ✓ latency judged on a **production bundle** with the rest bar running, not on the development build or a synthetic loop; the live workout's set rows **memoized** (the app's first `memo`) with stable handlers, after a profile showed every ✓ re-rendering all twenty — see the dated entry below |
+| 2026-09-26 | Task 005 stage 3 split into 3a and 3b; 3a built. Reconciliation projects every exercise from its latest anchor; the same exercise is `exercise_id` plus occurrence; anything short of target is `Under`; `Met` steps from the achieved state; `repeat_cycle` holds a whole cycle without inserting one; a user's rows and locked cycles anchor; a newer stamp anywhere returns the plan as given (01 §3.4, FR-3.11) — see the dated entry below |
 | 2026-09-26 | Task 005 stage 2: the other three strategies generate open-loop — double progression moves the exercise as one, `percent_1rm` prescribes counted sets from the wave and holds the rest, a bodyweight `percent_1rm` prescribes the added load or holds without a body weight, `rir_autoregulated` descends with ties to the higher RIR, the per-set ladder applies where a strategy moves the target (01 §3.2); the session-move rule confirmed — see the dated entry below |
 | 2026-09-26 | **Task 005 started.** Stage 0 brings the task file up to date with option B; stage 1's six decisions were taken as recommended: `proptest` with dev-dependencies outside `cargo deny`'s graph ([ADR-012](decisions/ADR-012.md) amended, INV-10's enforcement line with it); natural keys in the engine, ids minted by the wrappers ([ADR-002](decisions/ADR-002.md) amended); a deload multiplies the last working prescription and consumes no step (01 FR-3.9); the wrappers resolve the increment; plain records shaped like the rows; dates as whole days since 1970 — see the dated entry below |
 | 2026-09-26 | **Task 004 complete.** The live list's reveal aims again when its height changes; **with the keypad open the rest is a countdown on the keypad's heading line and the bar is not drawn** (07 §6) — on a 533 dp screen the two together left the list no height; the short screen judged by the field being edited — see the dated entry below |
@@ -2442,3 +2447,33 @@ projects as if each working cycle were `Met`, and a deload consumes no step of a
 - **Criteria ticked:** the per-set ladder, the double-progression sequence, and 10 000 random rules.
 - No invariant changed, no ADR was added, and `ENGINE_VERSION` stays 1, because no existing fixture's output changed.
   Counts unchanged: 49 documents, 15 ADRs.
+
+### 2026-09-26 — task 005 stage 3a: classify and reconcile
+
+The owner took all seven of stage 3's recommendations; the first was to split it into 3a and 3b. **Reconciliation
+projects every exercise from its latest anchor**, and a projected cycle is the anchor plus the working steps since it,
+rounded once. An anchor is:
+- cycle 1;
+- a logged session, adjusted by its outcome;
+- a locked cycle;
+- a user's edit or pin.
+
+`generate` now prescribes through the same `project` function, with cycle 1 as its anchor, so the two cannot drift.
+Written into [01 §3.4](01-business-requirements.md) and FR-3.11.
+- **The outcome table's gap closed on the strict side:** anything short of the target is `Under`. `Met` steps from
+  the loads actually lifted, `Exceeded` takes two steps, and `percent_1rm` re-reads its e1RM.
+- **`repeat_cycle` holds every exercise in the failed cycle** without inserting one. `Missed` changes nothing.
+- **The same exercise across cycles is its `exercise_id` plus its occurrence** — a catalog reference the engine
+  compares and never interprets.
+- **The guard:** a newer engine's stamp anywhere returns the plan exactly as given. Only projected cycles with nothing
+  logged are rewritten — a logged set marks a cycle started, whatever its status says.
+- **Proven:** 18 `reconcile.json` cases in `cargo test` and pytest, each reconciled twice. Five properties over
+  random histories, the first of them that **reconciling a freshly generated plan changes nothing**. Three deliberate
+  breaks each failed a property.
+- **Found by the properties and fixed:** a deload straight after cycle 1 read cycle 1 differently in the two paths,
+  shrunk to a 2-cycle block. And a deload after a user's edit could repeat reps outside the rule; it now clamps them.
+- **Noted for later stages:** stage 4 must write only changed rows, or `updated_at` breaks "byte-identical". Stage 7
+  needs a representation for a user deleting a generated set, which reconciliation would otherwise regenerate.
+- **Criteria ticked:** six more. The cycle-9 edit, `failure_policy`, never altering a started cycle, idempotence, the
+  older engine yielding, and an edit under an older engine surviving.
+- No invariant changed, no ADR was added, and `ENGINE_VERSION` stays 1. Counts unchanged: 49 documents, 15 ADRs.

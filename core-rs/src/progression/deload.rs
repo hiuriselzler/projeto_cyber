@@ -1,9 +1,89 @@
-//! FR-3.1b and FR-3.9 — which cycles are deloads.
+//! FR-3.1b and FR-3.9 — which cycles are deloads, and what a deload prescribes.
 //!
 //! Three modes, each a user's choice and none of them a default the engine prefers: `none` is as
 //! legitimate as the others, and under it no cycle is ever a deload.
 
-use super::plan::DeloadPolicy;
+use super::plan::{DeloadPolicy, MesocycleSpec, PlannedSet};
+use super::strategies::{Prescriber, clamp};
+use super::{BASIS_POINTS, RoundingMode, round_to_increment};
+use crate::strength::is_counted_type;
+
+/// FR-3.9: a deload cycle, from the working prescription it multiplies — the last working cycle's, as
+/// it stands.
+///
+/// Fewer working sets — `deload_set_bp` of them, a tie to the fewer, never below one — and every kept
+/// set's load cut to `deload_load_bp` and re-anchored with `nearest`, its RIR raised by
+/// `deload_rir_bump` and clamped into the rule (INV-05). Warm-up, drop and back-off sets are not counted
+/// sets (INV-04), so the reduction leaves them in place; their loads and RIR are deloaded like the rest.
+pub(super) fn deload_sets(
+    exercise: Prescriber<'_>,
+    working: Vec<PlannedSet>,
+    spec: &MesocycleSpec,
+) -> Vec<PlannedSet> {
+    let rule = exercise.rule;
+    let counted = working
+        .iter()
+        .filter(|set| is_counted_type(set.set_type))
+        .count();
+    let keep = deload_set_count(counted, spec.deload_set_bp);
+
+    let mut kept_counted = 0;
+    let mut sets = Vec::with_capacity(working.len());
+    for set in working {
+        if is_counted_type(set.set_type) {
+            if kept_counted == keep {
+                continue;
+            }
+            kept_counted += 1;
+        }
+        let target_weight_kg = set.target_weight_kg.map(|weight_kg| {
+            round_to_increment(
+                weight_kg * f64::from(spec.deload_load_bp) / f64::from(BASIS_POINTS),
+                exercise.increment_kg,
+                RoundingMode::Nearest,
+            )
+        });
+        let raised = set
+            .target_rir
+            .map(|rir| i64::from(rir) + i64::from(spec.deload_rir_bump));
+        let (target_rir, rir_clamped) = clamp(raised, rule.min_rir, rule.max_rir);
+        // The reps a deload keeps are the last working cycle's, and after a user's edit those may sit
+        // outside the rule — which the user may do, and the engine may not repeat (INV-05).
+        let (target_reps, reps_clamped) =
+            clamp(set.target_reps.map(i64::from), rule.min_reps, rule.max_reps);
+        sets.push(PlannedSet {
+            target_weight_kg,
+            target_reps,
+            target_rir,
+            was_clamped: set.was_clamped || rir_clamped || reps_clamped,
+            ..set
+        });
+    }
+    sets
+}
+
+/// How many of `counted` working sets a deload keeps: `set_bp` of them, a tie going to the fewer — the
+/// rule ADR-010 gives loads — and never below one, so a deload never removes an exercise. Never more
+/// than there were, whatever `set_bp` says. Integer arithmetic throughout (INV-10).
+pub(super) fn deload_set_count(counted: usize, set_bp: u32) -> usize {
+    if counted == 0 {
+        return 0;
+    }
+    let scaled = u64::try_from(counted)
+        .unwrap_or(u64::MAX)
+        .saturating_mul(u64::from(set_bp));
+    let whole = scaled / u64::from(BASIS_POINTS);
+    let remainder = scaled % u64::from(BASIS_POINTS);
+    // `>`, not `>=`: exactly half a set goes to the fewer.
+    let rounded = if remainder * 2 > u64::from(BASIS_POINTS) {
+        whole + 1
+    } else {
+        whole
+    };
+    usize::try_from(rounded)
+        .unwrap_or(counted)
+        .clamp(1, counted)
+}
 
 /// Whether each of cycles 1..=`num_microcycles` is a deload, cycle 1 first.
 ///
